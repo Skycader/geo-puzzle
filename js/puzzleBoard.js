@@ -154,6 +154,8 @@ export class PuzzleBoard {
     svg.setAttribute('viewBox', `0 0 ${vbW} ${vbH}`);
     svg.setAttribute('width', Math.round(vbW * fit));
     svg.setAttribute('height', Math.round(vbH * fit));
+    svg.dataset.trayWidth = Math.round(vbW * fit);
+    svg.dataset.trayHeight = Math.round(vbH * fit);
 
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', localD);
@@ -181,21 +183,52 @@ export class PuzzleBoard {
       if (this.activeTrayDrag || this.activeWsDrag) return;
       ev.preventDefault();
       const rect = wrap.getBoundingClientRect();
-      this.activeTrayDrag = {
-        id,
-        offsetX: ev.clientX - rect.left,
-        offsetY: ev.clientY - rect.top,
-      };
+      const grabFracX = (ev.clientX - rect.left) / rect.width;
+      const grabFracY = (ev.clientY - rect.top) / rect.height;
+
       wrap.classList.add('dragging');
       wrap.style.position = 'fixed';
       wrap.style.left = rect.left + 'px';
       wrap.style.top = rect.top + 'px';
       wrap.style.zIndex = 1000;
       document.body.appendChild(wrap);
+
+      // Switch the dragged piece to its true board-scale size right away,
+      // instead of only at drop — the tray icon is a shrunk/enlarged
+      // stand-in, but while it's actually being placed it should look
+      // like what you're about to get. Re-anchor the fixed position so
+      // the resize happens under the pointer, not from the old corner.
+      this._resizeToTrueSize(wrap);
+      const newRect = wrap.getBoundingClientRect();
+      const newLeft = ev.clientX - grabFracX * newRect.width;
+      const newTop = ev.clientY - grabFracY * newRect.height;
+      wrap.style.left = newLeft + 'px';
+      wrap.style.top = newTop + 'px';
+
+      this.activeTrayDrag = {
+        id,
+        offsetX: ev.clientX - newLeft,
+        offsetY: ev.clientY - newTop,
+      };
       playPickup();
       window.addEventListener('pointermove', this._boundTrayMove);
       window.addEventListener('pointerup', this._boundTrayUp);
     });
+  }
+
+  _resizeToTrueSize(wrap) {
+    const svg = wrap.querySelector('svg');
+    const vbW = svg.viewBox.baseVal.width;
+    const vbH = svg.viewBox.baseVal.height;
+    const effScale = this.scale * (this.zoomCtl?.getZoom() ?? 1);
+    svg.setAttribute('width', Math.max(1, Math.round(vbW * effScale)));
+    svg.setAttribute('height', Math.max(1, Math.round(vbH * effScale)));
+  }
+
+  _resizeToTraySize(wrap) {
+    const svg = wrap.querySelector('svg');
+    svg.setAttribute('width', svg.dataset.trayWidth);
+    svg.setAttribute('height', svg.dataset.trayHeight);
   }
 
   _onTrayPointerMove(ev) {
@@ -242,6 +275,7 @@ export class PuzzleBoard {
 
   _returnPieceToTray(id) {
     const wrap = this.trayWraps.get(id);
+    this._resizeToTraySize(wrap);
     wrap.style.position = 'relative';
     wrap.style.left = '';
     wrap.style.top = '';
@@ -272,6 +306,7 @@ export class PuzzleBoard {
     label.setAttribute('class', 'piece-label');
     label.style.fontSize = `${(LABEL_PX / this.scale).toFixed(2)}px`;
     label.style.strokeWidth = `${(LABEL_STROKE_PX / this.scale).toFixed(2)}px`;
+    label.style.opacity = this.labelsVisible ? '' : '0';
     label.textContent = data.id;
     g.appendChild(label);
     this.allLabelEls.push(label);
@@ -360,6 +395,7 @@ export class PuzzleBoard {
     this.placedCount--;
 
     const wrap = this.trayWraps.get(id);
+    this._resizeToTraySize(wrap);
     wrap.style.position = 'relative';
     wrap.style.left = '';
     wrap.style.top = '';
