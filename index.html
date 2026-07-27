@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GEO//PUZZLE — США</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div id="app">
+    <header class="topbar">
+      <button id="btn-brand" class="brand" type="button" title="В главное меню">GEO<span>//</span>PUZZLE</button>
+      <div class="hud" id="hud" hidden>
+        <span id="hud-level" class="hud-item"></span>
+        <span id="hud-progress" class="hud-item hud-chip">0/0</span>
+        <span id="hud-groups" class="hud-item hud-chip">Частей: 0</span>
+        <span id="hud-timer" class="hud-item hud-chip">00:00</span>
+        <label class="toggle" id="toggle-hints-wrap" title="Показать/скрыть фоновый контур карты-подсказки">
+          <input type="checkbox" id="toggle-hints" checked />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">Подсказки</span>
+        </label>
+        <label class="toggle" id="toggle-labels-wrap" title="Показать/скрыть буквы-подписи на кусочках">
+          <input type="checkbox" id="toggle-labels" checked />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">Буквы</span>
+        </label>
+        <button id="btn-menu" class="btn btn-ghost">Меню</button>
+      </div>
+    </header>
+
+    <main id="screen-menu" class="screen screen-menu">
+      <h1 class="title">GEO<span>//</span>PUZZLE</h1>
+      <p class="subtitle">Собери карту штатов США или потренируйся находить их на слепой карте. Настрой под настроение — и вперёд.</p>
+
+      <div class="panel-row">
+        <section class="panel">
+          <h2>Режим</h2>
+          <div id="mode-list" class="preset-list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Уровень</h2>
+          <div id="level-list" class="level-list"></div>
+        </section>
+      </div>
+
+      <section class="panel" id="panel-puzzle-settings">
+        <h2>Сложность</h2>
+        <div id="preset-list" class="preset-list"></div>
+        <div id="custom-count-row" class="custom-count-row" hidden>
+          <label for="custom-count">Штатов, которые нужно вставить: <strong id="custom-count-value">25</strong></label>
+          <input type="range" id="custom-count" min="1" max="50" value="25" />
+        </div>
+      </section>
+
+      <section class="panel" id="panel-quiz-settings" hidden>
+        <h2>Раунд</h2>
+        <div class="custom-count-row">
+          <label for="quiz-count">Сколько штатов спросить: <strong id="quiz-count-value">15</strong></label>
+          <input type="range" id="quiz-count" min="1" max="50" value="15" />
+        </div>
+      </section>
+
+      <button id="btn-start" class="btn btn-primary btn-lg">Играть ▶</button>
+    </main>
+
+    <main id="screen-game" class="screen screen-game" hidden>
+      <div id="quiz-prompt" class="quiz-prompt" hidden>
+        <span class="quiz-prompt-label">Найди на карте:</span>
+        <strong id="quiz-prompt-name"></strong>
+      </div>
+      <div id="board-container"></div>
+    </main>
+  </div>
+
+  <div id="win-overlay" class="overlay" hidden>
+    <div class="overlay-card">
+      <h2 id="win-title">КАРТА СОБРАНА</h2>
+      <p id="win-stats"></p>
+      <div class="overlay-actions">
+        <button id="btn-again" class="btn btn-primary">Ещё раз</button>
+        <button id="btn-back-menu" class="btn btn-ghost">В меню</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
