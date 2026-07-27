@@ -1,6 +1,6 @@
 import { shuffle, clamp } from './utils.js';
 import { playSnap, playError, playWin } from './audio.js';
-import { attachZoomPan, createZoomControls } from './zoomPan.js';
+import { attachZoomPan, createZoomControls, createZoomWrap } from './zoomPan.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -38,10 +38,9 @@ export class QuizBoard {
     const baseW = Math.round(width * this.scale);
     const baseH = Math.round(height * this.scale);
 
-    this.zoomViewport = document.createElement('div');
-    this.zoomViewport.className = 'zoom-viewport';
-    this.zoomViewport.style.width = baseW + 'px';
-    this.zoomViewport.style.height = baseH + 'px';
+    const { wrap: zoomWrap, viewport: zoomViewport } = createZoomWrap(baseW, baseH);
+    this.zoomWrap = zoomWrap;
+    this.zoomViewport = zoomViewport;
 
     this.svg = document.createElementNS(SVG_NS, 'svg');
     this.svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
@@ -53,16 +52,28 @@ export class QuizBoard {
       const path = document.createElementNS(SVG_NS, 'path');
       path.setAttribute('d', p.d);
       path.setAttribute('class', 'quiz-path');
-      path.addEventListener('click', () => this._onClick(p.id));
+      path.dataset.id = p.id;
       this.svg.appendChild(path);
       this.paths.set(p.id, path);
     }
 
     this.zoomViewport.appendChild(this.svg);
-    this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, { baseWidth: baseW, baseHeight: baseH });
-    this.zoomViewport.appendChild(createZoomControls(this.zoomCtl));
+    // Every point on this map is *some* state, so panning can't be
+    // restricted to "empty background" like the puzzle board — nothing
+    // here is otherwise draggable, so a press anywhere is free to become
+    // a pan; it only counts as an answer if it never turns into a drag.
+    this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, {
+      baseWidth: baseW,
+      baseHeight: baseH,
+      panFromAnywhere: true,
+      onTap: (ev) => {
+        const id = ev.target?.dataset?.id;
+        if (id) this._onClick(id);
+      },
+    });
+    this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
 
-    this.container.appendChild(this.zoomViewport);
+    this.container.appendChild(this.zoomWrap);
     this._nextQuestion();
   }
 

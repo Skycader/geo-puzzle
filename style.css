@@ -414,13 +414,26 @@ body {
   text-shadow: 0 0 8px rgba(33, 246, 255, 0.5);
 }
 
-.zoom-viewport {
+/* .zoom-wrap never scrolls — it's just the fixed-size frame that anchors
+   the floating zoom buttons. .zoom-viewport (its only other child) is the
+   actual overflow:auto scroller; keeping the buttons as its SIBLING,
+   rather than its child, is what stops them scrolling/flickering away
+   with the map when the player pans or zooms. */
+.zoom-wrap {
   position: relative;
+}
+
+.zoom-viewport {
+  width: 100%;
+  height: 100%;
   overflow: auto;
   border: 1px solid rgba(33, 246, 255, 0.25);
   border-radius: 4px;
   box-shadow: 0 0 30px rgba(33, 246, 255, 0.06) inset;
 }
+.zoom-viewport.panning { cursor: grabbing; }
+.zoom-viewport.panning .board-svg,
+.zoom-viewport.panning .quiz-svg { cursor: grabbing; }
 
 .zoom-controls {
   position: absolute;
@@ -453,6 +466,7 @@ body {
 
 .quiz-svg {
   display: block;
+  cursor: grab;
   background:
     radial-gradient(circle at 50% 0%, rgba(108, 113, 196, 0.08), transparent 60%),
     rgba(0, 20, 26, 0.55);
@@ -507,6 +521,7 @@ body {
 
 .board-svg {
   display: block;
+  cursor: grab;
   background:
     radial-gradient(circle at 50% 0%, rgba(108, 113, 196, 0.08), transparent 60%),
     rgba(0, 20, 26, 0.55);

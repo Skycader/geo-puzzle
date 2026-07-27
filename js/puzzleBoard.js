@@ -1,7 +1,7 @@
 import { shuffle, clamp } from './utils.js';
 import { translatePath } from './pieceShape.js';
 import { playPickup, playSnap, playWin } from './audio.js';
-import { attachZoomPan, createZoomControls } from './zoomPan.js';
+import { attachZoomPan, createZoomControls, createZoomWrap } from './zoomPan.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const TRAY_PAD = 6;
@@ -61,10 +61,9 @@ export class PuzzleBoard {
     const baseW = Math.round((width + padX * 2) * this.scale);
     const baseH = Math.round((height + padY * 2) * this.scale);
 
-    this.zoomViewport = document.createElement('div');
-    this.zoomViewport.className = 'zoom-viewport';
-    this.zoomViewport.style.width = baseW + 'px';
-    this.zoomViewport.style.height = baseH + 'px';
+    const { wrap: zoomWrap, viewport: zoomViewport } = createZoomWrap(baseW, baseH);
+    this.zoomWrap = zoomWrap;
+    this.zoomViewport = zoomViewport;
 
     this.boardSvg = document.createElementNS(SVG_NS, 'svg');
     this.boardSvg.setAttribute('viewBox', `${-padX} ${-padY} ${width + padX * 2} ${height + padY * 2}`);
@@ -96,9 +95,9 @@ export class PuzzleBoard {
 
     this.zoomViewport.appendChild(this.boardSvg);
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.boardSvg, { baseWidth: baseW, baseHeight: baseH });
-    this.zoomViewport.appendChild(createZoomControls(this.zoomCtl));
+    this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
 
-    this.wrapEl.appendChild(this.zoomViewport);
+    this.wrapEl.appendChild(this.zoomWrap);
     this.wrapEl.appendChild(this.trayEl);
     this.container.appendChild(this.wrapEl);
 
