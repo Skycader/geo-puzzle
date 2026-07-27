@@ -1,13 +1,15 @@
 import { shuffle, clamp } from './utils.js';
 import { playSnap, playError, playWin } from './audio.js';
+import { attachZoomPan, createZoomControls } from './zoomPan.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 // "Find the state" mode: a plain unlabeled map, the player is prompted
 // with a state's name and has to click it. Correct clicks lock briefly
-// (a green flash) before moving to the next prompt; wrong clicks just
-// flash red and let the player try again — low-friction, no penalty
-// beyond a mistake tally.
+// (a green flash) before moving to the next prompt. A wrong click flashes
+// red and, since this is practice rather than an exam, immediately reveals
+// the real target with a glowing outline so the player learns where it is
+// instead of having to guess blindly over and over.
 export class QuizBoard {
   constructor(container, level, opts = {}) {
     this.container = container;
@@ -23,6 +25,7 @@ export class QuizBoard {
     this.mistakes = 0;
     this.locked = false;
     this.current = null;
+    this.hinted = false;
     this.paths = new Map();
 
     this._build();
@@ -32,10 +35,18 @@ export class QuizBoard {
     const { width, height } = this.level.canvas;
     this.container.innerHTML = '';
 
+    const baseW = Math.round(width * this.scale);
+    const baseH = Math.round(height * this.scale);
+
+    this.zoomViewport = document.createElement('div');
+    this.zoomViewport.className = 'zoom-viewport';
+    this.zoomViewport.style.width = baseW + 'px';
+    this.zoomViewport.style.height = baseH + 'px';
+
     this.svg = document.createElementNS(SVG_NS, 'svg');
     this.svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    this.svg.setAttribute('width', Math.round(width * this.scale));
-    this.svg.setAttribute('height', Math.round(height * this.scale));
+    this.svg.setAttribute('width', baseW);
+    this.svg.setAttribute('height', baseH);
     this.svg.classList.add('quiz-svg');
 
     for (const p of this.level.pieces) {
@@ -47,7 +58,11 @@ export class QuizBoard {
       this.paths.set(p.id, path);
     }
 
-    this.container.appendChild(this.svg);
+    this.zoomViewport.appendChild(this.svg);
+    this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, { baseWidth: baseW, baseHeight: baseH });
+    this.zoomViewport.appendChild(createZoomControls(this.zoomCtl));
+
+    this.container.appendChild(this.zoomViewport);
     this._nextQuestion();
   }
 
@@ -57,6 +72,7 @@ export class QuizBoard {
       this.onFinish({ correct: this.correct, mistakes: this.mistakes, total: this.queue.length });
       return;
     }
+    this.hinted = false;
     this.current = this.queue[this.index];
     this._reportProgress();
   }
@@ -67,6 +83,7 @@ export class QuizBoard {
 
     if (id === this.current.id) {
       this.locked = true;
+      path.classList.remove('quiz-hint');
       path.classList.add('quiz-correct');
       playSnap();
       this.correct++;
@@ -81,6 +98,10 @@ export class QuizBoard {
       path.classList.add('quiz-wrong');
       playError();
       this.mistakes++;
+      if (!this.hinted) {
+        this.hinted = true;
+        this.paths.get(this.current.id).classList.add('quiz-hint');
+      }
       this._reportProgress();
       setTimeout(() => path.classList.remove('quiz-wrong'), 400);
     }
@@ -97,6 +118,7 @@ export class QuizBoard {
   }
 
   destroy() {
+    this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }
 }

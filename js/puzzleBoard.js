@@ -1,6 +1,7 @@
 import { shuffle, clamp } from './utils.js';
 import { translatePath } from './pieceShape.js';
 import { playPickup, playSnap, playWin } from './audio.js';
+import { attachZoomPan, createZoomControls } from './zoomPan.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const TRAY_PAD = 6;
@@ -57,10 +58,18 @@ export class PuzzleBoard {
     this.wrapEl = document.createElement('div');
     this.wrapEl.className = 'puzzle-wrap';
 
+    const baseW = Math.round((width + padX * 2) * this.scale);
+    const baseH = Math.round((height + padY * 2) * this.scale);
+
+    this.zoomViewport = document.createElement('div');
+    this.zoomViewport.className = 'zoom-viewport';
+    this.zoomViewport.style.width = baseW + 'px';
+    this.zoomViewport.style.height = baseH + 'px';
+
     this.boardSvg = document.createElementNS(SVG_NS, 'svg');
     this.boardSvg.setAttribute('viewBox', `${-padX} ${-padY} ${width + padX * 2} ${height + padY * 2}`);
-    this.boardSvg.setAttribute('width', Math.round((width + padX * 2) * this.scale));
-    this.boardSvg.setAttribute('height', Math.round((height + padY * 2) * this.scale));
+    this.boardSvg.setAttribute('width', baseW);
+    this.boardSvg.setAttribute('height', baseH);
     this.boardSvg.classList.add('board-svg');
     this.boardSvg.classList.toggle('hide-hints', !this.hintsVisible);
 
@@ -85,7 +94,11 @@ export class PuzzleBoard {
     this.trayEl = document.createElement('div');
     this.trayEl.className = 'tray';
 
-    this.wrapEl.appendChild(this.boardSvg);
+    this.zoomViewport.appendChild(this.boardSvg);
+    this.zoomCtl = attachZoomPan(this.zoomViewport, this.boardSvg, { baseWidth: baseW, baseHeight: baseH });
+    this.zoomViewport.appendChild(createZoomControls(this.zoomCtl));
+
+    this.wrapEl.appendChild(this.zoomViewport);
     this.wrapEl.appendChild(this.trayEl);
     this.container.appendChild(this.wrapEl);
 
@@ -466,6 +479,7 @@ export class PuzzleBoard {
     window.removeEventListener('pointerup', this._boundTrayUp);
     window.removeEventListener('pointermove', this._boundWsMove);
     window.removeEventListener('pointerup', this._boundWsUp);
+    this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }
 }
