@@ -437,8 +437,10 @@ body {
 
 .zoom-controls {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
+  /* offset past the thin scrollbar (8px) plus a little breathing room, so
+     the buttons never sit on top of it */
+  right: 18px;
+  bottom: 18px;
   z-index: 5;
   display: flex;
   flex-direction: column;
@@ -653,6 +655,32 @@ body {
 
 /* ---------------- scrollbars ---------------- */
 
-.tray::-webkit-scrollbar { width: 8px; }
-.tray::-webkit-scrollbar-thumb { background: rgba(33, 246, 255, 0.3); border-radius: 4px; }
-.tray::-webkit-scrollbar-track { background: transparent; }
+.tray,
+.screen-menu,
+.zoom-viewport {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(33, 246, 255, 0.35) transparent;
+}
+.tray::-webkit-scrollbar,
+.screen-menu::-webkit-scrollbar,
+.zoom-viewport::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.tray::-webkit-scrollbar-thumb,
+.screen-menu::-webkit-scrollbar-thumb,
+.zoom-viewport::-webkit-scrollbar-thumb {
+  background: rgba(33, 246, 255, 0.3);
+  border-radius: 4px;
+}
+.tray::-webkit-scrollbar-thumb:hover,
+.screen-menu::-webkit-scrollbar-thumb:hover,
+.zoom-viewport::-webkit-scrollbar-thumb:hover {
+  background: rgba(33, 246, 255, 0.5);
+}
+.tray::-webkit-scrollbar-track,
+.screen-menu::-webkit-scrollbar-track,
+.zoom-viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+.zoom-viewport::-webkit-scrollbar-corner { background: transparent; }
