@@ -5,8 +5,8 @@ import { attachZoomPan, createZoomControls, createZoomWrap } from './zoomPan.js'
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const TRAY_PAD = 6;
-const LABEL_PX = 11;
-const LABEL_STROKE_PX = 3;
+const LABEL_PX = 14;
+const LABEL_STROKE_PX = 3.5;
 const SNAP_THRESHOLD = 34; // native canvas units
 
 // A free-form jigsaw: pieces can be dropped anywhere on the workspace.

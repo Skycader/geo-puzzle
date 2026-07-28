@@ -185,14 +185,19 @@ export class Game {
   }
 
   _availableHeight(extraReserve = 0) {
-    const headerH = document.querySelector('.topbar').offsetHeight || 56;
-    const screenPadV = 24; // .screen-game padding-top + padding-bottom
+    const headerH = document.querySelector('.topbar').offsetHeight || 64;
+    const screenPadV = 32; // .screen-game padding-top + padding-bottom
     return window.innerHeight - headerH - screenPadV - extraReserve;
   }
 
   _computeScale(canvas, availH) {
     const availW = window.innerWidth - 48;
-    return clamp(Math.min(availW / canvas.width, availH / canvas.height), 0.2, 1);
+    // No reason to cap this at native (1x) resolution — it's all vector
+    // SVG, so it stays crisp at any size. Filling the available screen
+    // space is what makes the map (and its text/pieces) actually
+    // comfortable to read instead of floating small in the middle of a
+    // big monitor.
+    return clamp(Math.min(availW / canvas.width, availH / canvas.height), 0.2, 3);
   }
 
   startGame() {
@@ -239,10 +244,10 @@ export class Game {
     // ones shrink to fit).
     const availH = this._availableHeight();
     const availW = window.innerWidth - 48;
-    const trayBandH = clamp(availH * 0.26, 90, 220);
+    const trayBandH = clamp(availH * 0.28, 110, 280);
     const boardBandH = availH - trayBandH - 14;
     const scale = this._computeScale(level.canvas, boardBandH);
-    const traySize = clamp(Math.sqrt((availW * trayBandH) / toPlaceCount) * 0.74, 30, 78);
+    const traySize = clamp(Math.sqrt((availW * trayBandH) / toPlaceCount) * 0.78, 38, 110);
 
     this.board = new PuzzleBoard(this.el.boardContainer, level, {
       toPlaceCount,
@@ -264,7 +269,7 @@ export class Game {
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.textContent = 'Ошибки: 0';
 
-    const promptH = this.el.quizPrompt.offsetHeight + 10; // + gap to the map
+    const promptH = this.el.quizPrompt.offsetHeight + 14; // + gap to the map
     const scale = this._computeScale(level.canvas, this._availableHeight(promptH));
     this.board = new QuizBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
@@ -287,7 +292,7 @@ export class Game {
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.textContent = 'Ошибки: 0';
 
-    const promptH = this.el.quizPrompt.offsetHeight + 10;
+    const promptH = this.el.quizPrompt.offsetHeight + 14;
     const scale = this._computeScale(level.canvas, this._availableHeight(promptH));
     this.board = new CityQuizBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
@@ -310,8 +315,8 @@ export class Game {
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.textContent = 'Ср. ошибка: —';
 
-    const promptH = this.el.quizPrompt.offsetHeight + 10;
-    const actionBarH = 50; // the board builds its own confirm/next bar below the map
+    const promptH = this.el.quizPrompt.offsetHeight + 14;
+    const actionBarH = 60; // the board builds its own confirm/next bar below the map
     const scale = this._computeScale(level.canvas, this._availableHeight(promptH + actionBarH));
     this.board = new CityPinBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
