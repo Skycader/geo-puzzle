@@ -1,8 +1,16 @@
 import { PuzzleBoard } from './puzzleBoard.js';
 import { QuizBoard } from './quizBoard.js';
+import { CityQuizBoard } from './cityQuizBoard.js';
+import { CityPinBoard } from './cityPinBoard.js';
 import { clamp } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
 import { MODES } from './modes.js';
+
+const ROUNDS_PANEL_TEXT = {
+  quiz: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: 'Найди на карте:' },
+  'city-quiz': { heading: 'Раунд', label: 'Сколько городов спросить', prompt: 'Найди на карте:' },
+  'city-pins': { heading: 'Раунд', label: 'Сколько городов отметить', prompt: 'Отметь на карте:' },
+};
 
 function formatTime(totalSeconds) {
   const m = Math.floor(totalSeconds / 60)
@@ -52,6 +60,8 @@ export class Game {
       presetList: document.getElementById('preset-list'),
       panelPuzzleSettings: document.getElementById('panel-puzzle-settings'),
       panelQuizSettings: document.getElementById('panel-quiz-settings'),
+      quizPanelHeading: document.getElementById('quiz-panel-heading'),
+      quizCountLabel: document.getElementById('quiz-count-label'),
       customCountRow: document.getElementById('custom-count-row'),
       customCountInput: document.getElementById('custom-count'),
       customCountValue: document.getElementById('custom-count-value'),
@@ -60,6 +70,7 @@ export class Game {
       btnStart: document.getElementById('btn-start'),
       boardContainer: document.getElementById('board-container'),
       quizPrompt: document.getElementById('quiz-prompt'),
+      quizPromptLabel: document.getElementById('quiz-prompt-label'),
       quizPromptName: document.getElementById('quiz-prompt-name'),
       winOverlay: document.getElementById('win-overlay'),
       winTitle: document.getElementById('win-title'),
@@ -107,9 +118,22 @@ export class Game {
   }
 
   _applyModeVisibility() {
-    const isQuiz = this.modeId === 'quiz';
-    this.el.panelPuzzleSettings.hidden = isQuiz;
-    this.el.panelQuizSettings.hidden = !isQuiz;
+    const isPuzzle = this.modeId === 'puzzle';
+    this.el.panelPuzzleSettings.hidden = !isPuzzle;
+    this.el.panelQuizSettings.hidden = isPuzzle;
+    if (isPuzzle) return;
+
+    const text = ROUNDS_PANEL_TEXT[this.modeId];
+    this.el.quizPanelHeading.textContent = text.heading;
+    this.el.quizCountLabel.textContent = text.label;
+    this.el.quizPromptLabel.textContent = text.prompt;
+
+    const level = this.levels[this.levelId];
+    const max = this.modeId === 'quiz' ? level.pieces.length : level.cities.length;
+    this.quizRounds = clamp(this.quizRounds, 1, max);
+    this.el.quizCountInput.max = String(max);
+    this.el.quizCountInput.value = String(this.quizRounds);
+    this.el.quizCountValue.textContent = this.quizRounds;
   }
 
   _renderPresetList() {
@@ -179,11 +203,10 @@ export class Game {
 
     if (this.board) this.board.destroy();
 
-    if (this.modeId === 'quiz') {
-      this._startQuiz(level);
-    } else {
-      this._startPuzzle(level);
-    }
+    if (this.modeId === 'quiz') this._startQuiz(level);
+    else if (this.modeId === 'city-quiz') this._startCityQuiz(level);
+    else if (this.modeId === 'city-pins') this._startCityPins(level);
+    else this._startPuzzle(level);
 
     this.seconds = 0;
     this.el.hudTimer.textContent = formatTime(0);
@@ -255,6 +278,53 @@ export class Game {
     });
   }
 
+  _startCityQuiz(level) {
+    this.el.toggleHintsWrap.hidden = true;
+    this.el.toggleLabelsWrap.hidden = true;
+    this.el.quizPrompt.hidden = false;
+
+    this.el.hudLevel.textContent = `${level.title} · Найди город (${this.quizRounds})`;
+    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudGroups.textContent = 'Ошибки: 0';
+
+    const promptH = this.el.quizPrompt.offsetHeight + 10;
+    const scale = this._computeScale(level.canvas, this._availableHeight(promptH));
+    this.board = new CityQuizBoard(this.el.boardContainer, level, {
+      rounds: this.quizRounds,
+      scale,
+      onProgress: (p) => this._onQuizProgress(p),
+      onFinish: (stats) =>
+        this._onFinish(
+          'РАУНД ЗАВЕРШЁН',
+          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} городов`
+        ),
+    });
+  }
+
+  _startCityPins(level) {
+    this.el.toggleHintsWrap.hidden = true;
+    this.el.toggleLabelsWrap.hidden = true;
+    this.el.quizPrompt.hidden = false;
+
+    this.el.hudLevel.textContent = `${level.title} · Расставь метки (${this.quizRounds})`;
+    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudGroups.textContent = 'Ср. ошибка: —';
+
+    const promptH = this.el.quizPrompt.offsetHeight + 10;
+    const actionBarH = 50; // the board builds its own confirm/next bar below the map
+    const scale = this._computeScale(level.canvas, this._availableHeight(promptH + actionBarH));
+    this.board = new CityPinBoard(this.el.boardContainer, level, {
+      rounds: this.quizRounds,
+      scale,
+      onProgress: (p) => this._onPinProgress(p),
+      onFinish: (stats) =>
+        this._onFinish(
+          'РАУНД ЗАВЕРШЁН',
+          `Городов: ${stats.rounds} · Средняя ошибка: ${stats.avgDistanceKm} км`
+        ),
+    });
+  }
+
   _onPuzzleProgress({ placed, total, groups }) {
     this.el.hudProgress.textContent = `${placed}/${total}`;
     this.el.hudGroups.textContent = `Частей: ${groups}`;
@@ -263,6 +333,12 @@ export class Game {
   _onQuizProgress({ index, total, mistakes, promptRu, promptName }) {
     this.el.hudProgress.textContent = `${index}/${total}`;
     this.el.hudGroups.textContent = `Ошибки: ${mistakes}`;
+    this.el.quizPromptName.textContent = promptName ? `${promptRu} (${promptName})` : promptRu;
+  }
+
+  _onPinProgress({ index, total, avgDistanceKm, promptRu, promptName }) {
+    this.el.hudProgress.textContent = `${index}/${total}`;
+    this.el.hudGroups.textContent = avgDistanceKm == null ? 'Ср. ошибка: —' : `Ср. ошибка: ${avgDistanceKm} км`;
     this.el.quizPromptName.textContent = promptName ? `${promptRu} (${promptName})` : promptRu;
   }
 

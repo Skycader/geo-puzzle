@@ -1,0 +1,215 @@
+// Companion to build_usa_level.js: projects a curated list of US cities
+// (every state capital + the biggest non-capital metros) onto the exact
+// same canvas coordinate system as levels/usa.js, by re-deriving the same
+// Albers projection + normalization (and the same AK/HI inset formulas)
+// from the same source GeoJSON, so city dots and state borders line up.
+const fs = require('fs');
+const path = require('path');
+
+const SRC = path.join(__dirname, 'data', 'us-states.geojson');
+const geo = JSON.parse(fs.readFileSync(SRC, 'utf8'));
+
+const deg2rad = (d) => (d * Math.PI) / 180;
+
+const phi1 = deg2rad(29.5);
+const phi2 = deg2rad(45.5);
+const phi0 = deg2rad(23);
+const lambda0 = deg2rad(-96);
+const n = (Math.sin(phi1) + Math.sin(phi2)) / 2;
+const C = Math.cos(phi1) ** 2 + 2 * n * Math.sin(phi1);
+const rho0 = Math.sqrt(C - 2 * n * Math.sin(phi0)) / n;
+
+function albers([lon, lat]) {
+  const lambda = deg2rad(lon);
+  const phi = deg2rad(lat);
+  const theta = n * (lambda - lambda0);
+  const rho = Math.sqrt(C - 2 * n * Math.sin(phi)) / n;
+  const x = rho * Math.sin(theta);
+  const y = rho0 - rho * Math.cos(theta);
+  return [x, -y];
+}
+
+function forEachRing(geometry, fn) {
+  if (geometry.type === 'Polygon') geometry.coordinates.forEach((ring) => fn(ring));
+  else if (geometry.type === 'MultiPolygon') geometry.coordinates.forEach((poly) => poly.forEach((ring) => fn(ring)));
+}
+
+// ---- re-derive the exact same contiguous-US bbox/scale/margin ----
+const SKIP = new Set(['Puerto Rico', 'District of Columbia', 'Alaska', 'Hawaii']);
+let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+for (const f of geo.features) {
+  if (SKIP.has(f.properties.name)) continue;
+  forEachRing(f.geometry, (ring) => {
+    for (const pt of ring.map(albers)) {
+      const [x, y] = pt;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  });
+}
+const TARGET_W = 960;
+const scale = TARGET_W / (maxX - minX);
+const MARGIN = 18;
+function toCanvasMain([lon, lat]) {
+  const [x, y] = albers([lon, lat]);
+  return [(x - minX) * scale + MARGIN, (y - minY) * scale + MARGIN];
+}
+
+// ---- re-derive the exact same AK / HI inset projections ----
+function insetProjector(featureName, targetW, targetH, offsetX, offsetY) {
+  const feature = geo.features.find((f) => f.properties.name === featureName);
+  let lonMin = Infinity, lonMax = -Infinity, latMin = Infinity, latMax = -Infinity;
+  forEachRing(feature.geometry, (ring) => {
+    for (let [lon, lat] of ring) {
+      if (lon > 0) lon -= 360;
+      if (lon < lonMin) lonMin = lon;
+      if (lon > lonMax) lonMax = lon;
+      if (lat < latMin) latMin = lat;
+      if (lat > latMax) latMax = lat;
+    }
+  });
+  const midLat = (latMin + latMax) / 2;
+  const cosLat = Math.cos(deg2rad(midLat));
+  const w = (lonMax - lonMin) * cosLat;
+  const h = latMax - latMin;
+  const s = Math.min(targetW / w, targetH / h);
+  const padX = (targetW - w * s) / 2;
+  const padY = (targetH - h * s) / 2;
+  return ([lon, lat]) => {
+    let l = lon;
+    if (l > 0) l -= 360;
+    return [(l - lonMin) * cosLat * s + offsetX + padX, (latMax - lat) * s + offsetY + padY];
+  };
+}
+// must match build_usa_level.js exactly
+const bboxH = maxY - minY;
+const TARGET_H = bboxH * scale;
+const INSET_Y = TARGET_H + 40;
+const toCanvasAK = insetProjector('Alaska', 230, 150, 10, INSET_Y);
+const toCanvasHI = insetProjector('Hawaii', 150, 90, 270, INSET_Y + 60);
+
+function project(region, lon, lat) {
+  if (region === 'AK') return toCanvasAK([lon, lat]);
+  if (region === 'HI') return toCanvasHI([lon, lat]);
+  return toCanvasMain([lon, lat]);
+}
+
+// [id, name, ru, state, lat, lon, isCapital, region?]
+const CITIES = [
+  ['montgomery', 'Montgomery', 'Монтгомери', 'AL', 32.38, -86.30, true],
+  ['birmingham', 'Birmingham', 'Бирмингем', 'AL', 33.52, -86.81, false],
+  ['juneau', 'Juneau', 'Джуно', 'AK', 58.30, -134.42, true, 'AK'],
+  ['anchorage', 'Anchorage', 'Анкоридж', 'AK', 61.22, -149.90, false, 'AK'],
+  ['phoenix', 'Phoenix', 'Финикс', 'AZ', 33.45, -112.07, true],
+  ['tucson', 'Tucson', 'Тусон', 'AZ', 32.22, -110.97, false],
+  ['little_rock', 'Little Rock', 'Литл-Рок', 'AR', 34.75, -92.29, true],
+  ['sacramento', 'Sacramento', 'Сакраменто', 'CA', 38.58, -121.49, true],
+  ['los_angeles', 'Los Angeles', 'Лос-Анджелес', 'CA', 34.05, -118.24, false],
+  ['san_francisco', 'San Francisco', 'Сан-Франциско', 'CA', 37.77, -122.42, false],
+  ['san_diego', 'San Diego', 'Сан-Диего', 'CA', 32.72, -117.16, false],
+  ['san_jose', 'San Jose', 'Сан-Хосе', 'CA', 37.34, -121.89, false],
+  ['denver', 'Denver', 'Денвер', 'CO', 39.74, -104.99, true],
+  ['hartford', 'Hartford', 'Хартфорд', 'CT', 41.76, -72.69, true],
+  ['dover', 'Dover', 'Довер', 'DE', 39.16, -75.52, true],
+  ['washington_dc', 'Washington, D.C.', 'Вашингтон', 'DC', 38.90, -77.04, false],
+  ['tallahassee', 'Tallahassee', 'Таллахасси', 'FL', 30.44, -84.28, true],
+  ['miami', 'Miami', 'Майами', 'FL', 25.76, -80.19, false],
+  ['jacksonville', 'Jacksonville', 'Джэксонвилл', 'FL', 30.33, -81.66, false],
+  ['orlando', 'Orlando', 'Орландо', 'FL', 28.54, -81.38, false],
+  ['atlanta', 'Atlanta', 'Атланта', 'GA', 33.75, -84.39, true],
+  ['honolulu', 'Honolulu', 'Гонолулу', 'HI', 21.31, -157.86, true, 'HI'],
+  ['boise', 'Boise', 'Бойсе', 'ID', 43.62, -116.20, true],
+  ['springfield_il', 'Springfield', 'Спрингфилд', 'IL', 39.80, -89.64, true],
+  ['chicago', 'Chicago', 'Чикаго', 'IL', 41.88, -87.63, false],
+  ['indianapolis', 'Indianapolis', 'Индианаполис', 'IN', 39.77, -86.16, true],
+  ['des_moines', 'Des Moines', 'Де-Мойн', 'IA', 41.59, -93.62, true],
+  ['topeka', 'Topeka', 'Топика', 'KS', 39.06, -95.68, true],
+  ['wichita', 'Wichita', 'Уичито', 'KS', 37.69, -97.34, false],
+  ['frankfort', 'Frankfort', 'Франкфорт', 'KY', 38.20, -84.87, true],
+  ['louisville', 'Louisville', 'Луисвилл', 'KY', 38.25, -85.76, false],
+  ['baton_rouge', 'Baton Rouge', 'Батон-Руж', 'LA', 30.45, -91.19, true],
+  ['new_orleans', 'New Orleans', 'Новый Орлеан', 'LA', 29.95, -90.07, false],
+  ['augusta', 'Augusta', 'Огаста', 'ME', 44.31, -69.78, true],
+  ['annapolis', 'Annapolis', 'Аннаполис', 'MD', 38.98, -76.49, true],
+  ['baltimore', 'Baltimore', 'Балтимор', 'MD', 39.29, -76.61, false],
+  ['boston', 'Boston', 'Бостон', 'MA', 42.36, -71.06, true],
+  ['lansing', 'Lansing', 'Лансинг', 'MI', 42.73, -84.56, true],
+  ['detroit', 'Detroit', 'Детройт', 'MI', 42.33, -83.05, false],
+  ['saint_paul', 'Saint Paul', 'Сент-Пол', 'MN', 44.95, -93.09, true],
+  ['minneapolis', 'Minneapolis', 'Миннеаполис', 'MN', 44.98, -93.27, false],
+  ['jackson', 'Jackson', 'Джексон', 'MS', 32.30, -90.18, true],
+  ['jefferson_city', 'Jefferson City', 'Джефферсон-Сити', 'MO', 38.58, -92.17, true],
+  ['st_louis', 'St. Louis', 'Сент-Луис', 'MO', 38.63, -90.20, false],
+  ['kansas_city', 'Kansas City', 'Канзас-Сити', 'MO', 39.10, -94.58, false],
+  ['helena', 'Helena', 'Хелена', 'MT', 46.59, -112.04, true],
+  ['lincoln', 'Lincoln', 'Линкольн', 'NE', 40.81, -96.68, true],
+  ['omaha', 'Omaha', 'Омаха', 'NE', 41.26, -95.93, false],
+  ['carson_city', 'Carson City', 'Карсон-Сити', 'NV', 39.16, -119.77, true],
+  ['las_vegas', 'Las Vegas', 'Лас-Вегас', 'NV', 36.17, -115.14, false],
+  ['concord', 'Concord', 'Конкорд', 'NH', 43.21, -71.54, true],
+  ['trenton', 'Trenton', 'Трентон', 'NJ', 40.22, -74.76, true],
+  ['newark', 'Newark', 'Ньюарк', 'NJ', 40.74, -74.17, false],
+  ['santa_fe', 'Santa Fe', 'Санта-Фе', 'NM', 35.69, -105.94, true],
+  ['albuquerque', 'Albuquerque', 'Альбукерке', 'NM', 35.08, -106.65, false],
+  ['albany', 'Albany', 'Олбани', 'NY', 42.65, -73.75, true],
+  ['new_york', 'New York', 'Нью-Йорк', 'NY', 40.71, -74.01, false],
+  ['raleigh', 'Raleigh', 'Роли', 'NC', 35.78, -78.64, true],
+  ['charlotte', 'Charlotte', 'Шарлотт', 'NC', 35.23, -80.84, false],
+  ['bismarck', 'Bismarck', 'Бисмарк', 'ND', 46.81, -100.78, true],
+  ['columbus', 'Columbus', 'Колумбус', 'OH', 39.96, -83.00, true],
+  ['cleveland', 'Cleveland', 'Кливленд', 'OH', 41.50, -81.69, false],
+  ['oklahoma_city', 'Oklahoma City', 'Оклахома-Сити', 'OK', 35.47, -97.52, true],
+  ['tulsa', 'Tulsa', 'Талса', 'OK', 36.15, -95.99, false],
+  ['salem', 'Salem', 'Сейлем', 'OR', 44.94, -123.04, true],
+  ['portland_or', 'Portland', 'Портленд', 'OR', 45.52, -122.68, false],
+  ['harrisburg', 'Harrisburg', 'Гаррисберг', 'PA', 40.27, -76.88, true],
+  ['philadelphia', 'Philadelphia', 'Филадельфия', 'PA', 39.95, -75.17, false],
+  ['pittsburgh', 'Pittsburgh', 'Питтсбург', 'PA', 40.44, -79.99, false],
+  ['providence', 'Providence', 'Провиденс', 'RI', 41.82, -71.41, true],
+  ['columbia', 'Columbia', 'Колумбия', 'SC', 34.00, -81.03, true],
+  ['pierre', 'Pierre', 'Пирр', 'SD', 44.37, -100.35, true],
+  ['nashville', 'Nashville', 'Нэшвилл', 'TN', 36.16, -86.78, true],
+  ['memphis', 'Memphis', 'Мемфис', 'TN', 35.15, -90.05, false],
+  ['austin', 'Austin', 'Остин', 'TX', 30.27, -97.74, true],
+  ['houston', 'Houston', 'Хьюстон', 'TX', 29.76, -95.37, false],
+  ['san_antonio', 'San Antonio', 'Сан-Антонио', 'TX', 29.42, -98.49, false],
+  ['dallas', 'Dallas', 'Даллас', 'TX', 32.78, -96.80, false],
+  ['fort_worth', 'Fort Worth', 'Форт-Уэрт', 'TX', 32.75, -97.33, false],
+  ['el_paso', 'El Paso', 'Эль-Пасо', 'TX', 31.76, -106.49, false],
+  ['salt_lake_city', 'Salt Lake City', 'Солт-Лейк-Сити', 'UT', 40.76, -111.89, true],
+  ['montpelier', 'Montpelier', 'Монтпилиер', 'VT', 44.26, -72.58, true],
+  ['richmond', 'Richmond', 'Ричмонд', 'VA', 37.54, -77.44, true],
+  ['virginia_beach', 'Virginia Beach', 'Виргиния-Бич', 'VA', 36.85, -75.98, false],
+  ['langley', 'Langley (CIA HQ)', 'Лэнгли (штаб-квартира ЦРУ)', 'VA', 38.95, -77.15, false],
+  ['olympia', 'Olympia', 'Олимпия', 'WA', 47.04, -122.90, true],
+  ['seattle', 'Seattle', 'Сиэтл', 'WA', 47.61, -122.33, false],
+  ['charleston_wv', 'Charleston', 'Чарлстон', 'WV', 38.35, -81.63, true],
+  ['madison', 'Madison', 'Мадисон', 'WI', 43.07, -89.40, true],
+  ['milwaukee', 'Milwaukee', 'Милуоки', 'WI', 43.04, -87.91, false],
+  ['cheyenne', 'Cheyenne', 'Шайенн', 'WY', 41.14, -104.82, true],
+];
+
+const cities = CITIES.map(([id, name, ru, state, lat, lon, capital, region]) => {
+  const [cx, cy] = project(region, lon, lat);
+  return { id, name, ru, state, capital: !!capital, cx: +cx.toFixed(1), cy: +cy.toFixed(1) };
+});
+
+console.error('cities', cities.length);
+console.error('sample', cities.filter((c) => ['new_york', 'los_angeles', 'seattle', 'miami', 'juneau', 'honolulu'].includes(c.id)));
+
+let out = `// Auto-generated by scripts/build_usa_cities.js — projects a curated list\n`;
+out += `// of US cities (every state capital + the biggest non-capital metros) with\n`;
+out += `// the exact same Albers projection + normalization (and AK/HI insets) as\n`;
+out += `// scripts/build_usa_level.js, so these line up with levels/usa.js.\n`;
+out += `// Regenerate: node scripts/build_usa_cities.js\n`;
+out += `export default [\n`;
+for (const c of cities) {
+  out += `  { id: '${c.id}', name: '${c.name.replace(/'/g, "\\'")}', ru: '${c.ru.replace(/'/g, "\\'")}', state: '${c.state}', capital: ${c.capital}, cx: ${c.cx}, cy: ${c.cy} },\n`;
+}
+out += `];\n`;
+
+const outPath = path.join(__dirname, '..', 'levels', 'usaCities.js');
+fs.writeFileSync(outPath, out, 'utf8');
+console.error('wrote', outPath, out.length, 'bytes');

@@ -379,6 +379,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   flex: 1;
   width: 100%;
 }
@@ -519,6 +520,83 @@ body {
 @keyframes hint-pulse {
   0%, 100% { filter: drop-shadow(0 0 4px rgba(247, 255, 58, 0.5)); }
   50% { filter: drop-shadow(0 0 14px rgba(247, 255, 58, 0.95)); }
+}
+
+/* ---------------- state outline context (city boards) ---------------- */
+
+.state-bg-layer { pointer-events: none; }
+.state-bg-path {
+  fill: rgba(38, 139, 210, 0.08);
+  stroke: rgba(147, 161, 161, 0.35);
+  stroke-width: 1;
+}
+.state-bg-path.state-bg-inset { stroke: rgba(255, 43, 214, 0.25); }
+
+/* ---------------- city markers (find-the-city quiz) ---------------- */
+
+.city-hit { fill: transparent; cursor: pointer; }
+.city-dot {
+  fill: var(--neon-cyan);
+  stroke: rgba(0, 20, 26, 0.8);
+  stroke-width: 1;
+  pointer-events: none;
+  transition: fill 0.15s ease, r 0.15s ease;
+}
+.city-marker:hover .city-dot {
+  fill: var(--neon-pink);
+  filter: drop-shadow(0 0 6px rgba(255, 43, 214, 0.7));
+}
+.city-dot.city-used { fill: rgba(88, 110, 117, 0.6); }
+.city-marker:hover .city-dot.city-used {
+  fill: rgba(147, 161, 161, 0.8);
+  filter: none;
+}
+.city-dot.city-correct {
+  fill: var(--green);
+  filter: drop-shadow(0 0 12px rgba(133, 153, 0, 0.9));
+}
+.city-dot.city-wrong {
+  fill: var(--red);
+  animation: wrong-pulse 0.4s ease;
+}
+.city-dot.city-hint {
+  fill: var(--neon-yellow);
+  animation: hint-pulse 1.1s ease-in-out infinite;
+}
+
+/* ---------------- pin placement mode ---------------- */
+
+.pin path {
+  stroke: rgba(0, 20, 26, 0.85);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+.pin { cursor: grab; }
+.pin:active { cursor: grabbing; }
+
+.pin-connector {
+  stroke: var(--neon-cyan);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  opacity: 0.8;
+}
+.pin-true-mark {
+  fill: var(--neon-cyan);
+  stroke: rgba(0, 20, 26, 0.85);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 8px rgba(33, 246, 255, 0.8));
+}
+
+.city-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pin-feedback {
+  font-size: 13px;
+  color: var(--base1);
+  min-width: 160px;
 }
 
 .board-svg {

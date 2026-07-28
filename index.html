@@ -58,9 +58,9 @@
       </section>
 
       <section class="panel" id="panel-quiz-settings" hidden>
-        <h2>Раунд</h2>
+        <h2 id="quiz-panel-heading">Раунд</h2>
         <div class="custom-count-row">
-          <label for="quiz-count">Сколько штатов спросить: <strong id="quiz-count-value">15</strong></label>
+          <label for="quiz-count"><span id="quiz-count-label">Сколько штатов спросить</span>: <strong id="quiz-count-value">15</strong></label>
           <input type="range" id="quiz-count" min="1" max="50" value="15" />
         </div>
       </section>
@@ -70,7 +70,7 @@
 
     <main id="screen-game" class="screen screen-game" hidden>
       <div id="quiz-prompt" class="quiz-prompt" hidden>
-        <span class="quiz-prompt-label">Найди на карте:</span>
+        <span class="quiz-prompt-label" id="quiz-prompt-label">Найди на карте:</span>
         <strong id="quiz-prompt-name"></strong>
       </div>
       <div id="board-container"></div>
