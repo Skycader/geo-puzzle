@@ -4,7 +4,7 @@ export const PRESETS = [
   {
     id: 'easy',
     title: 'Лёгкий',
-    desc: 'Вставь 5 штатов — подсказки и названия включены',
+    desc: '5 штатов, с подсказками',
     pieceCount: 5,
     hints: true,
     labels: true,
@@ -13,7 +13,7 @@ export const PRESETS = [
   {
     id: 'medium',
     title: 'Средний',
-    desc: 'Вставь 10 штатов — названия есть, подсказок нет',
+    desc: '10 штатов, без подсказок',
     pieceCount: 10,
     hints: false,
     labels: true,
@@ -22,7 +22,7 @@ export const PRESETS = [
   {
     id: 'hard',
     title: 'Сложный',
-    desc: 'Вставь 15 штатов — без подсказок и названий',
+    desc: '15 штатов, вслепую',
     pieceCount: 15,
     hints: false,
     labels: false,
@@ -31,7 +31,7 @@ export const PRESETS = [
   {
     id: 'hardcore',
     title: 'Хардкор',
-    desc: 'Собери все 50 штатов с нуля — без подсказок, без названий, без тумблеров',
+    desc: 'Все 50 штатов, вслепую',
     pieceCount: 50,
     hints: false,
     labels: false,
@@ -40,7 +40,7 @@ export const PRESETS = [
   {
     id: 'custom',
     title: 'Кастом',
-    desc: 'Сам выбери, сколько штатов нужно вставить',
+    desc: 'Сам выбери сколько штатов',
     pieceCount: null,
     hints: true,
     labels: true,
