@@ -156,6 +156,9 @@ body {
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: 2px;
@@ -172,7 +175,18 @@ body {
   text-shadow: 0 0 10px var(--neon-cyan), 0 0 22px rgba(33, 246, 255, 0.6);
   transform: translateY(-1px);
 }
-.brand span { color: var(--neon-pink); }
+.brand-icon {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  filter: drop-shadow(0 0 4px rgba(33, 246, 255, 0.5));
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+.brand:hover .brand-icon {
+  filter: drop-shadow(0 0 8px rgba(33, 246, 255, 0.8));
+  transform: rotate(-6deg);
+}
+.brand-text span { color: var(--neon-pink); }
 
 .hud {
   display: flex;

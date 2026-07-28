@@ -12,7 +12,24 @@
 
   <div id="app">
     <header class="topbar">
-      <button id="btn-brand" class="brand" type="button" title="В главное меню">GEO<span>//</span>PUZZLE</button>
+      <button id="btn-brand" class="brand" type="button" title="В главное меню">
+        <svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <linearGradient id="brand-piece-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#21f6ff" />
+              <stop offset="1" stop-color="#a25bff" />
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="60" height="60" rx="14" fill="#04222b" stroke="#21f6ff" stroke-opacity="0.4" stroke-width="1.5" />
+          <path
+            d="M 17,17 L 47,17 L 47,25 A 6.5,6.5 0 0 1 47,38 L 47,47 L 38,47 A 6.5,6.5 0 0 1 25,47 L 17,47 Z"
+            fill="url(#brand-piece-grad)"
+            stroke="#0a3d4a"
+            stroke-width="1.2"
+          />
+        </svg>
+        <span class="brand-text">GEO<span>//</span>PUZZLE</span>
+      </button>
       <div class="hud" id="hud" hidden>
         <span id="hud-level" class="hud-item"></span>
         <span id="hud-progress" class="hud-item hud-chip">0/0</span>
@@ -38,13 +55,13 @@
 
       <div class="panel-row">
         <section class="panel">
-          <h2>Режим</h2>
-          <div id="mode-list" class="preset-list"></div>
+          <h2>Уровень</h2>
+          <div id="level-list" class="level-list"></div>
         </section>
 
         <section class="panel">
-          <h2>Уровень</h2>
-          <div id="level-list" class="level-list"></div>
+          <h2>Режим</h2>
+          <div id="mode-list" class="preset-list"></div>
         </section>
       </div>
 
