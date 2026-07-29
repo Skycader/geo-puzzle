@@ -177,10 +177,12 @@ function buildPieceFromRings(canvasRings) {
     .join(' ');
 
   let totalArea = 0, cx = 0, cy = 0;
+  let netArea = 0; // signed sum — unlike totalArea above, holes (opposite winding) subtract instead of adding
   let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
   for (const ring of canvasRings) {
     const [rcx, rcy, area] = ringCentroid(ring);
     totalArea += area;
+    netArea += ringArea(ring);
     cx += rcx * area;
     cy += rcy * area;
     for (const [x, y] of ring) {
@@ -197,7 +199,7 @@ function buildPieceFromRings(canvasRings) {
     cx = (bx0 + bx1) / 2;
     cy = (by0 + by1) / 2;
   }
-  return { d, cx, cy, bbox: [bx0, by0, bx1, by1] };
+  return { d, cx, cy, bbox: [bx0, by0, bx1, by1], areaNative: Math.abs(netArea) };
 }
 
 const pieces = [];
@@ -206,7 +208,8 @@ for (const f of contiguous) {
   const [abbr, ru] = NAME_INFO[name];
   const rings = projectedRings.get(name).map((ring) => ring.map(toCanvas));
   const piece = buildPieceFromRings(rings);
-  pieces.push({ id: abbr, name, ru, ...piece });
+  const area = +(piece.areaNative * kmPerUnit * kmPerUnit).toFixed(1);
+  pieces.push({ id: abbr, name, ru, ...piece, area });
 }
 
 // ---- Alaska / Hawaii: independent equirectangular insets ----
@@ -250,8 +253,14 @@ const INSET_Y = TARGET_H + 40;
 const akPiece = buildInset(insets['Alaska'], 230, 150, 10, INSET_Y);
 const hiPiece = buildInset(insets['Hawaii'], 150, 90, 270, INSET_Y + 60);
 
-pieces.push({ id: 'AK', name: 'Alaska', ru: 'Аляска', inset: true, ...akPiece });
-pieces.push({ id: 'HI', name: 'Hawaii', ru: 'Гавайи', inset: true, ...hiPiece });
+// AK/HI sit in their own independent inset projections (see buildInset)
+// with no consistent km-per-canvas-unit scale of their own, so kmPerUnit
+// (calibrated for the main Albers projection) can't convert their
+// areaNative — using the standard US Census total-area figures instead.
+const INSET_AREA_KM2 = { AK: 1723337, HI: 28313 };
+
+pieces.push({ id: 'AK', name: 'Alaska', ru: 'Аляска', inset: true, ...akPiece, area: INSET_AREA_KM2.AK });
+pieces.push({ id: 'HI', name: 'Hawaii', ru: 'Гавайи', inset: true, ...hiPiece, area: INSET_AREA_KM2.HI });
 
 const CANVAS_W = 960 + MARGIN * 2;
 const CANVAS_H = INSET_Y + 160;
@@ -323,7 +332,7 @@ out += `  canvas: { width: ${Math.round(CANVAS_W)}, height: ${Math.round(CANVAS_
 out += `  kmPerUnit: ${kmPerUnit.toFixed(6)}, // canvas units -> real-world km, for the on-map scale bar\n`;
 out += `  pieces: [\n`;
 for (const p of pieces) {
-  out += `    { id: '${p.id}', name: '${esc(p.name)}', ru: '${esc(p.ru)}', cx: ${p.cx.toFixed(1)}, cy: ${p.cy.toFixed(1)}, bbox: [${p.bbox.map((v) => v.toFixed(1)).join(', ')}]${p.inset ? ', inset: true' : ''}, neighbors: [${(p.neighbors || []).map((n2) => `'${n2}'`).join(', ')}],\n      d: '${p.d}' },\n`;
+  out += `    { id: '${p.id}', name: '${esc(p.name)}', ru: '${esc(p.ru)}', cx: ${p.cx.toFixed(1)}, cy: ${p.cy.toFixed(1)}, bbox: [${p.bbox.map((v) => v.toFixed(1)).join(', ')}]${p.inset ? ', inset: true' : ''}, area: ${p.area}, neighbors: [${(p.neighbors || []).map((n2) => `'${n2}'`).join(', ')}],\n      d: '${p.d}' },\n`;
 }
 out += `  ],\n`;
 out += `};\n`;

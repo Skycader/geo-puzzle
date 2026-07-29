@@ -682,33 +682,43 @@ body {
 .overview-city-dot:hover {
   filter: drop-shadow(0 0 8px rgba(255, 43, 214, 0.95));
 }
-.overview-city-label {
+/* Leader-line city label: a small point-mark at the city's exact
+   coordinate, a line running diagonally then bending horizontal, and the
+   name sitting above that horizontal run — geometry built in JS
+   (_layoutCityLeader), these rules are just paint. */
+.overview-city-point {
+  fill: var(--base3);
+  stroke: rgba(0, 20, 26, 0.85);
+  pointer-events: none;
+}
+.overview-city-leader {
+  fill: none;
+  stroke: var(--base1);
+  pointer-events: none;
+}
+.overview-city-leader-label {
   fill: var(--base3);
   font-family: var(--font-mono);
   font-weight: 700;
-  text-anchor: middle;
-  dominant-baseline: middle;
+  text-anchor: end;
+  dominant-baseline: alphabetic;
   pointer-events: none;
   paint-order: stroke;
   stroke: rgba(0, 20, 26, 0.85);
-  /* font-size and stroke-width are set inline in JS, rescaled to stay a
-     constant screen size as the board zoom level changes. */
+  /* font-size, stroke-width and x/y are all set inline in JS. */
   transition: opacity 0.15s ease;
 }
-.overview-city-radius-label {
-  fill: var(--base00);
-  font-family: var(--font-mono);
-  font-weight: 400;
-  text-anchor: middle;
-  dominant-baseline: hanging;
-  pointer-events: none;
-  paint-order: stroke;
-  stroke: rgba(0, 20, 26, 0.85);
-  /* font-size, stroke-width and y (gap below the dot) are set inline in
-     JS — the gap has to account for each city's own dot radius, which
-     varies a lot since dots are now drawn at true geographic scale. */
-  transition: opacity 0.15s ease;
+
+.overview-city-shape {
+  fill: var(--neon-pink);
+  fill-opacity: 0.55;
+  stroke: var(--neon-pink);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 4px rgba(255, 43, 214, 0.5));
+  cursor: default;
+  transition: fill-opacity 0.15s ease;
 }
+.overview-city-shape:hover { fill-opacity: 0.75; }
 
 .overview-focus-glow {
   fill: var(--neon-yellow);
@@ -801,14 +811,39 @@ body {
 }
 .overview-list-scroll::-webkit-scrollbar-thumb:hover { background: rgba(33, 246, 255, 0.5); }
 .overview-list-scroll::-webkit-scrollbar-track { background: transparent; }
+.overview-list-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--base00);
+}
+.overview-col-sort {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+  transition: color 0.15s ease;
+}
+.overview-col-sort:hover { color: var(--neon-cyan); }
+.overview-sort-arrow { color: var(--neon-cyan); }
+
 .overview-item-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 .overview-item {
-  display: flex;
-  align-items: baseline;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
   gap: 8px;
   width: 100%;
   font-family: var(--font-mono);
@@ -825,6 +860,12 @@ body {
   border-color: var(--neon-cyan);
   background: rgba(33, 246, 255, 0.08);
 }
+.overview-item-main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
 .overview-item-abbr {
   flex: none;
   font-size: 11px;
@@ -832,8 +873,14 @@ body {
   color: var(--neon-cyan);
   min-width: 24px;
 }
-.overview-item-name { font-size: 14px; color: var(--base2); flex: 1; }
+.overview-item-name { font-size: 14px; color: var(--base2); }
 .overview-item-sub { flex: none; font-size: 11px; color: var(--base00); }
+.overview-item-area {
+  flex: none;
+  font-size: 12px;
+  color: var(--base0);
+  white-space: nowrap;
+}
 .overview-empty {
   margin: 10px 4px;
   font-size: 13px;

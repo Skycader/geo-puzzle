@@ -5,11 +5,17 @@ const STATE_LABEL_PX = 12;
 const STATE_LABEL_STROKE_PX = 3;
 const CITY_LABEL_PX = 10;
 const CITY_LABEL_STROKE_PX = 2.5;
-const CITY_LABEL_OFFSET_PX = 10; // gap between a city dot and its label, above it
 const CITY_DOT_STROKE_PX = 1;
-const CITY_RADIUS_LABEL_PX = 9;
-const CITY_RADIUS_LABEL_STROKE_PX = 2;
-const CITY_RADIUS_LABEL_GAP_PX = 6; // gap between a dot's edge and its radius label, below it
+
+// City name labels hang off a leader line from the dot's exact center
+// (point-mark -> diagonal -> horizontal, text above the horizontal run) —
+// all sizes below are constant *screen* px, like the other label styling.
+const LEADER_POINT_R_PX = 2.2;
+const LEADER_POINT_STROKE_PX = 0.8;
+const LEADER_DIAG_PX = 14; // 45°-down-left diagonal segment length
+const LEADER_STROKE_PX = 1.2;
+const LEADER_PAD_PX = 3; // horizontal run's overshoot past the text on the far end
+const LEADER_TEXT_GAP_PX = 3; // gap between the horizontal run and the text sitting above it
 
 // Width of the side list panel — game.js subtracts this from the available
 // width before computing the board's fit scale, so the map doesn't get
@@ -18,6 +24,7 @@ const CITY_RADIUS_LABEL_GAP_PX = 6; // gap between a dot's edge and its radius l
 export const OVERVIEW_PANEL_W = 300;
 
 const STATE_FOCUS_FILL = 0.6; // fraction of the viewport a focused state's bbox should fill
+const FOCUS_DURATION_MS = 3000; // how long a click's highlight stays lit before auto-clearing
 
 // Free-look mode: every state sits filled at its true spot (like an
 // already-solved puzzle) and every city is a dot, all at once — nothing
@@ -32,14 +39,16 @@ export class OverviewBoard {
     this.labelsVisible = opts.labelsVisible !== false;
     this.allLabelEls = [];
     this.stateLabels = []; // { el }
-    this.cityLabels = []; // { el, cx, cy }
-    this.cityRadiusLabels = []; // { el, cx, cy, radiusNative }
+    this.cityLeaders = []; // { cx, cy, pointMark, leaderPath, leaderLabel }
     this.cityDots = []; // { el }
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl }
     this.activeTab = 'states';
     this.searchQuery = '';
+    this.sortBy = null; // null (alphabetical) | 'area'
+    this.sortDir = 'desc';
     this.focusedEl = null;
+    this.focusTimeoutHandle = null;
 
     this._build();
   }
@@ -99,6 +108,30 @@ export class OverviewBoard {
     }
 
     for (const c of this.level.cities) {
+      // A handful of large/distinctive cities carry a real projected
+      // municipal-boundary shape (see build_city_silhouettes.js) — render
+      // those like a mini state piece instead of a radius dot.
+      if (c.d) {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', c.d);
+        path.setAttribute('class', 'overview-city-shape');
+        const title = document.createElementNS(SVG_NS, 'title');
+        title.textContent = `${c.ru} (${c.name})`;
+        path.appendChild(title);
+        this.svg.appendChild(path);
+        this.citiesById.set(c.id, { data: c, pathEl: path });
+
+        const shapeLabel = document.createElementNS(SVG_NS, 'text');
+        shapeLabel.setAttribute('x', c.cx);
+        shapeLabel.setAttribute('y', c.cy);
+        shapeLabel.setAttribute('class', 'piece-label');
+        shapeLabel.textContent = c.ru;
+        this.svg.appendChild(shapeLabel);
+        this.allLabelEls.push(shapeLabel);
+        this.stateLabels.push({ el: shapeLabel });
+        continue;
+      }
+
       // A true-to-scale radius (derived at build time from real land area,
       // see scripts/build_usa_cities.js) — fixed in native units so it
       // grows/shrinks with zoom exactly like the state borders do, instead
@@ -117,21 +150,26 @@ export class OverviewBoard {
       this.cityDots.push({ el: dot });
       this.citiesById.set(c.id, { data: c, dotEl: dot });
 
-      const label = document.createElementNS(SVG_NS, 'text');
-      label.setAttribute('x', c.cx);
-      label.setAttribute('class', 'overview-city-label');
-      label.textContent = c.ru;
-      this.svg.appendChild(label);
-      this.allLabelEls.push(label);
-      this.cityLabels.push({ el: label, cx: c.cx, cy: c.cy });
+      // Leader-line label: a small point-mark at the exact (cx,cy), a line
+      // running diagonally down-left then bending horizontal, with the
+      // city name sitting above the horizontal run — see _layoutCityLeader.
+      const pointMark = document.createElementNS(SVG_NS, 'circle');
+      pointMark.setAttribute('class', 'overview-city-point');
+      this.svg.appendChild(pointMark);
+      this.allLabelEls.push(pointMark);
 
-      const radiusLabel = document.createElementNS(SVG_NS, 'text');
-      radiusLabel.setAttribute('x', c.cx);
-      radiusLabel.setAttribute('class', 'overview-city-radius-label');
-      radiusLabel.textContent = `R ${c.radiusKm.toFixed(1)} км`;
-      this.svg.appendChild(radiusLabel);
-      this.allLabelEls.push(radiusLabel);
-      this.cityRadiusLabels.push({ el: radiusLabel, cx: c.cx, cy: c.cy, radiusNative });
+      const leaderPath = document.createElementNS(SVG_NS, 'path');
+      leaderPath.setAttribute('class', 'overview-city-leader');
+      this.svg.appendChild(leaderPath);
+      this.allLabelEls.push(leaderPath);
+
+      const leaderLabel = document.createElementNS(SVG_NS, 'text');
+      leaderLabel.setAttribute('class', 'overview-city-leader-label');
+      leaderLabel.textContent = c.ru;
+      this.svg.appendChild(leaderLabel);
+      this.allLabelEls.push(leaderLabel);
+
+      this.cityLeaders.push({ cx: c.cx, cy: c.cy, pointMark, leaderPath, leaderLabel });
     }
 
     this.zoomViewport.appendChild(this.svg);
@@ -164,11 +202,16 @@ export class OverviewBoard {
         <button type="button" class="overview-tab" data-tab="cities">Города</button>
       </div>
       <input type="text" class="overview-search" placeholder="Поиск..." autocomplete="off" />
+      <div class="overview-list-header">
+        <span class="overview-col-name">Название</span>
+        <button type="button" class="overview-col-sort" data-sort="area">Площадь<span class="overview-sort-arrow"></span></button>
+      </div>
       <div class="overview-list-scroll"><div class="overview-item-list"></div></div>
     `;
 
     this.searchInput = panel.querySelector('.overview-search');
     this.itemListEl = panel.querySelector('.overview-item-list');
+    this.sortArrowEl = panel.querySelector('.overview-sort-arrow');
 
     for (const btn of panel.querySelectorAll('.overview-tab')) {
       btn.addEventListener('click', () => {
@@ -184,9 +227,21 @@ export class OverviewBoard {
       this.searchQuery = this.searchInput.value.trim().toLowerCase();
       this._renderList();
     });
+    panel.querySelector('.overview-col-sort').addEventListener('click', () => {
+      this.sortDir = this.sortBy === 'area' && this.sortDir === 'desc' ? 'asc' : 'desc';
+      this.sortBy = 'area';
+      this._renderList();
+    });
 
     this._renderList();
     return panel;
+  }
+
+  // Effective area (km²) of an item — states carry a real `area` field
+  // (see build_usa_level.js); cities only store a radius, so their area is
+  // derived (they're rendered as a circle of that radius to begin with).
+  _areaOf(it) {
+    return this.activeTab === 'states' ? it.area : Math.PI * it.radiusKm * it.radiusKm;
   }
 
   _renderList() {
@@ -195,7 +250,15 @@ export class OverviewBoard {
     const filtered = q
       ? items.filter((it) => it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q))
       : items;
-    const sorted = [...filtered].sort((a, b) => a.ru.localeCompare(b.ru, 'ru'));
+
+    let sorted;
+    if (this.sortBy === 'area') {
+      const dir = this.sortDir === 'asc' ? 1 : -1;
+      sorted = [...filtered].sort((a, b) => (this._areaOf(a) - this._areaOf(b)) * dir);
+    } else {
+      sorted = [...filtered].sort((a, b) => a.ru.localeCompare(b.ru, 'ru'));
+    }
+    this.sortArrowEl.textContent = this.sortBy === 'area' ? (this.sortDir === 'asc' ? ' ▲' : ' ▼') : '';
 
     this.itemListEl.innerHTML = '';
     if (!sorted.length) {
@@ -207,10 +270,11 @@ export class OverviewBoard {
       const row = document.createElement('button');
       row.type = 'button';
       row.className = 'overview-item';
+      const areaStr = Math.round(this._areaOf(it)).toLocaleString('ru-RU') + ' км²';
       row.innerHTML =
         this.activeTab === 'states'
-          ? `<span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span>`
-          : `<span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}</span><span class="overview-item-sub">${it.state}</span>`;
+          ? `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span><span class="overview-item-area">${areaStr}</span>`
+          : `<span class="overview-item-main"><span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state}</span></span><span class="overview-item-area">${areaStr}</span>`;
       row.addEventListener('click', () => {
         if (this.activeTab === 'states') this._focusState(it.id);
         else this._focusCity(it.id);
@@ -224,7 +288,30 @@ export class OverviewBoard {
   _focusState(id) {
     const entry = this.statesById.get(id);
     if (!entry) return;
+    this._focusShape(entry.data);
+  }
+
+  _focusCity(id) {
+    const entry = this.citiesById.get(id);
+    if (!entry) return;
     const { data } = entry;
+    if (data.bbox) {
+      this._focusShape(data);
+      return;
+    }
+    // Point features (plain dots) read best at the closest zoom the map
+    // allows — focusOn() clamps to the shared max itself.
+    this.zoomCtl.focusOn(data.cx, data.cy, Infinity);
+    this._clearFocus();
+    entry.dotEl.classList.add('overview-focused');
+    this.focusedEl = entry.dotEl;
+    this._scheduleAutoClear();
+  }
+
+  // Shared by states and by the handful of cities with a real boundary
+  // shape: zoom to fit the shape's bbox, then drop a glowing copy of it on
+  // top of everything else in paint order (see the comment below).
+  _focusShape(data) {
     const [bx0, by0, bx1, by1] = data.bbox;
     const bboxW = Math.max(bx1 - bx0, 1);
     const bboxH = Math.max(by1 - by0, 1);
@@ -234,31 +321,26 @@ export class OverviewBoard {
     this.zoomCtl.focusOn(data.cx, data.cy, targetZoom);
 
     this._clearFocus();
-    // Neighboring states painted after this one in document order would
+    // Neighboring shapes painted after this one in document order would
     // otherwise cover parts of its glow along shared borders — a fresh
-    // copy of the shape appended last (topmost in SVG paint order) always
-    // renders fully on top, whichever state it is.
+    // copy appended last (topmost in SVG paint order) always renders fully
+    // on top, whichever shape it is.
     const glow = document.createElementNS(SVG_NS, 'path');
     glow.setAttribute('d', data.d);
     glow.setAttribute('class', 'overview-focus-glow');
     this.svg.appendChild(glow);
     this.focusGlowEl = glow;
+    this._scheduleAutoClear();
   }
 
-  _focusCity(id) {
-    const entry = this.citiesById.get(id);
-    if (!entry) return;
-    const { data, dotEl } = entry;
-    // Point features read best at the closest zoom the map allows —
-    // focusOn() clamps to the shared max itself.
-    this.zoomCtl.focusOn(data.cx, data.cy, Infinity);
-
-    this._clearFocus();
-    dotEl.classList.add('overview-focused');
-    this.focusedEl = dotEl;
+  _scheduleAutoClear() {
+    clearTimeout(this.focusTimeoutHandle);
+    this.focusTimeoutHandle = setTimeout(() => this._clearFocus(), FOCUS_DURATION_MS);
   }
 
   _clearFocus() {
+    clearTimeout(this.focusTimeoutHandle);
+    this.focusTimeoutHandle = null;
     this.focusedEl?.classList.remove('overview-focused');
     this.focusedEl = null;
     this.focusGlowEl?.remove();
@@ -278,21 +360,40 @@ export class OverviewBoard {
       el.style.fontSize = `${(STATE_LABEL_PX / effScale).toFixed(2)}px`;
       el.style.strokeWidth = `${(STATE_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
     }
-    for (const { el, cx, cy } of this.cityLabels) {
-      el.style.fontSize = `${(CITY_LABEL_PX / effScale).toFixed(2)}px`;
-      el.style.strokeWidth = `${(CITY_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
-      el.setAttribute('y', cy - CITY_LABEL_OFFSET_PX / effScale);
-    }
-    for (const { el, cx, cy, radiusNative } of this.cityRadiusLabels) {
-      el.style.fontSize = `${(CITY_RADIUS_LABEL_PX / effScale).toFixed(2)}px`;
-      el.style.strokeWidth = `${(CITY_RADIUS_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
-      el.setAttribute('y', cy + radiusNative + CITY_RADIUS_LABEL_GAP_PX / effScale);
-    }
+    for (const entry of this.cityLeaders) this._layoutCityLeader(entry, effScale);
     // dot radius is NOT rescaled here — it's fixed in native units (true
     // geographic size), only the outline stroke stays a constant screen px.
     for (const { el } of this.cityDots) {
       el.style.strokeWidth = `${(CITY_DOT_STROKE_PX / effScale).toFixed(2)}px`;
     }
+  }
+
+  // Point-mark -> diagonal -> horizontal run -> text, all sized/positioned
+  // in constant screen px regardless of zoom (see the comment above). The
+  // horizontal run's length is measured from the actual rendered text via
+  // getComputedTextLength() so it reads as a true underline, not a guess.
+  _layoutCityLeader(entry, effScale) {
+    const { cx, cy, pointMark, leaderPath, leaderLabel } = entry;
+    pointMark.setAttribute('cx', cx);
+    pointMark.setAttribute('cy', cy);
+    pointMark.setAttribute('r', (LEADER_POINT_R_PX / effScale).toFixed(2));
+    pointMark.style.strokeWidth = `${(LEADER_POINT_STROKE_PX / effScale).toFixed(2)}px`;
+
+    const d45 = LEADER_DIAG_PX / effScale / Math.SQRT2;
+    const bendX = cx - d45;
+    const bendY = cy + d45;
+
+    leaderLabel.style.fontSize = `${(CITY_LABEL_PX / effScale).toFixed(2)}px`;
+    leaderLabel.style.strokeWidth = `${(CITY_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
+    const textLen = leaderLabel.getComputedTextLength();
+    const pad = LEADER_PAD_PX / effScale;
+    const lineEndX = bendX - textLen - pad * 2;
+
+    leaderPath.setAttribute('d', `M ${cx.toFixed(1)},${cy.toFixed(1)} L ${bendX.toFixed(1)},${bendY.toFixed(1)} L ${lineEndX.toFixed(1)},${bendY.toFixed(1)}`);
+    leaderPath.style.strokeWidth = `${(LEADER_STROKE_PX / effScale).toFixed(2)}px`;
+
+    leaderLabel.setAttribute('x', bendX - pad);
+    leaderLabel.setAttribute('y', bendY - LEADER_TEXT_GAP_PX / effScale);
   }
 
   setLabelsVisible(visible) {
@@ -301,6 +402,7 @@ export class OverviewBoard {
   }
 
   destroy() {
+    clearTimeout(this.focusTimeoutHandle);
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }
