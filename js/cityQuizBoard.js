@@ -1,11 +1,12 @@
 import { shuffle, clamp } from './utils.js';
 import { playSnap, playError, playWin } from './audio.js';
-import { attachZoomPan, createZoomControls, createZoomWrap } from './zoomPan.js';
+import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { buildStateBackground } from './mapBackground.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const DOT_R = 3.2;
 const HIT_R = 8; // generous invisible hit-area so tiny dots stay clickable
+const DOT_STROKE_PX = 1;
 
 // "Find the city" mode: state borders shown as context, every city is a
 // small dot on the map (unlabeled), the player is prompted with a city's
@@ -83,11 +84,25 @@ export class CityQuizBoard {
         const id = ev.target?.dataset?.id;
         if (id) this._onClick(id);
       },
+      onZoomChange: (zoom) => this._rescaleForZoom(zoom),
     });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
+    this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
     this.container.appendChild(this.zoomWrap);
     this._nextQuestion();
+  }
+
+  // Keeps dots/hit-areas a constant screen size as the board zooms — see
+  // the matching comment in overviewBoard.js for why native-unit sizes
+  // would otherwise balloon.
+  _rescaleForZoom(zoom) {
+    const effScale = this.scale * zoom;
+    for (const { hit, dot } of this.dots.values()) {
+      dot.setAttribute('r', (DOT_R / effScale).toFixed(2));
+      dot.style.strokeWidth = `${(DOT_STROKE_PX / effScale).toFixed(2)}px`;
+      hit.setAttribute('r', (HIT_R / effScale).toFixed(2));
+    }
   }
 
   _nextQuestion() {

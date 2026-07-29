@@ -1,6 +1,6 @@
 import { shuffle, clamp } from './utils.js';
 import { playSnap, playError, playWin } from './audio.js';
-import { attachZoomPan, createZoomControls, createZoomWrap } from './zoomPan.js';
+import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -72,6 +72,7 @@ export class QuizBoard {
       },
     });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
+    this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
     this.container.appendChild(this.zoomWrap);
     this._nextQuestion();

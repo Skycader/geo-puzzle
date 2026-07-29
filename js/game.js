@@ -2,9 +2,10 @@ import { PuzzleBoard } from './puzzleBoard.js';
 import { QuizBoard } from './quizBoard.js';
 import { CityQuizBoard } from './cityQuizBoard.js';
 import { CityPinBoard } from './cityPinBoard.js';
+import { OverviewBoard } from './overviewBoard.js';
 import { clamp } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
-import { MODES } from './modes.js';
+import { MODES, OVERVIEW_MODES } from './modes.js';
 
 const ROUNDS_PANEL_TEXT = {
   quiz: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: 'Найди на карте:' },
@@ -28,6 +29,7 @@ export class Game {
     this.levelId = Object.keys(levels)[0];
     this.modeId = MODES[0].id;
     this.presetId = PRESETS[0].id;
+    this.overviewModeId = OVERVIEW_MODES[0].id;
     this.customCount = DEFAULT_CUSTOM_COUNT;
     this.quizRounds = 15;
     this.hintsVisible = true;
@@ -40,6 +42,7 @@ export class Game {
     this._renderLevelList();
     this._renderModeList();
     this._renderPresetList();
+    this._renderOverviewList();
     this._bindEvents();
     this._applyModeVisibility();
   }
@@ -60,6 +63,8 @@ export class Game {
       presetList: document.getElementById('preset-list'),
       panelPuzzleSettings: document.getElementById('panel-puzzle-settings'),
       panelQuizSettings: document.getElementById('panel-quiz-settings'),
+      panelOverviewSettings: document.getElementById('panel-overview-settings'),
+      overviewList: document.getElementById('overview-list'),
       quizPanelHeading: document.getElementById('quiz-panel-heading'),
       quizCountLabel: document.getElementById('quiz-count-label'),
       customCountRow: document.getElementById('custom-count-row'),
@@ -81,6 +86,7 @@ export class Game {
       toggleLabelsWrap: document.getElementById('toggle-labels-wrap'),
       toggleHints: document.getElementById('toggle-hints'),
       toggleLabels: document.getElementById('toggle-labels'),
+      toggleLabelsText: document.getElementById('toggle-labels-text'),
     };
   }
 
@@ -119,9 +125,13 @@ export class Game {
 
   _applyModeVisibility() {
     const isPuzzle = this.modeId === 'puzzle';
+    const isOverview = this.modeId === 'overview';
+    const isRounds = !isPuzzle && !isOverview;
+
     this.el.panelPuzzleSettings.hidden = !isPuzzle;
-    this.el.panelQuizSettings.hidden = isPuzzle;
-    if (isPuzzle) return;
+    this.el.panelQuizSettings.hidden = !isRounds;
+    this.el.panelOverviewSettings.hidden = !isOverview;
+    if (!isRounds) return;
 
     const text = ROUNDS_PANEL_TEXT[this.modeId];
     this.el.quizPanelHeading.textContent = text.heading;
@@ -134,6 +144,22 @@ export class Game {
     this.el.quizCountInput.max = String(max);
     this.el.quizCountInput.value = String(this.quizRounds);
     this.el.quizCountValue.textContent = this.quizRounds;
+  }
+
+  _renderOverviewList() {
+    this.el.overviewList.innerHTML = '';
+    for (const mode of OVERVIEW_MODES) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'preset-card' + (mode.id === this.overviewModeId ? ' selected' : '');
+      card.innerHTML = `<strong>${mode.title}</strong><p>${mode.desc}</p>`;
+      card.addEventListener('click', () => {
+        this.overviewModeId = mode.id;
+        this.el.overviewList.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
+        card.classList.add('selected');
+      });
+      this.el.overviewList.appendChild(card);
+    }
   }
 
   _renderPresetList() {
@@ -211,6 +237,7 @@ export class Game {
     if (this.modeId === 'quiz') this._startQuiz(level);
     else if (this.modeId === 'city-quiz') this._startCityQuiz(level);
     else if (this.modeId === 'city-pins') this._startCityPins(level);
+    else if (this.modeId === 'overview') this._startOverview(level);
     else this._startPuzzle(level);
 
     this.seconds = 0;
@@ -232,10 +259,12 @@ export class Game {
     this.el.toggleLabels.checked = this.labelsVisible;
     this.el.toggleHintsWrap.hidden = !preset.showToggles;
     this.el.toggleLabelsWrap.hidden = !preset.showToggles;
+    this.el.toggleLabelsText.textContent = 'Буквы';
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · ${preset.title} (${toPlaceCount})`;
     this.el.hudProgress.textContent = `0/${toPlaceCount}`;
+    this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Частей: 0';
 
     // split the available vertical space between the board and the tray,
@@ -267,6 +296,7 @@ export class Game {
 
     this.el.hudLevel.textContent = `${level.title} · Найди штат (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Ошибки: 0';
 
     const promptH = this.el.quizPrompt.offsetHeight + 14; // + gap to the map
@@ -290,6 +320,7 @@ export class Game {
 
     this.el.hudLevel.textContent = `${level.title} · Найди город (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Ошибки: 0';
 
     const promptH = this.el.quizPrompt.offsetHeight + 14;
@@ -313,6 +344,7 @@ export class Game {
 
     this.el.hudLevel.textContent = `${level.title} · Расставь метки (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Ср. ошибка: —';
 
     const promptH = this.el.quizPrompt.offsetHeight + 14;
@@ -327,6 +359,27 @@ export class Game {
           'РАУНД ЗАВЕРШЁН',
           `Городов: ${stats.rounds} · Средняя ошибка: ${stats.avgDistanceKm} км`
         ),
+    });
+  }
+
+  _startOverview(level) {
+    const overviewMode = OVERVIEW_MODES.find((m) => m.id === this.overviewModeId) || OVERVIEW_MODES[0];
+    this.labelsVisible = overviewMode.id === 'full';
+
+    this.el.toggleHintsWrap.hidden = true;
+    this.el.toggleLabelsWrap.hidden = false;
+    this.el.toggleLabelsText.textContent = 'Подписи';
+    this.el.toggleLabels.checked = this.labelsVisible;
+    this.el.quizPrompt.hidden = true;
+
+    this.el.hudLevel.textContent = `${level.title} · Обзор`;
+    this.el.hudProgress.textContent = `${level.pieces.length} шт. · ${level.cities.length} гор.`;
+    this.el.hudGroups.hidden = true;
+
+    const scale = this._computeScale(level.canvas, this._availableHeight());
+    this.board = new OverviewBoard(this.el.boardContainer, level, {
+      scale,
+      labelsVisible: this.labelsVisible,
     });
   }
 

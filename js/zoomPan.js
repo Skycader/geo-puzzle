@@ -9,11 +9,20 @@ export function attachZoomPan(viewport, content, opts = {}) {
   const baseWidth = opts.baseWidth;
   const baseHeight = opts.baseHeight;
   const minZoom = opts.minZoom ?? 1;
-  const maxZoom = opts.maxZoom ?? 5;
+  // Zooming grows the SVG's actual width/height attributes (see above),
+  // so past a few tens of thousands of px the browser has to lay out and
+  // composite a huge backing store on every scroll/pan — framerate falls
+  // off a cliff well before the numeric zoom "should" matter. 20x keeps
+  // the largest board (~1000 native units wide) under ~20,000px, which
+  // stays smooth.
+  const maxZoom = opts.maxZoom ?? 20;
   const step = opts.step ?? 1.35;
   const tapThreshold = opts.tapThreshold ?? 6; // px of movement before a press counts as a drag
   const panFromAnywhere = opts.panFromAnywhere ?? false;
   const onTap = opts.onTap; // (originalPointerDownEvent) => void — fired when a press didn't turn into a drag
+
+  const listeners = new Set(); // (zoom) => void, fired whenever the zoom level actually changes
+  if (opts.onZoomChange) listeners.add(opts.onZoomChange);
 
   let zoom = 1;
 
@@ -37,6 +46,7 @@ export function attachZoomPan(viewport, content, opts = {}) {
     content.setAttribute('height', Math.round(newH));
     viewport.scrollLeft = fracX * newW - ax;
     viewport.scrollTop = fracY * newH - ay;
+    for (const cb of listeners) cb(zoom);
   }
 
   function onWheel(ev) {
@@ -97,11 +107,16 @@ export function attachZoomPan(viewport, content, opts = {}) {
     zoomOut: () => apply(zoom / step),
     reset: () => apply(1),
     getZoom: () => zoom,
+    subscribe: (cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
     destroy: () => {
       viewport.removeEventListener('wheel', onWheel);
       content.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
+      listeners.clear();
     },
   };
 }
@@ -123,17 +138,59 @@ export function createZoomWrap(baseWidth, baseHeight) {
   return { wrap, viewport };
 }
 
-// Small floating +/reset/- button cluster wired to a zoomPan controller.
+// Small floating +/reset/- button cluster wired to a zoomPan controller,
+// with a live "100%" / "300%" readout between the buttons.
 export function createZoomControls(zoomCtl) {
   const wrap = document.createElement('div');
   wrap.className = 'zoom-controls';
   wrap.innerHTML = `
     <button type="button" class="zoom-btn" data-action="in" title="Приблизить">+</button>
+    <span class="zoom-level" title="Текущий масштаб"></span>
     <button type="button" class="zoom-btn" data-action="reset" title="Сбросить масштаб">⟲</button>
     <button type="button" class="zoom-btn" data-action="out" title="Отдалить">−</button>
   `;
   wrap.querySelector('[data-action="in"]').addEventListener('click', () => zoomCtl.zoomIn());
   wrap.querySelector('[data-action="reset"]').addEventListener('click', () => zoomCtl.reset());
   wrap.querySelector('[data-action="out"]').addEventListener('click', () => zoomCtl.zoomOut());
+
+  const levelEl = wrap.querySelector('.zoom-level');
+  const updateLevel = (zoom) => { levelEl.textContent = `${Math.round(zoom * 100)}%`; };
+  updateLevel(zoomCtl.getZoom());
+  zoomCtl.subscribe(updateLevel);
+
+  return wrap;
+}
+
+const KM_PER_MI = 0.621371;
+
+// A passive, Google-Maps-style scale readout pinned to the bottom-left of
+// the map: a fixed 100-screen-pixel bracket labeled with how much real
+// distance those 100px cover at the current zoom. `baseScale` is the
+// board's fit-to-viewport scale (native units -> px at zoom 1); `kmPerUnit`
+// converts native canvas units to real-world km (baked in at build time
+// from the map's projection — see scripts/build_usa_level.js).
+export function createScaleBar(zoomCtl, opts = {}) {
+  const baseScale = opts.baseScale || 1;
+  const kmPerUnit = opts.kmPerUnit || 0;
+  const barPx = 100;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'scale-bar';
+  wrap.innerHTML = `
+    <div class="scale-bar-line"></div>
+    <div class="scale-bar-label"></div>
+  `;
+  const labelEl = wrap.querySelector('.scale-bar-label');
+
+  const update = (zoom) => {
+    const effScale = baseScale * zoom;
+    const km = (barPx / effScale) * kmPerUnit;
+    const mi = km * KM_PER_MI;
+    const fmt = (v) => (v < 10 ? v.toFixed(1) : Math.round(v));
+    labelEl.textContent = `${fmt(km)} км / ${fmt(mi)} mi`;
+  };
+  update(zoomCtl.getZoom());
+  zoomCtl.subscribe(update);
+
   return wrap;
 }

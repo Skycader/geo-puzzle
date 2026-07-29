@@ -128,6 +128,14 @@ const scale = TARGET_W / bboxW;
 const TARGET_H = bboxH * scale;
 const MARGIN = 18;
 
+// The Albers formulas above operate on a unit sphere (radius 1), so 1
+// projected unit there = 1 Earth radius. `scale` converts those units to
+// canvas pixels, so dividing it out gives real km per canvas unit — exact
+// along the standard parallels (phi1/phi2), a couple percent off farther
+// away, same caveat any conic-projection scale bar has.
+const EARTH_RADIUS_KM = 6371;
+const kmPerUnit = EARTH_RADIUS_KM / scale;
+
 function toCanvas([x, y]) {
   return [(x - minX) * scale + MARGIN, (y - minY) * scale + MARGIN];
 }
@@ -312,6 +320,7 @@ out += `  id: 'usa',\n`;
 out += `  title: 'США: штаты',\n`;
 out += `  subtitle: 'Собери и соедини все 50 штатов',\n`;
 out += `  canvas: { width: ${Math.round(CANVAS_W)}, height: ${Math.round(CANVAS_H)} },\n`;
+out += `  kmPerUnit: ${kmPerUnit.toFixed(6)}, // canvas units -> real-world km, for the on-map scale bar\n`;
 out += `  pieces: [\n`;
 for (const p of pieces) {
   out += `    { id: '${p.id}', name: '${esc(p.name)}', ru: '${esc(p.ru)}', cx: ${p.cx.toFixed(1)}, cy: ${p.cy.toFixed(1)}, bbox: [${p.bbox.map((v) => v.toFixed(1)).join(', ')}]${p.inset ? ', inset: true' : ''}, neighbors: [${(p.neighbors || []).map((n2) => `'${n2}'`).join(', ')}],\n      d: '${p.d}' },\n`;

@@ -21,4 +21,15 @@ export const MODES = [
     title: 'Расставь метки',
     desc: 'Булавка меняет цвет от точности',
   },
+  {
+    id: 'overview',
+    title: 'Обзор',
+    desc: 'Разглядывай карту без заданий',
+  },
+];
+
+// "Отображение" choice shown only for the Обзор (overview) mode.
+export const OVERVIEW_MODES = [
+  { id: 'full', title: 'Полная информация', desc: 'Все штаты и города подписаны' },
+  { id: 'hidden', title: 'Скрытая информация', desc: 'Наведи курсор — узнаешь название' },
 ];

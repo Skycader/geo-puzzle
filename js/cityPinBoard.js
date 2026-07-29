@@ -1,16 +1,12 @@
 import { shuffle, clamp } from './utils.js';
 import { playSnap, playWin } from './audio.js';
-import { attachZoomPan, createZoomControls, createZoomWrap } from './zoomPan.js';
+import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { buildStateBackground } from './mapBackground.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-// Calibrated from the great-circle distance between New York and Los
-// Angeles (~3936 km) vs their canvas-unit distance on this projection —
-// close enough for "how far off was your guess" feedback, not for
-// navigation.
-const KM_PER_UNIT = 4.83;
 const MAX_DISTANCE_KM = 400; // guesses this far or farther read as fully red
+const TRUE_MARK_R = 5;
 
 const RED = [220, 50, 47];
 const GREEN = [133, 153, 0];
@@ -85,8 +81,10 @@ export class CityPinBoard {
       baseHeight: baseH,
       panFromAnywhere: true,
       onTap: (ev) => this._placePinAtClient(ev.clientX, ev.clientY),
+      onZoomChange: () => this._onZoomChange(),
     });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
+    this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
     this.container.appendChild(this.zoomWrap);
     this._buildActionBar();
@@ -123,6 +121,7 @@ export class CityPinBoard {
     this.pinNative = null;
     this.pinGroup.hidden = true;
     this.revealLayer.innerHTML = '';
+    this.trueMarkGroup = null;
     this.confirmBtn.disabled = true;
     this.confirmBtn.hidden = false;
     this.nextBtn.hidden = true;
@@ -163,14 +162,33 @@ export class CityPinBoard {
   _distanceKm() {
     if (!this.pinNative || !this.current) return Infinity;
     const dNative = Math.hypot(this.pinNative.x - this.current.cx, this.pinNative.y - this.current.cy);
-    return dNative * KM_PER_UNIT;
+    return dNative * this.level.kmPerUnit;
+  }
+
+  // The pin/true-mark are drawn once in fixed local units and kept a
+  // constant screen size via a compensating `scale(1/effScale)` on their
+  // group transform — same idea as the label/dot rescaling elsewhere,
+  // just done with a transform instead of a geometry attribute since
+  // these are drawn shapes, not text/circles sized by a single number.
+  _invScale() {
+    return 1 / (this.scale * (this.zoomCtl?.getZoom() ?? 1));
   }
 
   _renderPin() {
     const { x, y } = this.pinNative;
-    this.pinGroup.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+    const inv = this._invScale().toFixed(4);
+    this.pinGroup.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${inv})`);
     const t = clamp(1 - this._distanceKm() / MAX_DISTANCE_KM, 0, 1);
     this.pinPath.style.fill = lerpColor(t);
+  }
+
+  _onZoomChange() {
+    if (this.pinNative && !this.pinGroup.hidden) this._renderPin();
+    if (this.trueMarkGroup) {
+      const inv = this._invScale().toFixed(4);
+      const { x, y } = this.trueMarkCenter;
+      this.trueMarkGroup.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${inv})`);
+    }
   }
 
   _confirm() {
@@ -189,12 +207,18 @@ export class CityPinBoard {
     line.setAttribute('class', 'pin-connector');
     this.revealLayer.appendChild(line);
 
+    const trueMarkGroup = document.createElementNS(SVG_NS, 'g');
+    const inv = this._invScale().toFixed(4);
+    trueMarkGroup.setAttribute('transform', `translate(${cx.toFixed(1)},${cy.toFixed(1)}) scale(${inv})`);
     const trueMark = document.createElementNS(SVG_NS, 'circle');
-    trueMark.setAttribute('cx', cx);
-    trueMark.setAttribute('cy', cy);
-    trueMark.setAttribute('r', 5);
+    trueMark.setAttribute('cx', 0);
+    trueMark.setAttribute('cy', 0);
+    trueMark.setAttribute('r', TRUE_MARK_R);
     trueMark.setAttribute('class', 'pin-true-mark');
-    this.revealLayer.appendChild(trueMark);
+    trueMarkGroup.appendChild(trueMark);
+    this.revealLayer.appendChild(trueMarkGroup);
+    this.trueMarkGroup = trueMarkGroup;
+    this.trueMarkCenter = { x: cx, y: cy };
 
     if (distKm < 15) playSnap();
     this.feedbackEl.textContent = `${this.current.ru}: ${distKm} км от цели`;

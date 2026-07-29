@@ -43,7 +43,7 @@
         <label class="toggle" id="toggle-labels-wrap" title="Показать/скрыть буквы-подписи на кусочках">
           <input type="checkbox" id="toggle-labels" checked />
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span class="toggle-text">Буквы</span>
+          <span class="toggle-text" id="toggle-labels-text">Буквы</span>
         </label>
         <button id="btn-menu" class="btn btn-ghost">Меню</button>
       </div>
@@ -79,6 +79,11 @@
             <label for="quiz-count"><span id="quiz-count-label">Сколько штатов спросить</span>: <strong id="quiz-count-value">15</strong></label>
             <input type="range" id="quiz-count" min="1" max="50" value="15" />
           </div>
+        </section>
+
+        <section class="panel" id="panel-overview-settings" hidden>
+          <h2>Отображение</h2>
+          <div id="overview-list" class="preset-list"></div>
         </section>
       </div>
 

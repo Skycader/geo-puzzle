@@ -107,6 +107,8 @@ html, body {
   color: var(--base1);
   font-family: var(--font-mono);
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 body {
@@ -533,6 +535,41 @@ body {
 }
 .zoom-btn[data-action='reset'] { font-size: 16px; }
 
+.zoom-level {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--base1);
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+  user-select: none;
+}
+
+/* Passive Google-Maps-style scale readout, opposite corner from the zoom
+   controls. Always exactly 100 screen px wide — only its label changes. */
+.scale-bar {
+  position: absolute;
+  left: 14px;
+  bottom: 16px;
+  width: 100px;
+  z-index: 5;
+  pointer-events: none;
+}
+.scale-bar-line {
+  height: 6px;
+  border-left: 2px solid var(--neon-cyan);
+  border-right: 2px solid var(--neon-cyan);
+  border-bottom: 2px solid var(--neon-cyan);
+  opacity: 0.85;
+}
+.scale-bar-label {
+  margin-top: 3px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--base1);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+}
+
 .quiz-svg {
   display: block;
   cursor: grab;
@@ -604,7 +641,8 @@ body {
 .city-dot {
   fill: var(--neon-cyan);
   stroke: rgba(0, 20, 26, 0.8);
-  stroke-width: 1;
+  /* r and stroke-width are set inline in JS, rescaled to stay a constant
+     screen size as the board zoom level changes. */
   pointer-events: none;
   transition: fill 0.15s ease, r 0.15s ease;
 }
@@ -630,6 +668,34 @@ body {
   animation: hint-pulse 1.1s ease-in-out infinite;
 }
 
+/* ---------------- overview mode ---------------- */
+
+.overview-city-dot {
+  fill: var(--neon-pink);
+  stroke: rgba(0, 20, 26, 0.85);
+  /* r and stroke-width are set inline in JS, rescaled to stay a constant
+     screen size as the board zoom level changes. */
+  filter: drop-shadow(0 0 4px rgba(255, 43, 214, 0.6));
+  cursor: default;
+  transition: filter 0.15s ease;
+}
+.overview-city-dot:hover {
+  filter: drop-shadow(0 0 8px rgba(255, 43, 214, 0.95));
+}
+.overview-city-label {
+  fill: var(--base3);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(0, 20, 26, 0.85);
+  /* font-size and stroke-width are set inline in JS, rescaled to stay a
+     constant screen size as the board zoom level changes. */
+  transition: opacity 0.15s ease;
+}
+
 /* ---------------- pin placement mode ---------------- */
 
 .pin path {
@@ -645,6 +711,9 @@ body {
   stroke-width: 1.5;
   stroke-dasharray: 4 3;
   opacity: 0.8;
+  /* endpoints legitimately live in map space, but the line itself should
+     stay a constant screen width as the board zooms */
+  vector-effect: non-scaling-stroke;
 }
 .pin-true-mark {
   fill: var(--neon-cyan);

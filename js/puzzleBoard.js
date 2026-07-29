@@ -1,7 +1,7 @@
 import { shuffle, clamp } from './utils.js';
 import { translatePath } from './pieceShape.js';
 import { playPickup, playSnap, playWin } from './audio.js';
-import { attachZoomPan, createZoomControls, createZoomWrap } from './zoomPan.js';
+import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const TRAY_PAD = 6;
@@ -37,6 +37,7 @@ export class PuzzleBoard {
     this.pieceGroup = new Map(); // id -> groupId (only for placed pieces)
     this.groups = new Map(); // groupId -> { offsetX, offsetY, members:Set<id>, locked }
     this.allLabelEls = [];
+    this.wsLabelEls = []; // labels of placed (workspace) pieces — rescaled on zoom, unlike tray icons
     this.nextGroupId = 1;
     this.placedCount = 0;
     this.won = false;
@@ -94,8 +95,13 @@ export class PuzzleBoard {
     this.trayEl.className = 'tray';
 
     this.zoomViewport.appendChild(this.boardSvg);
-    this.zoomCtl = attachZoomPan(this.zoomViewport, this.boardSvg, { baseWidth: baseW, baseHeight: baseH });
+    this.zoomCtl = attachZoomPan(this.zoomViewport, this.boardSvg, {
+      baseWidth: baseW,
+      baseHeight: baseH,
+      onZoomChange: (zoom) => this._rescaleLabelsForZoom(zoom),
+    });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
+    this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
     this.wrapEl.appendChild(this.zoomWrap);
     this.wrapEl.appendChild(this.trayEl);
@@ -300,16 +306,18 @@ export class PuzzleBoard {
     path.appendChild(title);
     g.appendChild(path);
 
+    const effScale = this.scale * (this.zoomCtl?.getZoom() ?? 1);
     const label = document.createElementNS(SVG_NS, 'text');
     label.setAttribute('x', data.cx);
     label.setAttribute('y', data.cy);
     label.setAttribute('class', 'piece-label');
-    label.style.fontSize = `${(LABEL_PX / this.scale).toFixed(2)}px`;
-    label.style.strokeWidth = `${(LABEL_STROKE_PX / this.scale).toFixed(2)}px`;
+    label.style.fontSize = `${(LABEL_PX / effScale).toFixed(2)}px`;
+    label.style.strokeWidth = `${(LABEL_STROKE_PX / effScale).toFixed(2)}px`;
     label.style.opacity = this.labelsVisible ? '' : '0';
     label.textContent = data.id;
     g.appendChild(label);
     this.allLabelEls.push(label);
+    this.wsLabelEls.push(label);
 
     this.boardSvg.appendChild(g);
     this.pieceEls.set(data.id, { g, path, label });
@@ -496,6 +504,17 @@ export class PuzzleBoard {
       this.won = true;
       setTimeout(() => playWin(), 150);
       this.onWin({});
+    }
+  }
+
+  // Keeps placed-piece labels a constant screen size as the board zooms —
+  // the SVG's width/height attributes scale against a fixed viewBox (see
+  // zoomPan.js), so a native-unit font size would otherwise balloon.
+  _rescaleLabelsForZoom(zoom) {
+    const effScale = this.scale * zoom;
+    for (const label of this.wsLabelEls) {
+      label.style.fontSize = `${(LABEL_PX / effScale).toFixed(2)}px`;
+      label.style.strokeWidth = `${(LABEL_STROKE_PX / effScale).toFixed(2)}px`;
     }
   }
 
