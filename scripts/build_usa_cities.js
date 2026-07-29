@@ -191,9 +191,42 @@ const CITIES = [
   ['cheyenne', 'Cheyenne', 'Шайенн', 'WY', 41.14, -104.82, true],
 ];
 
+// Effective radius (km) of each city's land area — sqrt(land_km2 / pi), so
+// a city with an irregular footprint gets the radius of a circle covering
+// the same area. Source: US Census Bureau 2024 Gazetteer Files (ALAND_SQMI
+// per place, https://www2.census.gov/geo/docs/maps-data/data/gazetteer/),
+// matched by name; three consolidated city-county governments (Honolulu,
+// Carson City, Nashville) needed their official Census place name looked
+// up by hand since it doesn't match the plain city name.
+const RADIUS_KM = {
+  montgomery: 11.48, birmingham: 11.01, juneau: 47.21, anchorage: 37.51,
+  phoenix: 20.67, tucson: 14.13, little_rock: 10, sacramento: 9.02,
+  los_angeles: 19.7, san_francisco: 6.2, san_diego: 16.4, san_jose: 12.11,
+  denver: 11.23, hartford: 3.79, dover: 4.43, washington_dc: 7.1,
+  tallahassee: 9.2, miami: 5.45, jacksonville: 24.82, orlando: 9.57,
+  atlanta: 10.56, honolulu: 7.07, boise: 8.38, springfield_il: 7.11,
+  chicago: 13.7, indianapolis: 17.25, des_moines: 8.53, topeka: 7.14,
+  wichita: 11.67, frankfort: 3.49, louisville: 7.12, baton_rouge: 8.47,
+  new_orleans: 11.82, augusta: 6.74, annapolis: 2.44, baltimore: 8.17,
+  boston: 6.31, lansing: 5.7, detroit: 10.69, saint_paul: 6.55,
+  minneapolis: 6.67, jackson: 9.6, jefferson_city: 5.45, st_louis: 7.13,
+  kansas_city: 16.1, helena: 6.62, lincoln: 9.13, omaha: 10.85,
+  carson_city: 10.92, las_vegas: 10.81, concord: 7.26, trenton: 2.5,
+  newark: 4.46, santa_fe: 6.56, albuquerque: 12.43, albany: 4.2,
+  new_york: 15.74, raleigh: 11.15, charlotte: 16.03, bismarck: 5.35,
+  columbus: 13.51, cleveland: 8.01, oklahoma_city: 22.36, tulsa: 12.77,
+  salem: 6.35, portland_or: 10.49, harrisburg: 2.59, philadelphia: 10.52,
+  pittsburgh: 6.76, providence: 3.9, columbia: 10.69, pierre: 3.28,
+  nashville: 19.8, memphis: 15.46, austin: 16.4, houston: 22.98,
+  san_antonio: 20.28, dallas: 16.73, fort_worth: 17.03, el_paso: 14.61,
+  salt_lake_city: 9.56, montpelier: 2.88, richmond: 7.03, virginia_beach: 14.2,
+  langley: 4.52, olympia: 3.88, seattle: 8.32, charleston_wv: 5.09,
+  madison: 8.3, milwaukee: 8.9, cheyenne: 5.48,
+};
+
 const cities = CITIES.map(([id, name, ru, state, lat, lon, capital, region]) => {
   const [cx, cy] = project(region, lon, lat);
-  return { id, name, ru, state, capital: !!capital, cx: +cx.toFixed(1), cy: +cy.toFixed(1) };
+  return { id, name, ru, state, capital: !!capital, cx: +cx.toFixed(1), cy: +cy.toFixed(1), radiusKm: RADIUS_KM[id] };
 });
 
 console.error('cities', cities.length);
@@ -206,7 +239,7 @@ out += `// scripts/build_usa_level.js, so these line up with levels/usa.js.\n`;
 out += `// Regenerate: node scripts/build_usa_cities.js\n`;
 out += `export default [\n`;
 for (const c of cities) {
-  out += `  { id: '${c.id}', name: '${c.name.replace(/'/g, "\\'")}', ru: '${c.ru.replace(/'/g, "\\'")}', state: '${c.state}', capital: ${c.capital}, cx: ${c.cx}, cy: ${c.cy} },\n`;
+  out += `  { id: '${c.id}', name: '${c.name.replace(/'/g, "\\'")}', ru: '${c.ru.replace(/'/g, "\\'")}', state: '${c.state}', capital: ${c.capital}, cx: ${c.cx}, cy: ${c.cy}, radiusKm: ${c.radiusKm} },\n`;
 }
 out += `];\n`;
 

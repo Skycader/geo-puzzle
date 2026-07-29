@@ -6,8 +6,10 @@ const STATE_LABEL_STROKE_PX = 3;
 const CITY_LABEL_PX = 10;
 const CITY_LABEL_STROKE_PX = 2.5;
 const CITY_LABEL_OFFSET_PX = 10; // gap between a city dot and its label, above it
-const CITY_DOT_R = 3;
 const CITY_DOT_STROKE_PX = 1;
+const CITY_RADIUS_LABEL_PX = 9;
+const CITY_RADIUS_LABEL_STROKE_PX = 2;
+const CITY_RADIUS_LABEL_GAP_PX = 6; // gap between a dot's edge and its radius label, below it
 
 // Width of the side list panel — game.js subtracts this from the available
 // width before computing the board's fit scale, so the map doesn't get
@@ -31,6 +33,7 @@ export class OverviewBoard {
     this.allLabelEls = [];
     this.stateLabels = []; // { el }
     this.cityLabels = []; // { el, cx, cy }
+    this.cityRadiusLabels = []; // { el, cx, cy, radiusNative }
     this.cityDots = []; // { el }
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl }
@@ -96,12 +99,19 @@ export class OverviewBoard {
     }
 
     for (const c of this.level.cities) {
+      // A true-to-scale radius (derived at build time from real land area,
+      // see scripts/build_usa_cities.js) — fixed in native units so it
+      // grows/shrinks with zoom exactly like the state borders do, instead
+      // of the artificial constant-screen-px sizing used for labels/etc.
+      const radiusNative = c.radiusKm / this.level.kmPerUnit;
+
       const dot = document.createElementNS(SVG_NS, 'circle');
       dot.setAttribute('cx', c.cx);
       dot.setAttribute('cy', c.cy);
+      dot.setAttribute('r', radiusNative.toFixed(3));
       dot.setAttribute('class', 'overview-city-dot');
       const title = document.createElementNS(SVG_NS, 'title');
-      title.textContent = `${c.ru} (${c.name})`;
+      title.textContent = `${c.ru} (${c.name}) — R ${c.radiusKm.toFixed(1)} км`;
       dot.appendChild(title);
       this.svg.appendChild(dot);
       this.cityDots.push({ el: dot });
@@ -114,6 +124,14 @@ export class OverviewBoard {
       this.svg.appendChild(label);
       this.allLabelEls.push(label);
       this.cityLabels.push({ el: label, cx: c.cx, cy: c.cy });
+
+      const radiusLabel = document.createElementNS(SVG_NS, 'text');
+      radiusLabel.setAttribute('x', c.cx);
+      radiusLabel.setAttribute('class', 'overview-city-radius-label');
+      radiusLabel.textContent = `R ${c.radiusKm.toFixed(1)} км`;
+      this.svg.appendChild(radiusLabel);
+      this.allLabelEls.push(radiusLabel);
+      this.cityRadiusLabels.push({ el: radiusLabel, cx: c.cx, cy: c.cy, radiusNative });
     }
 
     this.zoomViewport.appendChild(this.svg);
@@ -247,11 +265,13 @@ export class OverviewBoard {
     this.focusGlowEl = null;
   }
 
-  // Keeps text/dot sizes a constant number of *screen* pixels regardless of
-  // zoom level. The board's width/height attributes scale relative to a
-  // fixed viewBox (see zoomPan.js), so every native SVG unit maps to more
-  // screen pixels as you zoom in — sizes expressed in native units (font
-  // sizes, radii, stroke widths) would otherwise balloon and overlap.
+  // Keeps text (and stroke widths) a constant number of *screen* pixels
+  // regardless of zoom level. The board's width/height attributes scale
+  // relative to a fixed viewBox (see zoomPan.js), so every native SVG unit
+  // maps to more screen pixels as you zoom in — sizes expressed in native
+  // units would otherwise balloon and overlap. City dot radii are the one
+  // exception: those are meant to grow/shrink with zoom, so they're set
+  // once at creation and never touched here.
   _rescaleForZoom(zoom) {
     const effScale = this.scale * zoom;
     for (const { el } of this.stateLabels) {
@@ -263,8 +283,14 @@ export class OverviewBoard {
       el.style.strokeWidth = `${(CITY_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
       el.setAttribute('y', cy - CITY_LABEL_OFFSET_PX / effScale);
     }
+    for (const { el, cx, cy, radiusNative } of this.cityRadiusLabels) {
+      el.style.fontSize = `${(CITY_RADIUS_LABEL_PX / effScale).toFixed(2)}px`;
+      el.style.strokeWidth = `${(CITY_RADIUS_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
+      el.setAttribute('y', cy + radiusNative + CITY_RADIUS_LABEL_GAP_PX / effScale);
+    }
+    // dot radius is NOT rescaled here — it's fixed in native units (true
+    // geographic size), only the outline stroke stays a constant screen px.
     for (const { el } of this.cityDots) {
-      el.setAttribute('r', (CITY_DOT_R / effScale).toFixed(2));
       el.style.strokeWidth = `${(CITY_DOT_STROKE_PX / effScale).toFixed(2)}px`;
     }
   }

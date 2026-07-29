@@ -695,6 +695,20 @@ body {
      constant screen size as the board zoom level changes. */
   transition: opacity 0.15s ease;
 }
+.overview-city-radius-label {
+  fill: var(--base00);
+  font-family: var(--font-mono);
+  font-weight: 400;
+  text-anchor: middle;
+  dominant-baseline: hanging;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(0, 20, 26, 0.85);
+  /* font-size, stroke-width and y (gap below the dot) are set inline in
+     JS — the gap has to account for each city's own dot radius, which
+     varies a lot since dots are now drawn at true geographic scale. */
+  transition: opacity 0.15s ease;
+}
 
 .overview-focus-glow {
   fill: var(--neon-yellow);
