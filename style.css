@@ -134,6 +134,27 @@ body {
   opacity: 0.5;
 }
 
+/* Lives inside a .zoom-wrap (see fpsMeter.js/zoomPan.js), not the page —
+   .zoom-wrap is already position:relative, so this anchors to the map
+   frame's own top-left corner rather than the whole window. */
+#fps-meter {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--neon-cyan);
+  background: rgba(0, 20, 26, 0.75);
+  border: 1px solid rgba(33, 246, 255, 0.3);
+  border-radius: 4px;
+  padding: 3px 8px;
+  pointer-events: none;
+}
+#fps-meter.fps-ok { color: var(--neon-yellow); }
+#fps-meter.fps-bad { color: var(--red); }
+
 #app {
   position: relative;
   z-index: 1;
@@ -484,10 +505,11 @@ body {
 }
 
 /* .zoom-wrap never scrolls — it's just the fixed-size frame that anchors
-   the floating zoom buttons. .zoom-viewport (its only other child) is the
-   actual overflow:auto scroller; keeping the buttons as its SIBLING,
-   rather than its child, is what stops them scrolling/flickering away
-   with the map when the player pans or zooms. */
+   the floating zoom buttons. .zoom-viewport (its only other child) clips
+   the map (overflow:hidden — there's no native scrolling; zoomPan.js pans
+   the content itself via a CSS transform); keeping the buttons as its
+   SIBLING, rather than its child, is what stops them moving with the map
+   when the player pans or zooms. */
 .zoom-wrap {
   position: relative;
 }
@@ -495,7 +517,8 @@ body {
 .zoom-viewport {
   width: 100%;
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
+  cursor: grab;
   border: 1px solid rgba(33, 246, 255, 0.25);
   border-radius: 4px;
   box-shadow: 0 0 30px rgba(33, 246, 255, 0.06) inset;
@@ -506,8 +529,6 @@ body {
 
 .zoom-controls {
   position: absolute;
-  /* offset past the thin scrollbar (8px) plus a little breathing room, so
-     the buttons never sit on top of it */
   right: 20px;
   bottom: 20px;
   z-index: 5;
@@ -1062,31 +1083,25 @@ body {
 /* ---------------- scrollbars ---------------- */
 
 .tray,
-.screen-menu,
-.zoom-viewport {
+.screen-menu {
   scrollbar-width: thin; /* Firefox */
   scrollbar-color: rgba(33, 246, 255, 0.35) transparent;
 }
 .tray::-webkit-scrollbar,
-.screen-menu::-webkit-scrollbar,
-.zoom-viewport::-webkit-scrollbar {
+.screen-menu::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 .tray::-webkit-scrollbar-thumb,
-.screen-menu::-webkit-scrollbar-thumb,
-.zoom-viewport::-webkit-scrollbar-thumb {
+.screen-menu::-webkit-scrollbar-thumb {
   background: rgba(33, 246, 255, 0.3);
   border-radius: 4px;
 }
 .tray::-webkit-scrollbar-thumb:hover,
-.screen-menu::-webkit-scrollbar-thumb:hover,
-.zoom-viewport::-webkit-scrollbar-thumb:hover {
+.screen-menu::-webkit-scrollbar-thumb:hover {
   background: rgba(33, 246, 255, 0.5);
 }
 .tray::-webkit-scrollbar-track,
-.screen-menu::-webkit-scrollbar-track,
-.zoom-viewport::-webkit-scrollbar-track {
+.screen-menu::-webkit-scrollbar-track {
   background: transparent;
 }
-.zoom-viewport::-webkit-scrollbar-corner { background: transparent; }

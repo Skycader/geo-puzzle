@@ -1,33 +1,143 @@
-// Shared wheel/button zoom for an SVG sitting inside a fixed-size,
-// overflow:auto viewport. Zooming resizes the SVG's actual width/height
-// attributes (not a CSS transform) so the viewport's native scrollbars
-// correctly reveal the extra content — panning is just browser-native
-// scrolling, no custom drag math needed. Hit-testing elsewhere keeps
-// working unchanged because it's always computed from the SVG's live
-// getBoundingClientRect(), which already reflects the current size.
+import { mountFpsMeter } from './fpsMeter.js';
+
+// Shared wheel/button/drag zoom for an SVG sitting inside a fixed-size
+// viewport. Unlike the old approach (resizing the SVG's actual width/height
+// attributes so native overflow:auto scrollbars revealed the extra
+// content), zoom/pan here is a CSS `transform: translate() scale()` on the
+// content — the SVG's width/height attributes are NOT touched on every
+// frame. That keeps the browser's rasterized backing store at a constant,
+// small size *during interaction* (GPU-composited scaling is nearly free;
+// resizing the actual element and re-laying-out on every frame is not —
+// that's what caused the framerate drop at high zoom). Panning is custom
+// pointer-drag math instead of scrollLeft/scrollTop for the same reason:
+// there's no native scrollable content to scroll.
+//
+// Pure transform scaling has its own cost, though: the browser rasterizes
+// the SVG once at its native (small) size and the GPU just stretches that
+// raster for the zoom, which blurs text/lines at high zoom and never
+// re-sharpens on its own. So this is a hybrid — while actively
+// wheeling/dragging, zoom is 100% transform (cheap, can blur transiently);
+// once input settles (same debounce as the virtualization callback), a
+// one-time "rebake" sets the SVG's actual width/height to match the
+// current zoom (re-rasterizing crisply) and folds that into the transform
+// as a scale(1), so the *next* increment of zoom starts from a sharp
+// baseline instead of stacking blur on blur.
+// Hit-testing elsewhere keeps working unchanged because it's always
+// computed from the SVG's live getBoundingClientRect(), which reflects a
+// CSS transform (or a width/height attribute) identically either way.
 export function attachZoomPan(viewport, content, opts = {}) {
   const baseWidth = opts.baseWidth;
   const baseHeight = opts.baseHeight;
   // native-unit -> px at zoom 1, i.e. the board's fit-to-viewport scale.
-  // Only needed for focusOn(), which is given native map coordinates.
+  // Needed for focusOn() (given native map coordinates) and for the
+  // virtualization callback (converting the visible viewport back to
+  // native coordinates).
   const baseScale = opts.baseScale ?? 1;
   const minZoom = opts.minZoom ?? 1;
-  // Zooming grows the SVG's actual width/height attributes (see above),
-  // so past a few tens of thousands of px the browser has to lay out and
-  // composite a huge backing store on every scroll/pan — framerate falls
-  // off a cliff well before the numeric zoom "should" matter. 20x keeps
-  // the largest board (~1000 native units wide) under ~20,000px, which
-  // stays smooth.
-  const maxZoom = opts.maxZoom ?? 20;
+  // Hard cap on the rebaked raster's largest dimension, in px — chosen
+  // well within what any GPU from roughly the last decade guarantees
+  // (WebGL1's spec-minimum texture size is 4096; this leaves headroom).
+  // This ISN'T a speed limit — a bigger GPU can't push it higher, because
+  // it's a hard maximum *texture dimension* the graphics API allows, not
+  // a throughput number.
+  const MAX_BAKE_DIM = opts.maxBakeDim ?? 8192;
+  // maxZoom is clamped so the content can ALWAYS be fully rebaked crisp —
+  // i.e. baseWidth/baseHeight * maxZoom never exceeds MAX_BAKE_DIM. Letting
+  // zoom go further than that would mean some of it *has* to come from an
+  // un-rebakeable CSS scale, which is permanent blur with no way to ever
+  // sharpen — better to just not allow zooming there.
+  const maxZoom = Math.min(opts.maxZoom ?? 60, MAX_BAKE_DIM / Math.max(baseWidth, baseHeight));
   const step = opts.step ?? 1.35;
   const tapThreshold = opts.tapThreshold ?? 6; // px of movement before a press counts as a drag
   const panFromAnywhere = opts.panFromAnywhere ?? false;
   const onTap = opts.onTap; // (originalPointerDownEvent) => void — fired when a press didn't turn into a drag
+  // (visibleNativeRect) => void — fired (debounced) after pan/zoom settles,
+  // with the currently-visible native-coordinate rect plus a margin. Boards
+  // with lots of small features (city dots) use this to only keep
+  // in-view elements in the DOM instead of paying render cost for all of
+  // them all the time — see overviewBoard.js's virtualization.
+  const onVisibleRectChange = opts.onVisibleRectChange;
+  // How long input has to be quiet before the "settle" work (rebake +
+  // visibility notify) runs — see the file-level comment.
+  const settleDebounceMs = opts.settleDebounceMs ?? 150;
 
   const listeners = new Set(); // (zoom) => void, fired whenever the zoom level actually changes
   if (opts.onZoomChange) listeners.add(opts.onZoomChange);
 
   let zoom = 1;
+  let bakedZoom = 1; // zoom level actually baked into content's width/height right now
+  let panX = 0; // CSS-px offset of content's (0,0) from viewport's (0,0), pre-scale
+  let panY = 0;
+
+  content.style.transformOrigin = '0 0';
+  // Hints the browser to promote this to its own GPU compositing layer
+  // ahead of time, so the first zoom/pan doesn't stutter while that
+  // promotion happens.
+  content.style.willChange = 'transform';
+
+  function clampPan() {
+    const contentW = baseWidth * zoom;
+    const contentH = baseHeight * zoom;
+    const vw = viewport.clientWidth;
+    const vh = viewport.clientHeight;
+    panX = contentW <= vw ? (vw - contentW) / 2 : Math.min(0, Math.max(vw - contentW, panX));
+    panY = contentH <= vh ? (vh - contentH) / 2 : Math.min(0, Math.max(vh - contentH, panY));
+  }
+
+  function render() {
+    // Only the zoom *beyond* what's already baked into width/height needs
+    // to come from the CSS scale — see the file-level comment.
+    const cssScale = zoom / bakedZoom;
+    content.style.transform = `translate(${panX.toFixed(1)}px, ${panY.toFixed(1)}px) scale(${cssScale})`;
+  }
+
+  // Re-rasterizes content at the current zoom once input has settled, so
+  // the *next* zoom step starts from a sharp baseline instead of the GPU
+  // stretching an increasingly-stale raster. translate/scale math above
+  // doesn't need to change for this — baseWidth*zoom (the true rendered
+  // size) is invariant to how much of that is "baked" vs "CSS-scaled".
+  //
+  // Capped at MAX_BAKE_DIM: baking is exactly the "resize the actual
+  // element" cost this whole rewrite exists to avoid, just done once per
+  // settle instead of every frame — fine at moderate zoom, but baking a
+  // 6000%-zoomed board would recreate a multi-ten-thousand-px backing
+  // store and reintroduce the original framerate drop (and risks exceeding
+  // GPU max texture size outright). Past the cap, the raster stops
+  // growing and the *rest* of the zoom stays a CSS scale — some blur at
+  // extreme zoom, but the backing store is bounded no matter how far in
+  // the player goes.
+  function rebake() {
+    const rawW = baseWidth * zoom;
+    const rawH = baseHeight * zoom;
+    const capRatio = Math.min(1, MAX_BAKE_DIM / Math.max(rawW, rawH));
+    const bakeTarget = zoom * capRatio;
+
+    const w = Math.round(baseWidth * bakeTarget);
+    const h = Math.round(baseHeight * bakeTarget);
+    if (Math.round(baseWidth * bakedZoom) === w && Math.round(baseHeight * bakedZoom) === h) return;
+    content.setAttribute('width', w);
+    content.setAttribute('height', h);
+    bakedZoom = bakeTarget;
+    render();
+  }
+
+  let settleTimer = null;
+  function scheduleSettle() {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => {
+      rebake();
+      if (onVisibleRectChange) onVisibleRectChange(getVisibleNativeRect());
+    }, settleDebounceMs);
+  }
+  function getVisibleNativeRect() {
+    const s = zoom * baseScale; // native-unit -> screen px, at current zoom
+    return {
+      x0: -panX / s,
+      y0: -panY / s,
+      x1: (viewport.clientWidth - panX) / s,
+      y1: (viewport.clientHeight - panY) / s,
+    };
+  }
 
   function apply(nextZoom, anchorClientX, anchorClientY) {
     nextZoom = Math.min(maxZoom, Math.max(minZoom, nextZoom));
@@ -37,18 +147,16 @@ export function attachZoomPan(viewport, content, opts = {}) {
     const ax = anchorClientX != null ? anchorClientX - rect.left : viewport.clientWidth / 2;
     const ay = anchorClientY != null ? anchorClientY - rect.top : viewport.clientHeight / 2;
 
-    const oldW = baseWidth * zoom;
-    const oldH = baseHeight * zoom;
-    const fracX = (viewport.scrollLeft + ax) / oldW;
-    const fracY = (viewport.scrollTop + ay) / oldH;
+    // native-space point currently under the anchor, so it stays put
+    const contentX = (ax - panX) / zoom;
+    const contentY = (ay - panY) / zoom;
 
     zoom = nextZoom;
-    const newW = baseWidth * zoom;
-    const newH = baseHeight * zoom;
-    content.setAttribute('width', Math.round(newW));
-    content.setAttribute('height', Math.round(newH));
-    viewport.scrollLeft = fracX * newW - ax;
-    viewport.scrollTop = fracY * newH - ay;
+    panX = ax - contentX * zoom;
+    panY = ay - contentY * zoom;
+    clampPan();
+    render();
+    scheduleSettle();
     for (const cb of listeners) cb(zoom);
   }
 
@@ -58,11 +166,12 @@ export function attachZoomPan(viewport, content, opts = {}) {
   // apply()'s anchor-preserving zoom used for wheel/button zooming.
   function focusOn(nativeX, nativeY, targetZoom) {
     zoom = Math.min(maxZoom, Math.max(minZoom, targetZoom ?? zoom));
-    const effScale = baseScale * zoom;
-    content.setAttribute('width', Math.round(baseWidth * zoom));
-    content.setAttribute('height', Math.round(baseHeight * zoom));
-    viewport.scrollLeft = nativeX * effScale - viewport.clientWidth / 2;
-    viewport.scrollTop = nativeY * effScale - viewport.clientHeight / 2;
+    const s = baseScale * zoom;
+    panX = viewport.clientWidth / 2 - nativeX * s;
+    panY = viewport.clientHeight / 2 - nativeY * s;
+    clampPan();
+    render();
+    scheduleSettle();
     for (const cb of listeners) cb(zoom);
   }
 
@@ -86,8 +195,8 @@ export function attachZoomPan(viewport, content, opts = {}) {
     pan = {
       startX: ev.clientX,
       startY: ev.clientY,
-      startScrollLeft: viewport.scrollLeft,
-      startScrollTop: viewport.scrollTop,
+      startPanX: panX,
+      startPanY: panY,
       moved: false,
       downEvent: ev,
     };
@@ -104,8 +213,11 @@ export function attachZoomPan(viewport, content, opts = {}) {
       pan.downEvent.preventDefault();
       viewport.classList.add('panning');
     }
-    viewport.scrollLeft = pan.startScrollLeft - dx;
-    viewport.scrollTop = pan.startScrollTop - dy;
+    panX = pan.startPanX + dx;
+    panY = pan.startPanY + dy;
+    clampPan();
+    render();
+    scheduleSettle();
   }
   function onPointerUp() {
     if (!pan) return;
@@ -119,6 +231,12 @@ export function attachZoomPan(viewport, content, opts = {}) {
   }
   content.addEventListener('pointerdown', onPointerDown);
 
+  clampPan();
+  render();
+  // Fire once immediately (not debounced) so virtualized content shows up
+  // on first paint instead of waiting out the debounce.
+  if (onVisibleRectChange) onVisibleRectChange(getVisibleNativeRect());
+
   return {
     zoomIn: () => apply(zoom * step),
     zoomOut: () => apply(zoom / step),
@@ -130,6 +248,7 @@ export function attachZoomPan(viewport, content, opts = {}) {
       return () => listeners.delete(cb);
     },
     destroy: () => {
+      clearTimeout(settleTimer);
       viewport.removeEventListener('wheel', onWheel);
       content.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointermove', onPointerMove);
@@ -139,10 +258,10 @@ export function attachZoomPan(viewport, content, opts = {}) {
   };
 }
 
-// A fixed-size, non-scrolling wrapper around a scrollable zoom viewport.
-// Zoom control buttons get appended as its sibling (not the viewport's
-// child) so they stay pinned to the corner instead of scrolling away with
-// the map content when the player pans/zooms.
+// A fixed-size, non-scrolling wrapper around the zoom viewport. Zoom
+// control buttons get appended as its sibling (not the viewport's child)
+// so they stay pinned to the corner instead of moving with the map content
+// when the player pans/zooms.
 export function createZoomWrap(baseWidth, baseHeight) {
   const wrap = document.createElement('div');
   wrap.className = 'zoom-wrap';
@@ -152,6 +271,11 @@ export function createZoomWrap(baseWidth, baseHeight) {
   const viewport = document.createElement('div');
   viewport.className = 'zoom-viewport';
   wrap.appendChild(viewport);
+
+  // Moves the single persistent FPS readout into this map frame — it
+  // migrates from board to board this way instead of floating over the
+  // whole page (see fpsMeter.js).
+  mountFpsMeter(wrap);
 
   return { wrap, viewport };
 }

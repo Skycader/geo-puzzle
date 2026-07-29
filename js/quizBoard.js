@@ -58,6 +58,11 @@ export class QuizBoard {
     }
 
     this.zoomViewport.appendChild(this.svg);
+    // The wrap must be attached to the live document BEFORE attachZoomPan()
+    // runs — it measures viewport.clientWidth/Height immediately (for pan
+    // clamping), which reads 0 on a detached element.
+    this.container.appendChild(this.zoomWrap);
+
     // Every point on this map is *some* state, so panning can't be
     // restricted to "empty background" like the puzzle board — nothing
     // here is otherwise draggable, so a press anywhere is free to become
@@ -74,7 +79,6 @@ export class QuizBoard {
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
     this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
-    this.container.appendChild(this.zoomWrap);
     this._nextQuestion();
   }
 

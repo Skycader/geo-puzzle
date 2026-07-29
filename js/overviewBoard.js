@@ -25,6 +25,7 @@ export const OVERVIEW_PANEL_W = 300;
 
 const STATE_FOCUS_FILL = 0.6; // fraction of the viewport a focused state's bbox should fill
 const FOCUS_DURATION_MS = 3000; // how long a click's highlight stays lit before auto-clearing
+const VIRTUALIZE_MARGIN = 0.4; // extra fraction of the visible rect's size kept rendered just outside it
 
 // Free-look mode: every state sits filled at its true spot (like an
 // already-solved puzzle) and every city is a dot, all at once — nothing
@@ -39,10 +40,13 @@ export class OverviewBoard {
     this.labelsVisible = opts.labelsVisible !== false;
     this.allLabelEls = [];
     this.stateLabels = []; // { el }
-    this.cityLeaders = []; // { cx, cy, pointMark, leaderPath, leaderLabel }
-    this.cityDots = []; // { el }
+    // Cities are virtualized — only ones within the visible map area (plus
+    // a margin) are actually in the DOM at any given time (see
+    // _updateVisibleCities). Each entry tracks its own `appended` state.
+    this.cityDotEntries = []; // { id, cx, cy, dot, pointMark, leaderPath, leaderLabel, appended }
+    this.cityShapeEntries = []; // { id, cx, cy, bbox, path, label, appended }
     this.statesById = new Map(); // id -> { data, pathEl }
-    this.citiesById = new Map(); // id -> { data, dotEl }
+    this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
     this.activeTab = 'states';
     this.searchQuery = '';
     this.sortBy = null; // null (alphabetical) | 'area'
@@ -107,6 +111,9 @@ export class OverviewBoard {
       this.statesById.set(p.id, { data: p, pathEl: path });
     }
 
+    // City elements are built here but NOT appended yet — _updateVisibleCities
+    // (driven by zoomPan's virtualization callback) decides what's actually
+    // in the DOM, based on what's currently in view.
     for (const c of this.level.cities) {
       // A handful of large/distinctive cities carry a real projected
       // municipal-boundary shape (see build_city_silhouettes.js) — render
@@ -118,17 +125,18 @@ export class OverviewBoard {
         const title = document.createElementNS(SVG_NS, 'title');
         title.textContent = `${c.ru} (${c.name})`;
         path.appendChild(title);
-        this.svg.appendChild(path);
-        this.citiesById.set(c.id, { data: c, pathEl: path });
 
-        const shapeLabel = document.createElementNS(SVG_NS, 'text');
-        shapeLabel.setAttribute('x', c.cx);
-        shapeLabel.setAttribute('y', c.cy);
-        shapeLabel.setAttribute('class', 'piece-label');
-        shapeLabel.textContent = c.ru;
-        this.svg.appendChild(shapeLabel);
-        this.allLabelEls.push(shapeLabel);
-        this.stateLabels.push({ el: shapeLabel });
+        const label = document.createElementNS(SVG_NS, 'text');
+        label.setAttribute('x', c.cx);
+        label.setAttribute('y', c.cy);
+        label.setAttribute('class', 'piece-label');
+        label.textContent = c.ru;
+        this.allLabelEls.push(label);
+        this.stateLabels.push({ el: label });
+
+        const entry = { id: c.id, cx: c.cx, cy: c.cy, bbox: c.bbox, path, label, appended: false };
+        this.cityShapeEntries.push(entry);
+        this.citiesById.set(c.id, { data: c, pathEl: path });
         continue;
       }
 
@@ -146,49 +154,105 @@ export class OverviewBoard {
       const title = document.createElementNS(SVG_NS, 'title');
       title.textContent = `${c.ru} (${c.name}) — R ${c.radiusKm.toFixed(1)} км`;
       dot.appendChild(title);
-      this.svg.appendChild(dot);
-      this.cityDots.push({ el: dot });
-      this.citiesById.set(c.id, { data: c, dotEl: dot });
 
       // Leader-line label: a small point-mark at the exact (cx,cy), a line
       // running diagonally down-left then bending horizontal, with the
       // city name sitting above the horizontal run — see _layoutCityLeader.
       const pointMark = document.createElementNS(SVG_NS, 'circle');
       pointMark.setAttribute('class', 'overview-city-point');
-      this.svg.appendChild(pointMark);
       this.allLabelEls.push(pointMark);
 
       const leaderPath = document.createElementNS(SVG_NS, 'path');
       leaderPath.setAttribute('class', 'overview-city-leader');
-      this.svg.appendChild(leaderPath);
       this.allLabelEls.push(leaderPath);
 
       const leaderLabel = document.createElementNS(SVG_NS, 'text');
       leaderLabel.setAttribute('class', 'overview-city-leader-label');
       leaderLabel.textContent = c.ru;
-      this.svg.appendChild(leaderLabel);
       this.allLabelEls.push(leaderLabel);
 
-      this.cityLeaders.push({ cx: c.cx, cy: c.cy, pointMark, leaderPath, leaderLabel });
+      const entry = { id: c.id, cx: c.cx, cy: c.cy, dot, pointMark, leaderPath, leaderLabel, appended: false };
+      this.cityDotEntries.push(entry);
+      this.citiesById.set(c.id, { data: c, dotEl: dot });
     }
 
     this.zoomViewport.appendChild(this.svg);
+    // The wrap must be attached to the live document BEFORE attachZoomPan()
+    // runs — it measures viewport.clientWidth/Height immediately (for pan
+    // clamping and the initial virtualization pass), which reads 0 on a
+    // detached element.
+    this.wrapEl.appendChild(this.zoomWrap);
+    this.wrapEl.appendChild(this._buildSidePanel());
+    this.container.appendChild(this.wrapEl);
+
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, {
       baseWidth: baseW,
       baseHeight: baseH,
       baseScale: this.scale,
       panFromAnywhere: true,
       onZoomChange: (zoom) => this._rescaleForZoom(zoom),
+      onVisibleRectChange: (rect) => this._updateVisibleCities(rect),
     });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
     this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
-    this.wrapEl.appendChild(this.zoomWrap);
-    this.wrapEl.appendChild(this._buildSidePanel());
-    this.container.appendChild(this.wrapEl);
-
     this._rescaleForZoom(1);
     this.setLabelsVisible(this.labelsVisible);
+  }
+
+  // Adds/removes each city's elements from the SVG based on whether it's
+  // within the visible native-space rect (plus a margin) — states and
+  // their labels stay permanently rendered (only 50 of them), but cities
+  // (91, each with several elements) are cheap to keep out of the DOM
+  // until they're actually near the camera. Called (debounced) by
+  // zoomPan.js after pan/zoom settles, so there's a brief, deliberate delay
+  // before newly-panned-into-view cities appear — trading instant pop-in
+  // for not paying render cost for off-screen content.
+  _updateVisibleCities(rect) {
+    const mx = (rect.x1 - rect.x0) * VIRTUALIZE_MARGIN;
+    const my = (rect.y1 - rect.y0) * VIRTUALIZE_MARGIN;
+    const x0 = rect.x0 - mx, x1 = rect.x1 + mx;
+    const y0 = rect.y0 - my, y1 = rect.y1 + my;
+    const effScale = this.scale * (this.zoomCtl?.getZoom() ?? 1);
+
+    for (const entry of this.cityDotEntries) {
+      const visible = entry.cx >= x0 && entry.cx <= x1 && entry.cy >= y0 && entry.cy <= y1;
+      if (visible && !entry.appended) {
+        this.svg.appendChild(entry.dot);
+        this.svg.appendChild(entry.pointMark);
+        this.svg.appendChild(entry.leaderPath);
+        this.svg.appendChild(entry.leaderLabel);
+        entry.appended = true;
+        // Re-lay-out immediately at the current zoom — while detached, its
+        // stored geometry could be stale (from whenever it was last
+        // visible), and getComputedTextLength() only works once attached.
+        this._layoutCityLeader(entry, effScale);
+        entry.leaderLabel.style.opacity = this.labelsVisible ? '' : '0';
+        entry.pointMark.style.opacity = this.labelsVisible ? '' : '0';
+        entry.leaderPath.style.opacity = this.labelsVisible ? '' : '0';
+      } else if (!visible && entry.appended) {
+        entry.dot.remove();
+        entry.pointMark.remove();
+        entry.leaderPath.remove();
+        entry.leaderLabel.remove();
+        entry.appended = false;
+      }
+    }
+
+    for (const entry of this.cityShapeEntries) {
+      const [bx0, by0, bx1, by1] = entry.bbox;
+      const visible = !(bx1 < x0 || bx0 > x1 || by1 < y0 || by0 > y1);
+      if (visible && !entry.appended) {
+        this.svg.appendChild(entry.path);
+        this.svg.appendChild(entry.label);
+        entry.appended = true;
+        entry.label.style.opacity = this.labelsVisible ? '' : '0';
+      } else if (!visible && entry.appended) {
+        entry.path.remove();
+        entry.label.remove();
+        entry.appended = false;
+      }
+    }
   }
 
   // ---------------- side panel: search + tabbed state/city list ----------------
@@ -353,18 +417,22 @@ export class OverviewBoard {
   // maps to more screen pixels as you zoom in — sizes expressed in native
   // units would otherwise balloon and overlap. City dot radii are the one
   // exception: those are meant to grow/shrink with zoom, so they're set
-  // once at creation and never touched here.
+  // once at creation and never touched here. Only *currently-appended*
+  // (i.e. visible — see _updateVisibleCities) city entries are touched:
+  // detached ones would fail getComputedTextLength() anyway, and there's
+  // no point paying the cost for elements nobody can see.
   _rescaleForZoom(zoom) {
     const effScale = this.scale * zoom;
     for (const { el } of this.stateLabels) {
       el.style.fontSize = `${(STATE_LABEL_PX / effScale).toFixed(2)}px`;
       el.style.strokeWidth = `${(STATE_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
     }
-    for (const entry of this.cityLeaders) this._layoutCityLeader(entry, effScale);
-    // dot radius is NOT rescaled here — it's fixed in native units (true
-    // geographic size), only the outline stroke stays a constant screen px.
-    for (const { el } of this.cityDots) {
-      el.style.strokeWidth = `${(CITY_DOT_STROKE_PX / effScale).toFixed(2)}px`;
+    for (const entry of this.cityDotEntries) {
+      if (!entry.appended) continue;
+      this._layoutCityLeader(entry, effScale);
+      // dot radius is NOT rescaled here — it's fixed in native units (true
+      // geographic size), only the outline stroke stays a constant screen px.
+      entry.dot.style.strokeWidth = `${(CITY_DOT_STROKE_PX / effScale).toFixed(2)}px`;
     }
   }
 

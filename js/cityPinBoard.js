@@ -76,6 +76,11 @@ export class CityPinBoard {
     this.pinGroup.addEventListener('pointerdown', (ev) => this._onPinPointerDown(ev));
 
     this.zoomViewport.appendChild(this.svg);
+    // The wrap must be attached to the live document BEFORE attachZoomPan()
+    // runs — it measures viewport.clientWidth/Height immediately (for pan
+    // clamping), which reads 0 on a detached element.
+    this.container.appendChild(this.zoomWrap);
+
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, {
       baseWidth: baseW,
       baseHeight: baseH,
@@ -86,7 +91,6 @@ export class CityPinBoard {
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
     this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
-    this.container.appendChild(this.zoomWrap);
     this._buildActionBar();
     this._nextQuestion();
   }

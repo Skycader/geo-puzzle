@@ -95,6 +95,13 @@ export class PuzzleBoard {
     this.trayEl.className = 'tray';
 
     this.zoomViewport.appendChild(this.boardSvg);
+    // The wrap must be attached to the live document BEFORE attachZoomPan()
+    // runs — it measures viewport.clientWidth/Height immediately (for pan
+    // clamping), which reads 0 on a detached element.
+    this.wrapEl.appendChild(this.zoomWrap);
+    this.wrapEl.appendChild(this.trayEl);
+    this.container.appendChild(this.wrapEl);
+
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.boardSvg, {
       baseWidth: baseW,
       baseHeight: baseH,
@@ -102,10 +109,6 @@ export class PuzzleBoard {
     });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
     this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
-
-    this.wrapEl.appendChild(this.zoomWrap);
-    this.wrapEl.appendChild(this.trayEl);
-    this.container.appendChild(this.wrapEl);
 
     const count = clamp(this.toPlaceCount, 1, this.level.pieces.length);
     const toPlaceIds = new Set(shuffle(this.level.pieces.map((p) => p.id)).slice(0, count));
