@@ -9,6 +9,15 @@ const CITY_LABEL_OFFSET_PX = 10; // gap between a city dot and its label, above 
 const CITY_DOT_R = 3;
 const CITY_DOT_STROKE_PX = 1;
 
+// Width of the side list panel — game.js subtracts this from the available
+// width before computing the board's fit scale, so the map doesn't get
+// squeezed by a panel it doesn't know about yet. Keep in sync with
+// .overview-panel's width in style.css.
+export const OVERVIEW_PANEL_W = 300;
+
+const CITY_FOCUS_ZOOM = 6; // fixed "close enough to place it" zoom for a point feature
+const STATE_FOCUS_FILL = 0.6; // fraction of the viewport a focused state's bbox should fill
+
 // Free-look mode: every state sits filled at its true spot (like an
 // already-solved puzzle) and every city is a dot, all at once — nothing
 // to click, answer or assemble. "Full info" keeps every name permanently
@@ -24,6 +33,11 @@ export class OverviewBoard {
     this.stateLabels = []; // { el }
     this.cityLabels = []; // { el, cx, cy }
     this.cityDots = []; // { el }
+    this.statesById = new Map(); // id -> { data, pathEl }
+    this.citiesById = new Map(); // id -> { data, dotEl }
+    this.activeTab = 'states';
+    this.searchQuery = '';
+    this.focusedEl = null;
 
     this._build();
   }
@@ -34,6 +48,15 @@ export class OverviewBoard {
 
     const baseW = Math.round(width * this.scale);
     const baseH = Math.round(height * this.scale);
+
+    this.wrapEl = document.createElement('div');
+    this.wrapEl.className = 'overview-wrap';
+    // The side panel has no natural height of its own (its list wants to
+    // grow with content) — pin the row to the map's fixed height so the
+    // panel's flex:1 list-scroll area actually has something to be 1/N of,
+    // instead of the whole row growing to fit every list item.
+    this.wrapEl.style.height = baseH + 'px';
+
     const { wrap: zoomWrap, viewport: zoomViewport } = createZoomWrap(baseW, baseH);
     this.zoomWrap = zoomWrap;
     this.zoomViewport = zoomViewport;
@@ -70,6 +93,7 @@ export class OverviewBoard {
       this.svg.appendChild(label);
       this.allLabelEls.push(label);
       this.stateLabels.push({ el: label });
+      this.statesById.set(p.id, { data: p, pathEl: path });
     }
 
     for (const c of this.level.cities) {
@@ -82,6 +106,7 @@ export class OverviewBoard {
       dot.appendChild(title);
       this.svg.appendChild(dot);
       this.cityDots.push({ el: dot });
+      this.citiesById.set(c.id, { data: c, dotEl: dot });
 
       const label = document.createElementNS(SVG_NS, 'text');
       label.setAttribute('x', c.cx);
@@ -96,15 +121,115 @@ export class OverviewBoard {
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, {
       baseWidth: baseW,
       baseHeight: baseH,
+      baseScale: this.scale,
       panFromAnywhere: true,
       onZoomChange: (zoom) => this._rescaleForZoom(zoom),
     });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
     this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
-    this.container.appendChild(this.zoomWrap);
+    this.wrapEl.appendChild(this.zoomWrap);
+    this.wrapEl.appendChild(this._buildSidePanel());
+    this.container.appendChild(this.wrapEl);
+
     this._rescaleForZoom(1);
     this.setLabelsVisible(this.labelsVisible);
+  }
+
+  // ---------------- side panel: search + tabbed state/city list ----------------
+
+  _buildSidePanel() {
+    const panel = document.createElement('div');
+    panel.className = 'overview-panel';
+    panel.innerHTML = `
+      <div class="overview-tabs">
+        <button type="button" class="overview-tab active" data-tab="states">Штаты</button>
+        <button type="button" class="overview-tab" data-tab="cities">Города</button>
+      </div>
+      <input type="text" class="overview-search" placeholder="Поиск..." autocomplete="off" />
+      <div class="overview-list-scroll"><div class="overview-item-list"></div></div>
+    `;
+
+    this.searchInput = panel.querySelector('.overview-search');
+    this.itemListEl = panel.querySelector('.overview-item-list');
+
+    for (const btn of panel.querySelectorAll('.overview-tab')) {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.tab === this.activeTab) return;
+        this.activeTab = btn.dataset.tab;
+        for (const b of panel.querySelectorAll('.overview-tab')) b.classList.toggle('active', b === btn);
+        this.searchInput.value = '';
+        this.searchQuery = '';
+        this._renderList();
+      });
+    }
+    this.searchInput.addEventListener('input', () => {
+      this.searchQuery = this.searchInput.value.trim().toLowerCase();
+      this._renderList();
+    });
+
+    this._renderList();
+    return panel;
+  }
+
+  _renderList() {
+    const items = this.activeTab === 'states' ? this.level.pieces : this.level.cities;
+    const q = this.searchQuery;
+    const filtered = q
+      ? items.filter((it) => it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q))
+      : items;
+    const sorted = [...filtered].sort((a, b) => a.ru.localeCompare(b.ru, 'ru'));
+
+    this.itemListEl.innerHTML = '';
+    if (!sorted.length) {
+      this.itemListEl.innerHTML = '<p class="overview-empty">Ничего не найдено</p>';
+      return;
+    }
+
+    for (const it of sorted) {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'overview-item';
+      row.innerHTML =
+        this.activeTab === 'states'
+          ? `<span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span>`
+          : `<span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}</span><span class="overview-item-sub">${it.state}</span>`;
+      row.addEventListener('click', () => {
+        if (this.activeTab === 'states') this._focusState(it.id);
+        else this._focusCity(it.id);
+      });
+      this.itemListEl.appendChild(row);
+    }
+  }
+
+  // ---------------- focus / highlight ----------------
+
+  _focusState(id) {
+    const entry = this.statesById.get(id);
+    if (!entry) return;
+    const { data, pathEl } = entry;
+    const [bx0, by0, bx1, by1] = data.bbox;
+    const bboxW = Math.max(bx1 - bx0, 1);
+    const bboxH = Math.max(by1 - by0, 1);
+    const vw = this.zoomViewport.clientWidth;
+    const vh = this.zoomViewport.clientHeight;
+    const targetZoom = Math.max(1, Math.min((vw * STATE_FOCUS_FILL) / (bboxW * this.scale), (vh * STATE_FOCUS_FILL) / (bboxH * this.scale)));
+    this.zoomCtl.focusOn(data.cx, data.cy, targetZoom);
+    this._setFocused(pathEl);
+  }
+
+  _focusCity(id) {
+    const entry = this.citiesById.get(id);
+    if (!entry) return;
+    const { data, dotEl } = entry;
+    this.zoomCtl.focusOn(data.cx, data.cy, Math.max(this.zoomCtl.getZoom(), CITY_FOCUS_ZOOM));
+    this._setFocused(dotEl);
+  }
+
+  _setFocused(el) {
+    this.focusedEl?.classList.remove('overview-focused');
+    el.classList.add('overview-focused');
+    this.focusedEl = el;
   }
 
   // Keeps text/dot sizes a constant number of *screen* pixels regardless of

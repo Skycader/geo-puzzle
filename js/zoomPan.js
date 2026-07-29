@@ -8,6 +8,9 @@
 export function attachZoomPan(viewport, content, opts = {}) {
   const baseWidth = opts.baseWidth;
   const baseHeight = opts.baseHeight;
+  // native-unit -> px at zoom 1, i.e. the board's fit-to-viewport scale.
+  // Only needed for focusOn(), which is given native map coordinates.
+  const baseScale = opts.baseScale ?? 1;
   const minZoom = opts.minZoom ?? 1;
   // Zooming grows the SVG's actual width/height attributes (see above),
   // so past a few tens of thousands of px the browser has to lay out and
@@ -46,6 +49,20 @@ export function attachZoomPan(viewport, content, opts = {}) {
     content.setAttribute('height', Math.round(newH));
     viewport.scrollLeft = fracX * newW - ax;
     viewport.scrollTop = fracY * newH - ay;
+    for (const cb of listeners) cb(zoom);
+  }
+
+  // Jumps to a specific spot on the map (native canvas coordinates) at a
+  // given zoom, centering it in the viewport — used by the overview
+  // side-panel list to "fly to" a clicked state/city, as opposed to
+  // apply()'s anchor-preserving zoom used for wheel/button zooming.
+  function focusOn(nativeX, nativeY, targetZoom) {
+    zoom = Math.min(maxZoom, Math.max(minZoom, targetZoom ?? zoom));
+    const effScale = baseScale * zoom;
+    content.setAttribute('width', Math.round(baseWidth * zoom));
+    content.setAttribute('height', Math.round(baseHeight * zoom));
+    viewport.scrollLeft = nativeX * effScale - viewport.clientWidth / 2;
+    viewport.scrollTop = nativeY * effScale - viewport.clientHeight / 2;
     for (const cb of listeners) cb(zoom);
   }
 
@@ -107,6 +124,7 @@ export function attachZoomPan(viewport, content, opts = {}) {
     zoomOut: () => apply(zoom / step),
     reset: () => apply(1),
     getZoom: () => zoom,
+    focusOn,
     subscribe: (cb) => {
       listeners.add(cb);
       return () => listeners.delete(cb);

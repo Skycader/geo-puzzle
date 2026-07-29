@@ -2,7 +2,7 @@ import { PuzzleBoard } from './puzzleBoard.js';
 import { QuizBoard } from './quizBoard.js';
 import { CityQuizBoard } from './cityQuizBoard.js';
 import { CityPinBoard } from './cityPinBoard.js';
-import { OverviewBoard } from './overviewBoard.js';
+import { OverviewBoard, OVERVIEW_PANEL_W } from './overviewBoard.js';
 import { clamp } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
 import { MODES, OVERVIEW_MODES } from './modes.js';
@@ -216,8 +216,8 @@ export class Game {
     return window.innerHeight - headerH - screenPadV - extraReserve;
   }
 
-  _computeScale(canvas, availH) {
-    const availW = window.innerWidth - 48;
+  _computeScale(canvas, availH, availWOverride) {
+    const availW = availWOverride ?? window.innerWidth - 48;
     // No reason to cap this at native (1x) resolution — it's all vector
     // SVG, so it stays crisp at any size. Filling the available screen
     // space is what makes the map (and its text/pieces) actually
@@ -376,7 +376,11 @@ export class Game {
     this.el.hudProgress.textContent = `${level.pieces.length} шт. · ${level.cities.length} гор.`;
     this.el.hudGroups.hidden = true;
 
-    const scale = this._computeScale(level.canvas, this._availableHeight());
+    // the side list panel eats into the map's available width — the
+    // default _computeScale width doesn't know about it, so pass an
+    // override (kept in sync with .overview-panel's CSS width).
+    const availW = window.innerWidth - 48 - OVERVIEW_PANEL_W - 14;
+    const scale = this._computeScale(level.canvas, this._availableHeight(), availW);
     this.board = new OverviewBoard(this.el.boardContainer, level, {
       scale,
       labelsVisible: this.labelsVisible,
