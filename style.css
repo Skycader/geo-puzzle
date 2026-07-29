@@ -696,8 +696,11 @@ body {
   transition: opacity 0.15s ease;
 }
 
-.piece-shape.overview-focused {
+.overview-focus-glow {
+  fill: var(--neon-yellow);
   stroke: var(--neon-yellow);
+  stroke-width: 2.5;
+  pointer-events: none;
   animation: overview-focus-pulse 1.3s ease-in-out infinite;
 }
 .overview-city-dot.overview-focused {
@@ -705,8 +708,8 @@ body {
   filter: drop-shadow(0 0 10px var(--neon-yellow));
 }
 @keyframes overview-focus-pulse {
-  0%, 100% { filter: drop-shadow(0 0 6px var(--neon-yellow)); }
-  50% { filter: drop-shadow(0 0 18px var(--neon-yellow)); }
+  0%, 100% { fill-opacity: 0.35; filter: drop-shadow(0 0 6px var(--neon-yellow)); }
+  50% { fill-opacity: 0.7; filter: drop-shadow(0 0 20px var(--neon-yellow)); }
 }
 
 /* side list panel: search + tabbed state/city list, click-to-focus */

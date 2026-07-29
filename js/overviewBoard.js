@@ -15,7 +15,6 @@ const CITY_DOT_STROKE_PX = 1;
 // .overview-panel's width in style.css.
 export const OVERVIEW_PANEL_W = 300;
 
-const CITY_FOCUS_ZOOM = 6; // fixed "close enough to place it" zoom for a point feature
 const STATE_FOCUS_FILL = 0.6; // fraction of the viewport a focused state's bbox should fill
 
 // Free-look mode: every state sits filled at its true spot (like an
@@ -207,7 +206,7 @@ export class OverviewBoard {
   _focusState(id) {
     const entry = this.statesById.get(id);
     if (!entry) return;
-    const { data, pathEl } = entry;
+    const { data } = entry;
     const [bx0, by0, bx1, by1] = data.bbox;
     const bboxW = Math.max(bx1 - bx0, 1);
     const bboxH = Math.max(by1 - by0, 1);
@@ -215,21 +214,37 @@ export class OverviewBoard {
     const vh = this.zoomViewport.clientHeight;
     const targetZoom = Math.max(1, Math.min((vw * STATE_FOCUS_FILL) / (bboxW * this.scale), (vh * STATE_FOCUS_FILL) / (bboxH * this.scale)));
     this.zoomCtl.focusOn(data.cx, data.cy, targetZoom);
-    this._setFocused(pathEl);
+
+    this._clearFocus();
+    // Neighboring states painted after this one in document order would
+    // otherwise cover parts of its glow along shared borders — a fresh
+    // copy of the shape appended last (topmost in SVG paint order) always
+    // renders fully on top, whichever state it is.
+    const glow = document.createElementNS(SVG_NS, 'path');
+    glow.setAttribute('d', data.d);
+    glow.setAttribute('class', 'overview-focus-glow');
+    this.svg.appendChild(glow);
+    this.focusGlowEl = glow;
   }
 
   _focusCity(id) {
     const entry = this.citiesById.get(id);
     if (!entry) return;
     const { data, dotEl } = entry;
-    this.zoomCtl.focusOn(data.cx, data.cy, Math.max(this.zoomCtl.getZoom(), CITY_FOCUS_ZOOM));
-    this._setFocused(dotEl);
+    // Point features read best at the closest zoom the map allows —
+    // focusOn() clamps to the shared max itself.
+    this.zoomCtl.focusOn(data.cx, data.cy, Infinity);
+
+    this._clearFocus();
+    dotEl.classList.add('overview-focused');
+    this.focusedEl = dotEl;
   }
 
-  _setFocused(el) {
+  _clearFocus() {
     this.focusedEl?.classList.remove('overview-focused');
-    el.classList.add('overview-focused');
-    this.focusedEl = el;
+    this.focusedEl = null;
+    this.focusGlowEl?.remove();
+    this.focusGlowEl = null;
   }
 
   // Keeps text/dot sizes a constant number of *screen* pixels regardless of
