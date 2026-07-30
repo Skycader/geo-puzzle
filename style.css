@@ -1105,19 +1105,19 @@ body {
   flex: none;
   width: 42px;
   height: 42px;
-  border-radius: 50%;
   font-family: var(--font-mono);
   font-size: 18px;
   font-weight: 700;
-  border: 1px solid var(--neon-yellow);
-  background: rgba(247, 255, 58, 0.1);
-  color: var(--neon-yellow);
+  border-radius: 8px;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(33, 246, 255, 0.12);
+  color: var(--neon-cyan);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .name-hint-btn:hover {
-  background: rgba(247, 255, 58, 0.2);
-  box-shadow: 0 0 10px rgba(247, 255, 58, 0.4);
+  background: rgba(33, 246, 255, 0.25);
+  box-shadow: 0 0 10px rgba(33, 246, 255, 0.4);
 }
 .name-input-wrap {
   position: relative;
