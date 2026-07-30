@@ -1,14 +1,17 @@
 import { PuzzleBoard } from './puzzleBoard.js';
 import { QuizBoard } from './quizBoard.js';
+import { NameStateBoard } from './nameStateBoard.js';
 import { CityQuizBoard } from './cityQuizBoard.js';
 import { CityPinBoard } from './cityPinBoard.js';
 import { OverviewBoard, OVERVIEW_PANEL_W } from './overviewBoard.js';
+import { EligibilityList } from './eligibilityList.js';
 import { clamp } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
-import { MODES, OVERVIEW_MODES } from './modes.js';
+import { MODES, OVERVIEW_MODES, NAME_STATE_DIFFICULTIES } from './modes.js';
 
 const ROUNDS_PANEL_TEXT = {
   quiz: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: 'Найди на карте:' },
+  'name-state': { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
   'city-quiz': { heading: 'Раунд', label: 'Сколько городов спросить', prompt: 'Найди на карте:' },
   'city-pins': { heading: 'Раунд', label: 'Сколько городов отметить', prompt: 'Отметь на карте:' },
 };
@@ -32,9 +35,11 @@ export class Game {
     this.overviewModeId = OVERVIEW_MODES[0].id;
     this.customCount = DEFAULT_CUSTOM_COUNT;
     this.quizRounds = 15;
+    this.nameStateDifficulty = NAME_STATE_DIFFICULTIES[0].id;
     this.hintsVisible = true;
     this.labelsVisible = true;
     this.citiesVisible = true;
+    this.eligibilityList = null; // current EligibilityList instance for quiz/city-quiz — see _applyModeVisibility
     this.board = null;
     this.seconds = 0;
     this.timerHandle = null;
@@ -44,6 +49,7 @@ export class Game {
     this._renderModeList();
     this._renderPresetList();
     this._renderOverviewList();
+    this._renderNameStateDifficulty();
     this._bindEvents();
     this._applyModeVisibility();
   }
@@ -73,6 +79,8 @@ export class Game {
       customCountValue: document.getElementById('custom-count-value'),
       quizCountInput: document.getElementById('quiz-count'),
       quizCountValue: document.getElementById('quiz-count-value'),
+      quizEligibleWrap: document.getElementById('quiz-eligible-wrap'),
+      nameStateDifficultyEl: document.getElementById('name-state-difficulty'),
       btnStart: document.getElementById('btn-start'),
       boardContainer: document.getElementById('board-container'),
       quizPrompt: document.getElementById('quiz-prompt'),
@@ -103,6 +111,10 @@ export class Game {
         this.levelId = id;
         this.el.levelList.querySelectorAll('.level-card').forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
+        // Eligibility lists (and the round-count max they drive) are
+        // per-level data — only one level exists today, but this keeps
+        // switching levels from leaving a stale states/cities list behind.
+        this._applyModeVisibility();
       });
       this.el.levelList.appendChild(card);
     }
@@ -129,11 +141,23 @@ export class Game {
     const isPuzzle = this.modeId === 'puzzle';
     const isOverview = this.modeId === 'overview';
     const isRounds = !isPuzzle && !isOverview;
+    // The three "find/name the X" quiz modes get an eligibility checklist —
+    // city-pins also shares this panel but always draws from every city.
+    const hasEligibility = this.modeId === 'quiz' || this.modeId === 'name-state' || this.modeId === 'city-quiz';
+    const isNameState = this.modeId === 'name-state';
 
     this.el.panelPuzzleSettings.hidden = !isPuzzle;
     this.el.panelQuizSettings.hidden = !isRounds;
     this.el.panelOverviewSettings.hidden = !isOverview;
-    if (!isRounds) return;
+    this.el.quizEligibleWrap.hidden = !hasEligibility;
+    this.el.nameStateDifficultyEl.hidden = !isNameState;
+
+    if (!isRounds) {
+      this.eligibilityList?.destroy();
+      this.eligibilityList = null;
+      this.el.btnStart.disabled = false;
+      return;
+    }
 
     const text = ROUNDS_PANEL_TEXT[this.modeId];
     this.el.quizPanelHeading.textContent = text.heading;
@@ -141,11 +165,53 @@ export class Game {
     this.el.quizPromptLabel.textContent = text.prompt;
 
     const level = this.levels[this.levelId];
-    const max = this.modeId === 'quiz' ? level.pieces.length : level.cities.length;
-    this.quizRounds = clamp(this.quizRounds, 1, max);
+    this.eligibilityList?.destroy();
+    this.eligibilityList = null;
+
+    if (hasEligibility) {
+      const kind = this.modeId === 'quiz' || this.modeId === 'name-state' ? 'states' : 'cities';
+      const items = kind === 'states' ? level.pieces : level.cities;
+      this.eligibilityList = new EligibilityList(this.el.quizEligibleWrap, items, {
+        kind,
+        storageKey: `geo-puzzle:eligible:${this.levelId}:${kind}`,
+        onChange: (selected) => this._applyRoundCap(selected.size),
+      });
+      this._applyRoundCap(this.eligibilityList.getSelectedIds().size);
+    } else {
+      this.el.btnStart.disabled = false;
+      this._applyRoundCap(level.cities.length); // city-pins — full pool, no checklist
+    }
+  }
+
+  // Keeps the round-count range from ever asking for more rounds than
+  // there are eligible states/cities to pick from — if the eligible count
+  // drops below the current round count, the range's max (and, if needed,
+  // its value) drops to match; growing the eligible count back up only
+  // raises the max, not the value, so it doesn't silently override a
+  // smaller round count the player chose on purpose.
+  _applyRoundCap(eligibleCount) {
+    const max = Math.max(1, eligibleCount);
+    this.quizRounds = Math.min(clamp(this.quizRounds, 1, max), max);
     this.el.quizCountInput.max = String(max);
     this.el.quizCountInput.value = String(this.quizRounds);
     this.el.quizCountValue.textContent = this.quizRounds;
+    this.el.btnStart.disabled = eligibleCount === 0;
+  }
+
+  _renderNameStateDifficulty() {
+    this.el.nameStateDifficultyEl.innerHTML = '';
+    for (const diff of NAME_STATE_DIFFICULTIES) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'preset-card' + (diff.id === this.nameStateDifficulty ? ' selected' : '');
+      card.innerHTML = `<strong>${diff.title}</strong><p>${diff.desc}</p>`;
+      card.addEventListener('click', () => {
+        this.nameStateDifficulty = diff.id;
+        this.el.nameStateDifficultyEl.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
+        card.classList.add('selected');
+      });
+      this.el.nameStateDifficultyEl.appendChild(card);
+    }
   }
 
   _renderOverviewList() {
@@ -244,6 +310,7 @@ export class Game {
     if (this.board) this.board.destroy();
 
     if (this.modeId === 'quiz') this._startQuiz(level);
+    else if (this.modeId === 'name-state') this._startNameState(level);
     else if (this.modeId === 'city-quiz') this._startCityQuiz(level);
     else if (this.modeId === 'city-pins') this._startCityPins(level);
     else if (this.modeId === 'overview') this._startOverview(level);
@@ -313,8 +380,38 @@ export class Game {
     const scale = this._computeScale(level.canvas, this._availableHeight(promptH));
     this.board = new QuizBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
+      eligibleIds: this.eligibilityList?.getSelectedIds(),
       scale,
       onProgress: (p) => this._onQuizProgress(p),
+      onFinish: (stats) =>
+        this._onFinish(
+          'РАУНД ЗАВЕРШЁН',
+          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} штатов`
+        ),
+    });
+  }
+
+  _startNameState(level) {
+    this.el.toggleHintsWrap.hidden = true;
+    this.el.toggleLabelsWrap.hidden = true;
+    // No text prompt here — the "question" is the pulsing highlight on the
+    // map itself (see nameStateBoard.js), showing the name would give away
+    // the answer.
+    this.el.quizPrompt.hidden = true;
+
+    this.el.hudLevel.textContent = `${level.title} · Назови штат (${this.quizRounds})`;
+    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudGroups.hidden = false;
+    this.el.hudGroups.textContent = 'Ошибки: 0';
+
+    const answerBarH = 110; // the board builds its own options/input bar below the map
+    const scale = this._computeScale(level.canvas, this._availableHeight(answerBarH));
+    this.board = new NameStateBoard(this.el.boardContainer, level, {
+      rounds: this.quizRounds,
+      eligibleIds: this.eligibilityList?.getSelectedIds(),
+      difficulty: this.nameStateDifficulty,
+      scale,
+      onProgress: (p) => this._onNameStateProgress(p),
       onFinish: (stats) =>
         this._onFinish(
           'РАУНД ЗАВЕРШЁН',
@@ -337,6 +434,7 @@ export class Game {
     const scale = this._computeScale(level.canvas, this._availableHeight(promptH));
     this.board = new CityQuizBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
+      eligibleIds: this.eligibilityList?.getSelectedIds(),
       scale,
       onProgress: (p) => this._onQuizProgress(p),
       onFinish: (stats) =>
@@ -411,6 +509,11 @@ export class Game {
     this.el.hudProgress.textContent = `${index}/${total}`;
     this.el.hudGroups.textContent = `Ошибки: ${mistakes}`;
     this.el.quizPromptName.textContent = promptName ? `${promptRu} (${promptName})` : promptRu;
+  }
+
+  _onNameStateProgress({ index, total, mistakes }) {
+    this.el.hudProgress.textContent = `${index}/${total}`;
+    this.el.hudGroups.textContent = `Ошибки: ${mistakes}`;
   }
 
   _onPinProgress({ index, total, avgDistanceKm, promptRu, promptName }) {

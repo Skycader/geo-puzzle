@@ -12,6 +12,11 @@ export const MODES = [
     desc: 'Кликни штат по названию',
   },
   {
+    id: 'name-state',
+    title: 'Назови штат',
+    desc: 'Карта подсвечивает штат — угадай название',
+  },
+  {
     id: 'city-quiz',
     title: 'Найди город',
     desc: 'Кликни город по названию',
@@ -32,4 +37,10 @@ export const MODES = [
 export const OVERVIEW_MODES = [
   { id: 'full', title: 'Полная информация', desc: 'Все штаты и города подписаны' },
   { id: 'hidden', title: 'Скрытая информация', desc: 'Наведи курсор — узнаешь название' },
+];
+
+// Answer method for "Назови штат" — shown only for that mode.
+export const NAME_STATE_DIFFICULTIES = [
+  { id: 'easy', title: 'Лёгкий', desc: '4 варианта на выбор' },
+  { id: 'hard', title: 'Сложный', desc: 'Впиши название сам' },
 ];

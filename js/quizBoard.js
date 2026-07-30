@@ -18,8 +18,14 @@ export class QuizBoard {
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
 
-    const rounds = clamp(opts.rounds ?? 15, 1, level.pieces.length);
-    this.queue = shuffle(level.pieces).slice(0, rounds);
+    // eligibleIds (from the pre-game checklist — see js/eligibilityList.js
+    // and game.js's _startQuiz) restricts which states can be ASKED about;
+    // the full map is still drawn either way (see the loop below), so a
+    // wrong click can still land on a non-eligible state, it just never
+    // becomes the prompt itself.
+    const pool = opts.eligibleIds && opts.eligibleIds.size ? level.pieces.filter((p) => opts.eligibleIds.has(p.id)) : level.pieces;
+    const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
+    this.queue = shuffle(pool).slice(0, rounds);
     this.index = 0;
     this.correct = 0;
     this.mistakes = 0;

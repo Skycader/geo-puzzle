@@ -21,8 +21,12 @@ export class CityQuizBoard {
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
 
-    const rounds = clamp(opts.rounds ?? 15, 1, level.cities.length);
-    this.queue = shuffle(level.cities).slice(0, rounds);
+    // eligibleIds (from the pre-game checklist — see js/eligibilityList.js
+    // and game.js's _startCityQuiz) restricts which cities can be ASKED
+    // about; every city dot is still drawn either way (see the loop below).
+    const pool = opts.eligibleIds && opts.eligibleIds.size ? level.cities.filter((c) => opts.eligibleIds.has(c.id)) : level.cities;
+    const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
+    this.queue = shuffle(pool).slice(0, rounds);
     this.index = 0;
     this.correct = 0;
     this.mistakes = 0;

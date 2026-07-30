@@ -318,6 +318,12 @@ body {
   box-shadow: 0 0 10px rgba(255, 43, 214, 0.4);
 }
 .btn-lg { padding: 13px 36px; font-size: 18px; }
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
 
 /* ---------------- menu screen ---------------- */
 
@@ -366,14 +372,42 @@ body {
    stacked rows — each column's card list stacks vertically inside it. */
 .menu-columns {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* minmax(0, 1fr), not plain 1fr — a bare `1fr` track still has an
+     implicit `auto` minimum, meaning it won't shrink below its content's
+     min-content width. The "Раунд" column's content (search box, checklist
+     rows with long area numbers) has a different intrinsic minimum width
+     than the simple level/mode cards, so plain `1fr` let that column's
+     minimum width differ by mode and drag the other two columns along with
+     it — the exact "width changes with mode" symptom. minmax(0, 1fr) drops
+     that implicit floor, so all three columns split the row exactly evenly
+     regardless of what any of them contain. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
   width: 100%;
-  align-items: start;
+  align-items: stretch;
 }
 
 .panel {
   width: 100%;
+  /* A fixed viewport-relative height, not one driven by content — so
+     switching modes (which swaps what's in this column, e.g. plugging in
+     the eligibility checklist) never makes the panels jump to a different
+     size. Content that doesn't fill it just leaves empty space; content
+     that overflows it scrolls internally instead of growing the panel. */
+  height: 70vh;
+  overflow-y: auto;
+  /* Reserve the scrollbar's space always, whether content currently needs
+     it or not — otherwise the content column narrows by ~15px the instant
+     a mode's content grows past 70vh (or widens back out when it doesn't),
+     which reads as the whole panel's width "jumping" on every mode switch. */
+  scrollbar-gutter: stable;
+  /* A flex column so a child that wants to (the eligibility checklist —
+     see .elig-wrap) can flex:1 to fill whatever's left of that fixed
+     height, rather than being capped at some guessed pixel value. Plain
+     content (level/mode cards etc.) is unaffected — it just stacks as it
+     always did, with any leftover space sitting empty below it. */
+  display: flex;
+  flex-direction: column;
   border: 1px solid rgba(108, 113, 196, 0.35);
   background: rgba(7, 54, 66, 0.45);
   border-radius: 12px;
@@ -832,6 +866,11 @@ body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* Reserve scrollbar space always — otherwise row content (name/area
+     columns) shifts sideways by the scrollbar's width whenever a search or
+     a shorter list (e.g. switching states<->cities) crosses the threshold
+     where a scrollbar is or isn't needed. */
+  scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: rgba(33, 246, 255, 0.35) transparent;
 }
@@ -919,6 +958,61 @@ body {
   text-align: center;
 }
 
+/* ---------------- eligibility checklist (js/eligibilityList.js) ---------------- */
+/* Reuses the .overview-search / .overview-list-header / .overview-item*
+   classes above as-is — this only adds what's specific to a standalone,
+   checkbox-driven list dropped into a pre-game settings panel instead of
+   living inside OverviewBoard's fixed-height side panel. */
+
+.elig-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* fill whatever's left of .panel's fixed height, below the h2/round-count row */
+  min-height: 0; /* let .overview-list-scroll's own flex:1 actually shrink/grow within this instead of being pushed by content */
+  gap: 8px;
+  margin-top: 10px;
+}
+.elig-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.elig-count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--base0);
+}
+.elig-bulk {
+  display: flex;
+  gap: 6px;
+}
+.elig-bulk-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--base0);
+  background: transparent;
+  border: 1px solid var(--base01);
+  border-radius: 5px;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.elig-bulk-btn:hover { border-color: var(--neon-cyan); color: var(--base2); }
+
+.overview-item.elig-item {
+  grid-template-columns: auto 1fr auto;
+  cursor: pointer;
+}
+.elig-checkbox {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--neon-cyan);
+  cursor: pointer;
+}
+
 /* ---------------- pin placement mode ---------------- */
 
 .pin path {
@@ -955,6 +1049,121 @@ body {
   font-size: 15px;
   color: var(--base1);
   min-width: 190px;
+}
+
+/* ---------------- "Назови штат" (js/nameStateBoard.js) ---------------- */
+
+.name-state-difficulty { margin-bottom: 10px; }
+
+.name-answer-bar {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.name-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 10px;
+}
+.name-option-btn {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(0, 43, 54, 0.6);
+  color: var(--base2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.name-option-btn:hover:not(:disabled) {
+  background: rgba(33, 246, 255, 0.12);
+  box-shadow: 0 0 10px rgba(33, 246, 255, 0.4);
+}
+.name-option-btn:disabled { cursor: not-allowed; }
+.name-option-btn.name-option-correct {
+  border-color: var(--green);
+  background: rgba(133, 153, 0, 0.35);
+  color: var(--base3);
+  box-shadow: 0 0 12px rgba(133, 153, 0, 0.5);
+}
+.name-option-btn.name-option-wrong {
+  border-color: var(--red);
+  background: rgba(220, 50, 47, 0.3);
+  opacity: 0.6;
+}
+
+.name-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* the "small gap" between the search box and the confirm button */
+}
+.name-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.name-input {
+  width: 260px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--base2);
+  background: rgba(0, 43, 54, 0.6);
+  border: 1px solid var(--base01);
+  border-radius: 8px;
+  padding: 10px 34px 10px 14px; /* right padding leaves room for the match icon */
+}
+.name-input:focus {
+  outline: none;
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 8px rgba(33, 246, 255, 0.3);
+}
+.name-match-icon {
+  position: absolute;
+  right: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  pointer-events: none;
+}
+.name-match-icon.name-match-yes { color: var(--green); }
+.name-match-icon.name-match-no { color: var(--red); }
+.name-confirm-btn {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(33, 246, 255, 0.12);
+  color: var(--neon-cyan);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.name-confirm-btn:hover:not(:disabled) {
+  background: rgba(33, 246, 255, 0.25);
+  box-shadow: 0 0 10px rgba(33, 246, 255, 0.4);
+}
+.name-confirm-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.name-feedback {
+  font-size: 15px;
+  min-height: 1.2em;
+  color: var(--base1);
+}
+.name-feedback.name-feedback-correct { color: var(--green); }
+.name-feedback.name-feedback-wrong { color: var(--red); }
+
+/* transform, not filter — see the wrong-pulse comment further up for why
+   that matters for animation cost. */
+.name-shake { animation: name-shake 0.4s ease; }
+@keyframes name-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
 }
 
 .board-svg {
