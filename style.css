@@ -723,12 +723,7 @@ body {
   stroke: rgba(0, 20, 26, 0.85);
   /* r and stroke-width are set inline in JS, rescaled to stay a constant
      screen size as the board zoom level changes. */
-  filter: drop-shadow(0 0 4px rgba(255, 43, 214, 0.6));
   cursor: default;
-  transition: filter 0.15s ease;
-}
-.overview-city-dot:hover {
-  filter: drop-shadow(0 0 8px rgba(255, 43, 214, 0.95));
 }
 /* Leader-line city label: a small point-mark at the city's exact
    coordinate, a line running diagonally then bending horizontal, and the
@@ -762,7 +757,6 @@ body {
   fill-opacity: 0.55;
   stroke: var(--neon-pink);
   stroke-width: 1.2;
-  filter: drop-shadow(0 0 4px rgba(255, 43, 214, 0.5));
   cursor: default;
   transition: fill-opacity 0.15s ease;
 }
@@ -771,14 +765,12 @@ body {
 .overview-focus-glow {
   fill: var(--neon-yellow);
   stroke: var(--neon-yellow);
-  stroke-width: 2.5;
+  stroke-width: 3;
   pointer-events: none;
-  filter: drop-shadow(0 0 12px var(--neon-yellow)); /* static — see wrong-pulse comment above */
   animation: overview-focus-pulse 1.3s ease-in-out infinite;
 }
 .overview-city-dot.overview-focused {
   fill: var(--neon-yellow) !important;
-  filter: drop-shadow(0 0 10px var(--neon-yellow));
 }
 /* opacity (not fill-opacity) — the former is a compositor-accelerated
    property, so this infinite animation costs nothing on the main thread
@@ -1012,9 +1004,6 @@ body {
 .ws-piece.dragging { cursor: grabbing; }
 .ws-piece.dragging .piece-shape { filter: drop-shadow(0 0 10px var(--neon-pink)); }
 
-.piece-shape.placed {
-  filter: drop-shadow(0 0 5px var(--neon-cyan));
-}
 
 .piece-shape.just-connected { animation: snap-pop 0.4s ease; }
 @keyframes snap-pop {

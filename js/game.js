@@ -34,6 +34,7 @@ export class Game {
     this.quizRounds = 15;
     this.hintsVisible = true;
     this.labelsVisible = true;
+    this.citiesVisible = true;
     this.board = null;
     this.seconds = 0;
     this.timerHandle = null;
@@ -85,6 +86,7 @@ export class Game {
       toggleHintsWrap: document.getElementById('toggle-hints-wrap'),
       toggleLabelsWrap: document.getElementById('toggle-labels-wrap'),
       toggleHints: document.getElementById('toggle-hints'),
+      toggleHintsText: document.getElementById('toggle-hints-text'),
       toggleLabels: document.getElementById('toggle-labels'),
       toggleLabelsText: document.getElementById('toggle-labels-text'),
     };
@@ -201,8 +203,15 @@ export class Game {
       this.el.quizCountValue.textContent = this.quizRounds;
     });
     this.el.toggleHints.addEventListener('change', (ev) => {
-      this.hintsVisible = ev.target.checked;
-      if (this.board?.setHintsVisible) this.board.setHintsVisible(this.hintsVisible);
+      // Reused for Overview mode's "hide cities" switch — see _startOverview
+      // (mirrors how toggleLabels doubles as "Буквы"/"Подписи").
+      if (this.modeId === 'overview') {
+        this.citiesVisible = ev.target.checked;
+        if (this.board?.setCitiesVisible) this.board.setCitiesVisible(this.citiesVisible);
+      } else {
+        this.hintsVisible = ev.target.checked;
+        if (this.board?.setHintsVisible) this.board.setHintsVisible(this.hintsVisible);
+      }
     });
     this.el.toggleLabels.addEventListener('change', (ev) => {
       this.labelsVisible = ev.target.checked;
@@ -259,6 +268,7 @@ export class Game {
     this.el.toggleLabels.checked = this.labelsVisible;
     this.el.toggleHintsWrap.hidden = !preset.showToggles;
     this.el.toggleLabelsWrap.hidden = !preset.showToggles;
+    this.el.toggleHintsText.textContent = 'Подсказки';
     this.el.toggleLabelsText.textContent = 'Буквы';
     this.el.quizPrompt.hidden = true;
 
@@ -365,8 +375,12 @@ export class Game {
   _startOverview(level) {
     const overviewMode = OVERVIEW_MODES.find((m) => m.id === this.overviewModeId) || OVERVIEW_MODES[0];
     this.labelsVisible = overviewMode.id === 'full';
+    this.citiesVisible = true;
 
-    this.el.toggleHintsWrap.hidden = true;
+    this.el.toggleHintsWrap.hidden = false;
+    this.el.toggleHintsWrap.title = 'Показать/скрыть города на карте';
+    this.el.toggleHintsText.textContent = 'Города';
+    this.el.toggleHints.checked = this.citiesVisible;
     this.el.toggleLabelsWrap.hidden = false;
     this.el.toggleLabelsText.textContent = 'Подписи';
     this.el.toggleLabels.checked = this.labelsVisible;
@@ -384,6 +398,7 @@ export class Game {
     this.board = new OverviewBoard(this.el.boardContainer, level, {
       scale,
       labelsVisible: this.labelsVisible,
+      citiesVisible: this.citiesVisible,
     });
   }
 

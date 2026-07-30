@@ -50,18 +50,23 @@ export function attachZoomPan(viewport, content, opts = {}) {
   // player zooms, in exchange for CSS-scale blur past that headroom — the
   // same trade this code already made for "extreme" zoom, just kicking in
   // much sooner so typical use stays cheap.
-  const bakeZoomHeadroom = opts.bakeZoomHeadroom ?? 2.2;
+  // The real cost driver turned out to be a continuously-running filter
+  // animation (fixed separately in style.css) rather than the bake size
+  // itself, so this can afford to be generous — a small headroom made
+  // ordinary zoom levels permanently CSS-stretched (blurry at rest, not
+  // just transiently while moving), which is its own bug, just a visual one
+  // instead of a framerate one.
+  const bakeZoomHeadroom = opts.bakeZoomHeadroom ?? 4.5;
   function getMaxBakeDim() {
     if (opts.maxBakeDim) return opts.maxBakeDim;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     return Math.max(viewport.clientWidth, viewport.clientHeight) * dpr * bakeZoomHeadroom;
   }
-  // Capped at a modest multiple of the bake headroom — some zoom past the
-  // point where the raster stops growing is fine (graceful CSS-scale blur),
-  // but letting it run all the way to 60x means most of the zoom range is
-  // blur stretched over a huge ratio, which didn't help performance and
-  // isn't worth the visual cost. Deliberately more conservative than before.
-  const maxZoom = Math.min(opts.maxZoom ?? 60, bakeZoomHeadroom * 4);
+  // Some zoom past the point where the raster stops growing is still fine
+  // (graceful CSS-scale blur for a deliberately "further than normal" zoom),
+  // but kept close to the headroom so that blur stays the exception, not
+  // the default experience at typical zoom levels.
+  const maxZoom = Math.min(opts.maxZoom ?? 60, bakeZoomHeadroom * 1.5);
   const step = opts.step ?? 1.35;
   const tapThreshold = opts.tapThreshold ?? 6; // px of movement before a press counts as a drag
   const panFromAnywhere = opts.panFromAnywhere ?? false;

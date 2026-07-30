@@ -39,6 +39,7 @@ export class OverviewBoard {
     this.level = level;
     this.scale = opts.scale || 1;
     this.labelsVisible = opts.labelsVisible !== false;
+    this.citiesVisible = opts.citiesVisible !== false;
     this.allLabelEls = [];
     this.stateLabels = []; // { el }
     // Cities are virtualized — only ones within the visible map area (plus
@@ -230,18 +231,19 @@ export class OverviewBoard {
   // instead, a handful per animation frame — cities pop in over a few
   // frames rather than all at once, but every individual frame stays cheap.
   _updateVisibleCities(rect) {
+    this._lastVisibleRect = rect; // replayed by setCitiesVisible(true) — see below
     const mx = (rect.x1 - rect.x0) * VIRTUALIZE_MARGIN;
     const my = (rect.y1 - rect.y0) * VIRTUALIZE_MARGIN;
     this._visBounds = { x0: rect.x0 - mx, x1: rect.x1 + mx, y0: rect.y0 - my, y1: rect.y1 + my };
 
     const toReveal = [];
     for (const entry of this.cityDotEntries) {
-      const visible = this._dotEntryVisible(entry);
+      const visible = this.citiesVisible && this._dotEntryVisible(entry);
       if (visible && !entry.appended) toReveal.push({ kind: 'dot', entry });
       else if (!visible && entry.appended) this._hideDotEntry(entry);
     }
     for (const entry of this.cityShapeEntries) {
-      const visible = this._shapeEntryVisible(entry);
+      const visible = this.citiesVisible && this._shapeEntryVisible(entry);
       if (visible && !entry.appended) toReveal.push({ kind: 'shape', entry });
       else if (!visible && entry.appended) this._hideShapeEntry(entry);
     }
@@ -570,6 +572,15 @@ export class OverviewBoard {
   setLabelsVisible(visible) {
     this.labelsVisible = visible;
     for (const label of this.allLabelEls) label.style.opacity = visible ? '' : '0';
+  }
+
+  // Turning cities off hides every currently-shown dot/shape immediately
+  // (via the next _updateVisibleCities pass); turning them back on replays
+  // the last known visible rect so whatever should be on screen reappears
+  // right away instead of waiting for the next pan/zoom to trigger it.
+  setCitiesVisible(visible) {
+    this.citiesVisible = visible;
+    if (this._lastVisibleRect) this._updateVisibleCities(this._lastVisibleRect);
   }
 
   destroy() {
