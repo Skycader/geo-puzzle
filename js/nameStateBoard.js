@@ -108,6 +108,7 @@ export class NameStateBoard {
     } else {
       bar.innerHTML = `
         <div class="name-input-row">
+          <button type="button" class="name-hint-btn" data-action="hint" title="Не могу вспомнить — показать название">?</button>
           <div class="name-input-wrap">
             <input type="text" class="name-input" placeholder="Впиши название штата..." autocomplete="off" />
             <span class="name-match-icon"></span>
@@ -119,11 +120,13 @@ export class NameStateBoard {
       this.inputEl = bar.querySelector('.name-input');
       this.matchIconEl = bar.querySelector('.name-match-icon');
       this.confirmBtn = bar.querySelector('.name-confirm-btn');
+      this.hintBtn = bar.querySelector('.name-hint-btn');
       this.inputEl.addEventListener('input', () => this._onInput());
       this.inputEl.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter') this._confirmHard();
       });
       this.confirmBtn.addEventListener('click', () => this._confirmHard());
+      this.hintBtn.addEventListener('click', () => this._revealHint());
     }
     this.feedbackEl = bar.querySelector('.name-feedback');
     this.container.appendChild(bar);
@@ -195,14 +198,16 @@ export class NameStateBoard {
 
   // Closest real state name (by edit distance) to the current input, and
   // how far off it is — the single source of truth for both the live
-  // ✓/✗ indicator and what a confirm actually checks against.
+  // ✓/✗ indicator and what a confirm actually checks against. Checked
+  // against both the Russian and the English name, so "Орегон" and
+  // "Oregon" both resolve to the same state.
   _closestPiece(text) {
     const q = text.trim().toLowerCase();
     if (!q) return { piece: null, dist: Infinity };
     let best = null;
     let bestDist = Infinity;
     for (const p of this.level.pieces) {
-      const d = levenshtein(q, p.ru.toLowerCase());
+      const d = Math.min(levenshtein(q, p.ru.toLowerCase()), levenshtein(q, p.name.toLowerCase()));
       if (d < bestDist) {
         bestDist = d;
         best = p;
@@ -220,6 +225,14 @@ export class NameStateBoard {
     this.matchIconEl.classList.toggle('name-match-yes', !!matched);
     this.matchIconEl.classList.toggle('name-match-no', !matched && !!this.inputEl.value.trim());
     this.confirmBtn.disabled = !matched;
+  }
+
+  // "I can't remember it" button — just shows the name, doesn't fill the
+  // input or auto-confirm, so it stays a peek rather than an auto-solve.
+  _revealHint() {
+    if (this.locked || !this.current) return;
+    this.feedbackEl.textContent = `Ответ: ${this.current.ru} (${this.current.name})`;
+    this.feedbackEl.classList.remove('name-feedback-correct', 'name-feedback-wrong');
   }
 
   _resetHardInput() {
