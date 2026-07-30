@@ -1285,34 +1285,35 @@ body {
   filter: drop-shadow(0 0 6px rgba(255, 43, 214, 0.7));
 }
 
-/* ---------------- win overlay ---------------- */
+/* ---------------- finish bar ---------------- */
 
-.overlay {
+/* A small floating bar, not a full-screen modal — a backdrop covering the
+   whole map blocked exactly the thing the player just finished (the
+   assembled puzzle, the answered round) right when they'd want to look at
+   it. Pinned to the bottom center, it leaves the map fully visible; nothing
+   outside the bar's own box is clickable-blocked since there's no
+   full-viewport backdrop element at all. */
+.win-bar {
   position: fixed;
-  inset: 0;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
   z-index: 100;
-  background: rgba(0, 15, 20, 0.82);
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-.overlay-card {
+  gap: 18px;
+  padding: 14px 24px;
   border: 1px solid var(--neon-cyan);
-  background: var(--base03);
-  border-radius: 14px;
-  padding: 42px 50px;
-  text-align: center;
-  box-shadow: 0 0 40px rgba(33, 246, 255, 0.35);
+  border-radius: 12px;
+  background: rgba(0, 20, 26, 0.9);
+  box-shadow: 0 0 24px rgba(33, 246, 255, 0.3);
+  backdrop-filter: blur(6px);
 }
-.overlay-card h2 {
-  margin: 0 0 14px;
-  font-size: 26px;
-  color: var(--base3);
-  letter-spacing: 2px;
-  text-shadow: 0 0 10px var(--neon-pink);
+.win-bar-stats {
+  font-size: 15px;
+  color: var(--base2);
+  white-space: nowrap;
 }
-.overlay-card p { color: var(--base0); margin: 0 0 24px; font-size: 16px; }
-.overlay-actions { display: flex; gap: 16px; justify-content: center; }
 
 /* ---------------- scrollbars ---------------- */
 

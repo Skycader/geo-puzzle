@@ -8,6 +8,7 @@ import { EligibilityList } from './eligibilityList.js';
 import { clamp } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
 import { MODES, OVERVIEW_MODES, NAME_STATE_DIFFICULTIES } from './modes.js';
+import { playClick } from './audio.js';
 
 const ROUNDS_PANEL_TEXT = {
   quiz: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: 'Найди на карте:' },
@@ -86,10 +87,8 @@ export class Game {
       quizPrompt: document.getElementById('quiz-prompt'),
       quizPromptLabel: document.getElementById('quiz-prompt-label'),
       quizPromptName: document.getElementById('quiz-prompt-name'),
-      winOverlay: document.getElementById('win-overlay'),
-      winTitle: document.getElementById('win-title'),
+      winBar: document.getElementById('win-bar'),
       winStats: document.getElementById('win-stats'),
-      btnAgain: document.getElementById('btn-again'),
       btnBackMenu: document.getElementById('btn-back-menu'),
       toggleHintsWrap: document.getElementById('toggle-hints-wrap'),
       toggleLabelsWrap: document.getElementById('toggle-labels-wrap'),
@@ -249,15 +248,14 @@ export class Game {
   }
 
   _bindEvents() {
-    this.el.btnStart.addEventListener('click', () => this.startGame());
-    this.el.btnBrand.addEventListener('click', () => this._goMenu());
-    this.el.btnMenu.addEventListener('click', () => this._goMenu());
-    this.el.btnAgain.addEventListener('click', () => {
-      this.el.winOverlay.hidden = true;
+    this.el.btnStart.addEventListener('click', () => {
+      playClick();
       this.startGame();
     });
+    this.el.btnBrand.addEventListener('click', () => this._goMenu());
+    this.el.btnMenu.addEventListener('click', () => this._goMenu());
     this.el.btnBackMenu.addEventListener('click', () => {
-      this.el.winOverlay.hidden = true;
+      playClick();
       this._goMenu();
     });
     this.el.customCountInput.addEventListener('input', (ev) => {
@@ -524,9 +522,11 @@ export class Game {
 
   _onFinish(title, statsText) {
     clearInterval(this.timerHandle);
-    this.el.winTitle.textContent = title;
-    this.el.winStats.textContent = statsText;
-    this.el.winOverlay.hidden = false;
+    // A small bottom bar rather than a modal — a full-screen overlay blocked
+    // the finished map right when the player most wants to look at it (e.g.
+    // the assembled puzzle).
+    this.el.winStats.textContent = `${title} — ${statsText}`;
+    this.el.winBar.hidden = false;
   }
 
   _goMenu() {
@@ -538,5 +538,10 @@ export class Game {
     this.el.screenGame.hidden = true;
     this.el.hud.hidden = true;
     this.el.screenMenu.hidden = false;
+    // The finish bar is only ever shown mid-game — hiding it here (rather
+    // than just in btn-back-menu's own handler) covers every way back to
+    // the menu, including the header logo and the "Меню" button, which
+    // used to leave it stuck on screen.
+    this.el.winBar.hidden = true;
   }
 }

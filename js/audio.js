@@ -29,6 +29,13 @@ export function playPickup() {
   tone(520, 0, 0.06, 'sine', 0.06);
 }
 
+// Generic UI navigation click (e.g. leaving the finish bar back to the
+// menu) — distinct from playPickup, which is specifically for grabbing a
+// puzzle piece.
+export function playClick() {
+  tone(660, 0, 0.05, 'sine', 0.07);
+}
+
 export function playSnap() {
   tone(880, 0, 0.07, 'square', 0.1);
   tone(1320, 0.06, 0.09, 'square', 0.08);
