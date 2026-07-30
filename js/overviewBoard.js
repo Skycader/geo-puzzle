@@ -25,6 +25,7 @@ const LEADER_TEXT_GAP_PX = 3; // gap between the horizontal run and the text sit
 export const OVERVIEW_PANEL_W = 300;
 
 const STATE_FOCUS_FILL = 0.6; // fraction of the viewport a focused state's bbox should fill
+const CITY_POINT_FOCUS_FILL = 0.08; // fraction of the viewport a focused point-city's dot should fill
 const FOCUS_DURATION_MS = 3000; // how long a click's highlight stays lit before auto-clearing
 const VIRTUALIZE_MARGIN = 0.4; // extra fraction of the visible rect's size kept rendered just outside it
 
@@ -444,9 +445,23 @@ export class OverviewBoard {
       this._focusShape(data);
       return;
     }
-    // Point features (plain dots) read best at the closest zoom the map
-    // allows — focusOn() clamps to the shared max itself.
-    this.zoomCtl.focusOn(data.cx, data.cy, Infinity);
+    // Point features (plain dots) don't have a bbox to fit like states/shape
+    // cities do, but the dot's true-to-scale radius (native units, same as
+    // everything else — see where it's built) works the same way: zoom so
+    // it fills a small, comfortable fraction of the viewport. This used to
+    // just pass Infinity and rely on focusOn() clamping it to the shared
+    // max zoom — now that zoom has no ceiling at all (by design), Infinity
+    // stays Infinity and breaks the view entirely, so this needs its own
+    // finite target instead of leaning on a cap that no longer exists.
+    const radiusNative = data.radiusKm / this.level.kmPerUnit;
+    const diameterNative = Math.max(radiusNative * 2, 1);
+    const vw = this.zoomViewport.clientWidth;
+    const vh = this.zoomViewport.clientHeight;
+    const targetZoom = Math.max(
+      1,
+      Math.min((vw * CITY_POINT_FOCUS_FILL) / (diameterNative * this.scale), (vh * CITY_POINT_FOCUS_FILL) / (diameterNative * this.scale))
+    );
+    this.zoomCtl.focusOn(data.cx, data.cy, targetZoom);
     this._clearFocus();
     entry.dotEl.classList.add('overview-focused');
     this.focusedEl = entry.dotEl;
