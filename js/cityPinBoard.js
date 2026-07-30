@@ -134,11 +134,13 @@ export class CityPinBoard {
   }
 
   _clientToNative(clientX, clientY) {
+    // Reads the SVG's OWN live viewBox rather than the zoom=1 canvas size —
+    // see the matching comment in puzzleBoard.js's _clientToNative.
     const rect = this.svg.getBoundingClientRect();
-    const { width, height } = this.level.canvas;
+    const vb = this.svg.viewBox.baseVal;
     return {
-      x: ((clientX - rect.left) / rect.width) * width,
-      y: ((clientY - rect.top) / rect.height) * height,
+      x: ((clientX - rect.left) / rect.width) * vb.width + vb.x,
+      y: ((clientY - rect.top) / rect.height) * vb.height + vb.y,
     };
   }
 

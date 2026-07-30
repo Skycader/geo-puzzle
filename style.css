@@ -527,24 +527,6 @@ body {
 .zoom-viewport.panning .board-svg,
 .zoom-viewport.panning .quiz-svg { cursor: grabbing; }
 
-/* Drop-shadow filters are expensive to (re)rasterize on every scale change —
-   negligible for one element, but costly across 50+ state shapes and dozens
-   of city markers during a fast wheel-zoom burst (confirmed via a real perf
-   recording: main-thread stalls with no matching JS cost, i.e. browser paint
-   time). Suppressed for the duration of any zoom/pan interaction — see
-   zoomPan.js's scheduleSettle — and restored once it settles, fading back in
-   via each element's own filter transition. */
-.zoom-viewport.zoom-interacting .piece-shape,
-.zoom-viewport.zoom-interacting .overview-city-dot,
-.zoom-viewport.zoom-interacting .overview-city-shape,
-.zoom-viewport.zoom-interacting .pin path,
-.zoom-viewport.zoom-interacting .pin-true-mark,
-.zoom-viewport.zoom-interacting .city-dot,
-.zoom-viewport.reveal-busy .overview-city-dot,
-.zoom-viewport.reveal-busy .overview-city-shape {
-  filter: none !important;
-}
-
 .zoom-controls {
   position: absolute;
   right: 20px;

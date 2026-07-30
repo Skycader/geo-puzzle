@@ -299,19 +299,6 @@ export class OverviewBoard {
     this._revealQueue = (this._revealQueue || []).concat(items);
     if (this._revealScheduled) return;
     this._revealScheduled = true;
-    // City markers carry a permanent drop-shadow filter (see style.css) —
-    // cheap once painted, but expensive the instant a *new* filtered element
-    // is inserted, since the browser has to rasterize that filter as its own
-    // layer right away. Revealing happens right after zoomPan's settle
-    // (i.e. once its own 'zoom-interacting' suppression has already been
-    // lifted), often right after a rebake just grew the SVG's actual
-    // raster size — confirmed via a real recorded session where the
-    // dominant stall (400ms+) landed exactly on a reveal batch, not on the
-    // zoom itself. Suppressing filter for the duration of the reveal queue
-    // avoids paying that cost while cities are still being inserted; it
-    // fades back in via each marker's own filter transition once the queue
-    // is fully drained.
-    this.zoomViewport.classList.add('reveal-busy');
     requestAnimationFrame(() => this._processRevealQueue());
   }
 
@@ -335,7 +322,6 @@ export class OverviewBoard {
       requestAnimationFrame(() => this._processRevealQueue());
     } else {
       this._revealScheduled = false;
-      this.zoomViewport.classList.remove('reveal-busy');
     }
   }
 

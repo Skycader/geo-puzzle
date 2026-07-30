@@ -483,14 +483,16 @@ export class PuzzleBoard {
   }
 
   _clientToNative(clientX, clientY, boardRect) {
-    const { width, height } = this.level.canvas;
-    const padX = Math.round(width * 0.16);
-    const padY = Math.round(height * 0.12);
-    const totalW = width + padX * 2;
-    const totalH = height + padY * 2;
+    // Reads the SVG's OWN live viewBox rather than assuming it always spans
+    // the full padded canvas — zoomPan.js now zooms by shrinking/moving the
+    // viewBox itself (cropping into the vector data) rather than by
+    // stretching a fixed-viewBox element via CSS transform, so the mapping
+    // from screen px to native units has to follow whatever the viewBox
+    // currently is, not the zoom=1 extent.
+    const vb = this.boardSvg.viewBox.baseVal;
     return {
-      x: ((clientX - boardRect.left) / boardRect.width) * totalW - padX,
-      y: ((clientY - boardRect.top) / boardRect.height) * totalH - padY,
+      x: ((clientX - boardRect.left) / boardRect.width) * vb.width + vb.x,
+      y: ((clientY - boardRect.top) / boardRect.height) * vb.height + vb.y,
     };
   }
 
