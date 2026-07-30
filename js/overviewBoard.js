@@ -135,7 +135,7 @@ export class OverviewBoard {
         path.setAttribute('d', c.d);
         path.setAttribute('class', 'overview-city-shape');
         const title = document.createElementNS(SVG_NS, 'title');
-        title.textContent = `${c.ru} (${c.name})`;
+        title.textContent = this._cityHoverTitle(c);
         path.appendChild(title);
 
         const label = document.createElementNS(SVG_NS, 'text');
@@ -164,7 +164,7 @@ export class OverviewBoard {
       dot.setAttribute('r', radiusNative.toFixed(3));
       dot.setAttribute('class', 'overview-city-dot');
       const title = document.createElementNS(SVG_NS, 'title');
-      title.textContent = `${c.ru} (${c.name}) — R ${c.radiusKm.toFixed(1)} км`;
+      title.textContent = this._cityHoverTitle(c);
       dot.appendChild(title);
 
       // Leader-line label: a small point-mark at the exact (cx,cy), a line
@@ -376,6 +376,17 @@ export class OverviewBoard {
   // derived (they're rendered as a circle of that radius to begin with).
   _areaOf(it) {
     return this.activeTab === 'states' ? it.area : Math.PI * it.radiusKm * it.radiusKm;
+  }
+
+  // Hover tooltip for a city marker (dot or real-boundary shape alike) —
+  // area here is always the derived circle-of-that-radius figure, computed
+  // directly rather than via _areaOf (which reads the side panel's current
+  // tab to decide states-vs-cities and would misfire if a city is hovered
+  // on the map while that panel happens to be showing the states tab).
+  _cityHoverTitle(c) {
+    const areaKm2 = Math.PI * c.radiusKm * c.radiusKm;
+    const areaStr = Math.round(areaKm2).toLocaleString('ru-RU');
+    return `${c.ru} (${c.name}) — R ${c.radiusKm.toFixed(1)} км (${areaStr} км²)`;
   }
 
   _renderList() {
