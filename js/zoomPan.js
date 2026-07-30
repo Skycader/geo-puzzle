@@ -29,7 +29,7 @@ import { mark } from './perfDebug.js';
 // assuming it's fixed at the zoom=1 extent — see puzzleBoard.js's and
 // cityPinBoard.js's _clientToNative.
 export function attachZoomPan(viewport, content, opts = {}) {
-  const minZoom = opts.minZoom ?? 1;
+  const minZoom = opts.minZoom ?? 0.01;
   const maxZoom = opts.maxZoom ?? Infinity;
   const step = opts.step ?? 1.35;
   const tapThreshold = opts.tapThreshold ?? 6; // px of movement before a press counts as a drag
@@ -68,9 +68,22 @@ export function attachZoomPan(viewport, content, opts = {}) {
     return { vw: nativeW / zoom, vh: nativeH / zoom };
   }
 
+  // Panning is allowed to carry the view past the map's edge into empty
+  // space — you shouldn't be walled off from the border of a state just
+  // because it's near the map's own edge, and even at zoom=1 (map exactly
+  // filling the view) the camera should still be free to drift, not locked
+  // rigidly in place. It's never allowed so far that the map disappears
+  // off screen entirely, though: the required overlap is a fraction of
+  // whichever is smaller — the view or the map itself — so there's always
+  // a visible sliver of map on screen telling you which way to pan back,
+  // whether you're zoomed in past the map's edge or zoomed out with the
+  // whole map already visible and room to spare.
+  const minMapOverlap = opts.minMapOverlap ?? 0.15;
   function clampOrigin(vw, vh) {
-    vx = vw >= nativeW ? homeX - (vw - nativeW) / 2 : Math.min(homeX + nativeW - vw, Math.max(homeX, vx));
-    vy = vh >= nativeH ? homeY - (vh - nativeH) / 2 : Math.min(homeY + nativeH - vh, Math.max(homeY, vy));
+    const overlapX = minMapOverlap * Math.min(vw, nativeW);
+    const overlapY = minMapOverlap * Math.min(vh, nativeH);
+    vx = Math.min(homeX + nativeW - overlapX, Math.max(homeX + overlapX - vw, vx));
+    vy = Math.min(homeY + nativeH - overlapY, Math.max(homeY + overlapY - vh, vy));
   }
 
   function render() {
