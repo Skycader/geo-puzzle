@@ -15,6 +15,10 @@ export class EligibilityList {
     this.kind = opts.kind; // 'states' | 'cities' — same distinction OverviewBoard's list uses for area formula + row layout
     this.storageKey = opts.storageKey;
     this.onChange = opts.onChange || (() => {});
+    // Optional extra column (e.g. "Найди штат"'s adaptive-mode success
+    // streak) — omit both to keep the plain name/area layout.
+    this.getStat = opts.getStat || null;
+    this.statLabel = opts.statLabel || '';
     this.searchQuery = '';
     this.sortBy = null; // null (alphabetical) | 'area'
     this.sortDir = 'desc';
@@ -69,9 +73,10 @@ export class EligibilityList {
         </div>
       </div>
       <input type="text" class="overview-search" placeholder="Поиск..." autocomplete="off" />
-      <div class="overview-list-header">
+      <div class="overview-list-header${this.getStat ? ' overview-list-header-with-stat' : ''}">
         <span class="overview-col-name">Название</span>
         <button type="button" class="overview-col-sort" data-sort="area">Площадь<span class="overview-sort-arrow"></span></button>
+        ${this.getStat ? `<span class="overview-col-stat">${this.statLabel}</span>` : ''}
       </div>
       <div class="overview-list-scroll"><div class="overview-item-list"></div></div>
     `;
@@ -135,13 +140,14 @@ export class EligibilityList {
 
     for (const it of sorted) {
       const row = document.createElement('label');
-      row.className = 'overview-item elig-item';
+      row.className = 'overview-item elig-item' + (this.getStat ? ' elig-item-with-stat' : '');
       const areaStr = Math.round(this._areaOf(it)).toLocaleString('ru-RU') + ' км²';
       const checked = this.selected.has(it.id);
+      const statHtml = this.getStat ? `<span class="overview-item-stat">${this.getStat(it)}</span>` : '';
       row.innerHTML =
         this.kind === 'states'
-          ? `<input type="checkbox" class="elig-checkbox"${checked ? ' checked' : ''} /><span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span><span class="overview-item-area">${areaStr}</span>`
-          : `<input type="checkbox" class="elig-checkbox"${checked ? ' checked' : ''} /><span class="overview-item-main"><span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state}</span></span><span class="overview-item-area">${areaStr}</span>`;
+          ? `<input type="checkbox" class="elig-checkbox"${checked ? ' checked' : ''} /><span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span><span class="overview-item-area">${areaStr}</span>${statHtml}`
+          : `<input type="checkbox" class="elig-checkbox"${checked ? ' checked' : ''} /><span class="overview-item-main"><span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state}</span></span><span class="overview-item-area">${areaStr}</span>${statHtml}`;
       row.querySelector('.elig-checkbox').addEventListener('change', (ev) => {
         if (ev.target.checked) this.selected.add(it.id);
         else this.selected.delete(it.id);

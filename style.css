@@ -280,6 +280,13 @@ body {
 .toggle-text { color: var(--base0); }
 .toggle input:checked ~ .toggle-text { color: var(--neon-cyan); }
 
+.adaptive-mode-row {
+  margin-top: 12px;
+  align-items: flex-start;
+}
+.adaptive-mode-row .toggle-track { margin-top: 2px; }
+.adaptive-mode-row .toggle-text { font-size: 13px; line-height: 1.35; }
+
 /* ---------------- buttons ---------------- */
 
 .btn {
@@ -1005,6 +1012,27 @@ body {
 .overview-item.elig-item {
   grid-template-columns: auto 1fr auto;
   cursor: pointer;
+}
+/* Adaptive-mode success streak — an extra 4th column, only present when
+   EligibilityList is given a getStat/statLabel (currently just "Найди
+   штат"'s states list). */
+.overview-list-header.overview-list-header-with-stat {
+  grid-template-columns: 1fr auto auto;
+}
+.overview-col-stat {
+  font: inherit;
+  color: inherit;
+  text-align: right;
+}
+.overview-item.elig-item.elig-item-with-stat {
+  grid-template-columns: auto 1fr auto auto;
+}
+.overview-item-stat {
+  flex: none;
+  min-width: 22px;
+  font-size: 12px;
+  text-align: right;
+  color: var(--neon-cyan);
 }
 .elig-checkbox {
   width: 15px;

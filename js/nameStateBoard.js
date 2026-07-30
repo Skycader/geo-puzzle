@@ -1,8 +1,14 @@
-import { shuffle, clamp, levenshtein } from './utils.js';
+import { shuffle, clamp, levenshtein, weightedSampleWithoutReplacement } from './utils.js';
 import { playSnap, playError, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
+import { loadSuccessStats, recordOutcome } from './successStats.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+// Separate from quizBoard.js's 'quiz-states' scope — clicking a state on
+// the map and recalling its name from a highlight are different skills,
+// so a streak in one mode shouldn't silently suppress practice in the
+// other.
+const SUCCESS_SCOPE = 'name-state-states';
 const OPTION_COUNT = 4; // easy mode: 1 correct + this many distractors
 const ADVANCE_DELAY_MS = 650; // pause after a correct answer so the green flash reads before the next round
 const WRONG_FLASH_MS = 500;
@@ -25,6 +31,7 @@ export class NameStateBoard {
   constructor(container, level, opts = {}) {
     this.container = container;
     this.level = level;
+    this.levelId = opts.levelId;
     this.scale = opts.scale || 1;
     this.difficulty = opts.difficulty === 'hard' ? 'hard' : 'easy';
     this.onProgress = opts.onProgress || (() => {});
@@ -32,7 +39,15 @@ export class NameStateBoard {
 
     const pool = opts.eligibleIds && opts.eligibleIds.size ? level.pieces.filter((p) => opts.eligibleIds.has(p.id)) : level.pieces;
     const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
-    this.queue = shuffle(pool).slice(0, rounds);
+    if (opts.adaptive && this.levelId) {
+      // Same adaptive weighting as quizBoard.js — see js/successStats.js
+      // and js/utils.js's weightedSampleWithoutReplacement.
+      const stats = loadSuccessStats(this.levelId, SUCCESS_SCOPE);
+      const picked = weightedSampleWithoutReplacement(pool, (p) => 1 / ((stats[p.id] || 0) + 1), rounds);
+      this.queue = shuffle(picked);
+    } else {
+      this.queue = shuffle(pool).slice(0, rounds);
+    }
     this.index = 0;
     this.correct = 0;
     this.mistakes = 0;
@@ -43,6 +58,10 @@ export class NameStateBoard {
     // Wrong guesses in easy mode disable that option instead of resetting
     // every round, so a repeated wrong pick isn't possible within a round.
     this.wrongOptionIds = new Set();
+    // Reset each round; set true by a wrong guess/confirm or the hint
+    // button — mirrors quizBoard.js's `hinted` flag, feeding the same
+    // recordOutcome() streak logic (see _answerEasy/_confirmHard/_revealHint).
+    this.roundNeededHelp = false;
     // hard mode: whichever real state the current input text fuzzy-matches
     // to right now (null if nothing matches closely enough to confirm).
     this.matchedPiece = null;
@@ -146,6 +165,7 @@ export class NameStateBoard {
     this.currentPath.classList.add('quiz-hint');
     this.feedbackEl.textContent = '';
     this.wrongOptionIds.clear();
+    this.roundNeededHelp = false;
 
     if (this.difficulty === 'easy') this._renderOptions();
     else this._resetHardInput();
@@ -176,6 +196,7 @@ export class NameStateBoard {
       for (const b of this.optionsEl.querySelectorAll('.name-option-btn')) b.disabled = true;
       playSnap();
       this.correct++;
+      if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.roundNeededHelp);
       this.feedbackEl.textContent = 'Верно!';
       this.feedbackEl.classList.remove('name-feedback-wrong');
       this.feedbackEl.classList.add('name-feedback-correct');
@@ -185,6 +206,7 @@ export class NameStateBoard {
       }, ADVANCE_DELAY_MS);
     } else {
       this.wrongOptionIds.add(id);
+      this.roundNeededHelp = true;
       btn.classList.add('name-option-wrong');
       btn.disabled = true;
       playError();
@@ -229,8 +251,11 @@ export class NameStateBoard {
 
   // "I can't remember it" button — just shows the name, doesn't fill the
   // input or auto-confirm, so it stays a peek rather than an auto-solve.
+  // Counts the same as a wrong guess for the adaptive streak, though —
+  // seeing the answer means this state still needs practice.
   _revealHint() {
     if (this.locked || !this.current) return;
+    this.roundNeededHelp = true;
     this.feedbackEl.textContent = `Ответ: ${this.current.ru} (${this.current.name})`;
     this.feedbackEl.classList.remove('name-feedback-correct', 'name-feedback-wrong');
   }
@@ -252,6 +277,7 @@ export class NameStateBoard {
       this.confirmBtn.disabled = true;
       playSnap();
       this.correct++;
+      if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.roundNeededHelp);
       this.feedbackEl.textContent = 'Верно!';
       this.feedbackEl.classList.remove('name-feedback-wrong');
       this.feedbackEl.classList.add('name-feedback-correct');
@@ -261,6 +287,7 @@ export class NameStateBoard {
         this._nextQuestion();
       }, ADVANCE_DELAY_MS);
     } else {
+      this.roundNeededHelp = true;
       playError();
       this.mistakes++;
       this.feedbackEl.textContent = `«${this.matchedPiece.ru}» — не тот штат, попробуй ещё`;

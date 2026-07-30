@@ -1,8 +1,10 @@
-import { shuffle, clamp } from './utils.js';
+import { shuffle, clamp, weightedSampleWithoutReplacement } from './utils.js';
 import { playSnap, playError, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
+import { loadSuccessStats, recordOutcome } from './successStats.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+const SUCCESS_SCOPE = 'quiz-states';
 
 // "Find the state" mode: a plain unlabeled map, the player is prompted
 // with a state's name and has to click it. Correct clicks lock briefly
@@ -14,6 +16,7 @@ export class QuizBoard {
   constructor(container, level, opts = {}) {
     this.container = container;
     this.level = level;
+    this.levelId = opts.levelId;
     this.scale = opts.scale || 1;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
@@ -25,7 +28,20 @@ export class QuizBoard {
     // becomes the prompt itself.
     const pool = opts.eligibleIds && opts.eligibleIds.size ? level.pieces.filter((p) => opts.eligibleIds.has(p.id)) : level.pieces;
     const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
-    this.queue = shuffle(pool).slice(0, rounds);
+    if (opts.adaptive && this.levelId) {
+      // Adaptive mode: draw states weighted by 1/(streak+1), so a state
+      // with a 0 streak (never answered right in a row, or just missed
+      // one) is far likelier to be picked than one the player has been
+      // consistently nailing — see js/successStats.js and game.js's
+      // "Адаптивный режим" checkbox for the full picture. Shuffled again
+      // after picking so the weighting only affects WHICH states are
+      // asked, not the order they come up in.
+      const stats = loadSuccessStats(this.levelId, SUCCESS_SCOPE);
+      const picked = weightedSampleWithoutReplacement(pool, (p) => 1 / ((stats[p.id] || 0) + 1), rounds);
+      this.queue = shuffle(picked);
+    } else {
+      this.queue = shuffle(pool).slice(0, rounds);
+    }
     this.index = 0;
     this.correct = 0;
     this.mistakes = 0;
@@ -109,6 +125,10 @@ export class QuizBoard {
       path.classList.add('quiz-correct');
       playSnap();
       this.correct++;
+      // Recorded regardless of whether adaptive mode is on right now — the
+      // streak should keep building from ordinary play too, so turning
+      // adaptive mode on later isn't starting from a blank slate.
+      if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.hinted);
       setTimeout(() => {
         path.classList.remove('quiz-correct');
         path.classList.add('quiz-used');

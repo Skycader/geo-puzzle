@@ -9,6 +9,13 @@ import { clamp } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
 import { MODES, OVERVIEW_MODES, NAME_STATE_DIFFICULTIES } from './modes.js';
 import { playClick } from './audio.js';
+import { loadSuccessStats } from './successStats.js';
+
+// Distinct scopes per mode — clicking a state on the map (quiz) and
+// recalling its name from a highlight (name-state) are different skills,
+// so their adaptive streaks are tracked separately (see the matching
+// SUCCESS_SCOPE constants in quizBoard.js / nameStateBoard.js).
+const ADAPTIVE_SUCCESS_SCOPE_BY_MODE = { quiz: 'quiz-states', 'name-state': 'name-state-states' };
 
 const ROUNDS_PANEL_TEXT = {
   quiz: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: 'Найди на карте:' },
@@ -37,6 +44,7 @@ export class Game {
     this.customCount = DEFAULT_CUSTOM_COUNT;
     this.quizRounds = 15;
     this.nameStateDifficulty = NAME_STATE_DIFFICULTIES[0].id;
+    this.adaptiveMode = false;
     this.hintsVisible = true;
     this.labelsVisible = true;
     this.citiesVisible = true;
@@ -82,6 +90,8 @@ export class Game {
       quizCountValue: document.getElementById('quiz-count-value'),
       quizEligibleWrap: document.getElementById('quiz-eligible-wrap'),
       nameStateDifficultyEl: document.getElementById('name-state-difficulty'),
+      adaptiveModeRow: document.getElementById('adaptive-mode-row'),
+      adaptiveModeCheckbox: document.getElementById('adaptive-mode-checkbox'),
       btnStart: document.getElementById('btn-start'),
       boardContainer: document.getElementById('board-container'),
       quizPrompt: document.getElementById('quiz-prompt'),
@@ -144,12 +154,15 @@ export class Game {
     // city-pins also shares this panel but always draws from every city.
     const hasEligibility = this.modeId === 'quiz' || this.modeId === 'name-state' || this.modeId === 'city-quiz';
     const isNameState = this.modeId === 'name-state';
+    const isQuiz = this.modeId === 'quiz';
 
     this.el.panelPuzzleSettings.hidden = !isPuzzle;
     this.el.panelQuizSettings.hidden = !isRounds;
     this.el.panelOverviewSettings.hidden = !isOverview;
     this.el.quizEligibleWrap.hidden = !hasEligibility;
     this.el.nameStateDifficultyEl.hidden = !isNameState;
+    this.el.adaptiveModeRow.hidden = !(isQuiz || isNameState);
+    this.el.adaptiveModeCheckbox.checked = this.adaptiveMode;
 
     if (!isRounds) {
       this.eligibilityList?.destroy();
@@ -170,10 +183,21 @@ export class Game {
     if (hasEligibility) {
       const kind = this.modeId === 'quiz' || this.modeId === 'name-state' ? 'states' : 'cities';
       const items = kind === 'states' ? level.pieces : level.cities;
+      // Adaptive mode's success streak — shown here so the player can see,
+      // right where they're picking which states to include, which ones
+      // are still giving them trouble in whichever mode they're setting up.
+      const adaptiveScope = ADAPTIVE_SUCCESS_SCOPE_BY_MODE[this.modeId];
+      const statOpts = adaptiveScope
+        ? (() => {
+            const stats = loadSuccessStats(this.levelId, adaptiveScope);
+            return { getStat: (it) => stats[it.id] || 0, statLabel: 'Успехов' };
+          })()
+        : {};
       this.eligibilityList = new EligibilityList(this.el.quizEligibleWrap, items, {
         kind,
         storageKey: `geo-puzzle:eligible:${this.levelId}:${kind}`,
         onChange: (selected) => this._applyRoundCap(selected.size),
+        ...statOpts,
       });
       this._applyRoundCap(this.eligibilityList.getSelectedIds().size);
     } else {
@@ -261,6 +285,9 @@ export class Game {
     this.el.customCountInput.addEventListener('input', (ev) => {
       this.customCount = Number(ev.target.value);
       this.el.customCountValue.textContent = this.customCount;
+    });
+    this.el.adaptiveModeCheckbox.addEventListener('change', (ev) => {
+      this.adaptiveMode = ev.target.checked;
     });
     this.el.quizCountInput.addEventListener('input', (ev) => {
       this.quizRounds = Number(ev.target.value);
@@ -379,6 +406,8 @@ export class Game {
     this.board = new QuizBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
       eligibleIds: this.eligibilityList?.getSelectedIds(),
+      levelId: this.levelId,
+      adaptive: this.adaptiveMode,
       scale,
       onProgress: (p) => this._onQuizProgress(p),
       onFinish: (stats) =>
@@ -408,6 +437,8 @@ export class Game {
       rounds: this.quizRounds,
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       difficulty: this.nameStateDifficulty,
+      levelId: this.levelId,
+      adaptive: this.adaptiveMode,
       scale,
       onProgress: (p) => this._onNameStateProgress(p),
       onFinish: (stats) =>
