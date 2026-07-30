@@ -1,4 +1,5 @@
 import { mountFpsMeter } from './fpsMeter.js';
+import { mark } from './perfDebug.js';
 
 // Shared wheel/button/drag zoom for an SVG sitting inside a fixed-size
 // viewport. Unlike the old approach (resizing the SVG's actual width/height
@@ -34,19 +35,33 @@ export function attachZoomPan(viewport, content, opts = {}) {
   // native coordinates).
   const baseScale = opts.baseScale ?? 1;
   const minZoom = opts.minZoom ?? 1;
-  // Hard cap on the rebaked raster's largest dimension, in px — chosen
-  // well within what any GPU from roughly the last decade guarantees
-  // (WebGL1's spec-minimum texture size is 4096; this leaves headroom).
-  // This ISN'T a speed limit — a bigger GPU can't push it higher, because
-  // it's a hard maximum *texture dimension* the graphics API allows, not
-  // a throughput number.
-  const MAX_BAKE_DIM = opts.maxBakeDim ?? 8192;
-  // maxZoom is clamped so the content can ALWAYS be fully rebaked crisp —
-  // i.e. baseWidth/baseHeight * maxZoom never exceeds MAX_BAKE_DIM. Letting
-  // zoom go further than that would mean some of it *has* to come from an
-  // un-rebakeable CSS scale, which is permanent blur with no way to ever
-  // sharpen — better to just not allow zooming there.
-  const maxZoom = Math.min(opts.maxZoom ?? 60, MAX_BAKE_DIM / Math.max(baseWidth, baseHeight));
+  // Cap on the rebaked raster's largest dimension, in px. This used to be a
+  // flat constant (8192) sized against GPU texture limits — but that's the
+  // wrong budget to optimize for. Only a viewport-sized window of the baked
+  // content is EVER visible at once (the rest is clipped by
+  // .zoom-viewport's overflow:hidden); baking the *entire* map at high zoom
+  // (up to 8192x8192) meant every repaint after that — even revealing one
+  // new city dot — cost the browser a full repaint of a raster dozens of
+  // times bigger than the screen, regardless of GPU. Confirmed via real
+  // recorded sessions: 300-500ms main-thread stalls landing exactly on
+  // whatever DOM mutation happened to follow a rebake to a large size.
+  // Bounding the cap to (viewport size * some zoom-in headroom * device
+  // pixel ratio) keeps repaint cost roughly constant no matter how far the
+  // player zooms, in exchange for CSS-scale blur past that headroom — the
+  // same trade this code already made for "extreme" zoom, just kicking in
+  // much sooner so typical use stays cheap.
+  const bakeZoomHeadroom = opts.bakeZoomHeadroom ?? 2.2;
+  function getMaxBakeDim() {
+    if (opts.maxBakeDim) return opts.maxBakeDim;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    return Math.max(viewport.clientWidth, viewport.clientHeight) * dpr * bakeZoomHeadroom;
+  }
+  // Capped at a modest multiple of the bake headroom — some zoom past the
+  // point where the raster stops growing is fine (graceful CSS-scale blur),
+  // but letting it run all the way to 60x means most of the zoom range is
+  // blur stretched over a huge ratio, which didn't help performance and
+  // isn't worth the visual cost. Deliberately more conservative than before.
+  const maxZoom = Math.min(opts.maxZoom ?? 60, bakeZoomHeadroom * 4);
   const step = opts.step ?? 1.35;
   const tapThreshold = opts.tapThreshold ?? 6; // px of movement before a press counts as a drag
   const panFromAnywhere = opts.panFromAnywhere ?? false;
@@ -97,37 +112,61 @@ export function attachZoomPan(viewport, content, opts = {}) {
   // doesn't need to change for this — baseWidth*zoom (the true rendered
   // size) is invariant to how much of that is "baked" vs "CSS-scaled".
   //
-  // Capped at MAX_BAKE_DIM: baking is exactly the "resize the actual
-  // element" cost this whole rewrite exists to avoid, just done once per
-  // settle instead of every frame — fine at moderate zoom, but baking a
-  // 6000%-zoomed board would recreate a multi-ten-thousand-px backing
-  // store and reintroduce the original framerate drop (and risks exceeding
-  // GPU max texture size outright). Past the cap, the raster stops
-  // growing and the *rest* of the zoom stays a CSS scale — some blur at
-  // extreme zoom, but the backing store is bounded no matter how far in
-  // the player goes.
-  function rebake() {
+  // Only ever grows bakedZoom, never shrinks it: setting width/height is
+  // itself exactly the "resize the actual element" cost this whole
+  // rewrite exists to avoid, so it's only worth paying when zooming IN
+  // needs a sharper raster than what's already baked. Zooming OUT never
+  // needs it — shrinking an existing raster via the CSS scale looks fine
+  // (unlike stretching one up, which is what causes the blur), so a quick
+  // 800%->100% zoom-out settles into a pure `scale(0.125)`-style transform
+  // with no re-layout at all, instead of re-baking a huge SVG down to a
+  // tiny one just to immediately look identical.
+  //
+  // Growing is capped at getMaxBakeDim() (viewport-relative, see above):
+  // past that, the raster stops growing and the *rest* of the zoom stays a
+  // CSS scale — some blur, but the backing store — and therefore the cost
+  // of repainting it on every subsequent DOM change — is bounded no matter
+  // how far in the player goes.
+  function rebakeRaw() {
+    if (zoom <= bakedZoom) return;
     const rawW = baseWidth * zoom;
     const rawH = baseHeight * zoom;
-    const capRatio = Math.min(1, MAX_BAKE_DIM / Math.max(rawW, rawH));
+    const capRatio = Math.min(1, getMaxBakeDim() / Math.max(rawW, rawH));
     const bakeTarget = zoom * capRatio;
+    if (bakeTarget <= bakedZoom) return; // already baked at least this sharp (can happen right at the cap)
 
     const w = Math.round(baseWidth * bakeTarget);
     const h = Math.round(baseHeight * bakeTarget);
-    if (Math.round(baseWidth * bakedZoom) === w && Math.round(baseHeight * bakedZoom) === h) return;
     content.setAttribute('width', w);
     content.setAttribute('height', h);
     bakedZoom = bakeTarget;
     render();
   }
+  const rebake = mark('zoomPan.rebake', rebakeRaw);
 
   let settleTimer = null;
   function scheduleSettle() {
+    // Drop-shadow filters (state glows, city marker glows) are expensive to
+    // rasterize and must be recomputed on every scale change — cheap for
+    // one element, but 50+ states and dozens of city markers all filtered
+    // at once turns a rapid wheel-zoom burst into a string of 100-300ms
+    // main-thread stalls (confirmed via a real recorded session: unexplained
+    // "LONG TASK" entries lining up exactly with zoom bursts, with none of
+    // the instrumented JS functions accounting for the time — the cost is
+    // in the browser's paint step, invisible to JS timing). Suppressing
+    // filter for the duration of the interaction and restoring it once
+    // settled (each element already transitions filter back in) avoids
+    // paying that cost on every tick.
+    viewport.classList.add('zoom-interacting');
     clearTimeout(settleTimer);
-    settleTimer = setTimeout(() => {
-      rebake();
-      if (onVisibleRectChange) onVisibleRectChange(getVisibleNativeRect());
-    }, settleDebounceMs);
+    settleTimer = setTimeout(
+      mark('zoomPan.settle(rebake+visibleRect)', () => {
+        rebake();
+        if (onVisibleRectChange) onVisibleRectChange(getVisibleNativeRect());
+        viewport.classList.remove('zoom-interacting');
+      }),
+      settleDebounceMs
+    );
   }
   function getVisibleNativeRect() {
     const s = zoom * baseScale; // native-unit -> screen px, at current zoom
@@ -138,6 +177,10 @@ export function attachZoomPan(viewport, content, opts = {}) {
       y1: (viewport.clientHeight - panY) / s,
     };
   }
+
+  const notifyListeners = mark('zoomPan.onZoomChange listeners', () => {
+    for (const cb of listeners) cb(zoom);
+  });
 
   function apply(nextZoom, anchorClientX, anchorClientY) {
     nextZoom = Math.min(maxZoom, Math.max(minZoom, nextZoom));
@@ -157,7 +200,7 @@ export function attachZoomPan(viewport, content, opts = {}) {
     clampPan();
     render();
     scheduleSettle();
-    for (const cb of listeners) cb(zoom);
+    notifyListeners();
   }
 
   // Jumps to a specific spot on the map (native canvas coordinates) at a
@@ -203,7 +246,7 @@ export function attachZoomPan(viewport, content, opts = {}) {
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
   }
-  function onPointerMove(ev) {
+  function onPointerMoveRaw(ev) {
     if (!pan) return;
     const dx = ev.clientX - pan.startX;
     const dy = ev.clientY - pan.startY;
@@ -219,6 +262,7 @@ export function attachZoomPan(viewport, content, opts = {}) {
     render();
     scheduleSettle();
   }
+  const onPointerMove = mark('zoomPan.onPointerMove', onPointerMoveRaw);
   function onPointerUp() {
     if (!pan) return;
     const wasTap = !pan.moved;

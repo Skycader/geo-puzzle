@@ -5,6 +5,8 @@
 // into whichever map frame is currently on screen — see mountFpsMeter(),
 // called from zoomPan.js's createZoomWrap so it always lives inside the
 // map window itself rather than floating over the whole page.
+import { recordFpsSample, recordFrameTime } from './perfDebug.js';
+
 let el = null;
 
 export function startFpsMeter() {
@@ -14,8 +16,12 @@ export function startFpsMeter() {
 
   let frames = 0;
   let windowStart = performance.now();
+  let lastFrame = windowStart;
 
   function tick(now) {
+    recordFrameTime(now - lastFrame); // raw per-frame delta, for startDebug()/endDebug()
+    lastFrame = now;
+
     frames++;
     const elapsed = now - windowStart;
     if (elapsed >= 500) {
@@ -23,6 +29,7 @@ export function startFpsMeter() {
       el.textContent = `${fps} FPS`;
       el.classList.toggle('fps-bad', fps < 30);
       el.classList.toggle('fps-ok', fps >= 30 && fps < 50);
+      recordFpsSample(fps);
       frames = 0;
       windowStart = now;
     }

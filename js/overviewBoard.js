@@ -1,4 +1,5 @@
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
+import { mark } from './perfDebug.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const STATE_LABEL_PX = 12;
@@ -53,6 +54,16 @@ export class OverviewBoard {
     this.sortDir = 'desc';
     this.focusedEl = null;
     this.focusTimeoutHandle = null;
+    this._revealQueue = [];
+    this._revealScheduled = false;
+    this._destroyed = false;
+
+    // Perf instrumentation — instance-level overrides (shadow the
+    // prototype methods) so the onVisibleRectChange/onZoomChange
+    // callbacks wired up in _build() pick up the timed versions.
+    this._updateVisibleCities = mark('overview._updateVisibleCities', this._updateVisibleCities.bind(this));
+    this._processRevealQueue = mark('overview._processRevealQueue', this._processRevealQueue.bind(this));
+    this._rescaleForZoom = mark('overview._rescaleForZoom', this._rescaleForZoom.bind(this));
 
     this._build();
   }
@@ -184,6 +195,7 @@ export class OverviewBoard {
     this.wrapEl.appendChild(this.zoomWrap);
     this.wrapEl.appendChild(this._buildSidePanel());
     this.container.appendChild(this.wrapEl);
+    this._calibrateCharWidth();
 
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, {
       baseWidth: baseW,
@@ -208,50 +220,120 @@ export class OverviewBoard {
   // zoomPan.js after pan/zoom settles, so there's a brief, deliberate delay
   // before newly-panned-into-view cities appear — trading instant pop-in
   // for not paying render cost for off-screen content.
+  //
+  // Hiding is cheap (just removing nodes) and happens immediately. Showing
+  // is NOT cheap — laying out a dot-city's leader line calls
+  // getComputedTextLength(), which forces a synchronous layout; doing that
+  // for 70+ cities in one synchronous pass (e.g. zooming back out to see
+  // the whole map at once) is exactly the kind of single giant frame that
+  // tanks the framerate. So reveals go through a small lazy-loading queue
+  // instead, a handful per animation frame — cities pop in over a few
+  // frames rather than all at once, but every individual frame stays cheap.
   _updateVisibleCities(rect) {
     const mx = (rect.x1 - rect.x0) * VIRTUALIZE_MARGIN;
     const my = (rect.y1 - rect.y0) * VIRTUALIZE_MARGIN;
-    const x0 = rect.x0 - mx, x1 = rect.x1 + mx;
-    const y0 = rect.y0 - my, y1 = rect.y1 + my;
-    const effScale = this.scale * (this.zoomCtl?.getZoom() ?? 1);
+    this._visBounds = { x0: rect.x0 - mx, x1: rect.x1 + mx, y0: rect.y0 - my, y1: rect.y1 + my };
 
+    const toReveal = [];
     for (const entry of this.cityDotEntries) {
-      const visible = entry.cx >= x0 && entry.cx <= x1 && entry.cy >= y0 && entry.cy <= y1;
-      if (visible && !entry.appended) {
-        this.svg.appendChild(entry.dot);
-        this.svg.appendChild(entry.pointMark);
-        this.svg.appendChild(entry.leaderPath);
-        this.svg.appendChild(entry.leaderLabel);
-        entry.appended = true;
-        // Re-lay-out immediately at the current zoom — while detached, its
-        // stored geometry could be stale (from whenever it was last
-        // visible), and getComputedTextLength() only works once attached.
-        this._layoutCityLeader(entry, effScale);
-        entry.leaderLabel.style.opacity = this.labelsVisible ? '' : '0';
-        entry.pointMark.style.opacity = this.labelsVisible ? '' : '0';
-        entry.leaderPath.style.opacity = this.labelsVisible ? '' : '0';
-      } else if (!visible && entry.appended) {
-        entry.dot.remove();
-        entry.pointMark.remove();
-        entry.leaderPath.remove();
-        entry.leaderLabel.remove();
-        entry.appended = false;
-      }
+      const visible = this._dotEntryVisible(entry);
+      if (visible && !entry.appended) toReveal.push({ kind: 'dot', entry });
+      else if (!visible && entry.appended) this._hideDotEntry(entry);
     }
-
     for (const entry of this.cityShapeEntries) {
-      const [bx0, by0, bx1, by1] = entry.bbox;
-      const visible = !(bx1 < x0 || bx0 > x1 || by1 < y0 || by0 > y1);
-      if (visible && !entry.appended) {
-        this.svg.appendChild(entry.path);
-        this.svg.appendChild(entry.label);
-        entry.appended = true;
-        entry.label.style.opacity = this.labelsVisible ? '' : '0';
-      } else if (!visible && entry.appended) {
-        entry.path.remove();
-        entry.label.remove();
-        entry.appended = false;
-      }
+      const visible = this._shapeEntryVisible(entry);
+      if (visible && !entry.appended) toReveal.push({ kind: 'shape', entry });
+      else if (!visible && entry.appended) this._hideShapeEntry(entry);
+    }
+    this._queueReveals(toReveal);
+  }
+
+  _dotEntryVisible(entry) {
+    const b = this._visBounds;
+    return entry.cx >= b.x0 && entry.cx <= b.x1 && entry.cy >= b.y0 && entry.cy <= b.y1;
+  }
+  _shapeEntryVisible(entry) {
+    const [bx0, by0, bx1, by1] = entry.bbox;
+    const b = this._visBounds;
+    return !(bx1 < b.x0 || bx0 > b.x1 || by1 < b.y0 || by0 > b.y1);
+  }
+
+  _hideDotEntry(entry) {
+    entry.dot.remove();
+    entry.pointMark.remove();
+    entry.leaderPath.remove();
+    entry.leaderLabel.remove();
+    entry.appended = false;
+  }
+  _hideShapeEntry(entry) {
+    entry.path.remove();
+    entry.label.remove();
+    entry.appended = false;
+  }
+
+  _showDotEntry(entry, effScale) {
+    this.svg.appendChild(entry.dot);
+    this.svg.appendChild(entry.pointMark);
+    this.svg.appendChild(entry.leaderPath);
+    this.svg.appendChild(entry.leaderLabel);
+    entry.appended = true;
+    // Re-lay-out immediately at the current zoom — while detached, its
+    // stored geometry could be stale (from whenever it was last visible),
+    // and getComputedTextLength() only works once attached.
+    this._layoutCityLeader(entry, effScale);
+    entry.leaderLabel.style.opacity = this.labelsVisible ? '' : '0';
+    entry.pointMark.style.opacity = this.labelsVisible ? '' : '0';
+    entry.leaderPath.style.opacity = this.labelsVisible ? '' : '0';
+  }
+  _showShapeEntry(entry) {
+    this.svg.appendChild(entry.path);
+    this.svg.appendChild(entry.label);
+    entry.appended = true;
+    entry.label.style.opacity = this.labelsVisible ? '' : '0';
+  }
+
+  _queueReveals(items) {
+    if (!items.length) return;
+    this._revealQueue = (this._revealQueue || []).concat(items);
+    if (this._revealScheduled) return;
+    this._revealScheduled = true;
+    // City markers carry a permanent drop-shadow filter (see style.css) —
+    // cheap once painted, but expensive the instant a *new* filtered element
+    // is inserted, since the browser has to rasterize that filter as its own
+    // layer right away. Revealing happens right after zoomPan's settle
+    // (i.e. once its own 'zoom-interacting' suppression has already been
+    // lifted), often right after a rebake just grew the SVG's actual
+    // raster size — confirmed via a real recorded session where the
+    // dominant stall (400ms+) landed exactly on a reveal batch, not on the
+    // zoom itself. Suppressing filter for the duration of the reveal queue
+    // avoids paying that cost while cities are still being inserted; it
+    // fades back in via each marker's own filter transition once the queue
+    // is fully drained.
+    this.zoomViewport.classList.add('reveal-busy');
+    requestAnimationFrame(() => this._processRevealQueue());
+  }
+
+  _processRevealQueue() {
+    if (this._destroyed) return;
+    const BATCH = 6; // cities revealed per frame — small enough to stay well under a 16ms frame budget
+    const effScale = this.scale * (this.zoomCtl?.getZoom() ?? 1);
+    let n = 0;
+    while (n < BATCH && this._revealQueue.length) {
+      const { kind, entry } = this._revealQueue.shift();
+      n++;
+      if (entry.appended) continue; // already shown by the time its turn came up
+      // Re-check visibility — the camera may have moved on since this was
+      // queued, and there's no point revealing something no longer in view.
+      const stillVisible = kind === 'dot' ? this._dotEntryVisible(entry) : this._shapeEntryVisible(entry);
+      if (!stillVisible) continue;
+      if (kind === 'dot') this._showDotEntry(entry, effScale);
+      else this._showShapeEntry(entry);
+    }
+    if (this._revealQueue.length) {
+      requestAnimationFrame(() => this._processRevealQueue());
+    } else {
+      this._revealScheduled = false;
+      this.zoomViewport.classList.remove('reveal-busy');
     }
   }
 
@@ -418,9 +500,8 @@ export class OverviewBoard {
   // units would otherwise balloon and overlap. City dot radii are the one
   // exception: those are meant to grow/shrink with zoom, so they're set
   // once at creation and never touched here. Only *currently-appended*
-  // (i.e. visible — see _updateVisibleCities) city entries are touched:
-  // detached ones would fail getComputedTextLength() anyway, and there's
-  // no point paying the cost for elements nobody can see.
+  // (i.e. visible — see _updateVisibleCities) city entries are touched —
+  // there's no point paying to lay out elements nobody can see.
   _rescaleForZoom(zoom) {
     const effScale = this.scale * zoom;
     for (const { el } of this.stateLabels) {
@@ -436,10 +517,31 @@ export class OverviewBoard {
     }
   }
 
+  // getComputedTextLength() forces a synchronous layout of the *whole*
+  // page, not just the one element — calling it per-city (up to 91 times
+  // on first load, and again for every visible city on every zoom step)
+  // was the actual cause of the framerate collapsing to single digits,
+  // independent of how small the reveal batches were. JetBrains Mono is
+  // monospace, so every character has the same advance width — measuring
+  // it ONCE here and reusing that ratio arithmetically from then on gets
+  // the same result without ever forcing layout again.
+  _calibrateCharWidth() {
+    const probe = document.createElementNS(SVG_NS, 'text');
+    probe.setAttribute('class', 'overview-city-leader-label');
+    probe.style.fontSize = '100px';
+    probe.style.opacity = '0';
+    probe.textContent = 'MW0123456789АБВГДЕЖ';
+    this.svg.appendChild(probe);
+    const len = probe.getComputedTextLength();
+    this.svg.removeChild(probe);
+    this._charWidthRatio = len / (probe.textContent.length * 100); // px of width per px of font-size, per character
+  }
+
   // Point-mark -> diagonal -> horizontal run -> text, all sized/positioned
   // in constant screen px regardless of zoom (see the comment above). The
-  // horizontal run's length is measured from the actual rendered text via
-  // getComputedTextLength() so it reads as a true underline, not a guess.
+  // horizontal run's length comes from the calibrated char-width ratio
+  // (see _calibrateCharWidth) rather than measuring the live element, so
+  // laying out a city never forces a page-wide synchronous layout.
   _layoutCityLeader(entry, effScale) {
     const { cx, cy, pointMark, leaderPath, leaderLabel } = entry;
     pointMark.setAttribute('cx', cx);
@@ -451,9 +553,10 @@ export class OverviewBoard {
     const bendX = cx - d45;
     const bendY = cy + d45;
 
-    leaderLabel.style.fontSize = `${(CITY_LABEL_PX / effScale).toFixed(2)}px`;
+    const fontSizeNative = CITY_LABEL_PX / effScale;
+    leaderLabel.style.fontSize = `${fontSizeNative.toFixed(2)}px`;
     leaderLabel.style.strokeWidth = `${(CITY_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
-    const textLen = leaderLabel.getComputedTextLength();
+    const textLen = leaderLabel.textContent.length * this._charWidthRatio * fontSizeNative;
     const pad = LEADER_PAD_PX / effScale;
     const lineEndX = bendX - textLen - pad * 2;
 
@@ -470,6 +573,8 @@ export class OverviewBoard {
   }
 
   destroy() {
+    this._destroyed = true;
+    this._revealQueue = [];
     clearTimeout(this.focusTimeoutHandle);
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
