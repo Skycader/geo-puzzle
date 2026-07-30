@@ -1,14 +1,24 @@
-import { shuffle, clamp, levenshtein, weightedSampleWithoutReplacement } from './utils.js';
-import { playSnap, playError, playWin } from './audio.js';
-import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
-import { loadSuccessStats, recordOutcome } from './successStats.js';
+import {
+  shuffle,
+  clamp,
+  levenshtein,
+  weightedSampleWithoutReplacement,
+} from "./utils.js";
+import { playSnap, playError, playWin } from "./audio.js";
+import {
+  attachZoomPan,
+  createZoomControls,
+  createZoomWrap,
+  createScaleBar,
+} from "./zoomPan.js";
+import { loadSuccessStats, recordOutcome } from "./successStats.js";
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
+const SVG_NS = "http://www.w3.org/2000/svg";
 // Separate from quizBoard.js's 'quiz-states' scope — clicking a state on
 // the map and recalling its name from a highlight are different skills,
 // so a streak in one mode shouldn't silently suppress practice in the
 // other.
-const SUCCESS_SCOPE = 'name-state-states';
+const SUCCESS_SCOPE = "name-state-states";
 const OPTION_COUNT = 4; // easy mode: 1 correct + this many distractors
 const ADVANCE_DELAY_MS = 650; // pause after a correct answer so the green flash reads before the next round
 const WRONG_FLASH_MS = 500;
@@ -33,17 +43,24 @@ export class NameStateBoard {
     this.level = level;
     this.levelId = opts.levelId;
     this.scale = opts.scale || 1;
-    this.difficulty = opts.difficulty === 'hard' ? 'hard' : 'easy';
+    this.difficulty = opts.difficulty === "hard" ? "hard" : "easy";
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
 
-    const pool = opts.eligibleIds && opts.eligibleIds.size ? level.pieces.filter((p) => opts.eligibleIds.has(p.id)) : level.pieces;
+    const pool =
+      opts.eligibleIds && opts.eligibleIds.size
+        ? level.pieces.filter((p) => opts.eligibleIds.has(p.id))
+        : level.pieces;
     const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
     if (opts.adaptive && this.levelId) {
       // Same adaptive weighting as quizBoard.js — see js/successStats.js
       // and js/utils.js's weightedSampleWithoutReplacement.
       const stats = loadSuccessStats(this.levelId, SUCCESS_SCOPE);
-      const picked = weightedSampleWithoutReplacement(pool, (p) => 1 / ((stats[p.id] || 0) + 1), rounds);
+      const picked = weightedSampleWithoutReplacement(
+        pool,
+        (p) => 1 / ((stats[p.id] || 0) + 1),
+        rounds,
+      );
       this.queue = shuffle(picked);
     } else {
       this.queue = shuffle(pool).slice(0, rounds);
@@ -71,25 +88,28 @@ export class NameStateBoard {
 
   _build() {
     const { width, height } = this.level.canvas;
-    this.container.innerHTML = '';
+    this.container.innerHTML = "";
 
     const baseW = Math.round(width * this.scale);
     const baseH = Math.round(height * this.scale);
 
-    const { wrap: zoomWrap, viewport: zoomViewport } = createZoomWrap(baseW, baseH);
+    const { wrap: zoomWrap, viewport: zoomViewport } = createZoomWrap(
+      baseW,
+      baseH,
+    );
     this.zoomWrap = zoomWrap;
     this.zoomViewport = zoomViewport;
 
-    this.svg = document.createElementNS(SVG_NS, 'svg');
-    this.svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    this.svg.setAttribute('width', baseW);
-    this.svg.setAttribute('height', baseH);
-    this.svg.classList.add('quiz-svg');
+    this.svg = document.createElementNS(SVG_NS, "svg");
+    this.svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    this.svg.setAttribute("width", baseW);
+    this.svg.setAttribute("height", baseH);
+    this.svg.classList.add("quiz-svg");
 
     for (const p of this.level.pieces) {
-      const path = document.createElementNS(SVG_NS, 'path');
-      path.setAttribute('d', p.d);
-      path.setAttribute('class', 'quiz-path');
+      const path = document.createElementNS(SVG_NS, "path");
+      path.setAttribute("d", p.d);
+      path.setAttribute("class", "quiz-path");
       path.dataset.id = p.id;
       this.svg.appendChild(path);
       this.paths.set(p.id, path);
@@ -112,18 +132,23 @@ export class NameStateBoard {
       panFromAnywhere: true,
     });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
-    this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
+    this.zoomWrap.appendChild(
+      createScaleBar(this.zoomCtl, {
+        baseScale: this.scale,
+        kmPerUnit: this.level.kmPerUnit,
+      }),
+    );
 
     this._buildAnswerBar();
     this._nextQuestion();
   }
 
   _buildAnswerBar() {
-    const bar = document.createElement('div');
-    bar.className = 'name-answer-bar';
-    if (this.difficulty === 'easy') {
+    const bar = document.createElement("div");
+    bar.className = "name-answer-bar";
+    if (this.difficulty === "easy") {
       bar.innerHTML = `<div class="name-options"></div><span class="name-feedback"></span>`;
-      this.optionsEl = bar.querySelector('.name-options');
+      this.optionsEl = bar.querySelector(".name-options");
     } else {
       bar.innerHTML = `
         <div class="name-input-row">
@@ -136,54 +161,60 @@ export class NameStateBoard {
         </div>
         <span class="name-feedback"></span>
       `;
-      this.inputEl = bar.querySelector('.name-input');
-      this.matchIconEl = bar.querySelector('.name-match-icon');
-      this.confirmBtn = bar.querySelector('.name-confirm-btn');
-      this.hintBtn = bar.querySelector('.name-hint-btn');
-      this.inputEl.addEventListener('input', () => this._onInput());
-      this.inputEl.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter') this._confirmHard();
+      this.inputEl = bar.querySelector(".name-input");
+      this.matchIconEl = bar.querySelector(".name-match-icon");
+      this.confirmBtn = bar.querySelector(".name-confirm-btn");
+      this.hintBtn = bar.querySelector(".name-hint-btn");
+      this.inputEl.addEventListener("input", () => this._onInput());
+      this.inputEl.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") this._confirmHard();
       });
-      this.confirmBtn.addEventListener('click', () => this._confirmHard());
-      this.hintBtn.addEventListener('click', () => this._revealHint());
+      this.confirmBtn.addEventListener("click", () => this._confirmHard());
+      this.hintBtn.addEventListener("click", () => this._revealHint());
     }
-    this.feedbackEl = bar.querySelector('.name-feedback');
+    this.feedbackEl = bar.querySelector(".name-feedback");
     this.container.appendChild(bar);
     this.answerBar = bar;
   }
 
   _nextQuestion() {
-    this.currentPath?.classList.remove('quiz-hint');
+    this.currentPath?.classList.remove("quiz-hint");
     if (this.index >= this.queue.length) {
       setTimeout(() => playWin(), 100);
-      this.onFinish({ correct: this.correct, mistakes: this.mistakes, total: this.queue.length });
+      this.onFinish({
+        correct: this.correct,
+        mistakes: this.mistakes,
+        total: this.queue.length,
+      });
       return;
     }
     this.locked = false;
     this.current = this.queue[this.index];
     this.currentPath = this.paths.get(this.current.id);
-    this.currentPath.classList.add('quiz-hint');
-    this.feedbackEl.textContent = '';
+    this.currentPath.classList.add("quiz-hint");
+    this.feedbackEl.textContent = "";
     this.wrongOptionIds.clear();
     this.roundNeededHelp = false;
 
-    if (this.difficulty === 'easy') this._renderOptions();
+    if (this.difficulty === "easy") this._renderOptions();
     else this._resetHardInput();
 
     this._reportProgress();
   }
 
   _renderOptions() {
-    const distractors = shuffle(this.level.pieces.filter((p) => p.id !== this.current.id)).slice(0, OPTION_COUNT - 1);
+    const distractors = shuffle(
+      this.level.pieces.filter((p) => p.id !== this.current.id),
+    ).slice(0, OPTION_COUNT - 1);
     const options = shuffle([this.current, ...distractors]);
-    this.optionsEl.innerHTML = '';
+    this.optionsEl.innerHTML = "";
     for (const opt of options) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'name-option-btn';
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "name-option-btn";
       btn.textContent = opt.ru;
       btn.dataset.id = opt.id;
-      btn.addEventListener('click', () => this._answerEasy(opt.id, btn));
+      btn.addEventListener("click", () => this._answerEasy(opt.id, btn));
       this.optionsEl.appendChild(btn);
     }
   }
@@ -192,14 +223,21 @@ export class NameStateBoard {
     if (this.locked || this.wrongOptionIds.has(id)) return;
     if (id === this.current.id) {
       this.locked = true;
-      btn.classList.add('name-option-correct');
-      for (const b of this.optionsEl.querySelectorAll('.name-option-btn')) b.disabled = true;
+      btn.classList.add("name-option-correct");
+      for (const b of this.optionsEl.querySelectorAll(".name-option-btn"))
+        b.disabled = true;
       playSnap();
       this.correct++;
-      if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.roundNeededHelp);
-      this.feedbackEl.textContent = 'Верно!';
-      this.feedbackEl.classList.remove('name-feedback-wrong');
-      this.feedbackEl.classList.add('name-feedback-correct');
+      if (this.levelId)
+        recordOutcome(
+          this.levelId,
+          SUCCESS_SCOPE,
+          this.current.id,
+          this.roundNeededHelp,
+        );
+      this.feedbackEl.textContent = "Верно!";
+      this.feedbackEl.classList.remove("name-feedback-wrong");
+      this.feedbackEl.classList.add("name-feedback-correct");
       setTimeout(() => {
         this.index++;
         this._nextQuestion();
@@ -207,13 +245,13 @@ export class NameStateBoard {
     } else {
       this.wrongOptionIds.add(id);
       this.roundNeededHelp = true;
-      btn.classList.add('name-option-wrong');
+      btn.classList.add("name-option-wrong");
       btn.disabled = true;
       playError();
       this.mistakes++;
-      this.feedbackEl.textContent = 'Не тот штат — попробуй ещё';
-      this.feedbackEl.classList.remove('name-feedback-correct');
-      this.feedbackEl.classList.add('name-feedback-wrong');
+      this.feedbackEl.textContent = "Не тот штат — попробуй ещё";
+      this.feedbackEl.classList.remove("name-feedback-correct");
+      this.feedbackEl.classList.add("name-feedback-wrong");
       this._reportProgress();
     }
   }
@@ -229,7 +267,10 @@ export class NameStateBoard {
     let best = null;
     let bestDist = Infinity;
     for (const p of this.level.pieces) {
-      const d = Math.min(levenshtein(q, p.ru.toLowerCase()), levenshtein(q, p.name.toLowerCase()));
+      const d = Math.min(
+        levenshtein(q, p.ru.toLowerCase()),
+        levenshtein(q, p.name.toLowerCase()),
+      );
       if (d < bestDist) {
         bestDist = d;
         best = p;
@@ -243,9 +284,16 @@ export class NameStateBoard {
     const { piece, dist } = this._closestPiece(this.inputEl.value);
     const matched = dist <= FUZZY_MATCH_MAX_DIST ? piece : null;
     this.matchedPiece = matched;
-    this.matchIconEl.textContent = matched ? '✓' : this.inputEl.value.trim() ? '✗' : '';
-    this.matchIconEl.classList.toggle('name-match-yes', !!matched);
-    this.matchIconEl.classList.toggle('name-match-no', !matched && !!this.inputEl.value.trim());
+    this.matchIconEl.textContent = matched
+      ? "✓"
+      : this.inputEl.value.trim()
+        ? "✗"
+        : "";
+    this.matchIconEl.classList.toggle("name-match-yes", !!matched);
+    this.matchIconEl.classList.toggle(
+      "name-match-no",
+      !matched && !!this.inputEl.value.trim(),
+    );
     this.confirmBtn.disabled = !matched;
   }
 
@@ -257,19 +305,23 @@ export class NameStateBoard {
     if (this.locked || !this.current) return;
     this.roundNeededHelp = true;
     this.feedbackEl.textContent = `Ответ: ${this.current.ru} (${this.current.name})`;
-    this.feedbackEl.classList.remove('name-feedback-correct', 'name-feedback-wrong');
+    this.feedbackEl.classList.remove(
+      "name-feedback-correct",
+      "name-feedback-wrong",
+    );
   }
 
   _resetHardInput() {
-    this.inputEl.value = '';
+    this.inputEl.value = "";
     this.matchedPiece = null;
-    this.matchIconEl.textContent = '';
-    this.matchIconEl.classList.remove('name-match-yes', 'name-match-no');
+    this.matchIconEl.textContent = "";
+    this.matchIconEl.classList.remove("name-match-yes", "name-match-no");
     this.confirmBtn.disabled = true;
     this.inputEl.focus();
   }
 
   _confirmHard() {
+    if (this.inputEl.value === "?") this._revealHint(); //Allow manual asking for help;
     if (this.locked || !this.matchedPiece) return;
     if (this.matchedPiece.id === this.current.id) {
       this.locked = true;
@@ -277,10 +329,16 @@ export class NameStateBoard {
       this.confirmBtn.disabled = true;
       playSnap();
       this.correct++;
-      if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.roundNeededHelp);
-      this.feedbackEl.textContent = 'Верно!';
-      this.feedbackEl.classList.remove('name-feedback-wrong');
-      this.feedbackEl.classList.add('name-feedback-correct');
+      if (this.levelId)
+        recordOutcome(
+          this.levelId,
+          SUCCESS_SCOPE,
+          this.current.id,
+          this.roundNeededHelp,
+        );
+      this.feedbackEl.textContent = "Верно!";
+      this.feedbackEl.classList.remove("name-feedback-wrong");
+      this.feedbackEl.classList.add("name-feedback-correct");
       setTimeout(() => {
         this.inputEl.disabled = false;
         this.index++;
@@ -291,10 +349,13 @@ export class NameStateBoard {
       playError();
       this.mistakes++;
       this.feedbackEl.textContent = `«${this.matchedPiece.ru}» — не тот штат, попробуй ещё`;
-      this.feedbackEl.classList.remove('name-feedback-correct');
-      this.feedbackEl.classList.add('name-feedback-wrong');
-      this.answerBar.classList.add('name-shake');
-      setTimeout(() => this.answerBar.classList.remove('name-shake'), WRONG_FLASH_MS);
+      this.feedbackEl.classList.remove("name-feedback-correct");
+      this.feedbackEl.classList.add("name-feedback-wrong");
+      this.answerBar.classList.add("name-shake");
+      setTimeout(
+        () => this.answerBar.classList.remove("name-shake"),
+        WRONG_FLASH_MS,
+      );
       this._reportProgress();
     }
   }
@@ -309,6 +370,6 @@ export class NameStateBoard {
 
   destroy() {
     this.zoomCtl?.destroy();
-    this.container.innerHTML = '';
+    this.container.innerHTML = "";
   }
 }
