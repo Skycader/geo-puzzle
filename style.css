@@ -694,6 +694,22 @@ body {
   50% { opacity: 0.45; }
 }
 
+/* first click only selects a state (see quizBoard.js's _onClick /
+   _confirmAnswer) — a second click on the same, still-glowing state is what
+   actually submits the answer, so a misclick can be corrected for free by
+   just clicking somewhere else instead of it counting as a mistake. */
+.quiz-path.quiz-selected {
+  fill: rgba(33, 246, 255, 0.4);
+  stroke: var(--neon-cyan);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 10px rgba(33, 246, 255, 0.8)); /* static — see wrong-pulse comment */
+  animation: selected-pulse 0.9s ease-in-out infinite;
+}
+@keyframes selected-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 /* revealed after a mistake so the player learns where it actually is */
 .quiz-path.quiz-hint {
   fill: rgba(247, 255, 58, 0.4);

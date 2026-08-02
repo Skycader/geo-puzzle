@@ -48,6 +48,7 @@ export class QuizBoard {
     this.locked = false;
     this.current = null;
     this.hinted = false;
+    this.selectedId = null;
     this.paths = new Map();
 
     this._build();
@@ -111,13 +112,34 @@ export class QuizBoard {
       return;
     }
     this.hinted = false;
+    this.selectedId = null;
     this.current = this.queue[this.index];
     this._reportProgress();
   }
 
+  // Click #1 on a state only selects/highlights it — click #2 on that same
+  // (still-selected) state is what actually submits it as the answer. This
+  // gives a misclick an escape hatch: clicking a different state just moves
+  // the highlight instead of immediately counting as a wrong answer.
   _onClick(id) {
     if (this.locked || !this.current) return;
+    if (this.selectedId !== id) {
+      this._selectPiece(id);
+      return;
+    }
+    this._confirmAnswer(id);
+  }
+
+  _selectPiece(id) {
+    if (this.selectedId) this.paths.get(this.selectedId)?.classList.remove('quiz-selected');
+    this.selectedId = id;
+    this.paths.get(id).classList.add('quiz-selected');
+  }
+
+  _confirmAnswer(id) {
     const path = this.paths.get(id);
+    path.classList.remove('quiz-selected');
+    this.selectedId = null;
 
     if (id === this.current.id) {
       this.locked = true;

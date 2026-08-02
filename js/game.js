@@ -574,5 +574,9 @@ export class Game {
     // the menu, including the header logo and the "Меню" button, which
     // used to leave it stuck on screen.
     this.el.winBar.hidden = true;
+    // Rebuild the eligibility list so its success stats reflect the round
+    // that was just played — otherwise it kept showing whatever stats were
+    // loaded when the settings panel was last opened, before the round.
+    this._applyModeVisibility();
   }
 }
