@@ -14,7 +14,7 @@ export const MODES = [
   {
     id: 'name-state',
     title: 'Назови штат',
-    desc: 'Карта подсвечивает штат — угадай название',
+    desc: 'Назови подсвеченный штат',
   },
   {
     id: 'city-quiz',

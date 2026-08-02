@@ -392,16 +392,27 @@ body {
   gap: 14px;
   width: 100%;
   align-items: stretch;
+  /* Grow to fill whatever .screen-menu's flex column has left after the
+     title/subtitle above and the "Играть" button below, instead of a
+     fixed vh-based guess — that guess was sized against one specific
+     viewport and broke (pushed the Играть button off-screen) the moment
+     the actual chrome-reserved space differed, e.g. at 125% browser zoom
+     where window.innerHeight is smaller in CSS px. min-height:0 lets it
+     actually shrink below its content's natural size instead of forcing
+     .screen-menu to scroll. */
+  flex: 1;
+  min-height: 0;
 }
 
 .panel {
   width: 100%;
-  /* A fixed viewport-relative height, not one driven by content — so
-     switching modes (which swaps what's in this column, e.g. plugging in
-     the eligibility checklist) never makes the panels jump to a different
-     size. Content that doesn't fill it just leaves empty space; content
-     that overflows it scrolls internally instead of growing the panel. */
-  height: 70vh;
+  /* Fills .menu-columns's actual (flex-grown, see above) row height —
+     not driven by which mode's content is currently showing, so switching
+     modes never makes the panels jump to a different size. Content that
+     doesn't fill it just leaves empty space; content that overflows it
+     scrolls internally instead of growing the panel. */
+  height: 100%;
+  min-height: 0;
   overflow-y: auto;
   /* Reserve the scrollbar's space always, whether content currently needs
      it or not — otherwise the content column narrows by ~15px the instant
@@ -978,6 +989,30 @@ body {
   min-height: 0; /* let .overview-list-scroll's own flex:1 actually shrink/grow within this instead of being pushed by content */
   gap: 8px;
   margin-top: 10px;
+}
+/* (states/cities with success > 0) / total * 100% — how much of the map
+   the player has met at least once, regardless of current recall streak. */
+.elig-familiarity {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border: 1px solid rgba(33, 246, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(33, 246, 255, 0.08);
+}
+.elig-familiarity-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--base0);
+}
+.elig-familiarity-value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--neon-cyan);
 }
 .elig-header {
   display: flex;

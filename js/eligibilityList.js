@@ -20,7 +20,7 @@ export class EligibilityList {
     this.getStat = opts.getStat || null;
     this.statLabel = opts.statLabel || '';
     this.searchQuery = '';
-    this.sortBy = null; // null (alphabetical) | 'area'
+    this.sortBy = null; // null (alphabetical) | 'area' | 'stat'
     this.sortDir = 'desc';
     this.selected = this._loadSelection();
     this._build();
@@ -65,6 +65,11 @@ export class EligibilityList {
 
   _build() {
     this.container.innerHTML = `
+      ${this.getStat ? `
+      <div class="elig-familiarity">
+        <span class="elig-familiarity-label">Знакомство с картой</span>
+        <span class="elig-familiarity-value"></span>
+      </div>` : ''}
       <div class="elig-header">
         <span class="elig-count"></span>
         <div class="elig-bulk">
@@ -75,24 +80,28 @@ export class EligibilityList {
       <input type="text" class="overview-search" placeholder="Поиск..." autocomplete="off" />
       <div class="overview-list-header${this.getStat ? ' overview-list-header-with-stat' : ''}">
         <span class="overview-col-name">Название</span>
-        <button type="button" class="overview-col-sort" data-sort="area">Площадь<span class="overview-sort-arrow"></span></button>
-        ${this.getStat ? `<span class="overview-col-stat">${this.statLabel}</span>` : ''}
+        <button type="button" class="overview-col-sort" data-sort="area">Площадь<span class="overview-sort-arrow" data-arrow="area"></span></button>
+        ${this.getStat ? `<button type="button" class="overview-col-sort overview-col-stat" data-sort="stat">${this.statLabel}<span class="overview-sort-arrow" data-arrow="stat"></span></button>` : ''}
       </div>
       <div class="overview-list-scroll"><div class="overview-item-list"></div></div>
     `;
     this.searchInput = this.container.querySelector('.overview-search');
     this.itemListEl = this.container.querySelector('.overview-item-list');
-    this.sortArrowEl = this.container.querySelector('.overview-sort-arrow');
+    this.arrowEls = this.container.querySelectorAll('.overview-sort-arrow');
     this.countEl = this.container.querySelector('.elig-count');
+    this.familiarityValueEl = this.container.querySelector('.elig-familiarity-value');
 
     this.searchInput.addEventListener('input', () => {
       this.searchQuery = this.searchInput.value.trim().toLowerCase();
       this._renderList();
     });
-    this.container.querySelector('.overview-col-sort').addEventListener('click', () => {
-      this.sortDir = this.sortBy === 'area' && this.sortDir === 'desc' ? 'asc' : 'desc';
-      this.sortBy = 'area';
-      this._renderList();
+    this.container.querySelectorAll('.overview-col-sort[data-sort]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.sort;
+        this.sortDir = this.sortBy === key && this.sortDir === 'desc' ? 'asc' : 'desc';
+        this.sortBy = key;
+        this._renderList();
+      });
     });
     this.container.querySelector('[data-bulk="all"]').addEventListener('click', () => {
       this.selected = new Set(this.items.map((it) => it.id));
@@ -116,6 +125,18 @@ export class EligibilityList {
     this.countEl.textContent = `Выбрано: ${this.selected.size} из ${this.items.length}`;
   }
 
+  // (Количество штатов/городов со success > 0) / всего * 100% — показывает,
+  // со сколькими элементами игрок вообще успешно справлялся хоть раз, вне
+  // зависимости от текущего поиска/сортировки (поэтому считаем по
+  // this.items, а не по filtered/sorted).
+  _updateFamiliarity() {
+    if (!this.familiarityValueEl) return;
+    const known = this.items.filter((it) => this.getStat(it) > 0).length;
+    const pct = Math.round((known / this.items.length) * 100);
+    this.familiarityValueEl.textContent = `${pct}%`;
+    this.familiarityValueEl.title = `${known} из ${this.items.length}`;
+  }
+
   _renderList() {
     const q = this.searchQuery;
     const filtered = q
@@ -126,11 +147,17 @@ export class EligibilityList {
     if (this.sortBy === 'area') {
       const dir = this.sortDir === 'asc' ? 1 : -1;
       sorted = [...filtered].sort((a, b) => (this._areaOf(a) - this._areaOf(b)) * dir);
+    } else if (this.sortBy === 'stat' && this.getStat) {
+      const dir = this.sortDir === 'asc' ? 1 : -1;
+      sorted = [...filtered].sort((a, b) => (this.getStat(a) - this.getStat(b)) * dir);
     } else {
       sorted = [...filtered].sort((a, b) => a.ru.localeCompare(b.ru, 'ru'));
     }
-    this.sortArrowEl.textContent = this.sortBy === 'area' ? (this.sortDir === 'asc' ? ' ▲' : ' ▼') : '';
+    this.arrowEls.forEach((el) => {
+      el.textContent = this.sortBy === el.dataset.arrow ? (this.sortDir === 'asc' ? ' ▲' : ' ▼') : '';
+    });
     this._updateCount();
+    if (this.getStat) this._updateFamiliarity();
 
     this.itemListEl.innerHTML = '';
     if (!sorted.length) {
