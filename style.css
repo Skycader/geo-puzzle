@@ -898,7 +898,14 @@ body {
 }
 .overview-list-scroll {
   flex: 1;
-  min-height: 0;
+  /* A bare 0 here let this shrink all the way to invisible whenever the
+     panel's other content (round slider, adaptive toggle, familiarity
+     badge, etc.) didn't fit the available height — e.g. "Назови штат" with
+     the difficulty picker AND adaptive mode both showing, at a 125%-zoom-
+     equivalent viewport. The panel already has overflow-y:auto, so a floor
+     here just means THAT scrolls to reveal the rest of the list instead of
+     the list itself quietly disappearing to 0px. */
+  min-height: 140px;
   overflow-y: auto;
   /* Reserve scrollbar space always — otherwise row content (name/area
      columns) shifts sideways by the scrollbar's width whenever a search or
