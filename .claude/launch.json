@@ -4,8 +4,8 @@
     {
       "name": "geo-puzzle",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "5703"],
-      "port": 5703
+      "runtimeArgs": ["-m", "http.server", "5706"],
+      "port": 5706
     }
   ]
 }

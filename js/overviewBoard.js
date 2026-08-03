@@ -58,9 +58,9 @@ function loadInfo() {
   }
   return _infoLoadPromise;
 }
-const POPUP_W_PX = 260;
-const POPUP_MARGIN_PX = 16;
-const POPUP_EDGE_PAD_PX = 8;
+const POPUP_W_PX = 480;
+const POPUP_MARGIN_PX = 20;
+const POPUP_EDGE_PAD_PX = 12;
 
 // Free-look mode: every state sits filled at its true spot (like an
 // already-solved puzzle) and every city is a dot, all at once — nothing

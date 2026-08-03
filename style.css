@@ -891,13 +891,12 @@ body {
    rather than continuously re-tracking the connector line mid-drag. */
 .info-popup {
   position: absolute;
-  width: 260px;
-  max-height: 340px;
+  width: 480px;
+  max-height: 80vh;
   overflow-y: auto;
   background: rgba(0, 20, 26, 0.97);
-  border: 1px solid var(--neon-cyan);
-  border-radius: 10px;
-  box-shadow: 0 0 24px rgba(33, 246, 255, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+  border-radius: 9px;
+  box-shadow: 0 0 32px rgba(33, 246, 255, 0.3), 0 12px 36px rgba(0, 0, 0, 0.55);
   z-index: 8;
   animation: info-popup-in 0.15s ease;
 }
@@ -907,15 +906,15 @@ body {
 }
 .info-popup-close {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 22px;
-  height: 22px;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.5);
   color: var(--base2);
-  font-size: 16px;
+  font-size: 22px;
   line-height: 1;
   cursor: pointer;
   z-index: 1;
@@ -924,28 +923,28 @@ body {
 .info-popup-image {
   display: block;
   width: 100%;
-  height: 120px;
+  height: 240px;
   object-fit: cover;
-  border-radius: 10px 10px 0 0;
+  border-radius: 9px 9px 0 0;
 }
-.info-popup-body { padding: 10px 12px 12px; }
+.info-popup-body { padding: 18px 24px 22px; }
 .info-popup-title {
-  margin: 0 0 6px;
+  margin: 0 0 12px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 1.4rem;
   color: var(--neon-cyan);
 }
 .info-popup-text {
-  margin: 0 0 8px;
+  margin: 0 0 16px;
   font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: 14px;
+  line-height: 1.6;
   color: var(--base1);
 }
 .info-popup-link {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--neon-pink);
+  font-size: 0.95rem;
+  color: var(--neon-cyan);
   text-decoration: none;
 }
 .info-popup-link:hover { text-decoration: underline; }

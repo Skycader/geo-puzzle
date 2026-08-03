@@ -1,26 +1,26 @@
 {
   "golden_gate_bridge": {
-    "extract": "The Golden Gate Bridge is a suspension bridge spanning the Golden Gate, the one-mile-wide (1.6 km) strait connecting San Francisco Bay and the Pacific Ocean in California, United States.",
+    "extract": "Мост Золотые Ворота — это подвесной мост, пересекающий Золотые Ворота, пролив шириной в одну милю (1,6 км), соединяющий залив Сан-Франциско и Тихий океан в Калифорнии, США.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Golden_Gate_Bridge_as_seen_from_Battery_East.jpg/330px-Golden_Gate_Bridge_as_seen_from_Battery_East.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Golden_Gate_Bridge"
   },
   "statue_of_liberty": {
-    "extract": "The Statue of Liberty is a colossal neoclassical sculpture of a robed and crowned woman on Liberty Island, part of New York City, in New York Harbor. The copper-clad statue, a gift to the United States from the people of France, was designed by French sculptor Frédéric Auguste Bartholdi, and its metal framework built by Gustave Eiffel. The statue was dedicated on October 28, 1886.",
+    "extract": "Статуя Свободы — это колоссальная неоклассическая скульптура женщины в одеждах и с короной на острове Свободы, части Нью-Йорка, в гавани Нью-Йорка. Медная статуя, подарок Соединённым Штатам от народа Франции, была спроектирована французским скульптором Фредериком Огюстом Бартольди, а её металлический каркас построен Гюставом Эйфелем. Статуя была открыта 28 октября 1886 года.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Front_view_of_Statue_of_Liberty_%28cropped%29.jpg/330px-Front_view_of_Statue_of_Liberty_%28cropped%29.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Statue_of_Liberty"
   },
   "grand_canyon": {
-    "extract": "The Grand Canyon is a steep-sided canyon carved by the Colorado River in Arizona, United States. The Grand Canyon is 277 miles (446 km) long, up to 18 miles (29 km) wide and attains a depth of over a mile.",
+    "extract": "Гранд-Каньон — это крутостенный каньон, вырезанный рекой Колорадо в Аризоне, США. Гранд-Каньон имеет длину 277 миль (446 км), ширину до 18 миль (29 км) и достигает глубины более мили.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Canyon_River_Tree_%28165872763%29.jpeg/330px-Canyon_River_Tree_%28165872763%29.jpeg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Grand_Canyon"
   },
   "mount_rushmore": {
-    "extract": "The Mount Rushmore National Memorial is a national memorial featuring a colossal sculpture carved into the granite face of Mount Rushmore in the Black Hills, about 2 mi (3 km) southwest of Keystone, South Dakota, United States.",
+    "extract": "Национальный мемориал Маунт-Рашмор — это национальный мемориал, представляющий собой колоссальную скульптуру, вырезанную в гранитной скале горы Рашмор в Чёрных Холмах, примерно в 2 милях (3 км) к юго-западу от Кейстоуна, Южная Дакота, США.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Mount_Rushmore_detail_view_%28100MP%29.jpg/330px-Mount_Rushmore_detail_view_%28100MP%29.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Mount_Rushmore"
   },
   "niagara_falls": {
-    "extract": "Niagara Falls is a group of three waterfalls at the southern end of Niagara Gorge, spanning the border between the Canadian province of Ontario and the U.S. state of New York. The largest of the three is Horseshoe Falls. The smaller American Falls and Bridal Veil Falls lie within the United States.",
+    "extract": "Ниагарский водопад — это группа из трёх водопадов в южной части ущелья Ниагара, пересекающая границу между канадской провинцией Онтарио и штатом Нью-Йорк в США. Самый большой из трёх — водопад Подкова. Меньшие Американский водопад и водопад Фата Невесты находятся на территории США.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/3Falls_Niagara.jpg/330px-3Falls_Niagara.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Niagara_Falls"
   }

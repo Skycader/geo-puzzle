@@ -1,26 +1,31 @@
 {
   "new_york": {
-    "extract": "New York, often called New York City (NYC), is the most populous city in the United States. It is located at the southern tip of New York State on New York Harbor, one of the world's largest natural harbors.",
+    "extract_EN": "New York, often called New York City (NYC), is the most populous city in the United States. It is located at the southern tip of New York State on New York Harbor, one of the world's largest natural harbors.",
+    "extract_RU": "Нью-Йорк, часто называемый Нью-Йорк-Сити (NYC), — самый населённый город США. Он расположен на южной оконечности штата Нью-Йорк на Нью-Йоркской гавани, одной из крупнейших естественных гаваней в мире.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu_%28cropped%29.jpg/330px-View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu_%28cropped%29.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/New_York_City"
   },
   "los_angeles": {
-    "extract": "Los Angeles is the most populous city in the U.S. state of California, and the commercial, financial, and cultural center of Southern California. With an estimated 3.87 million residents within the city limits, it is the second-most populous city in the United States, behind New York City.",
+    "extract_EN": "Los Angeles is the most populous city in the U.S. state of California, and the commercial, financial, and cultural center of Southern California. With an estimated 3.87 million residents within the city limits, it is the second-most populous city in the United States, behind New York City.",
+    "extract_RU": "Лос-Анджелес — самый населённый город штата Калифорния, а также коммерческий, финансовый и культурный центр Южной Калифорнии. С населением около 3,87 миллиона человек в черте города, это второй по величине город США после Нью-Йорка.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Hollywood_sign_%288485145044%29.jpg/330px-Hollywood_sign_%288485145044%29.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Los_Angeles"
   },
   "chicago": {
-    "extract": "Chicago is the most populous city in the U.S. state of Illinois and in the Midwestern United States. Located on the western shore of Lake Michigan, it is the third-most populous city in the United States, with a population of 2.74 million at the 2020 census.",
+    "extract_EN": "Chicago is the most populous city in the U.S. state of Illinois and in the Midwestern United States. Located on the western shore of Lake Michigan, it is the third-most populous city in the United States, with a population of 2.74 million at the 2020 census.",
+    "extract_RU": "Чикаго — самый населённый город штата Иллинойс и всего Среднего Запада США. Расположенный на западном берегу озера Мичиган, это третий по численности населения город США — 2,74 миллиона человек по переписи 2020 года.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Chicago_River_ferry_b.jpg/330px-Chicago_River_ferry_b.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Chicago"
   },
   "boston": {
-    "extract": "Boston is the capital and most populous city of the U.S. state of Massachusetts. It serves as a cultural and financial center of New England, a region of the Northeastern United States. Boston has a population of 675,647 as of the 2020 census, making it the third-most populous city in the Northeastern United States after New York City and Philadelphia.",
+    "extract_EN": "Boston is the capital and most populous city of the U.S. state of Massachusetts. It serves as a cultural and financial center of New England, a region of the Northeastern United States. Boston has a population of 675,647 as of the 2020 census, making it the third-most populous city in the Northeastern United States after New York City and Philadelphia.",
+    "extract_RU": "Бостон — столица и самый населённый город штата Массачусетс. Он служит культурным и финансовым центром Новой Англии, региона на северо-востоке США. По переписи 2020 года население Бостона составляет 675 647 человек, что делает его третьим по величине городом северо-востока США после Нью-Йорка и Филадельфии.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/ISH_WC_Boston4.jpg/330px-ISH_WC_Boston4.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Boston"
   },
   "seattle": {
-    "extract": "Seattle is the most populous city in the U.S. state of Washington and the Pacific Northwest region of North America. It is the 18th-most populous city in the United States, while the Seattle metropolitan area at over 4.15 million residents is the 15th-most populous metropolitan area in the nation.",
+    "extract_EN": "Seattle is the most populous city in the U.S. state of Washington and the Pacific Northwest region of North America. It is the 18th-most populous city in the United States, while the Seattle metropolitan area at over 4.15 million residents is the 15th-most populous metropolitan area in the nation.",
+    "extract_RU": "Сиэтл — самый населённый город штата Вашингтон и региона Тихоокеанский Северо-Запад Северной Америки. Он занимает 18-е место по численности населения среди городов США, а агломерация Сиэтла с населением более 4,15 миллиона человек — 15-я по величине городская агломерация страны.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Seattle_Center_as_night_falls.jpg/330px-Seattle_Center_as_night_falls.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Seattle"
   }
