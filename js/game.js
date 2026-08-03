@@ -26,13 +26,14 @@ const ADAPTIVE_SUCCESS_SCOPE_BY_MODE = {
   identify: 'identify-states',
 };
 
+// 'city-place' isn't here — its heading/label/prompt depend on its own two
+// toggles (entity, interaction), computed by _cityPlaceRoundsText() instead
+// of a static per-mode lookup.
 const ROUNDS_PANEL_TEXT = {
   quiz: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: 'Найди на карте:' },
   'name-state': { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
   neighbor: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
   identify: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
-  'city-quiz': { heading: 'Раунд', label: 'Сколько городов спросить', prompt: 'Найди на карте:' },
-  'city-pins': { heading: 'Раунд', label: 'Сколько городов отметить', prompt: 'Отметь на карте:' },
 };
 
 function formatTime(totalSeconds) {
@@ -57,11 +58,17 @@ export class Game {
     this.nameStateDifficulty = NAME_STATE_DIFFICULTIES[0].id;
     this.neighborDifficulty = NEIGHBOR_DIFFICULTIES[0].id;
     this.identifyDifficulty = IDENTIFY_DIFFICULTIES[0].id;
+    // "Города и места" — two independent toggles instead of separate mode
+    // cards: WHAT to ask about (cities vs places) and HOW to answer
+    // (click-to-find vs place-a-pin). See _startCityPlace.
+    this.cityPlaceEntity = 'cities';
+    this.cityPlaceMode = 'find';
     this.adaptiveMode = false;
     this.hintsVisible = true;
     this.labelsVisible = true;
     this.citiesVisible = true;
-    this.eligibilityList = null; // current EligibilityList instance for quiz/city-quiz — see _applyModeVisibility
+    this.placesVisible = true;
+    this.eligibilityList = null; // current EligibilityList instance for quiz/city-place — see _applyModeVisibility
     this.board = null;
     this.seconds = 0;
     this.timerHandle = null;
@@ -102,6 +109,12 @@ export class Game {
       quizCountValue: document.getElementById('quiz-count-value'),
       quizEligibleWrap: document.getElementById('quiz-eligible-wrap'),
       nameStateDifficultyEl: document.getElementById('name-state-difficulty'),
+      cityPlaceEntityRow: document.getElementById('city-place-entity-row'),
+      cityPlaceEntityCheckbox: document.getElementById('city-place-entity-checkbox'),
+      cityPlaceEntityText: document.getElementById('city-place-entity-text'),
+      cityPlaceModeRow: document.getElementById('city-place-mode-row'),
+      cityPlaceModeCheckbox: document.getElementById('city-place-mode-checkbox'),
+      cityPlaceModeText: document.getElementById('city-place-mode-text'),
       adaptiveModeRow: document.getElementById('adaptive-mode-row'),
       adaptiveModeCheckbox: document.getElementById('adaptive-mode-checkbox'),
       btnStart: document.getElementById('btn-start'),
@@ -118,6 +131,8 @@ export class Game {
       toggleHintsText: document.getElementById('toggle-hints-text'),
       toggleLabels: document.getElementById('toggle-labels'),
       toggleLabelsText: document.getElementById('toggle-labels-text'),
+      togglePlacesWrap: document.getElementById('toggle-places-wrap'),
+      togglePlaces: document.getElementById('toggle-places'),
     };
   }
 
@@ -162,15 +177,15 @@ export class Game {
     const isPuzzle = this.modeId === 'puzzle';
     const isOverview = this.modeId === 'overview';
     const isRounds = !isPuzzle && !isOverview;
-    // The "find/name/identify the X" quiz modes get an eligibility
-    // checklist — city-pins also shares this panel but always draws from
-    // every city.
-    const hasEligibility =
-      this.modeId === 'quiz' || this.modeId === 'name-state' || this.modeId === 'neighbor' || this.modeId === 'identify' || this.modeId === 'city-quiz';
     const isNameState = this.modeId === 'name-state';
     const isNeighbor = this.modeId === 'neighbor';
     const isIdentify = this.modeId === 'identify';
     const isQuiz = this.modeId === 'quiz';
+    const isCityPlace = this.modeId === 'city-place';
+    // "Города и места" only gets an eligibility checklist in "найти" mode —
+    // "расставь метку" always draws from the full pool, same as the old
+    // separate city-pins mode used to.
+    const hasEligibility = isQuiz || isNameState || isNeighbor || isIdentify || (isCityPlace && this.cityPlaceMode === 'find');
     this.el.panelPuzzleSettings.hidden = !isPuzzle;
     this.el.panelQuizSettings.hidden = !isRounds;
     this.el.panelOverviewSettings.hidden = !isOverview;
@@ -186,6 +201,12 @@ export class Game {
     else if (isIdentify) this._renderIdentifyDifficulty();
     this.el.adaptiveModeRow.hidden = !(isQuiz || isNameState || isNeighbor || isIdentify);
     this.el.adaptiveModeCheckbox.checked = this.adaptiveMode;
+    this.el.cityPlaceEntityRow.hidden = !isCityPlace;
+    this.el.cityPlaceModeRow.hidden = !isCityPlace;
+    this.el.cityPlaceEntityCheckbox.checked = this.cityPlaceEntity === 'places';
+    this.el.cityPlaceEntityText.textContent = this.cityPlaceEntity === 'places' ? 'Места' : 'Города';
+    this.el.cityPlaceModeCheckbox.checked = this.cityPlaceMode === 'pin';
+    this.el.cityPlaceModeText.textContent = this.cityPlaceMode === 'pin' ? 'Расставь метку' : 'Найди на карте';
 
     if (!isRounds) {
       this.eligibilityList?.destroy();
@@ -194,7 +215,7 @@ export class Game {
       return;
     }
 
-    const text = ROUNDS_PANEL_TEXT[this.modeId];
+    const text = isCityPlace ? this._cityPlaceRoundsText() : ROUNDS_PANEL_TEXT[this.modeId];
     this.el.quizPanelHeading.textContent = text.heading;
     this.el.quizCountLabel.textContent = text.label;
     this.el.quizPromptLabel.textContent = text.prompt;
@@ -204,11 +225,8 @@ export class Game {
     this.eligibilityList = null;
 
     if (hasEligibility) {
-      const kind =
-        this.modeId === 'quiz' || this.modeId === 'name-state' || this.modeId === 'neighbor' || this.modeId === 'identify'
-          ? 'states'
-          : 'cities';
-      const items = kind === 'states' ? level.pieces : level.cities;
+      const kind = isQuiz || isNameState || isNeighbor || isIdentify ? 'states' : this.cityPlaceEntity;
+      const items = kind === 'states' ? level.pieces : kind === 'places' ? level.places : level.cities;
       // Adaptive mode's success streak — shown here so the player can see,
       // right where they're picking which states to include, which ones
       // are still giving them trouble in whichever mode they're setting up.
@@ -234,8 +252,22 @@ export class Game {
       this._applyRoundCap(countEligible(this.eligibilityList.getSelectedIds()));
     } else {
       this.el.btnStart.disabled = false;
-      this._applyRoundCap(level.cities.length); // city-pins — full pool, no checklist
+      // "расставь метку" (city-place's pin mode) — full pool, no checklist.
+      const fullPoolCount = isCityPlace && this.cityPlaceEntity === 'places' ? level.places.length : level.cities.length;
+      this._applyRoundCap(fullPoolCount);
     }
+  }
+
+  // "Города и места"'s heading/label/prompt depend on its own two toggles
+  // rather than a static per-mode lookup — see ROUNDS_PANEL_TEXT's comment.
+  _cityPlaceRoundsText() {
+    const entityWord = this.cityPlaceEntity === 'places' ? 'мест' : 'городов';
+    const isPin = this.cityPlaceMode === 'pin';
+    return {
+      heading: 'Раунд',
+      label: `Сколько ${entityWord} ${isPin ? 'отметить' : 'спросить'}`,
+      prompt: isPin ? 'Отметь на карте:' : 'Найди на карте:',
+    };
   }
 
   // Keeps the round-count range from ever asking for more rounds than
@@ -339,6 +371,14 @@ export class Game {
     this.el.adaptiveModeCheckbox.addEventListener('change', (ev) => {
       this.adaptiveMode = ev.target.checked;
     });
+    this.el.cityPlaceEntityCheckbox.addEventListener('change', (ev) => {
+      this.cityPlaceEntity = ev.target.checked ? 'places' : 'cities';
+      this._applyModeVisibility(); // rebuilds the eligibility list for the newly-chosen entity
+    });
+    this.el.cityPlaceModeCheckbox.addEventListener('change', (ev) => {
+      this.cityPlaceMode = ev.target.checked ? 'pin' : 'find';
+      this._applyModeVisibility(); // eligibility only applies to "найти", not "расставь"
+    });
     this.el.quizCountInput.addEventListener('input', (ev) => {
       this.quizRounds = Number(ev.target.value);
       this.el.quizCountValue.textContent = this.quizRounds;
@@ -357,6 +397,10 @@ export class Game {
     this.el.toggleLabels.addEventListener('change', (ev) => {
       this.labelsVisible = ev.target.checked;
       if (this.board?.setLabelsVisible) this.board.setLabelsVisible(this.labelsVisible);
+    });
+    this.el.togglePlaces.addEventListener('change', (ev) => {
+      this.placesVisible = ev.target.checked;
+      if (this.board?.setPlacesVisible) this.board.setPlacesVisible(this.placesVisible);
     });
   }
 
@@ -388,8 +432,7 @@ export class Game {
     else if (this.modeId === 'name-state') this._startNameState(level);
     else if (this.modeId === 'neighbor') this._startNeighbor(level);
     else if (this.modeId === 'identify') this._startIdentify(level);
-    else if (this.modeId === 'city-quiz') this._startCityQuiz(level);
-    else if (this.modeId === 'city-pins') this._startCityPins(level);
+    else if (this.modeId === 'city-place') this._startCityPlace(level);
     else if (this.modeId === 'overview') this._startOverview(level);
     else this._startPuzzle(level);
 
@@ -445,6 +488,7 @@ export class Game {
 
   _startQuiz(level) {
     this.el.toggleHintsWrap.hidden = true;
+    this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
     this.el.quizPrompt.hidden = false;
 
@@ -472,6 +516,7 @@ export class Game {
 
   _startNameState(level) {
     this.el.toggleHintsWrap.hidden = true;
+    this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
     // No text prompt here — the "question" is the pulsing highlight on the
     // map itself (see nameStateBoard.js), showing the name would give away
@@ -503,6 +548,7 @@ export class Game {
 
   _startNeighbor(level) {
     this.el.toggleHintsWrap.hidden = true;
+    this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
     // No text prompt — the "question" is entirely on the map (highlighted
     // state + glowing border), same reasoning as _startNameState.
@@ -538,6 +584,7 @@ export class Game {
 
   _startIdentify(level) {
     this.el.toggleHintsWrap.hidden = true;
+    this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
     this.el.quizPrompt.hidden = true;
 
@@ -567,60 +614,61 @@ export class Game {
     });
   }
 
-  _startCityQuiz(level) {
+  // Replaces the old separate _startCityQuiz/_startCityPins — one method
+  // dispatching to whichever of the two (still-unchanged-in-core-logic)
+  // board classes the interaction toggle picked, over whichever item pool
+  // (cities or places) the entity toggle picked.
+  _startCityPlace(level) {
+    const isPin = this.cityPlaceMode === 'pin';
+    const items = this.cityPlaceEntity === 'places' ? level.places : level.cities;
+    const entityWord = this.cityPlaceEntity === 'places' ? 'мест' : 'городов';
+
     this.el.toggleHintsWrap.hidden = true;
+    this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
     this.el.quizPrompt.hidden = false;
 
-    this.el.hudLevel.textContent = `${level.title} · Найди город (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${level.title} · Города и места (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = 'Ошибки: 0';
 
-    const promptH = this.el.quizPrompt.offsetHeight + 14;
-    const scale = this._computeScale(level.canvas, this._availableHeight(promptH));
-    this.board = new CityQuizBoard(this.el.boardContainer, level, {
-      rounds: this.quizRounds,
-      eligibleIds: this.eligibilityList?.getSelectedIds(),
-      scale,
-      onProgress: (p) => this._onQuizProgress(p),
-      onFinish: (stats) =>
-        this._onFinish(
-          'РАУНД ЗАВЕРШЁН',
-          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} городов`
-        ),
-    });
-  }
-
-  _startCityPins(level) {
-    this.el.toggleHintsWrap.hidden = true;
-    this.el.toggleLabelsWrap.hidden = true;
-    this.el.quizPrompt.hidden = false;
-
-    this.el.hudLevel.textContent = `${level.title} · Расставь метки (${this.quizRounds})`;
-    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
-    this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = 'Ср. ошибка: —';
-
-    const promptH = this.el.quizPrompt.offsetHeight + 14;
-    const actionBarH = 60; // the board builds its own confirm/next bar below the map
-    const scale = this._computeScale(level.canvas, this._availableHeight(promptH + actionBarH));
-    this.board = new CityPinBoard(this.el.boardContainer, level, {
-      rounds: this.quizRounds,
-      scale,
-      onProgress: (p) => this._onPinProgress(p),
-      onFinish: (stats) =>
-        this._onFinish(
-          'РАУНД ЗАВЕРШЁН',
-          `Городов: ${stats.rounds} · Средняя ошибка: ${stats.avgDistanceKm} км`
-        ),
-    });
+    if (isPin) {
+      this.el.hudGroups.textContent = 'Ср. ошибка: —';
+      const promptH = this.el.quizPrompt.offsetHeight + 14;
+      const actionBarH = 60; // the board builds its own confirm/next bar below the map
+      const scale = this._computeScale(level.canvas, this._availableHeight(promptH + actionBarH));
+      this.board = new CityPinBoard(this.el.boardContainer, level, {
+        rounds: this.quizRounds,
+        items,
+        scale,
+        onProgress: (p) => this._onPinProgress(p),
+        onFinish: (stats) =>
+          this._onFinish('РАУНД ЗАВЕРШЁН', `${entityWord[0].toUpperCase()}${entityWord.slice(1)}: ${stats.rounds} · Средняя ошибка: ${stats.avgDistanceKm} км`),
+      });
+    } else {
+      this.el.hudGroups.textContent = 'Ошибки: 0';
+      const promptH = this.el.quizPrompt.offsetHeight + 14;
+      const scale = this._computeScale(level.canvas, this._availableHeight(promptH));
+      this.board = new CityQuizBoard(this.el.boardContainer, level, {
+        rounds: this.quizRounds,
+        items,
+        eligibleIds: this.eligibilityList?.getSelectedIds(),
+        scale,
+        onProgress: (p) => this._onQuizProgress(p),
+        onFinish: (stats) =>
+          this._onFinish(
+            'РАУНД ЗАВЕРШЁН',
+            `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} ${entityWord}`
+          ),
+      });
+    }
   }
 
   _startOverview(level) {
     const overviewMode = OVERVIEW_MODES.find((m) => m.id === this.overviewModeId) || OVERVIEW_MODES[0];
     this.labelsVisible = overviewMode.id === 'full';
     this.citiesVisible = true;
+    this.placesVisible = true;
 
     this.el.toggleHintsWrap.hidden = false;
     this.el.toggleHintsWrap.title = 'Показать/скрыть города на карте';
@@ -629,10 +677,12 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = false;
     this.el.toggleLabelsText.textContent = 'Подписи';
     this.el.toggleLabels.checked = this.labelsVisible;
+    this.el.togglePlacesWrap.hidden = false;
+    this.el.togglePlaces.checked = this.placesVisible;
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Обзор`;
-    this.el.hudProgress.textContent = `${level.pieces.length} шт. · ${level.cities.length} гор.`;
+    this.el.hudProgress.textContent = `${level.pieces.length} шт. · ${level.cities.length} гор. · ${level.places.length} мест`;
     this.el.hudGroups.hidden = true;
 
     // the side list panel eats into the map's available width — the
@@ -644,6 +694,7 @@ export class Game {
       scale,
       labelsVisible: this.labelsVisible,
       citiesVisible: this.citiesVisible,
+      placesVisible: this.placesVisible,
     });
   }
 

@@ -29,6 +29,16 @@ const CITY_POINT_FOCUS_FILL = 0.08; // fraction of the viewport a focused point-
 const FOCUS_DURATION_MS = 3000; // how long a click's highlight stays lit before auto-clearing
 const VIRTUALIZE_MARGIN = 0.4; // extra fraction of the visible rect's size kept rendered just outside it
 
+// Places (landmarks) carry only a nominal radiusKm (see
+// scripts/build_usa_places.js — it's there just so they can share
+// EligibilityList's area math, not because it means anything physically),
+// so their on-map dot is a small constant-screen-px marker instead of a
+// true-to-scale circle like a city's, and focusing one zooms to a fixed
+// "close-up" radius instead of deriving one from that nominal value.
+const PLACE_DOT_R_PX = 4;
+const PLACE_DOT_STROKE_PX = 1;
+const PLACE_FOCUS_RADIUS_KM = 30;
+
 // Free-look mode: every state sits filled at its true spot (like an
 // already-solved puzzle) and every city is a dot, all at once — nothing
 // to click, answer or assemble. "Full info" keeps every name permanently
@@ -48,8 +58,13 @@ export class OverviewBoard {
     // _updateVisibleCities). Each entry tracks its own `appended` state.
     this.cityDotEntries = []; // { id, cx, cy, dot, pointMark, leaderPath, leaderLabel, appended }
     this.cityShapeEntries = []; // { id, cx, cy, bbox, path, label, appended }
+    // Places aren't virtualized (only 20 of them, same reasoning as
+    // states) — always rendered, no `appended` bookkeeping needed.
+    this.placeEntries = []; // { id, cx, cy, dot, pointMark, leaderPath, leaderLabel }
+    this.placesVisible = opts.placesVisible !== false;
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
+    this.placesById = new Map(); // id -> { data, dotEl }
     this.activeTab = 'states';
     this.searchQuery = '';
     this.sortBy = null; // null (alphabetical) | 'area'
@@ -189,6 +204,43 @@ export class OverviewBoard {
       this.citiesById.set(c.id, { data: c, dotEl: dot });
     }
 
+    // Places (landmarks) — always rendered (unlike cities, no
+    // virtualization needed for just 20 of them), same leader-line label
+    // construction as a dot-city, but the "dot" itself is a small constant-
+    // screen-px marker (set every _rescaleForZoom) rather than a true-to-
+    // scale circle, since a landmark has no real land-area radius.
+    for (const p of this.level.places) {
+      const dot = document.createElementNS(SVG_NS, 'circle');
+      dot.setAttribute('cx', p.cx);
+      dot.setAttribute('cy', p.cy);
+      dot.setAttribute('class', 'overview-place-dot');
+      const title = document.createElementNS(SVG_NS, 'title');
+      title.textContent = this._placeHoverTitle(p);
+      dot.appendChild(title);
+
+      const pointMark = document.createElementNS(SVG_NS, 'circle');
+      pointMark.setAttribute('class', 'overview-city-point');
+      this.allLabelEls.push(pointMark);
+
+      const leaderPath = document.createElementNS(SVG_NS, 'path');
+      leaderPath.setAttribute('class', 'overview-city-leader');
+      this.allLabelEls.push(leaderPath);
+
+      const leaderLabel = document.createElementNS(SVG_NS, 'text');
+      leaderLabel.setAttribute('class', 'overview-city-leader-label');
+      leaderLabel.textContent = p.ru;
+      this.allLabelEls.push(leaderLabel);
+
+      const entry = { id: p.id, cx: p.cx, cy: p.cy, dot, pointMark, leaderPath, leaderLabel };
+      this.placeEntries.push(entry);
+      this.placesById.set(p.id, { data: p, dotEl: dot });
+
+      this.svg.appendChild(dot);
+      this.svg.appendChild(pointMark);
+      this.svg.appendChild(leaderPath);
+      this.svg.appendChild(leaderLabel);
+    }
+
     this.zoomViewport.appendChild(this.svg);
     // The wrap must be attached to the live document BEFORE attachZoomPan()
     // runs — it measures viewport.clientWidth/Height immediately (for pan
@@ -212,6 +264,7 @@ export class OverviewBoard {
 
     this._rescaleForZoom(1);
     this.setLabelsVisible(this.labelsVisible);
+    this.setPlacesVisible(this.placesVisible);
   }
 
   // Adds/removes each city's elements from the SVG based on whether it's
@@ -335,6 +388,7 @@ export class OverviewBoard {
       <div class="overview-tabs">
         <button type="button" class="overview-tab active" data-tab="states">Штаты</button>
         <button type="button" class="overview-tab" data-tab="cities">Города</button>
+        <button type="button" class="overview-tab" data-tab="places">Места</button>
       </div>
       <input type="text" class="overview-search" placeholder="Поиск..." autocomplete="off" />
       <div class="overview-list-header">
@@ -347,6 +401,7 @@ export class OverviewBoard {
     this.searchInput = panel.querySelector('.overview-search');
     this.itemListEl = panel.querySelector('.overview-item-list');
     this.sortArrowEl = panel.querySelector('.overview-sort-arrow');
+    this.sortBtnEl = panel.querySelector('.overview-col-sort');
 
     for (const btn of panel.querySelectorAll('.overview-tab')) {
       btn.addEventListener('click', () => {
@@ -390,21 +445,33 @@ export class OverviewBoard {
     return `${c.ru} (${c.name}) — R ${c.radiusKm.toFixed(1)} км (${areaStr} км²)`;
   }
 
+  // Places have no meaningful radius/area (see scripts/build_usa_places.js)
+  // — just the name, unlike _cityHoverTitle.
+  _placeHoverTitle(p) {
+    return `${p.ru} (${p.name})`;
+  }
+
   _renderList() {
-    const items = this.activeTab === 'states' ? this.level.pieces : this.level.cities;
+    const items = this.activeTab === 'states' ? this.level.pieces : this.activeTab === 'places' ? this.level.places : this.level.cities;
     const q = this.searchQuery;
     const filtered = q
       ? items.filter((it) => it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q))
       : items;
 
+    // Places carry only a nominal radiusKm (identical for every place), so
+    // sorting/showing "Площадь" for them would be a meaningless tie —
+    // hide that column entirely on this tab instead of displaying it.
+    const showArea = this.activeTab !== 'places';
+    this.sortBtnEl.hidden = !showArea;
+
     let sorted;
-    if (this.sortBy === 'area') {
+    if (this.sortBy === 'area' && showArea) {
       const dir = this.sortDir === 'asc' ? 1 : -1;
       sorted = [...filtered].sort((a, b) => (this._areaOf(a) - this._areaOf(b)) * dir);
     } else {
       sorted = [...filtered].sort((a, b) => a.ru.localeCompare(b.ru, 'ru'));
     }
-    this.sortArrowEl.textContent = this.sortBy === 'area' ? (this.sortDir === 'asc' ? ' ▲' : ' ▼') : '';
+    this.sortArrowEl.textContent = this.sortBy === 'area' && showArea ? (this.sortDir === 'asc' ? ' ▲' : ' ▼') : '';
 
     this.itemListEl.innerHTML = '';
     if (!sorted.length) {
@@ -416,13 +483,16 @@ export class OverviewBoard {
       const row = document.createElement('button');
       row.type = 'button';
       row.className = 'overview-item';
-      const areaStr = Math.round(this._areaOf(it)).toLocaleString('ru-RU') + ' км²';
+      const areaStr = showArea ? Math.round(this._areaOf(it)).toLocaleString('ru-RU') + ' км²' : '';
       row.innerHTML =
         this.activeTab === 'states'
           ? `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span><span class="overview-item-area">${areaStr}</span>`
-          : `<span class="overview-item-main"><span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state}</span></span><span class="overview-item-area">${areaStr}</span>`;
+          : this.activeTab === 'places'
+            ? `<span class="overview-item-main"><span class="overview-item-name">${it.ru}</span></span>`
+            : `<span class="overview-item-main"><span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state}</span></span><span class="overview-item-area">${areaStr}</span>`;
       row.addEventListener('click', () => {
         if (this.activeTab === 'states') this._focusState(it.id);
+        else if (this.activeTab === 'places') this._focusPlace(it.id);
         else this._focusCity(it.id);
       });
       this.itemListEl.appendChild(row);
@@ -454,6 +524,29 @@ export class OverviewBoard {
     // stays Infinity and breaks the view entirely, so this needs its own
     // finite target instead of leaning on a cap that no longer exists.
     const radiusNative = data.radiusKm / this.level.kmPerUnit;
+    const diameterNative = Math.max(radiusNative * 2, 1);
+    const vw = this.zoomViewport.clientWidth;
+    const vh = this.zoomViewport.clientHeight;
+    const targetZoom = Math.max(
+      1,
+      Math.min((vw * CITY_POINT_FOCUS_FILL) / (diameterNative * this.scale), (vh * CITY_POINT_FOCUS_FILL) / (diameterNative * this.scale))
+    );
+    this.zoomCtl.focusOn(data.cx, data.cy, targetZoom);
+    this._clearFocus();
+    entry.dotEl.classList.add('overview-focused');
+    this.focusedEl = entry.dotEl;
+    this._scheduleAutoClear();
+  }
+
+  // A place has no bbox and no real physical radius (unlike a city's
+  // true-to-scale one) — same point-feature zoom math as _focusCity's
+  // point branch, just against a fixed "close-up" radius instead of a
+  // meaningful one.
+  _focusPlace(id) {
+    const entry = this.placesById.get(id);
+    if (!entry) return;
+    const { data } = entry;
+    const radiusNative = PLACE_FOCUS_RADIUS_KM / this.level.kmPerUnit;
     const diameterNative = Math.max(radiusNative * 2, 1);
     const vw = this.zoomViewport.clientWidth;
     const vh = this.zoomViewport.clientHeight;
@@ -529,6 +622,14 @@ export class OverviewBoard {
       // geographic size), only the outline stroke stays a constant screen px.
       entry.dot.style.strokeWidth = `${(CITY_DOT_STROKE_PX / effScale).toFixed(2)}px`;
     }
+    for (const entry of this.placeEntries) {
+      this._layoutCityLeader(entry, effScale);
+      // Unlike a city dot, a place's dot IS rescaled here — it has no real
+      // physical radius to stay true-to-scale to, so it's just a constant-
+      // screen-px marker like the label text/leader-line around it.
+      entry.dot.setAttribute('r', (PLACE_DOT_R_PX / effScale).toFixed(2));
+      entry.dot.style.strokeWidth = `${(PLACE_DOT_STROKE_PX / effScale).toFixed(2)}px`;
+    }
   }
 
   // getComputedTextLength() forces a synchronous layout of the *whole*
@@ -593,6 +694,19 @@ export class OverviewBoard {
   setCitiesVisible(visible) {
     this.citiesVisible = visible;
     if (this._lastVisibleRect) this._updateVisibleCities(this._lastVisibleRect);
+  }
+
+  // Places aren't virtualized (always in the DOM — see the constructor
+  // comment), so unlike setCitiesVisible this just toggles display directly
+  // rather than replaying a visible-rect pass.
+  setPlacesVisible(visible) {
+    this.placesVisible = visible;
+    for (const entry of this.placeEntries) {
+      entry.dot.style.display = visible ? '' : 'none';
+      entry.pointMark.style.display = visible ? '' : 'none';
+      entry.leaderPath.style.display = visible ? '' : 'none';
+      entry.leaderLabel.style.display = visible ? '' : 'none';
+    }
   }
 
   destroy() {

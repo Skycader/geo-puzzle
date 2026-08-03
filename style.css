@@ -844,6 +844,16 @@ body {
 }
 .overview-city-shape:hover { fill-opacity: 0.75; }
 
+/* Places (landmarks) — a distinct accent (violet, vs cities' pink) so the
+   two are still easy to tell apart at a glance when both are visible.
+   Unlike a city dot, r/stroke-width are rescaled every zoom step (js) since
+   there's no true physical radius to stay fixed to. */
+.overview-place-dot {
+  fill: var(--neon-violet);
+  stroke: rgba(0, 20, 26, 0.85);
+  cursor: default;
+}
+
 .overview-focus-glow {
   fill: var(--neon-yellow);
   stroke: var(--neon-yellow);
@@ -851,7 +861,8 @@ body {
   pointer-events: none;
   animation: overview-focus-pulse 1.3s ease-in-out infinite;
 }
-.overview-city-dot.overview-focused {
+.overview-city-dot.overview-focused,
+.overview-place-dot.overview-focused {
   fill: var(--neon-yellow) !important;
 }
 /* opacity (not fill-opacity) — the former is a compositor-accelerated

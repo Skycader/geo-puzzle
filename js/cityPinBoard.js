@@ -33,8 +33,13 @@ export class CityPinBoard {
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
 
-    const rounds = clamp(opts.rounds ?? 15, 1, level.cities.length);
-    this.queue = shuffle(level.cities).slice(0, rounds);
+    // items defaults to level.cities so nothing breaks if ever constructed
+    // the old way — game.js's merged "Города и места" mode passes
+    // level.places instead when the entity toggle is set to "места".
+    this.items = opts.items || level.cities;
+
+    const rounds = clamp(opts.rounds ?? 15, 1, this.items.length);
+    this.queue = shuffle(this.items).slice(0, rounds);
     this.index = 0;
     this.current = null;
     this.confirmed = false;

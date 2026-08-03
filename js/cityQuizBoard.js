@@ -21,10 +21,15 @@ export class CityQuizBoard {
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
 
+    // items defaults to level.cities so nothing breaks if ever constructed
+    // the old way — game.js's merged "Города и места" mode passes
+    // level.places instead when the entity toggle is set to "места".
+    this.items = opts.items || level.cities;
+
     // eligibleIds (from the pre-game checklist — see js/eligibilityList.js
-    // and game.js's _startCityQuiz) restricts which cities can be ASKED
-    // about; every city dot is still drawn either way (see the loop below).
-    const pool = opts.eligibleIds && opts.eligibleIds.size ? level.cities.filter((c) => opts.eligibleIds.has(c.id)) : level.cities;
+    // and game.js's _startCityQuiz) restricts which items can be ASKED
+    // about; every dot is still drawn either way (see the loop below).
+    const pool = opts.eligibleIds && opts.eligibleIds.size ? this.items.filter((c) => opts.eligibleIds.has(c.id)) : this.items;
     const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
     this.queue = shuffle(pool).slice(0, rounds);
     this.index = 0;
@@ -56,7 +61,7 @@ export class CityQuizBoard {
     this.svg.classList.add('quiz-svg');
     this.svg.appendChild(buildStateBackground(this.level.pieces));
 
-    for (const c of this.level.cities) {
+    for (const c of this.items) {
       const g = document.createElementNS(SVG_NS, 'g');
       g.setAttribute('class', 'city-marker');
 

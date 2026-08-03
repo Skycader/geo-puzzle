@@ -45,6 +45,11 @@
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
           <span class="toggle-text" id="toggle-labels-text">Буквы</span>
         </label>
+        <label class="toggle" id="toggle-places-wrap" title="Показать/скрыть места на карте" hidden>
+          <input type="checkbox" id="toggle-places" checked />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">Места</span>
+        </label>
         <button id="btn-menu" class="btn btn-ghost">Меню</button>
       </div>
     </header>
@@ -76,6 +81,16 @@
         <section class="panel" id="panel-quiz-settings" hidden>
           <h2 id="quiz-panel-heading">Раунд</h2>
           <div id="name-state-difficulty" class="preset-list name-state-difficulty" hidden></div>
+          <label class="toggle" id="city-place-entity-row" hidden>
+            <input type="checkbox" id="city-place-entity-checkbox" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text" id="city-place-entity-text">Города</span>
+          </label>
+          <label class="toggle" id="city-place-mode-row" hidden>
+            <input type="checkbox" id="city-place-mode-checkbox" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text" id="city-place-mode-text">Найди на карте</span>
+          </label>
           <div class="custom-count-row">
             <label for="quiz-count"><span id="quiz-count-label">Сколько штатов спросить</span>: <strong id="quiz-count-value">15</strong></label>
             <input type="range" id="quiz-count" min="1" max="50" value="15" />
