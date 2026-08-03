@@ -2,27 +2,35 @@ import { PuzzleBoard } from './puzzleBoard.js';
 import { QuizBoard } from './quizBoard.js';
 import { NameStateBoard } from './nameStateBoard.js';
 import { NeighborBoard } from './neighborBoard.js';
+import { IdentifyStateBoard } from './identifyStateBoard.js';
 import { CityQuizBoard } from './cityQuizBoard.js';
 import { CityPinBoard } from './cityPinBoard.js';
 import { OverviewBoard, OVERVIEW_PANEL_W } from './overviewBoard.js';
 import { EligibilityList } from './eligibilityList.js';
 import { clamp } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
-import { MODES, OVERVIEW_MODES, NAME_STATE_DIFFICULTIES } from './modes.js';
+import { MODES, OVERVIEW_MODES, NAME_STATE_DIFFICULTIES, NEIGHBOR_DIFFICULTIES, IDENTIFY_DIFFICULTIES } from './modes.js';
 import { playClick } from './audio.js';
 import { loadSuccessStats } from './successStats.js';
 
 // Distinct scopes per mode — clicking a state on the map (quiz), recalling
-// its name from a highlight (name-state), and naming its neighbor
-// (neighbor) are different skills, so their adaptive streaks are tracked
-// separately (see the matching SUCCESS_SCOPE constants in quizBoard.js /
-// nameStateBoard.js / neighborBoard.js).
-const ADAPTIVE_SUCCESS_SCOPE_BY_MODE = { quiz: 'quiz-states', 'name-state': 'name-state-states', neighbor: 'neighbor-states' };
+// its name from a highlight (name-state), naming its neighbor (neighbor),
+// and identifying it from a bare isolated shape (identify) are different
+// skills, so their adaptive streaks are tracked separately (see the
+// matching SUCCESS_SCOPE constants in quizBoard.js / nameStateBoard.js /
+// neighborBoard.js / identifyStateBoard.js).
+const ADAPTIVE_SUCCESS_SCOPE_BY_MODE = {
+  quiz: 'quiz-states',
+  'name-state': 'name-state-states',
+  neighbor: 'neighbor-states',
+  identify: 'identify-states',
+};
 
 const ROUNDS_PANEL_TEXT = {
   quiz: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: 'Найди на карте:' },
   'name-state': { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
   neighbor: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
+  identify: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
   'city-quiz': { heading: 'Раунд', label: 'Сколько городов спросить', prompt: 'Найди на карте:' },
   'city-pins': { heading: 'Раунд', label: 'Сколько городов отметить', prompt: 'Отметь на карте:' },
 };
@@ -47,6 +55,8 @@ export class Game {
     this.customCount = DEFAULT_CUSTOM_COUNT;
     this.quizRounds = 15;
     this.nameStateDifficulty = NAME_STATE_DIFFICULTIES[0].id;
+    this.neighborDifficulty = NEIGHBOR_DIFFICULTIES[0].id;
+    this.identifyDifficulty = IDENTIFY_DIFFICULTIES[0].id;
     this.adaptiveMode = false;
     this.hintsVisible = true;
     this.labelsVisible = true;
@@ -61,7 +71,6 @@ export class Game {
     this._renderModeList();
     this._renderPresetList();
     this._renderOverviewList();
-    this._renderNameStateDifficulty();
     this._bindEvents();
     this._applyModeVisibility();
   }
@@ -153,21 +162,29 @@ export class Game {
     const isPuzzle = this.modeId === 'puzzle';
     const isOverview = this.modeId === 'overview';
     const isRounds = !isPuzzle && !isOverview;
-    // The "find/name the X" quiz modes get an eligibility checklist —
-    // city-pins also shares this panel but always draws from every city.
-    const hasEligibility = this.modeId === 'quiz' || this.modeId === 'name-state' || this.modeId === 'neighbor' || this.modeId === 'city-quiz';
+    // The "find/name/identify the X" quiz modes get an eligibility
+    // checklist — city-pins also shares this panel but always draws from
+    // every city.
+    const hasEligibility =
+      this.modeId === 'quiz' || this.modeId === 'name-state' || this.modeId === 'neighbor' || this.modeId === 'identify' || this.modeId === 'city-quiz';
     const isNameState = this.modeId === 'name-state';
     const isNeighbor = this.modeId === 'neighbor';
+    const isIdentify = this.modeId === 'identify';
     const isQuiz = this.modeId === 'quiz';
-    // "Назови соседа" reuses the same easy/hard answer-method picker as
-    // "Назови штат" (multiple choice vs typed) — see js/modes.js's
-    // NAME_STATE_DIFFICULTIES and _startNeighbor's `difficulty` option.
     this.el.panelPuzzleSettings.hidden = !isPuzzle;
     this.el.panelQuizSettings.hidden = !isRounds;
     this.el.panelOverviewSettings.hidden = !isOverview;
     this.el.quizEligibleWrap.hidden = !hasEligibility;
-    this.el.nameStateDifficultyEl.hidden = !(isNameState || isNeighbor);
-    this.el.adaptiveModeRow.hidden = !(isQuiz || isNameState || isNeighbor);
+    this.el.nameStateDifficultyEl.hidden = !(isNameState || isNeighbor || isIdentify);
+    // Each of these three modes has its own differently-sized difficulty
+    // list (2/3/3 tiers — NAME_STATE_DIFFICULTIES / NEIGHBOR_DIFFICULTIES /
+    // IDENTIFY_DIFFICULTIES) sharing the same panel element — re-render it
+    // for whichever mode is now active so the right cards (and the right
+    // one marked "selected") show up.
+    if (isNameState) this._renderNameStateDifficulty();
+    else if (isNeighbor) this._renderNeighborDifficulty();
+    else if (isIdentify) this._renderIdentifyDifficulty();
+    this.el.adaptiveModeRow.hidden = !(isQuiz || isNameState || isNeighbor || isIdentify);
     this.el.adaptiveModeCheckbox.checked = this.adaptiveMode;
 
     if (!isRounds) {
@@ -187,7 +204,10 @@ export class Game {
     this.eligibilityList = null;
 
     if (hasEligibility) {
-      const kind = this.modeId === 'quiz' || this.modeId === 'name-state' || this.modeId === 'neighbor' ? 'states' : 'cities';
+      const kind =
+        this.modeId === 'quiz' || this.modeId === 'name-state' || this.modeId === 'neighbor' || this.modeId === 'identify'
+          ? 'states'
+          : 'cities';
       const items = kind === 'states' ? level.pieces : level.cities;
       // Adaptive mode's success streak — shown here so the player can see,
       // right where they're picking which states to include, which ones
@@ -233,20 +253,38 @@ export class Game {
     this.el.btnStart.disabled = eligibleCount === 0;
   }
 
-  _renderNameStateDifficulty() {
+  _renderDifficultyList(diffs, currentId, onSelect) {
     this.el.nameStateDifficultyEl.innerHTML = '';
-    for (const diff of NAME_STATE_DIFFICULTIES) {
+    for (const diff of diffs) {
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = 'preset-card' + (diff.id === this.nameStateDifficulty ? ' selected' : '');
+      card.className = 'preset-card' + (diff.id === currentId ? ' selected' : '');
       card.innerHTML = `<strong>${diff.title}</strong><p>${diff.desc}</p>`;
       card.addEventListener('click', () => {
-        this.nameStateDifficulty = diff.id;
+        onSelect(diff.id);
         this.el.nameStateDifficultyEl.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
       });
       this.el.nameStateDifficultyEl.appendChild(card);
     }
+  }
+
+  _renderNameStateDifficulty() {
+    this._renderDifficultyList(NAME_STATE_DIFFICULTIES, this.nameStateDifficulty, (id) => {
+      this.nameStateDifficulty = id;
+    });
+  }
+
+  _renderNeighborDifficulty() {
+    this._renderDifficultyList(NEIGHBOR_DIFFICULTIES, this.neighborDifficulty, (id) => {
+      this.neighborDifficulty = id;
+    });
+  }
+
+  _renderIdentifyDifficulty() {
+    this._renderDifficultyList(IDENTIFY_DIFFICULTIES, this.identifyDifficulty, (id) => {
+      this.identifyDifficulty = id;
+    });
   }
 
   _renderOverviewList() {
@@ -349,6 +387,7 @@ export class Game {
     if (this.modeId === 'quiz') this._startQuiz(level);
     else if (this.modeId === 'name-state') this._startNameState(level);
     else if (this.modeId === 'neighbor') this._startNeighbor(level);
+    else if (this.modeId === 'identify') this._startIdentify(level);
     else if (this.modeId === 'city-quiz') this._startCityQuiz(level);
     else if (this.modeId === 'city-pins') this._startCityPins(level);
     else if (this.modeId === 'overview') this._startOverview(level);
@@ -483,7 +522,38 @@ export class Game {
     this.board = new NeighborBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
       eligibleIds: this.eligibilityList?.getSelectedIds(),
-      difficulty: this.nameStateDifficulty,
+      difficulty: this.neighborDifficulty,
+      levelId: this.levelId,
+      adaptive: this.adaptiveMode,
+      availW: window.innerWidth - 48,
+      availH: this._availableHeight(answerBarH),
+      onProgress: (p) => this._onNameStateProgress(p),
+      onFinish: (stats) =>
+        this._onFinish(
+          'РАУНД ЗАВЕРШЁН',
+          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} штатов`
+        ),
+    });
+  }
+
+  _startIdentify(level) {
+    this.el.toggleHintsWrap.hidden = true;
+    this.el.toggleLabelsWrap.hidden = true;
+    this.el.quizPrompt.hidden = true;
+
+    this.el.hudLevel.textContent = `${level.title} · Определи штат (${this.quizRounds})`;
+    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudGroups.hidden = false;
+    this.el.hudGroups.textContent = 'Ошибки: 0';
+
+    // Same per-round isolated-shape cropping as _startNeighbor — see its
+    // comment for why raw available pixel space is passed instead of a
+    // single pre-computed scale.
+    const answerBarH = 110;
+    this.board = new IdentifyStateBoard(this.el.boardContainer, level, {
+      rounds: this.quizRounds,
+      eligibleIds: this.eligibilityList?.getSelectedIds(),
+      difficulty: this.identifyDifficulty,
       levelId: this.levelId,
       adaptive: this.adaptiveMode,
       availW: window.innerWidth - 48,

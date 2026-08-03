@@ -22,6 +22,11 @@ export const MODES = [
     desc: 'Назови соседний штат',
   },
   {
+    id: 'identify',
+    title: 'Определи штат',
+    desc: 'Угадай штат по форме',
+  },
+  {
     id: 'city-quiz',
     title: 'Найди город',
     desc: 'Кликни город по названию',
@@ -48,4 +53,24 @@ export const OVERVIEW_MODES = [
 export const NAME_STATE_DIFFICULTIES = [
   { id: 'easy', title: 'Лёгкий', desc: '4 варианта на выбор' },
   { id: 'hard', title: 'Сложный', desc: 'Впиши название сам' },
+];
+
+// Answer method for "Назови соседа" — a third "ultra" tier on top of the
+// same easy/hard split, since the shape is already isolated/unlabeled in
+// hard mode: rotating it a random angle removes orientation as a
+// recognition shortcut, so knowing the shape ISN'T enough on its own.
+export const NEIGHBOR_DIFFICULTIES = [
+  { id: 'easy', title: 'Лёгкий', desc: '4 варианта на выбор' },
+  { id: 'hard', title: 'Сложный', desc: 'Впиши название сам' },
+  { id: 'ultra', title: 'Хардкор', desc: 'Штат повёрнут на случайный угол' },
+];
+
+// Answer method for "Определи штат" — same three-tier shape (choice/typed/
+// rotated) as "Назови соседа"'s, but this mode never labels the state in
+// any tier (unlike "Назови соседа"'s easy mode) since the shown state IS
+// the answer here, not just context for naming its neighbor.
+export const IDENTIFY_DIFFICULTIES = [
+  { id: 'easy', title: 'Лёгкий', desc: '4 варианта на выбор' },
+  { id: 'medium', title: 'Средний', desc: 'Впиши название сам' },
+  { id: 'hard', title: 'Сложный', desc: 'Штат повёрнут на случайный угол' },
 ];
