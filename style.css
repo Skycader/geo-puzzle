@@ -723,6 +723,38 @@ body {
   50% { opacity: 0.55; }
 }
 
+/* "Назови соседа" (js/neighborBoard.js) — the source state is the ONLY
+   shape on screen (cropped/zoomed to just its own bounding box, no full
+   map, no neighbor rendered), so it needs no separate "this is the state"
+   highlight of its own; the yellow border-glow polyline below is the sole
+   highlight, marking which side to name a neighbor for. Approximate shared-
+   border indicator — see neighborBoard.js's
+   _borderGlowPoints doc comment for why this is a sampled-outline
+   approximation rather than an exact border-segment line. */
+.neighbor-border-glow {
+  fill: none;
+  stroke: var(--neon-yellow);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 10px rgba(247, 255, 58, 0.9)); /* static — see wrong-pulse comment */
+  pointer-events: none;
+  animation: hint-pulse 1.1s ease-in-out infinite;
+}
+.neighbor-source-label {
+  fill: rgba(240, 246, 246, 0.95);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 18px; /* native SVG-unit size, not screen px — see .piece-label's dynamic sizing in overviewBoard.js for the more precise approach; a static size is good enough here since this is a single transient per-round label, not a persistent all-states layer */
+  letter-spacing: 0.3px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(0, 20, 26, 0.75);
+  stroke-width: 3px;
+}
+
 /* ---------------- state outline context (city boards) ---------------- */
 
 .state-bg-layer { pointer-events: none; }
