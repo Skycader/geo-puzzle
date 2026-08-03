@@ -39,6 +39,29 @@ const PLACE_DOT_R_PX = 4;
 const PLACE_DOT_STROKE_PX = 1;
 const PLACE_FOCUS_RADIUS_KM = 30;
 
+// Info-popup: hand-editable Wikipedia-sourced blurbs (see
+// levels/usa/cities-info.json / places-info.json — plain JSON, not baked
+// into a JS module, specifically so they're easy to hand-edit/extend
+// without touching any code). Fetched once and cached at module scope so
+// re-entering Overview mode doesn't refetch. Only cities/places with an
+// entry here get click-to-info behavior — everything else stays inert.
+let _infoLoadPromise = null;
+function loadInfo() {
+  if (!_infoLoadPromise) {
+    const fetchJson = (url) =>
+      fetch(url)
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({}));
+    _infoLoadPromise = Promise.all([fetchJson('./levels/usa/cities-info.json'), fetchJson('./levels/usa/places-info.json')]).then(
+      ([cities, places]) => ({ cities, places })
+    );
+  }
+  return _infoLoadPromise;
+}
+const POPUP_W_PX = 260;
+const POPUP_MARGIN_PX = 16;
+const POPUP_EDGE_PAD_PX = 8;
+
 // Free-look mode: every state sits filled at its true spot (like an
 // already-solved puzzle) and every city is a dot, all at once — nothing
 // to click, answer or assemble. "Full info" keeps every name permanently
@@ -74,6 +97,10 @@ export class OverviewBoard {
     this._revealQueue = [];
     this._revealScheduled = false;
     this._destroyed = false;
+    this.info = { cities: {}, places: {} }; // populated async — see loadInfo()
+    this._openPopupId = null;
+    this._infoPopupEl = null;
+    this._infoConnectorEl = null;
 
     // Perf instrumentation — instance-level overrides (shadow the
     // prototype methods) so the onVisibleRectChange/onZoomChange
@@ -83,6 +110,11 @@ export class OverviewBoard {
     this._rescaleForZoom = mark('overview._rescaleForZoom', this._rescaleForZoom.bind(this));
 
     this._build();
+    loadInfo().then((info) => {
+      if (this._destroyed) return;
+      this.info = info;
+      this._applyInfoAvailability();
+    });
   }
 
   _build() {
@@ -150,6 +182,8 @@ export class OverviewBoard {
         const path = document.createElementNS(SVG_NS, 'path');
         path.setAttribute('d', c.d);
         path.setAttribute('class', 'overview-city-shape');
+        path.dataset.id = c.id;
+        path.dataset.kind = 'city';
         const title = document.createElementNS(SVG_NS, 'title');
         title.textContent = this._cityHoverTitle(c);
         path.appendChild(title);
@@ -179,6 +213,8 @@ export class OverviewBoard {
       dot.setAttribute('cy', c.cy);
       dot.setAttribute('r', radiusNative.toFixed(3));
       dot.setAttribute('class', 'overview-city-dot');
+      dot.dataset.id = c.id;
+      dot.dataset.kind = 'city';
       const title = document.createElementNS(SVG_NS, 'title');
       title.textContent = this._cityHoverTitle(c);
       dot.appendChild(title);
@@ -214,6 +250,8 @@ export class OverviewBoard {
       dot.setAttribute('cx', p.cx);
       dot.setAttribute('cy', p.cy);
       dot.setAttribute('class', 'overview-place-dot');
+      dot.dataset.id = p.id;
+      dot.dataset.kind = 'place';
       const title = document.createElementNS(SVG_NS, 'title');
       title.textContent = this._placeHoverTitle(p);
       dot.appendChild(title);
@@ -256,6 +294,7 @@ export class OverviewBoard {
       baseHeight: baseH,
       baseScale: this.scale,
       panFromAnywhere: true,
+      onTap: (ev) => this._onMapTap(ev),
       onZoomChange: (zoom) => this._rescaleForZoom(zoom),
       onVisibleRectChange: (rect) => this._updateVisibleCities(rect),
     });
@@ -285,6 +324,11 @@ export class OverviewBoard {
   // instead, a handful per animation frame — cities pop in over a few
   // frames rather than all at once, but every individual frame stays cheap.
   _updateVisibleCities(rect) {
+    // An open info popup is anchored to a specific screen position via its
+    // connector line — any further pan/zoom moves the dot out from under
+    // it, so simplest correct behavior is to just close it rather than
+    // continuously re-tracking the line during every frame of a drag.
+    this._closeInfoPopup();
     this._lastVisibleRect = rect; // replayed by setCitiesVisible(true) — see below
     const mx = (rect.x1 - rect.x0) * VIRTUALIZE_MARGIN;
     const my = (rect.y1 - rect.y0) * VIRTUALIZE_MARGIN;
@@ -377,6 +421,108 @@ export class OverviewBoard {
     } else {
       this._revealScheduled = false;
     }
+  }
+
+  // ---------------- click-to-info popup (cities/places only, states excluded) ----------------
+
+  // Once levels/usa/{cities,places}-info.json has loaded, mark whichever
+  // dots/shapes actually have an entry as visually clickable — applied
+  // retroactively since the fetch resolves after _build() already created
+  // every element (including ones not currently appended, for virtualized
+  // cities — the class just sits on the detached node until it's shown).
+  _applyInfoAvailability() {
+    for (const entry of this.cityDotEntries) {
+      if (this.info.cities[entry.id]) entry.dot.classList.add('overview-has-info');
+    }
+    for (const entry of this.cityShapeEntries) {
+      if (this.info.cities[entry.id]) entry.path.classList.add('overview-has-info');
+    }
+    for (const entry of this.placeEntries) {
+      if (this.info.places[entry.id]) entry.dot.classList.add('overview-has-info');
+    }
+  }
+
+  _onMapTap(ev) {
+    const kind = ev.target?.dataset?.kind;
+    const id = ev.target?.dataset?.id;
+    const entry = kind === 'city' ? this.info.cities[id] : kind === 'place' ? this.info.places[id] : null;
+    if (entry) {
+      if (this._openPopupId === id) {
+        this._closeInfoPopup(); // tapping the same dot again toggles it closed
+      } else {
+        this._openInfoPopup(kind, id, entry);
+      }
+    } else {
+      this._closeInfoPopup(); // tapping anything else (state, empty map, a city/place with no info) dismisses it
+    }
+  }
+
+  _openInfoPopup(kind, id, info) {
+    this._closeInfoPopup();
+    const source = kind === 'city' ? this.citiesById.get(id) : this.placesById.get(id);
+    if (!source) return;
+    const dotEl = source.dotEl || source.pathEl;
+    const wrapRect = this.zoomWrap.getBoundingClientRect();
+    const dotRect = dotEl.getBoundingClientRect();
+    const dotX = dotRect.left + dotRect.width / 2 - wrapRect.left;
+    const dotY = dotRect.top + dotRect.height / 2 - wrapRect.top;
+
+    const popup = document.createElement('div');
+    popup.className = 'info-popup';
+    popup.innerHTML = `
+      <button type="button" class="info-popup-close" title="Закрыть">×</button>
+      ${info.image ? `<img class="info-popup-image" src="${info.image}" alt="" loading="lazy" />` : ''}
+      <div class="info-popup-body">
+        <h3 class="info-popup-title">${source.data.ru}</h3>
+        <p class="info-popup-text">${info.extract}</p>
+        <a class="info-popup-link" href="${info.wikiUrl}" target="_blank" rel="noopener">Читать в Википедии →</a>
+      </div>
+    `;
+    popup.querySelector('.info-popup-close').addEventListener('click', () => this._closeInfoPopup());
+    this.zoomWrap.appendChild(popup);
+
+    // Prefer the right side of the dot; flip to the left if that would
+    // overflow the map frame. Vertically centered on the dot, clamped so it
+    // never runs off the top/bottom either.
+    const wrapW = wrapRect.width;
+    const wrapH = wrapRect.height;
+    let popX = dotX + POPUP_MARGIN_PX;
+    let connectSide = 'left'; // which edge of the popup the connector line touches
+    if (popX + POPUP_W_PX > wrapW - POPUP_EDGE_PAD_PX) {
+      popX = dotX - POPUP_MARGIN_PX - POPUP_W_PX;
+      connectSide = 'right';
+    }
+    popX = Math.min(Math.max(popX, POPUP_EDGE_PAD_PX), wrapW - POPUP_W_PX - POPUP_EDGE_PAD_PX);
+    popup.style.left = `${popX}px`;
+    const popH = popup.offsetHeight; // real height, now that content + width are set
+    const popY = Math.min(Math.max(dotY - popH / 2, POPUP_EDGE_PAD_PX), wrapH - popH - POPUP_EDGE_PAD_PX);
+    popup.style.top = `${popY}px`;
+
+    const connectX = connectSide === 'left' ? popX : popX + POPUP_W_PX;
+    const connectY = popY + popH / 2;
+    const connectorSvg = document.createElementNS(SVG_NS, 'svg');
+    connectorSvg.setAttribute('class', 'info-popup-connector-svg');
+    const line = document.createElementNS(SVG_NS, 'line');
+    line.setAttribute('x1', dotX.toFixed(1));
+    line.setAttribute('y1', dotY.toFixed(1));
+    line.setAttribute('x2', connectX.toFixed(1));
+    line.setAttribute('y2', connectY.toFixed(1));
+    line.setAttribute('class', 'info-popup-connector');
+    connectorSvg.appendChild(line);
+    this.zoomWrap.insertBefore(connectorSvg, popup);
+
+    this._openPopupId = id;
+    this._infoPopupEl = popup;
+    this._infoConnectorEl = connectorSvg;
+  }
+
+  _closeInfoPopup() {
+    if (!this._openPopupId) return;
+    this._openPopupId = null;
+    this._infoPopupEl?.remove();
+    this._infoPopupEl = null;
+    this._infoConnectorEl?.remove();
+    this._infoConnectorEl = null;
   }
 
   // ---------------- side panel: search + tabbed state/city list ----------------
