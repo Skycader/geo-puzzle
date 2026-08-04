@@ -206,6 +206,14 @@ export class IdentifyStateBoard {
     this.feedbackEl.classList.remove('name-feedback-wrong');
     this.feedbackEl.classList.add('name-feedback-correct');
     setTimeout(() => {
+      // Re-enabling the (hard-mode-only) input HERE, before _nextQuestion()
+      // rather than in a second setTimeout of its own back in _confirmHard,
+      // is what guarantees it happens before _resetHardInput()'s
+      // .focus() call below runs — focusing a still-disabled input is a
+      // silent no-op, which was exactly the bug (focus lost every round,
+      // needing a manual click) when this was two separately-scheduled
+      // same-delay timers racing each other.
+      if (this.inputEl) this.inputEl.disabled = false;
       this.index++;
       this._nextQuestion();
     }, ADVANCE_DELAY_MS);
@@ -279,10 +287,7 @@ export class IdentifyStateBoard {
     if (this.matchedPiece.id === this.current.id) {
       this.inputEl.disabled = true;
       this.confirmBtn.disabled = true;
-      this._onCorrect();
-      setTimeout(() => {
-        this.inputEl.disabled = false;
-      }, ADVANCE_DELAY_MS);
+      this._onCorrect(); // re-enables inputEl itself, right before focusing it — see _onCorrect's comment
     } else {
       this.roundNeededHelp = true;
       playError();

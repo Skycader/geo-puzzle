@@ -1,32 +1,102 @@
 {
   "new_york": {
-    "extract_EN": "New York, often called New York City (NYC), is the most populous city in the United States. It is located at the southern tip of New York State on New York Harbor, one of the world's largest natural harbors.",
-    "extract_RU": "Нью-Йорк, часто называемый Нью-Йорк-Сити (NYC), — самый населённый город США. Он расположен на южной оконечности штата Нью-Йорк на Нью-Йоркской гавани, одной из крупнейших естественных гаваней в мире.",
+    "extract": "Нью-Йорк, часто называемый Нью-Йорк-Сити (NYC), — самый населённый город США. Он расположен на южной оконечности штата Нью-Йорк на Нью-Йоркской гавани, одной из крупнейших естественных гаваней в мире.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu_%28cropped%29.jpg/330px-View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu_%28cropped%29.jpg",
-    "wikiUrl": "https://en.wikipedia.org/wiki/New_York_City"
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Нью-Йорк"
   },
   "los_angeles": {
-    "extract_EN": "Los Angeles is the most populous city in the U.S. state of California, and the commercial, financial, and cultural center of Southern California. With an estimated 3.87 million residents within the city limits, it is the second-most populous city in the United States, behind New York City.",
-    "extract_RU": "Лос-Анджелес — самый населённый город штата Калифорния, а также коммерческий, финансовый и культурный центр Южной Калифорнии. С населением около 3,87 миллиона человек в черте города, это второй по величине город США после Нью-Йорка.",
+    "extract": "Лос-Анджелес — самый населённый город штата Калифорния, а также коммерческий, финансовый и культурный центр Южной Калифорнии. С населением около 3,87 миллиона человек в черте города, это второй по величине город США после Нью-Йорка.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Hollywood_sign_%288485145044%29.jpg/330px-Hollywood_sign_%288485145044%29.jpg",
-    "wikiUrl": "https://en.wikipedia.org/wiki/Los_Angeles"
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Лос-Анджелес"
   },
   "chicago": {
-    "extract_EN": "Chicago is the most populous city in the U.S. state of Illinois and in the Midwestern United States. Located on the western shore of Lake Michigan, it is the third-most populous city in the United States, with a population of 2.74 million at the 2020 census.",
-    "extract_RU": "Чикаго — самый населённый город штата Иллинойс и всего Среднего Запада США. Расположенный на западном берегу озера Мичиган, это третий по численности населения город США — 2,74 миллиона человек по переписи 2020 года.",
+    "extract": "Чикаго — самый населённый город штата Иллинойс и всего Среднего Запада США. Расположенный на западном берегу озера Мичиган, это третий по численности населения город США — 2,74 миллиона человек по переписи 2020 года.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Chicago_River_ferry_b.jpg/330px-Chicago_River_ferry_b.jpg",
-    "wikiUrl": "https://en.wikipedia.org/wiki/Chicago"
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Чикаго"
   },
   "boston": {
-    "extract_EN": "Boston is the capital and most populous city of the U.S. state of Massachusetts. It serves as a cultural and financial center of New England, a region of the Northeastern United States. Boston has a population of 675,647 as of the 2020 census, making it the third-most populous city in the Northeastern United States after New York City and Philadelphia.",
-    "extract_RU": "Бостон — столица и самый населённый город штата Массачусетс. Он служит культурным и финансовым центром Новой Англии, региона на северо-востоке США. По переписи 2020 года население Бостона составляет 675 647 человек, что делает его третьим по величине городом северо-востока США после Нью-Йорка и Филадельфии.",
+    "extract": "Бостон — столица и самый населённый город штата Массачусетс. Он служит культурным и финансовым центром Новой Англии, региона на северо-востоке США. По переписи 2020 года население Бостона составляет 675 647 человек, что делает его третьим по величине городом северо-востока США после Нью-Йорка и Филадельфии.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/ISH_WC_Boston4.jpg/330px-ISH_WC_Boston4.jpg",
-    "wikiUrl": "https://en.wikipedia.org/wiki/Boston"
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Бостон"
   },
   "seattle": {
-    "extract_EN": "Seattle is the most populous city in the U.S. state of Washington and the Pacific Northwest region of North America. It is the 18th-most populous city in the United States, while the Seattle metropolitan area at over 4.15 million residents is the 15th-most populous metropolitan area in the nation.",
-    "extract_RU": "Сиэтл — самый населённый город штата Вашингтон и региона Тихоокеанский Северо-Запад Северной Америки. Он занимает 18-е место по численности населения среди городов США, а агломерация Сиэтла с населением более 4,15 миллиона человек — 15-я по величине городская агломерация страны.",
+    "extract": "Сиэтл — самый населённый город штата Вашингтон и региона Тихоокеанский Северо-Запад Северной Америки. Он занимает 18-е место по численности населения среди городов США, а агломерация Сиэтла с населением более 4,15 миллиона человек — 15-я по величине городская агломерация страны.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Seattle_Center_as_night_falls.jpg/330px-Seattle_Center_as_night_falls.jpg",
-    "wikiUrl": "https://en.wikipedia.org/wiki/Seattle"
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Сиэтл"
+  },
+  "houston": {
+    "extract": "Хьюстон — четвёртый по количеству жителей город в Соединённых Штатах Америки и крупнейший город в штате Техас с населением 2 314 157 человек в 2023 году по оценке Бюро переписи населения США. Хьюстон является административным центром округа Харрис, а также главным экономическим центром агломерации Большого Хьюстона.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Houston_Images.jpg/330px-Houston_Images.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Хьюстон"
+  },
+  "phoenix": {
+    "extract": "Финикс — столица и крупнейший город американского штата Аризона. С населением в 1 624 569 Финикс является крупнейшим административным центром среди всех в США, включая федеральную столицу Вашингтон, а также 5-м по населению городом в стране.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/PhoenixMontage02.jpg/330px-PhoenixMontage02.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Финикс"
+  },
+  "philadelphia": {
+    "extract": "Филадельфия — город в США, шестой по населению город страны и самый населённый город штата Пенсильвания. Население агломерации составляет 6 096 120 жителей. Расположен на реке Делавэр у побережья Атлантического океана.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Liberty_Bell_on_display_%282022%29.jpg/330px-Liberty_Bell_on_display_%282022%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Филадельфия"
+  },
+  "washington_dc": {
+    "extract": "Вашингтон — столица Соединённых Штатов Америки, федеральная территория. Официальное название — округ Колумбия. Чтобы не путать город с одноимённым штатом на северо-западе страны, американцы в разговорной речи обычно называют город «Ди-Си» или «Вашингтон, Ди-Си».",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Washington_260424_US_Capitol_02.jpg/330px-Washington_260424_US_Capitol_02.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Вашингтон"
+  },
+  "san_francisco": {
+    "extract": "Сан-Франциско — город в штате Калифорния, США; административный центр округа Сан-Франциско. Культурный, коммерческий, финансовый центр Северной Калифорнии.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/The_Painted_Ladies.jpg/330px-The_Painted_Ladies.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Сан-Франциско"
+  },
+  "las_vegas": {
+    "extract": "Лас-Вегас — город на западе США, в штате Невада, административный центр самого южного в штате округа Кларк. Расположен в центральной части пустыни Мохаве.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Las_Vegas_89.jpg/330px-Las_Vegas_89.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Лас-Вегас"
+  },
+  "denver": {
+    "extract": "Денвер, официально — Город и округ Денвер — крупнейший город и административный центр штата Колорадо. Население составляет 715 522 (2020), что определяет Денвер как 19-й город в США по количеству населения, а Денверский метрополитенский ареал — 2 697 476 жителей.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Denver%2C_Colorado_skyline_%28cropped%29.jpg/330px-Denver%2C_Colorado_skyline_%28cropped%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Денвер"
+  },
+  "atlanta": {
+    "extract": "Атланта — город в США, административный центр (столица) и крупнейший город штата Джорджия, административный центр округа Фултон.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Georgia_State_Capitol%2C_Atlanta%2C_GA_%2847421890312%29.jpg/330px-Georgia_State_Capitol%2C_Atlanta%2C_GA_%2847421890312%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Атланта"
+  },
+  "austin": {
+    "extract": "Остин — город в США, расположенный в центральной части штата Техас, столица штата и административный центр округа Травис. Город основан в 1839 году и назван в честь Стивена Остина, одного из основателей независимого Техаса.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Austin%2C_TX_skyline_2026.jpg/330px-Austin%2C_TX_skyline_2026.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Остин_(Техас)"
+  },
+  "nashville": {
+    "extract": "Нэшвилл — город на юге США, столица и крупнейший город штата Теннесси, центр округа Дейвидсон. Расположен на берегу реки Камберленд. Город является крупным центром здравоохранения и образования, а также столицей музыкального стиля кантри, благодаря чему получил прозвище «Город музыки».",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Nashville_Parthenon%2C_Centennial_Park%2C_West_End_Avenue%2C_Midtown%2C_Nashville%2C_TN_%2854385295358%29.jpg/330px-Nashville_Parthenon%2C_Centennial_Park%2C_West_End_Avenue%2C_Midtown%2C_Nashville%2C_TN_%2854385295358%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Нашвилл"
+  },
+  "salt_lake_city": {
+    "extract": "Солт-Лейк-Сити — столица, самый населённый и самый большой по площади город штата Юта (США). Название часто сокращается до Солт-Лейк или SLC.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Salt_Lake_City%2C_August_2012_%287707261420%29_%28cropped%29.jpg/330px-Salt_Lake_City%2C_August_2012_%287707261420%29_%28cropped%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Солт-Лейк-Сити"
+  },
+  "sacramento": {
+    "extract": "Сакраменто — город на западе США на месте впадения реки Американ-Ривер в реку Сакраменто, столица штата Калифорния и округа Сакраменто, основан в декабре 1848 года Джоном Саттером-младшим.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Sacramento%2C_California_skyline_in_2023.jpg/330px-Sacramento%2C_California_skyline_in_2023.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Сакраменто_(Калифорния)"
+  },
+  "miami": {
+    "extract": "Майами — город в США, расположенный на побережье Атлантического океана на юго-востоке Флориды в округе Майами-Дейд.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/PortMiami_main_channel_with_city_skyline_in_the_background_%28March_11%2C_2024%29.jpg/330px-PortMiami_main_channel_with_city_skyline_in_the_background_%28March_11%2C_2024%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Майами"
+  },
+  "new_orleans": {
+    "extract": "Новый Орлеан — крупный портовый город в США, самый густонаселённый город штата Луизиана.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/New_Orleans%2C_Louisiana_-_LaBranche_House%2C_French_Quarter%2C_February_2018.jpg/330px-New_Orleans%2C_Louisiana_-_LaBranche_House%2C_French_Quarter%2C_February_2018.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Новый_Орлеан"
+  },
+  "honolulu": {
+    "extract": "Гонолулу — город на острове Оаху Гавайского архипелага, столица и крупнейший город штата Гавайи и округа Гонолулу.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Downtown_Honolulu_from_P%C5%ABowaina_%28Punchbowl_Crater%29.jpg/330px-Downtown_Honolulu_from_P%C5%ABowaina_%28Punchbowl_Crater%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Гонолулу"
   }
 }

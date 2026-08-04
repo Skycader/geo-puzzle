@@ -754,6 +754,10 @@ body {
   stroke: rgba(0, 20, 26, 0.75);
   stroke-width: 3px;
 }
+/* The neighbor's label in the post-answer reveal (js/neighborBoard.js's
+   _renderRoundBoard reveal mode) — greenish to match its highlighted
+   .quiz-correct shape, distinguishing it from the source state's label. */
+.neighbor-reveal-label { fill: var(--green); }
 
 /* ---------------- state outline context (city boards) ---------------- */
 

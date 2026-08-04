@@ -11,7 +11,6 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 // I know THIS state's neighbors."
 const SUCCESS_SCOPE = 'neighbor-states';
 const OPTION_COUNT = 4; // easy mode: 1 correct + this many distractors
-const ADVANCE_DELAY_MS = 650;
 const WRONG_FLASH_MS = 500;
 const FUZZY_MATCH_MAX_DIST = 1;
 // How much of the source state's sampled outline (as a fraction of the
@@ -93,13 +92,37 @@ export class NeighborBoard {
     this.container.innerHTML = '';
     this._buildAnswerBar();
     this._nextQuestion();
+    // Explicit rather than relying on the focused "Далее" button's native
+    // Enter-activation — that didn't fire reliably (focus moving to a
+    // <button> mid-keydown doesn't consistently pick up the SAME keypress
+    // in every environment). This works regardless of what currently has
+    // focus, as long as the round is actually locked/waiting to advance.
+    //
+    // The `ev.target === this.inputEl` guard matters: keydown BUBBLES, so
+    // the exact same Enter press that just submitted a correct hard-mode
+    // answer (target: inputEl, handled by its own listener, which sets
+    // this.locked = true before returning) would otherwise reach this
+    // document-level listener too, in that same synchronous dispatch — and
+    // since this.locked is already true by then, it would immediately
+    // call _advance() right after submitting, collapsing the two-step
+    // confirm-then-next back into one. Skipping events whose target IS
+    // the input makes sure only a genuinely SEPARATE later Enter press
+    // (target has moved elsewhere by then) can advance.
+    this._onKeydown = (ev) => {
+      if (ev.key !== 'Enter' || ev.target === this.inputEl) return;
+      if (this.locked && this.nextBtn && !this.nextBtn.hidden) {
+        ev.preventDefault();
+        this._advance();
+      }
+    };
+    document.addEventListener('keydown', this._onKeydown);
   }
 
   _buildAnswerBar() {
     const bar = document.createElement('div');
     bar.className = 'name-answer-bar';
     if (this.difficulty === 'easy') {
-      bar.innerHTML = `<div class="name-options"></div><span class="name-feedback"></span>`;
+      bar.innerHTML = `<div class="name-options"></div><span class="name-feedback"></span><button type="button" class="btn btn-primary name-next-btn" hidden>Далее ▶</button>`;
       this.optionsEl = bar.querySelector('.name-options');
     } else {
       bar.innerHTML = `
@@ -112,6 +135,7 @@ export class NeighborBoard {
           <button type="button" class="name-confirm-btn" data-action="confirm" title="Подтвердить" disabled>✓</button>
         </div>
         <span class="name-feedback"></span>
+        <button type="button" class="btn btn-primary name-next-btn" hidden>Далее ▶</button>
       `;
       this.inputEl = bar.querySelector('.name-input');
       this.matchIconEl = bar.querySelector('.name-match-icon');
@@ -125,6 +149,11 @@ export class NeighborBoard {
       this.hintBtn.addEventListener('click', () => this._revealHint());
     }
     this.feedbackEl = bar.querySelector('.name-feedback');
+    this.nextBtn = bar.querySelector('.name-next-btn');
+    // Focusing this button (see _onCorrect) means a plain Enter press
+    // advances too — native <button> behavior — without needing a separate
+    // keydown listener for it.
+    this.nextBtn.addEventListener('click', () => this._advance());
     this.container.appendChild(bar);
     this.answerBar = bar;
   }
@@ -160,19 +189,27 @@ export class NeighborBoard {
   // Rebuilds the entire map area for the current round: a fresh SVG,
   // cropped/zoomed to just this.current's own bounding box, containing
   // ONLY that one path — nothing else from the level is ever added to the
-  // DOM here, so there's no full map and no neighbor to see, by
-  // construction rather than by hiding.
-  _renderRoundBoard() {
+  // DOM here, so there's no full map and no neighbor to see during the
+  // guessing phase, by construction rather than by hiding.
+  //
+  // `reveal` (passed once the round is answered correctly — see
+  // _onCorrect) switches to a DIFFERENT crop: both this.current's AND
+  // this.currentNeighbor's real shapes, side by side, so the player
+  // actually sees the two states touching instead of just being told the
+  // neighbor's name. Never rotated (rotation was only ever meant to make
+  // the *guess* harder, not to obscure the ground truth once it's been
+  // answered), and both get a label regardless of difficulty.
+  _renderRoundBoard(reveal = false) {
     this.zoomCtl?.destroy();
     this.zoomWrap?.remove();
 
-    const [minX, minY, maxX, maxY] = this.current.bbox;
+    const [minX, minY, maxX, maxY] = reveal ? this._combinedBbox(this.current.bbox, this.currentNeighbor.bbox) : this.current.bbox;
     const w = maxX - minX || 1;
     const h = maxY - minY || 1;
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     let vbX, vbY, vbW, vbH;
-    if (this.difficulty === 'ultra') {
+    if (this.difficulty === 'ultra' && !reveal) {
       // Rotating around the shape's own center means any point can end up
       // as far as the bbox's half-diagonal from that center, in any
       // direction — a square crop of that radius (+ padding) always
@@ -213,7 +250,7 @@ export class NeighborBoard {
     // outline points used for the glow) is never touched, only how it's
     // displayed, so _borderGlowPoints below still works in the path's own
     // untransformed coordinate space.
-    const rotateDeg = this.difficulty === 'ultra' ? ROTATION_MIN_DEG + Math.random() * (ROTATION_MAX_DEG - ROTATION_MIN_DEG) : 0;
+    const rotateDeg = this.difficulty === 'ultra' && !reveal ? ROTATION_MIN_DEG + Math.random() * (ROTATION_MAX_DEG - ROTATION_MIN_DEG) : 0;
     const group = document.createElementNS(SVG_NS, 'g');
     if (rotateDeg) group.setAttribute('transform', `rotate(${rotateDeg.toFixed(2)} ${cx} ${cy})`);
     this.svg.appendChild(group);
@@ -223,21 +260,30 @@ export class NeighborBoard {
     path.setAttribute('class', 'quiz-path');
     group.appendChild(path);
 
-    const glowPoints = this._borderGlowPoints(path, this.currentNeighbor);
-    if (glowPoints.length) {
-      const glow = document.createElementNS(SVG_NS, 'polyline');
-      glow.setAttribute('points', glowPoints.map((p) => `${p.x},${p.y}`).join(' '));
-      glow.setAttribute('class', 'neighbor-border-glow');
-      group.appendChild(glow);
+    if (reveal) {
+      // The real border is directly visible now that both actual shapes
+      // are drawn — the approximate glow (built for the single-shape
+      // guessing view) would only risk looking slightly misaligned next to
+      // it, so it's skipped here rather than shown.
+      const neighborPath = document.createElementNS(SVG_NS, 'path');
+      neighborPath.setAttribute('d', this.currentNeighbor.d);
+      neighborPath.setAttribute('class', 'quiz-path quiz-correct');
+      group.appendChild(neighborPath);
+    } else {
+      const glowPoints = this._borderGlowPoints(path, this.currentNeighbor);
+      if (glowPoints.length) {
+        const glow = document.createElementNS(SVG_NS, 'polyline');
+        glow.setAttribute('points', glowPoints.map((p) => `${p.x},${p.y}`).join(' '));
+        glow.setAttribute('class', 'neighbor-border-glow');
+        group.appendChild(glow);
+      }
     }
 
-    if (this.difficulty === 'easy') {
-      const label = document.createElementNS(SVG_NS, 'text');
-      label.setAttribute('x', this.current.cx);
-      label.setAttribute('y', this.current.cy);
-      label.setAttribute('class', 'neighbor-source-label');
-      label.textContent = this.current.ru;
-      this.svg.appendChild(label);
+    if (reveal) {
+      this._addPieceLabel(this.current, 'neighbor-source-label');
+      this._addPieceLabel(this.currentNeighbor, 'neighbor-source-label neighbor-reveal-label');
+    } else if (this.difficulty === 'easy') {
+      this._addPieceLabel(this.current, 'neighbor-source-label');
     }
 
     this.zoomViewport.appendChild(this.svg);
@@ -246,6 +292,19 @@ export class NeighborBoard {
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, { panFromAnywhere: true });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
     this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: fitScale, kmPerUnit: this.level.kmPerUnit }));
+  }
+
+  _addPieceLabel(piece, className) {
+    const label = document.createElementNS(SVG_NS, 'text');
+    label.setAttribute('x', piece.cx);
+    label.setAttribute('y', piece.cy);
+    label.setAttribute('class', className);
+    label.textContent = piece.ru;
+    this.svg.appendChild(label);
+  }
+
+  _combinedBbox(a, b) {
+    return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])];
   }
 
   _nextQuestion() {
@@ -295,20 +354,48 @@ export class NeighborBoard {
     }
   }
 
-  // No map reveal here (unlike quizBoard.js/nameStateBoard.js) — the
-  // neighbor is never rendered in this mode, so feedback is text-only.
+  // Once answered correctly, actually DRAW the neighbor next to the
+  // source (see _renderRoundBoard's `reveal` mode) rather than just naming
+  // it — the player should see the two real shapes touching, not take the
+  // adjacency on faith. No auto-advance timer either — the round now waits
+  // for an explicit "Далее" click or Enter press (focusing the button
+  // makes Enter work natively), so there's no rush to look before it
+  // disappears.
   _onCorrect() {
     this.locked = true;
     playSnap();
     this.correct++;
     if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.roundNeededHelp);
-    this.feedbackEl.textContent = 'Верно!';
+    this.feedbackEl.textContent = `Верно! Сосед: ${this.currentNeighbor.ru} (${this.currentNeighbor.name})`;
     this.feedbackEl.classList.remove('name-feedback-wrong');
     this.feedbackEl.classList.add('name-feedback-correct');
-    setTimeout(() => {
-      this.index++;
-      this._nextQuestion();
-    }, ADVANCE_DELAY_MS);
+    this._renderRoundBoard(true);
+    this.nextBtn.hidden = false;
+    // Deferred to the next tick on purpose: when this fires from an Enter
+    // keydown on inputEl (submitting the answer), focusing nextBtn
+    // SYNCHRONOUSLY within that same handler let the browser's native
+    // "Enter activates the focused button" behavior apply to THIS SAME
+    // keypress — so one Enter press submitted the answer AND immediately
+    // advanced, collapsing the intended two-step confirm+next into one.
+    // Moving the focus() call to a fresh task lets the current keydown's
+    // event/default-action handling finish first, so a second, separate
+    // Enter press is what's actually needed to advance.
+    setTimeout(() => this.nextBtn.focus(), 0);
+  }
+
+  // Advances to the next round — called by the "Далее" button (or Enter,
+  // since focusing that button gives Enter its native activation
+  // behavior). Re-enabling the (hard-mode-only) input HERE, before
+  // _nextQuestion(), guarantees it happens before _resetHardInput()'s
+  // .focus() call runs — focusing a still-disabled input is a silent
+  // no-op, which was the bug the whole "wait for explicit advance" design
+  // replaces a timer-based version of.
+  _advance() {
+    if (!this.locked) return;
+    this.nextBtn.hidden = true;
+    if (this.inputEl) this.inputEl.disabled = false;
+    this.index++;
+    this._nextQuestion();
   }
 
   _answerEasy(id, btn) {
@@ -379,10 +466,7 @@ export class NeighborBoard {
     if (this.matchedPiece.id === this.currentNeighbor.id) {
       this.inputEl.disabled = true;
       this.confirmBtn.disabled = true;
-      this._onCorrect();
-      setTimeout(() => {
-        this.inputEl.disabled = false;
-      }, ADVANCE_DELAY_MS);
+      this._onCorrect(); // stays disabled until _advance() re-enables it — see its comment
     } else {
       this.roundNeededHelp = true;
       playError();
@@ -405,6 +489,7 @@ export class NeighborBoard {
   }
 
   destroy() {
+    document.removeEventListener('keydown', this._onKeydown);
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }

@@ -48,8 +48,12 @@ const PLACE_FOCUS_RADIUS_KM = 30;
 let _infoLoadPromise = null;
 function loadInfo() {
   if (!_infoLoadPromise) {
+    // no-store: these files are hand-edited fairly often (see todo.md-style
+    // requests to add more entries) — a cached GET response would keep
+    // serving a stale version indefinitely across reloads, exactly like it
+    // just did (an old cached copy silently keeping edits from showing up).
     const fetchJson = (url) =>
-      fetch(url)
+      fetch(url, { cache: 'no-store' })
         .then((r) => (r.ok ? r.json() : {}))
         .catch(() => ({}));
     _infoLoadPromise = Promise.all([fetchJson('./levels/usa/cities-info.json'), fetchJson('./levels/usa/places-info.json')]).then(
