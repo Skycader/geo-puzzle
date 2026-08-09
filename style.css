@@ -1266,9 +1266,8 @@ body {
 .ruler-point {
   fill: var(--orange);
   stroke: rgba(0, 20, 26, 0.85);
-  cursor: grab;
+  cursor: move;
 }
-.ruler-point:active { cursor: grabbing; }
 .ruler-segment {
   stroke: var(--orange);
   stroke-width: 2;
