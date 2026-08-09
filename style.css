@@ -1258,6 +1258,69 @@ body {
   filter: drop-shadow(0 0 8px rgba(33, 246, 255, 0.8));
 }
 
+/* ---------------- ruler tool (js/overviewBoard.js's _renderRuler) ---------------- */
+/* Orange — every other map layer here already has its own accent (states'
+   gradient, cities pink, places violet, focus/hint yellow, info-popup
+   connector cyan), so the ruler gets a color nothing else uses, to read
+   unambiguously as "a measurement overlay" rather than map data. */
+.ruler-point {
+  fill: var(--orange);
+  stroke: rgba(0, 20, 26, 0.85);
+  cursor: grab;
+}
+.ruler-point:active { cursor: grabbing; }
+.ruler-segment {
+  stroke: var(--orange);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  opacity: 0.85;
+  vector-effect: non-scaling-stroke; /* constant screen width regardless of zoom — endpoints stay in real map coordinates */
+  pointer-events: none;
+}
+.ruler-label {
+  fill: var(--base3);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(0, 20, 26, 0.85);
+}
+
+.ruler-readout {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 6;
+  min-width: 140px;
+  background: rgba(0, 20, 26, 0.85);
+  border: 1px solid var(--orange);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--base1);
+}
+.ruler-readout-row { white-space: nowrap; }
+.ruler-readout-row strong { color: var(--orange); }
+.ruler-readout-clear {
+  margin-top: 6px;
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--base0);
+  background: transparent;
+  border: 1px solid var(--base01);
+  border-radius: 5px;
+  padding: 3px 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ruler-readout-clear:hover { border-color: var(--orange); color: var(--orange); }
+
 .city-actions {
   flex: none;
   display: flex;

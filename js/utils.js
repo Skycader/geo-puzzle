@@ -26,6 +26,21 @@ export function dist(x1, y1, x2, y2) {
   return Math.hypot(x2 - x1, y2 - y1);
 }
 
+// Shoelace formula — unsigned area of a closed polygon (`points` need not
+// repeat the first point at the end; the closing edge is implicit). Used
+// by overviewBoard.js's ruler tool to turn 3+ placed points into an area
+// reading, in whatever unit² the input points are in (native map units —
+// callers convert to real km² by multiplying by kmPerUnit²).
+export function polygonArea(points) {
+  let sum = 0;
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % points.length];
+    sum += a.x * b.y - b.x * a.y;
+  }
+  return Math.abs(sum) / 2;
+}
+
 // Weighted random sample, no replacement — repeatedly draws one item
 // proportional to its current weight and removes it from the pool, so
 // earlier draws don't change the RELATIVE odds among what's left. Used by

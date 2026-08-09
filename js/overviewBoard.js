@@ -1,5 +1,6 @@
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { mark } from './perfDebug.js';
+import { polygonArea } from './utils.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const STATE_LABEL_PX = 12;
@@ -66,6 +67,18 @@ const POPUP_W_PX = 480;
 const POPUP_MARGIN_PX = 20;
 const POPUP_EDGE_PAD_PX = 12;
 
+// Ruler tool: right-click places/removes a point, drag moves one, live
+// distance/perimeter/area readout. Always live in Overview mode — no
+// separate "mode" toggle, since it only ever responds to right-click and
+// dragging an existing point, neither of which the rest of the board uses
+// for anything (left-click keeps panning / opening city-info popups
+// exactly as before — see _onMapTap).
+const RULER_POINT_R_PX = 5;
+const RULER_POINT_STROKE_PX = 1.5;
+const RULER_HIT_R_PX = 12; // how close a right-click has to land on an existing point to delete it instead of adding a new one
+const RULER_LABEL_PX = 11;
+const RULER_LABEL_STROKE_PX = 2.5;
+
 // Free-look mode: every state sits filled at its true spot (like an
 // already-solved puzzle) and every city is a dot, all at once — nothing
 // to click, answer or assemble. "Full info" keeps every name permanently
@@ -105,6 +118,7 @@ export class OverviewBoard {
     this._openPopupId = null;
     this._infoPopupEl = null;
     this._infoConnectorEl = null;
+    this.rulerPoints = []; // { x, y } in native units, in placement order — see _renderRuler
 
     // Perf instrumentation — instance-level overrides (shadow the
     // prototype methods) so the onVisibleRectChange/onZoomChange
@@ -283,6 +297,16 @@ export class OverviewBoard {
       this.svg.appendChild(leaderLabel);
     }
 
+    // Ruler layer — kept as its own <g> so _renderRuler can cheaply
+    // rebuild just its contents (innerHTML='') without touching anything
+    // else, and so it can be re-appended (moved) to the end of this.svg's
+    // children on every render, keeping it painted on top even as new
+    // city dots get revealed into the DOM later by the virtualization
+    // queue above.
+    this.rulerLayer = document.createElementNS(SVG_NS, 'g');
+    this.rulerLayer.setAttribute('class', 'ruler-layer');
+    this.svg.appendChild(this.rulerLayer);
+
     this.zoomViewport.appendChild(this.svg);
     // The wrap must be attached to the live document BEFORE attachZoomPan()
     // runs — it measures viewport.clientWidth/Height immediately (for pan
@@ -304,6 +328,13 @@ export class OverviewBoard {
     });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
     this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
+
+    // Right-click only — never conflicts with left-click's existing
+    // pan/tap-to-info behavior (contextmenu and pointerdown are entirely
+    // separate event types), so the ruler needs no "enter ruler mode"
+    // toggle at all.
+    this.svg.addEventListener('contextmenu', (ev) => this._onMapContextMenu(ev));
+    this._buildRulerReadout();
 
     this._rescaleForZoom(1);
     this.setLabelsVisible(this.labelsVisible);
@@ -527,6 +558,173 @@ export class OverviewBoard {
     this._infoPopupEl = null;
     this._infoConnectorEl?.remove();
     this._infoConnectorEl = null;
+  }
+
+  // ---------------- ruler tool (right-click to place/remove a point, drag to move) ----------------
+
+  _buildRulerReadout() {
+    const el = document.createElement('div');
+    el.className = 'ruler-readout';
+    el.hidden = true;
+    el.innerHTML = `
+      <div class="ruler-readout-body"></div>
+      <button type="button" class="ruler-readout-clear">Очистить</button>
+    `;
+    this.rulerReadoutBody = el.querySelector('.ruler-readout-body');
+    el.querySelector('.ruler-readout-clear').addEventListener('click', () => this._clearRuler());
+    this.zoomWrap.appendChild(el);
+    this.rulerReadoutEl = el;
+  }
+
+  // Same math as cityPinBoard.js's _clientToNative — reads the SVG's own
+  // live viewBox (rather than assuming zoom=1), so it stays correct at
+  // any current pan/zoom.
+  _clientToNative(clientX, clientY) {
+    const rect = this.svg.getBoundingClientRect();
+    const vb = this.svg.viewBox.baseVal;
+    return {
+      x: ((clientX - rect.left) / rect.width) * vb.width + vb.x,
+      y: ((clientY - rect.top) / rect.height) * vb.height + vb.y,
+    };
+  }
+
+  // Right-click doesn't need any onTap-style tap-vs-drag distinction —
+  // 'contextmenu' already only fires for a genuine right-click, and (per
+  // zoomPan.js) the pan machinery ignores non-left buttons entirely, so
+  // there's no risk of a right-click ever starting a pan underneath this.
+  _onMapContextMenu(ev) {
+    ev.preventDefault();
+    const pt = this._clientToNative(ev.clientX, ev.clientY);
+    const hitIndex = this._hitTestRulerPoint(pt);
+    if (hitIndex !== -1) this.rulerPoints.splice(hitIndex, 1);
+    else this.rulerPoints.push(pt);
+    this._renderRuler();
+  }
+
+  // Constant on-screen hit radius (like the point markers' own screen
+  // size) rather than a fixed native-unit one, so it's equally easy to
+  // land a right-click on a point whether zoomed in or out.
+  _hitTestRulerPoint(pt) {
+    const effScale = this.scale * (this.zoomCtl?.getZoom() ?? 1);
+    const hitRadiusNative = RULER_HIT_R_PX / effScale;
+    for (let i = 0; i < this.rulerPoints.length; i++) {
+      const p = this.rulerPoints[i];
+      if (Math.hypot(p.x - pt.x, p.y - pt.y) <= hitRadiusNative) return i;
+    }
+    return -1;
+  }
+
+  // Left-button drag only — a right-click's own pointerdown (button 2)
+  // passes straight through here so it isn't stopPropagation'd away from
+  // reaching the 'contextmenu' listener that actually handles deleting a
+  // point. stopPropagation on the LEFT-button case is what keeps the map
+  // from panning underneath the drag (same trick cityPinBoard.js's own
+  // pin dragging already relies on — see _onPinPointerDown).
+  _onRulerPointerDown(ev, index) {
+    if (ev.button !== 0) return;
+    ev.stopPropagation();
+    ev.preventDefault();
+    const move = (mv) => {
+      this.rulerPoints[index] = this._clientToNative(mv.clientX, mv.clientY);
+      this._renderRuler();
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  }
+
+  _fmtKm(km) {
+    if (km < 10) return `${km.toFixed(2)} км`;
+    if (km < 100) return `${km.toFixed(1)} км`;
+    return `${Math.round(km).toLocaleString('ru-RU')} км`;
+  }
+
+  _fmtArea(km2) {
+    if (km2 < 100) return `${km2.toFixed(1)} км²`;
+    return `${Math.round(km2).toLocaleString('ru-RU')} км²`;
+  }
+
+  _clearRuler() {
+    this.rulerPoints = [];
+    this._renderRuler();
+  }
+
+  // Full rebuild on every add/remove/move/zoom — point counts here are
+  // always small (a handful), so this is far cheaper than the incremental
+  // appended/hidden bookkeeping cities need at 91-wide scale.
+  _renderRuler() {
+    // Re-append (moves, doesn't clone) so the ruler layer is always the
+    // LAST child of this.svg, painting on top even of city dots the
+    // virtualization queue appends later.
+    this.svg.appendChild(this.rulerLayer);
+    this.rulerLayer.innerHTML = '';
+
+    const pts = this.rulerPoints;
+    const effScale = this.scale * (this.zoomCtl?.getZoom() ?? 1);
+    const kmPerUnit = this.level.kmPerUnit;
+
+    const addLabel = (x, y, text) => {
+      const label = document.createElementNS(SVG_NS, 'text');
+      label.setAttribute('x', x);
+      label.setAttribute('y', y);
+      label.setAttribute('class', 'ruler-label');
+      label.style.fontSize = `${(RULER_LABEL_PX / effScale).toFixed(2)}px`;
+      label.style.strokeWidth = `${(RULER_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
+      label.textContent = text;
+      this.rulerLayer.appendChild(label);
+    };
+
+    // Sequential segments, PLUS an implicit closing edge (last -> first)
+    // once there are 3+ points — that's what turns the sequence of
+    // segments into a closed polygon with a perimeter/area, with no
+    // separate "close the loop" action needed.
+    const segCount = pts.length >= 3 ? pts.length : pts.length - 1;
+    let totalKm = 0;
+    for (let i = 0; i < segCount; i++) {
+      const a = pts[i];
+      const b = pts[(i + 1) % pts.length];
+      const segKm = Math.hypot(b.x - a.x, b.y - a.y) * kmPerUnit;
+      totalKm += segKm;
+      const line = document.createElementNS(SVG_NS, 'line');
+      line.setAttribute('x1', a.x);
+      line.setAttribute('y1', a.y);
+      line.setAttribute('x2', b.x);
+      line.setAttribute('y2', b.y);
+      line.setAttribute('class', 'ruler-segment');
+      this.rulerLayer.appendChild(line);
+      addLabel((a.x + b.x) / 2, (a.y + b.y) / 2, this._fmtKm(segKm));
+    }
+
+    // Points drawn after (on top of) segments.
+    pts.forEach((pt, i) => {
+      const marker = document.createElementNS(SVG_NS, 'circle');
+      marker.setAttribute('cx', pt.x);
+      marker.setAttribute('cy', pt.y);
+      marker.setAttribute('r', (RULER_POINT_R_PX / effScale).toFixed(2));
+      marker.style.strokeWidth = `${(RULER_POINT_STROKE_PX / effScale).toFixed(2)}px`;
+      marker.setAttribute('class', 'ruler-point');
+      marker.addEventListener('pointerdown', (ev) => this._onRulerPointerDown(ev, i));
+      this.rulerLayer.appendChild(marker);
+    });
+
+    // Readout panel — hidden below 2 points (a lone point has nothing to
+    // measure yet); "Расстояние" for exactly 2 (a single segment, not a
+    // polygon); "Периметр" + "Площадь" once closed (3+).
+    if (pts.length < 2) {
+      this.rulerReadoutEl.hidden = true;
+    } else {
+      this.rulerReadoutEl.hidden = false;
+      const closed = pts.length >= 3;
+      let html = `<div class="ruler-readout-row">${closed ? 'Периметр' : 'Расстояние'}: <strong>${this._fmtKm(totalKm)}</strong></div>`;
+      if (closed) {
+        const areaKm2 = polygonArea(pts) * kmPerUnit * kmPerUnit;
+        html += `<div class="ruler-readout-row">Площадь: <strong>${this._fmtArea(areaKm2)}</strong></div>`;
+      }
+      this.rulerReadoutBody.innerHTML = html;
+    }
   }
 
   // ---------------- side panel: search + tabbed state/city list ----------------
@@ -780,6 +978,11 @@ export class OverviewBoard {
       entry.dot.setAttribute('r', (PLACE_DOT_R_PX / effScale).toFixed(2));
       entry.dot.style.strokeWidth = `${(PLACE_DOT_STROKE_PX / effScale).toFixed(2)}px`;
     }
+    // _renderRuler already recomputes its own effScale internally and is a
+    // full (cheap, small-N) rebuild each time, so just re-running it here
+    // keeps ruler point/label sizes constant-screen-px too, same as
+    // everything else in this method.
+    if (this.rulerLayer) this._renderRuler();
   }
 
   // getComputedTextLength() forces a synchronous layout of the *whole*
