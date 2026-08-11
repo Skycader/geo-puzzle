@@ -4,6 +4,7 @@
 import usa from './usa.js';
 import usaCities from './usaCities.js';
 import usaPlaces from './usaPlaces.js';
+import world from './world.js';
 
 // usaCities.js/usaPlaces.js are generated independently (scripts/
 // build_usa_cities.js, scripts/build_usa_places.js) so each can be
@@ -11,6 +12,7 @@ import usaPlaces from './usaPlaces.js';
 // rather than baking them into the generated usa.js file.
 export const levels = {
   usa: { ...usa, cities: usaCities, places: usaPlaces },
+  world,
 };
 
 export default levels;

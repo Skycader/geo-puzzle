@@ -769,6 +769,22 @@ body {
 }
 .state-bg-path.state-bg-inset { stroke: rgba(255, 43, 214, 0.25); }
 
+/* World-map country context (js/seaQuizBoard.js, js/seaIdentifyBoard.js) —
+   solid dark-blue land (Solarized base01/base00, matching the rest of the
+   UI's palette), deliberately more solid than the .state-bg-path default
+   above so continents read as land at a glance instead of blending into
+   the plain-dark-navy ocean background (the default is a near-invisible
+   0.08-alpha wash, tuned for the USA level where it sits *behind* the
+   interactive .quiz-path states and shouldn't compete with them — wrong
+   call for a world map where the land itself needs to be legible). The
+   target sea/ocean is highlighted in yellow/gold (.quiz-hint) precisely so
+   it reads as the "special" zone against this deliberately muted land. */
+.world-bg-path {
+  fill: rgba(88, 110, 117, 0.45);
+  stroke: rgba(101, 123, 131, 0.7);
+  stroke-width: 0.6;
+}
+
 /* ---------------- city markers (find-the-city quiz) ---------------- */
 
 .city-hit { fill: transparent; cursor: pointer; }

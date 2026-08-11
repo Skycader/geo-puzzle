@@ -12,7 +12,7 @@ export class EligibilityList {
   constructor(container, items, opts = {}) {
     this.container = container;
     this.items = items;
-    this.kind = opts.kind; // 'states' | 'cities' — same distinction OverviewBoard's list uses for area formula + row layout
+    this.kind = opts.kind; // 'states' | 'cities' | 'places' | 'seas' — see _areaOf/_mainColumnHtml for what each actually changes
     this.storageKey = opts.storageKey;
     this.onChange = opts.onChange || (() => {});
     // Optional extra column (e.g. "Найди штат"'s adaptive-mode success
@@ -30,8 +30,28 @@ export class EligibilityList {
     return this.selected;
   }
 
+  // States and seas both carry a real precomputed `.area` (km², built into
+  // the level data); cities/places only store a radius, so their area is
+  // derived (they're rendered as a circle of that radius to begin with).
   _areaOf(it) {
-    return this.kind === 'states' ? it.area : Math.PI * it.radiusKm * it.radiusKm;
+    return this.kind === 'states' || this.kind === 'seas' ? it.area : Math.PI * it.radiusKm * it.radiusKm;
+  }
+
+  // 'states': short `.id` codes (AL, CA…) fit a dedicated abbreviation
+  // column. 'cities': capital/silhouette markers + a state sub-label.
+  // Everything else ('places', 'seas' — whose `.id` is a full slug like
+  // "pacific_ocean", not a short code, and neither has `.state`) just gets
+  // a plain name — this used to fall into the 'cities' template by
+  // default, which rendered a literal "undefined" sub-label for anything
+  // without a `.state` field.
+  _mainColumnHtml(it) {
+    if (this.kind === 'states') {
+      return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span>`;
+    }
+    if (this.kind === 'cities') {
+      return `<span class="overview-item-main"><span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
+    }
+    return `<span class="overview-item-main"><span class="overview-item-name">${it.ru}</span></span>`;
   }
 
   _loadSelection() {
@@ -171,10 +191,7 @@ export class EligibilityList {
       const areaStr = Math.round(this._areaOf(it)).toLocaleString('ru-RU') + ' км²';
       const checked = this.selected.has(it.id);
       const statHtml = this.getStat ? `<span class="overview-item-stat">${this.getStat(it)}</span>` : '';
-      row.innerHTML =
-        this.kind === 'states'
-          ? `<input type="checkbox" class="elig-checkbox"${checked ? ' checked' : ''} /><span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span><span class="overview-item-area">${areaStr}</span>${statHtml}`
-          : `<input type="checkbox" class="elig-checkbox"${checked ? ' checked' : ''} /><span class="overview-item-main"><span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state}</span></span><span class="overview-item-area">${areaStr}</span>${statHtml}`;
+      row.innerHTML = `<input type="checkbox" class="elig-checkbox"${checked ? ' checked' : ''} />${this._mainColumnHtml(it)}<span class="overview-item-area">${areaStr}</span>${statHtml}`;
       row.querySelector('.elig-checkbox').addEventListener('change', (ev) => {
         if (ev.target.checked) this.selected.add(it.id);
         else this.selected.delete(it.id);

@@ -1,6 +1,7 @@
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { mark } from './perfDebug.js';
 import { polygonArea } from './utils.js';
+import { buildStateBackground } from './mapBackground.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const STATE_LABEL_PX = 12;
@@ -167,6 +168,16 @@ export class OverviewBoard {
         <stop offset="1" stop-color="var(--piece-b)" />
       </linearGradient>`;
     this.svg.appendChild(defs);
+
+    // World level's `pieces` are seas/oceans — unlike states, they don't
+    // tile the whole map, so without land context Overview mode showed
+    // them floating in blank space (same issue seaQuizBoard.js/
+    // seaIdentifyBoard.js had before they gained this same background
+    // layer). The USA level has no `land` field at all (its `pieces`
+    // already cover the whole map), so this is a no-op there.
+    if (this.level.land) {
+      this.svg.appendChild(buildStateBackground(this.level.land, { pathClass: 'world-bg-path' }));
+    }
 
     for (const p of this.level.pieces) {
       const path = document.createElementNS(SVG_NS, 'path');
@@ -734,7 +745,7 @@ export class OverviewBoard {
     panel.className = 'overview-panel';
     panel.innerHTML = `
       <div class="overview-tabs">
-        <button type="button" class="overview-tab active" data-tab="states">Штаты</button>
+        <button type="button" class="overview-tab active" data-tab="states">${this.level.id === 'world' ? 'Моря' : 'Штаты'}</button>
         <button type="button" class="overview-tab" data-tab="cities">Города</button>
         <button type="button" class="overview-tab" data-tab="places">Места</button>
       </div>
@@ -832,12 +843,7 @@ export class OverviewBoard {
       row.type = 'button';
       row.className = 'overview-item';
       const areaStr = showArea ? Math.round(this._areaOf(it)).toLocaleString('ru-RU') + ' км²' : '';
-      row.innerHTML =
-        this.activeTab === 'states'
-          ? `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span><span class="overview-item-area">${areaStr}</span>`
-          : this.activeTab === 'places'
-            ? `<span class="overview-item-main"><span class="overview-item-name">${it.ru}</span></span>`
-            : `<span class="overview-item-main"><span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state}</span></span><span class="overview-item-area">${areaStr}</span>`;
+      row.innerHTML = this._mainColumnHtml(it) + `<span class="overview-item-area">${areaStr}</span>`;
       row.addEventListener('click', () => {
         if (this.activeTab === 'states') this._focusState(it.id);
         else if (this.activeTab === 'places') this._focusPlace(it.id);

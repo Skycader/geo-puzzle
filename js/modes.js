@@ -1,35 +1,60 @@
 // Top-level game modes, shown as cards in the menu above the mode-specific
-// settings (puzzle difficulty presets vs quiz round length).
+// settings (puzzle difficulty presets vs quiz round length). Every mode
+// except "Обзор" is scoped to specific level(s) via `levels` — everything
+// below assumes US-state-shaped data (neighbors, cities, places, etc)
+// that only levels.usa has, so they're US-only; the two "Моря и океаны"
+// modes only make sense for levels.world. "Обзор" has no `levels` at all
+// (works generically off level.pieces/cities/places for any level) — see
+// game.js's _renderModeList, which filters this list by the currently
+// selected level.
 export const MODES = [
   {
     id: 'puzzle',
     title: 'Собери карту',
     desc: 'Штаты из кусочков, как пазл',
+    levels: ['usa'],
   },
   {
     id: 'quiz',
     title: 'Найди штат',
     desc: 'Кликни штат по названию',
+    levels: ['usa'],
   },
   {
     id: 'name-state',
     title: 'Назови штат',
     desc: 'Назови подсвеченный штат',
+    levels: ['usa'],
   },
   {
     id: 'neighbor',
     title: 'Назови соседа',
     desc: 'Назови соседний штат',
+    levels: ['usa'],
   },
   {
     id: 'identify',
     title: 'Определи штат',
     desc: 'Угадай штат по форме',
+    levels: ['usa'],
   },
   {
     id: 'city-place',
     title: 'Города и места',
     desc: 'Переключи объект и способ игры',
+    levels: ['usa'],
+  },
+  {
+    id: 'sea-identify',
+    title: 'Определи море или океан',
+    desc: 'Угадай море по форме',
+    levels: ['world'],
+  },
+  {
+    id: 'sea-quiz',
+    title: 'Найди море или океан',
+    desc: 'Кликни море по названию',
+    levels: ['world'],
   },
   {
     id: 'overview',
@@ -68,4 +93,12 @@ export const IDENTIFY_DIFFICULTIES = [
   { id: 'easy', title: 'Лёгкий', desc: '4 варианта на выбор' },
   { id: 'medium', title: 'Средний', desc: 'Впиши название сам' },
   { id: 'hard', title: 'Сложный', desc: 'Штат повёрнут на случайный угол' },
+];
+
+// Answer method for "Определи море или океан" — no rotated/hardcore tier
+// (unlike "Определи штат"/"Назови соседа"'s 3-tier versions), just the
+// plain easy/hard split, per what was actually asked for.
+export const SEA_IDENTIFY_DIFFICULTIES = [
+  { id: 'easy', title: 'Лёгкий', desc: '4 варианта на выбор' },
+  { id: 'hard', title: 'Сложный', desc: 'Впиши название сам' },
 ];

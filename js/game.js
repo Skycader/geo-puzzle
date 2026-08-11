@@ -5,11 +5,20 @@ import { NeighborBoard } from './neighborBoard.js';
 import { IdentifyStateBoard } from './identifyStateBoard.js';
 import { CityQuizBoard } from './cityQuizBoard.js';
 import { CityPinBoard } from './cityPinBoard.js';
+import { SeaIdentifyBoard } from './seaIdentifyBoard.js';
+import { SeaQuizBoard } from './seaQuizBoard.js';
 import { OverviewBoard, OVERVIEW_PANEL_W } from './overviewBoard.js';
 import { EligibilityList } from './eligibilityList.js';
 import { clamp } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
-import { MODES, OVERVIEW_MODES, NAME_STATE_DIFFICULTIES, NEIGHBOR_DIFFICULTIES, IDENTIFY_DIFFICULTIES } from './modes.js';
+import {
+  MODES,
+  OVERVIEW_MODES,
+  NAME_STATE_DIFFICULTIES,
+  NEIGHBOR_DIFFICULTIES,
+  IDENTIFY_DIFFICULTIES,
+  SEA_IDENTIFY_DIFFICULTIES,
+} from './modes.js';
 import { playClick } from './audio.js';
 import { loadSuccessStats } from './successStats.js';
 
@@ -34,6 +43,8 @@ const ROUNDS_PANEL_TEXT = {
   'name-state': { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
   neighbor: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
   identify: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
+  'sea-identify': { heading: 'Раунд', label: 'Сколько морей/океанов спросить', prompt: '' },
+  'sea-quiz': { heading: 'Раунд', label: 'Сколько морей/океанов спросить', prompt: 'Найди на карте:' },
 };
 
 function formatTime(totalSeconds) {
@@ -58,6 +69,7 @@ export class Game {
     this.nameStateDifficulty = NAME_STATE_DIFFICULTIES[0].id;
     this.neighborDifficulty = NEIGHBOR_DIFFICULTIES[0].id;
     this.identifyDifficulty = IDENTIFY_DIFFICULTIES[0].id;
+    this.seaIdentifyDifficulty = SEA_IDENTIFY_DIFFICULTIES[0].id;
     // "Города и места" — two independent toggles instead of separate mode
     // cards: WHAT to ask about (cities vs places) and HOW to answer
     // (click-to-find vs place-a-pin). See _startCityPlace.
@@ -147,18 +159,33 @@ export class Game {
         this.levelId = id;
         this.el.levelList.querySelectorAll('.level-card').forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
+        // Most modes assume US-state-shaped data (neighbors, cities,
+        // places…) that only levels.usa has — see modes.js's `levels`
+        // field. If the mode that was selected doesn't apply to the level
+        // just switched to, fall back to the first one that does, rather
+        // than leaving a now-nonsensical mode selected.
+        if (!this._modesForCurrentLevel().some((m) => m.id === this.modeId)) {
+          this.modeId = this._modesForCurrentLevel()[0].id;
+        }
+        this._renderModeList();
         // Eligibility lists (and the round-count max they drive) are
-        // per-level data — only one level exists today, but this keeps
-        // switching levels from leaving a stale states/cities list behind.
+        // per-level data — this keeps switching levels from leaving a
+        // stale states/cities list behind.
         this._applyModeVisibility();
       });
       this.el.levelList.appendChild(card);
     }
   }
 
+  // Modes with no `levels` field (currently just "Обзор") work generically
+  // for any level; everything else is scoped to specific ones.
+  _modesForCurrentLevel() {
+    return MODES.filter((m) => !m.levels || m.levels.includes(this.levelId));
+  }
+
   _renderModeList() {
     this.el.modeList.innerHTML = '';
-    for (const mode of MODES) {
+    for (const mode of this._modesForCurrentLevel()) {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'preset-card' + (mode.id === this.modeId ? ' selected' : '');
@@ -182,23 +209,30 @@ export class Game {
     const isIdentify = this.modeId === 'identify';
     const isQuiz = this.modeId === 'quiz';
     const isCityPlace = this.modeId === 'city-place';
+    const isSeaIdentify = this.modeId === 'sea-identify';
+    const isSeaQuiz = this.modeId === 'sea-quiz';
     // "Города и места" only gets an eligibility checklist in "найти" mode —
     // "расставь метку" always draws from the full pool, same as the old
     // separate city-pins mode used to.
-    const hasEligibility = isQuiz || isNameState || isNeighbor || isIdentify || (isCityPlace && this.cityPlaceMode === 'find');
+    const hasEligibility =
+      isQuiz || isNameState || isNeighbor || isIdentify || isSeaIdentify || isSeaQuiz || (isCityPlace && this.cityPlaceMode === 'find');
     this.el.panelPuzzleSettings.hidden = !isPuzzle;
     this.el.panelQuizSettings.hidden = !isRounds;
     this.el.panelOverviewSettings.hidden = !isOverview;
     this.el.quizEligibleWrap.hidden = !hasEligibility;
-    this.el.nameStateDifficultyEl.hidden = !(isNameState || isNeighbor || isIdentify);
-    // Each of these three modes has its own differently-sized difficulty
-    // list (2/3/3 tiers — NAME_STATE_DIFFICULTIES / NEIGHBOR_DIFFICULTIES /
-    // IDENTIFY_DIFFICULTIES) sharing the same panel element — re-render it
-    // for whichever mode is now active so the right cards (and the right
-    // one marked "selected") show up.
+    this.el.nameStateDifficultyEl.hidden = !(isNameState || isNeighbor || isIdentify || isSeaIdentify);
+    // Each of these has its own differently-sized difficulty list sharing
+    // the same panel element — re-render it for whichever mode is now
+    // active so the right cards (and the right one marked "selected")
+    // show up. "sea-quiz" has no difficulty at all (click-to-find only),
+    // so the panel just stays hidden for it.
     if (isNameState) this._renderNameStateDifficulty();
     else if (isNeighbor) this._renderNeighborDifficulty();
     else if (isIdentify) this._renderIdentifyDifficulty();
+    else if (isSeaIdentify) this._renderSeaIdentifyDifficulty();
+    // No adaptive mode for the two new sea modes (not asked for, keeps
+    // this new level's scope tight) — same "no adaptive" default
+    // city-place's pin mode already has.
     this.el.adaptiveModeRow.hidden = !(isQuiz || isNameState || isNeighbor || isIdentify);
     this.el.adaptiveModeCheckbox.checked = this.adaptiveMode;
     this.el.cityPlaceEntityRow.hidden = !isCityPlace;
@@ -225,8 +259,8 @@ export class Game {
     this.eligibilityList = null;
 
     if (hasEligibility) {
-      const kind = isQuiz || isNameState || isNeighbor || isIdentify ? 'states' : this.cityPlaceEntity;
-      const items = kind === 'states' ? level.pieces : kind === 'places' ? level.places : level.cities;
+      const kind = isSeaIdentify || isSeaQuiz ? 'seas' : isQuiz || isNameState || isNeighbor || isIdentify ? 'states' : this.cityPlaceEntity;
+      const items = kind === 'states' || kind === 'seas' ? level.pieces : kind === 'places' ? level.places : level.cities;
       // Adaptive mode's success streak — shown here so the player can see,
       // right where they're picking which states to include, which ones
       // are still giving them trouble in whichever mode they're setting up.
@@ -316,6 +350,12 @@ export class Game {
   _renderIdentifyDifficulty() {
     this._renderDifficultyList(IDENTIFY_DIFFICULTIES, this.identifyDifficulty, (id) => {
       this.identifyDifficulty = id;
+    });
+  }
+
+  _renderSeaIdentifyDifficulty() {
+    this._renderDifficultyList(SEA_IDENTIFY_DIFFICULTIES, this.seaIdentifyDifficulty, (id) => {
+      this.seaIdentifyDifficulty = id;
     });
   }
 
@@ -433,6 +473,8 @@ export class Game {
     else if (this.modeId === 'neighbor') this._startNeighbor(level);
     else if (this.modeId === 'identify') this._startIdentify(level);
     else if (this.modeId === 'city-place') this._startCityPlace(level);
+    else if (this.modeId === 'sea-identify') this._startSeaIdentify(level);
+    else if (this.modeId === 'sea-quiz') this._startSeaQuiz(level);
     else if (this.modeId === 'overview') this._startOverview(level);
     else this._startPuzzle(level);
 
@@ -610,6 +652,64 @@ export class Game {
         this._onFinish(
           'РАУНД ЗАВЕРШЁН',
           `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} штатов`
+        ),
+    });
+  }
+
+  _startSeaIdentify(level) {
+    this.el.toggleHintsWrap.hidden = true;
+    this.el.togglePlacesWrap.hidden = true;
+    this.el.toggleLabelsWrap.hidden = true;
+    this.el.quizPrompt.hidden = true;
+
+    this.el.hudLevel.textContent = `${level.title} · Определи море или океан (${this.quizRounds})`;
+    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudGroups.hidden = false;
+    this.el.hudGroups.textContent = 'Ошибки: 0';
+
+    // Unlike _startIdentify/_startNeighbor's per-round isolated-shape crop,
+    // this shows the whole world map with the target sea highlighted —
+    // sea shapes read as "the gap between coastlines", so cropping away the
+    // land context (as states can afford to, being self-contained shapes)
+    // left the target floating in blank space. See seaIdentifyBoard.js.
+    const answerBarH = 110;
+    const scale = this._computeScale(level.canvas, this._availableHeight(answerBarH));
+    this.board = new SeaIdentifyBoard(this.el.boardContainer, level, {
+      rounds: this.quizRounds,
+      eligibleIds: this.eligibilityList?.getSelectedIds(),
+      difficulty: this.seaIdentifyDifficulty,
+      scale,
+      onProgress: (p) => this._onNameStateProgress(p),
+      onFinish: (stats) =>
+        this._onFinish(
+          'РАУНД ЗАВЕРШЁН',
+          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total}`
+        ),
+    });
+  }
+
+  _startSeaQuiz(level) {
+    this.el.toggleHintsWrap.hidden = true;
+    this.el.togglePlacesWrap.hidden = true;
+    this.el.toggleLabelsWrap.hidden = true;
+    this.el.quizPrompt.hidden = false;
+
+    this.el.hudLevel.textContent = `${level.title} · Найди море или океан (${this.quizRounds})`;
+    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudGroups.hidden = false;
+    this.el.hudGroups.textContent = 'Ошибки: 0';
+
+    const promptH = this.el.quizPrompt.offsetHeight + 14;
+    const scale = this._computeScale(level.canvas, this._availableHeight(promptH));
+    this.board = new SeaQuizBoard(this.el.boardContainer, level, {
+      rounds: this.quizRounds,
+      eligibleIds: this.eligibilityList?.getSelectedIds(),
+      scale,
+      onProgress: (p) => this._onQuizProgress(p),
+      onFinish: (stats) =>
+        this._onFinish(
+          'РАУНД ЗАВЕРШЁН',
+          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total}`
         ),
     });
   }
