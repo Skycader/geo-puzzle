@@ -174,14 +174,22 @@
   --land-fill-faint: rgba(92, 92, 92, 0.1);
   --land-stroke: rgba(110, 110, 110, 0.7);
   --land-stroke-faint: rgba(158, 158, 158, 0.35);
-  --neon-cyan: #9e9e9e;
-  --neon-pink: #6e6e6e;
-  --neon-violet: #5c5c5c;
-  --neon-cyan-rgb: 158, 158, 158;
-  --neon-pink-rgb: 110, 110, 110;
-  --neon-violet-rgb: 92, 92, 92;
+  /* The accent itself is red, not gray — everything above this point is
+     the neutral base (backgrounds, piece fills, panel/board tones);
+     these three (+ -rgb twins, + the panel-border glow) are the only
+     "accent" colors, so they're what actually carries the red. Three
+     different shades (not one flat red) preserve the original scheme's
+     primary/secondary/tertiary distinction — e.g. .level-card's selected
+     border (--neon-cyan) vs .preset-card's (--neon-pink) still read as
+     visually distinct, just both red instead of both being cyan/pink. */
+  --neon-cyan: #ff3b30;
+  --neon-pink: #ff5c4d;
+  --neon-violet: #cc2936;
+  --neon-cyan-rgb: 255, 59, 48;
+  --neon-pink-rgb: 255, 92, 77;
+  --neon-violet-rgb: 204, 41, 54;
   --bg-glow: #262626;
-  --violet-glow-rgb: 92, 92, 92;
+  --violet-glow-rgb: 204, 41, 54;
   --base03-rgb: 26, 26, 26;
   --base02-rgb: 38, 38, 38;
   --ink-rgb: 20, 20, 20;
