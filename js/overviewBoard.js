@@ -189,17 +189,28 @@ export class OverviewBoard {
       path.appendChild(title);
       this.svg.appendChild(path);
 
-      const label = document.createElementNS(SVG_NS, 'text');
-      label.setAttribute('x', p.cx);
-      label.setAttribute('y', p.cy);
-      label.setAttribute('class', 'piece-label');
-      // USA states: a short 2-letter code reads fine directly on the map.
-      // World seas have no such code — `.id` is a long slug ("gulf_of_mexico"),
-      // which was rendering as literal, cluttered slug text on the map.
-      label.textContent = this.level.id === 'world' ? p.ru : p.id;
-      this.svg.appendChild(label);
-      this.allLabelEls.push(label);
-      this.stateLabels.push({ el: label });
+      // Usually one label at [cx, cy] — world pieces carry a `labelPoints`
+      // array instead (see scripts/build_world_seas.js's computeLabelPoints):
+      // seas that straddle the antimeridian (Pacific, Arctic/Southern
+      // Ocean, Ross Sea) render as two disconnected on-screen chunks, and a
+      // single label at the bbox center used to land in the empty gap
+      // between them, on neither chunk — so those get one label per
+      // visible chunk instead. USA states have no `labelPoints` field, so
+      // they always fall back to the single [cx, cy] point, unchanged.
+      const labelPoints = p.labelPoints || [[p.cx, p.cy]];
+      for (const [lx, ly] of labelPoints) {
+        const label = document.createElementNS(SVG_NS, 'text');
+        label.setAttribute('x', lx);
+        label.setAttribute('y', ly);
+        label.setAttribute('class', 'piece-label');
+        // USA states: a short 2-letter code reads fine directly on the map.
+        // World seas have no such code — `.id` is a long slug ("gulf_of_mexico"),
+        // which was rendering as literal, cluttered slug text on the map.
+        label.textContent = this.level.id === 'world' ? p.ru : p.id;
+        this.svg.appendChild(label);
+        this.allLabelEls.push(label);
+        this.stateLabels.push({ el: label });
+      }
       this.statesById.set(p.id, { data: p, pathEl: path });
     }
 

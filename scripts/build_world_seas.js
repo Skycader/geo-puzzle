@@ -27,8 +27,17 @@ const fs = require('fs');
 const path = require('path');
 
 const MARINE_SRC = path.join(__dirname, 'data', 'world-marine-polys.geojson');
+// The Sargasso Sea has no coastline (it's bounded by ocean currents, not
+// land), so it's absent from Natural Earth's 110m marine layer entirely —
+// confirmed missing even at 50m. It IS present at 10m
+// (ne_10m_geography_marine_polys.geojson), so this is just that one
+// feature extracted out, rather than switching the whole marine layer to
+// 10m (306 features, many obscure straits/channels not worth quizzing on —
+// a much bigger, separate call from patching one well-known omission).
+const MARINE_EXTRA_SRC = path.join(__dirname, 'data', 'world-marine-extra.geojson');
 const LAND_SRC = path.join(__dirname, 'data', 'world-countries-simplified.geojson');
 const marine = JSON.parse(fs.readFileSync(MARINE_SRC, 'utf8'));
+const marineExtra = JSON.parse(fs.readFileSync(MARINE_EXTRA_SRC, 'utf8'));
 const land = JSON.parse(fs.readFileSync(LAND_SRC, 'utf8'));
 
 // Equirectangular (x=lon, y=-lat) — deliberately simpler than Mercator: one
@@ -163,15 +172,53 @@ const MERGE_INTO = {
   'South Atlantic Ocean': { id: 'atlantic_ocean', name: 'Atlantic Ocean', ru: 'Атлантический океан' },
 };
 
-const merged = new Map(); // id -> { id, name, ru, dParts: [], bbox, nativeArea }
-for (const f of marine.features) {
+// Raw (non-unwrapped) projected vertices of a geometry — used only for
+// label placement (see computeLabelPoints below), not for path drawing.
+// Unlike the unwrap+shift logic ringToPath needs to draw a seam-crossing
+// ring correctly, a plain project(lon,lat) per vertex already lands each
+// point in its correct on-screen spot (the antimeridian bug was only in
+// how consecutive points got CONNECTED, never in where individual points
+// project to) — so this is deliberately simpler than ringToPath.
+function collectRawPoints(geometry) {
+  const pts = [];
+  const visitRing = (ring) => {
+    for (const [lon, lat] of ring) pts.push(project(lon, lat));
+  };
+  if (geometry.type === 'Polygon') geometry.coordinates.forEach(visitRing);
+  else if (geometry.type === 'MultiPolygon') geometry.coordinates.forEach((poly) => poly.forEach(visitRing));
+  return pts;
+}
+
+// A piece whose bbox is ~the full canvas width (Pacific/Arctic/Southern
+// Ocean/Ross Sea — all straddle the antimeridian) doesn't just have one
+// wide shape: on screen it's two disconnected chunks, one hugging each
+// edge of the map (see ringToPath's shift-duplicate comment). A single
+// label at the bbox center lands in the empty gap between them, on neither
+// visible chunk — so instead, cluster this piece's raw projected vertices
+// by which half of the canvas they fall in and place one label per
+// non-empty cluster.
+function computeLabelPoints(rawPoints, bbox) {
+  const [minX, minY, maxX, maxY] = bbox;
+  if (maxX - minX < CANVAS_W * 0.9) {
+    return [[+((minX + maxX) / 2).toFixed(1), +((minY + maxY) / 2).toFixed(1)]];
+  }
+  const half = CANVAS_W / 2;
+  const clusters = [rawPoints.filter(([x]) => x < half), rawPoints.filter(([x]) => x >= half)].filter((c) => c.length);
+  return clusters.map((c) => [
+    +(c.reduce((s, [x]) => s + x, 0) / c.length).toFixed(1),
+    +(c.reduce((s, [, y]) => s + y, 0) / c.length).toFixed(1),
+  ]);
+}
+
+const merged = new Map(); // id -> { id, name, ru, dParts: [], bbox, nativeArea, rawPoints }
+for (const f of [...marine.features, ...marineExtra.features]) {
   const p = f.properties;
   const target = MERGE_INTO[p.name] || { id: slugify(p.name_en || p.name), name: p.name_en || p.name, ru: p.name_ru };
   const d = geometryToPath(f.geometry);
   const bbox = geometryBbox(f.geometry);
   const area = geometryArea(f.geometry);
   if (!merged.has(target.id)) {
-    merged.set(target.id, { id: target.id, name: target.name, ru: target.ru, dParts: [], bbox: [Infinity, Infinity, -Infinity, -Infinity], nativeArea: 0 });
+    merged.set(target.id, { id: target.id, name: target.name, ru: target.ru, dParts: [], bbox: [Infinity, Infinity, -Infinity, -Infinity], nativeArea: 0, rawPoints: [] });
   }
   const entry = merged.get(target.id);
   entry.dParts.push(d);
@@ -180,6 +227,7 @@ for (const f of marine.features) {
   entry.bbox[1] = Math.min(entry.bbox[1], bbox[1]);
   entry.bbox[2] = Math.max(entry.bbox[2], bbox[2]);
   entry.bbox[3] = Math.max(entry.bbox[3], bbox[3]);
+  entry.rawPoints.push(...collectRawPoints(f.geometry));
 }
 
 const pieces = [...merged.values()].map((e) => {
@@ -193,6 +241,11 @@ const pieces = [...merged.values()].map((e) => {
     bbox: e.bbox.map((n) => +n.toFixed(1)),
     area: Math.round(e.nativeArea * KM_PER_UNIT * KM_PER_UNIT),
     d: e.dParts.join(' '),
+    // Usually just [[cx, cy]] — two points only for antimeridian-split
+    // pieces (Pacific/Arctic/Southern Ocean/Ross Sea), one per visible
+    // on-screen chunk (see computeLabelPoints). overviewBoard.js renders
+    // one <text> label per entry instead of always using cx/cy.
+    labelPoints: computeLabelPoints(e.rawPoints, e.bbox),
   };
 });
 
