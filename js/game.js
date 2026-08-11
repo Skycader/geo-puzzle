@@ -100,14 +100,16 @@ export class Game {
     this._applyModeVisibility();
   }
 
-  // Reads the persisted global land-color choice ('blue' default — the
-  // original look every level always had | 'gray'), applies it as a
-  // data-attribute on <html> (style.css's --piece-a/--piece-b and
-  // --land-fill/--land-stroke variables key off it, covering both actual
-  // state/sea pieces and the secondary background-context layers), and
-  // wires the topbar toggle to change + persist it. Independent of
-  // level/mode — see the toggle's markup in index.html, deliberately a
-  // sibling of .hud, not inside it.
+  // Reads the persisted global color-scheme choice ('blue' default — the
+  // original look everything always had | 'gray'), applies it as a
+  // data-attribute on <html>, and wires the topbar toggle to change +
+  // persist it. Independent of level/mode — see the toggle's markup in
+  // index.html, deliberately a sibling of .hud, not inside it.
+  // style.css keys a lot off this attribute: --piece-a/--piece-b and
+  // --land-fill/--land-stroke (state/sea pieces + their background-context
+  // layers) AND --neon-cyan/--neon-pink/--neon-violet (the app's general
+  // accent colors — buttons, borders, highlights throughout the menu and
+  // HUD), so picking "gray" reskins the whole app, not just the map.
   _initLandScheme() {
     let scheme = 'blue';
     try {
@@ -133,7 +135,6 @@ export class Game {
     this.landScheme = scheme;
     document.documentElement.dataset.landScheme = scheme;
     this.el.toggleLandScheme.checked = scheme === 'blue';
-    this.el.toggleLandSchemeText.textContent = scheme === 'blue' ? 'Земля: синяя' : 'Земля: серая';
   }
 
   _cacheDom() {
@@ -188,7 +189,6 @@ export class Game {
       togglePlacesWrap: document.getElementById('toggle-places-wrap'),
       togglePlaces: document.getElementById('toggle-places'),
       toggleLandScheme: document.getElementById('toggle-land-scheme'),
-      toggleLandSchemeText: document.getElementById('toggle-land-scheme-text'),
     };
   }
 
@@ -819,14 +819,17 @@ export class Game {
     this.citiesVisible = true;
     this.placesVisible = true;
 
-    this.el.toggleHintsWrap.hidden = false;
+    // World level has no cities/places at all (levels/world.js: cities: [],
+    // places: []) — showing "Города"/"Места" toggles for a level with
+    // nothing for them to show/hide is just confusing clutter.
+    this.el.toggleHintsWrap.hidden = level.cities.length === 0;
     this.el.toggleHintsWrap.title = 'Показать/скрыть города на карте';
     this.el.toggleHintsText.textContent = 'Города';
     this.el.toggleHints.checked = this.citiesVisible;
     this.el.toggleLabelsWrap.hidden = false;
     this.el.toggleLabelsText.textContent = 'Подписи';
     this.el.toggleLabels.checked = this.labelsVisible;
-    this.el.togglePlacesWrap.hidden = false;
+    this.el.togglePlacesWrap.hidden = level.places.length === 0;
     this.el.togglePlaces.checked = this.placesVisible;
     this.el.quizPrompt.hidden = true;
 

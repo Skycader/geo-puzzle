@@ -60,31 +60,55 @@ const KM_PER_DEGREE_AT_EQUATOR = 111.32;
 const KM_PER_UNIT = KM_PER_DEGREE_AT_EQUATOR / SCALE;
 
 // Antimeridian handling: raw longitudes are stored in [-180, 180], but a
-// ring that actually crosses the ±180° seam (the Pacific, the Arctic/
-// Southern Ocean, Ross Sea, Russia, Fiji…) has consecutive points that jump
-// from ~+179° to ~-179° (or vice versa) — geographically adjacent, but a
-// naive project()+line-to draws a spurious straight chord all the way
-// across the map between them. That stray chord was rendering as either a
-// phantom filled rectangle or an unfilled "hole" bitten out of a nearby
-// shape (SVG's nonzero fill rule), depending on which sub-ring it turned
-// up in.
+// ring that actually crosses the ±180° seam AT A NON-POLAR LATITUDE (the
+// Pacific, Russia, Fiji…) has consecutive points that jump from ~+179° to
+// ~-179° (or vice versa) — geographically adjacent, but a naive
+// project()+line-to draws a spurious straight chord all the way across the
+// map between them. Fix: unwrap those longitudes (accumulate ±360°
+// whenever a step exceeds 180°, so the sequence becomes spatially
+// continuous, even if that pushes some points outside the canvas' native
+// [0, CANVAS_W] range), then, if projecting that ring lands partly outside
+// the canvas, render it TWICE more — shifted by ∓CANVAS_W — so whichever
+// wrapped copy actually falls on-screen draws correctly (see ringToPath).
 //
-// Fix: unwrap each ring's longitudes first (accumulate ±360° whenever a
-// step exceeds 180°, so the sequence becomes spatially continuous, even if
-// that pushes some points outside the canvas' native [0, CANVAS_W] range),
-// then, if projecting that ring lands partly outside the canvas, render it
-// TWICE more — shifted by ∓CANVAS_W (equivalent to ∓360° of longitude) —
-// so whichever wrapped copy actually falls on-screen draws correctly. The
-// off-screen copies are harmless (just extra path data that paints outside
-// the viewBox).
+// A jump that happens AT a pole (lat ≈ ±90°) is a different animal
+// entirely and must NOT be unwrapped this way: longitude is undefined
+// exactly at a pole, so a ring that goes "up to the pole and back down the
+// other side" (e.g. the Arctic Ocean's boundary, which legitimately
+// covers the pole) naturally has consecutive points like [-180,90] then
+// [179.999897,90] — a ~360° jump, but NOT a seam crossing to unwrap. In
+// equirectangular projection the pole isn't a point, it's smeared across
+// the ENTIRE top (or bottom) edge — x=0 to x=CANVAS_W at y=0 (or
+// CANVAS_H) — so that jump's naive projection (x≈0 to x≈CANVAS_W) is
+// already exactly correct; "fixing" it by unwrapping instead collapsed
+// that whole top edge down to a single degenerate point, which pinched
+// the ring's fill into the floating "dome" artifact reported over the
+// real Arctic coastline (the true top-edge band got cut off, and what
+// remained closed back up into a smooth, wrong, disconnected hump).
+const POLE_LAT_EPSILON = 0.01;
+function isAtPole(lat) {
+  return Math.abs(lat) > 90 - POLE_LAT_EPSILON;
+}
+// GeoJSON rings conventionally repeat their first point as the last (an
+// explicit "closing" duplicate) — a path's trailing 'Z' already closes it
+// back to the first M coordinate, so keeping that duplicate around for
+// unwrapping is redundant at best; dropping it avoids ever having to
+// reconcile two different projected positions for what's meant to be one
+// coordinate.
 function unwrapRingLons(ring) {
-  const out = [ring[0]];
+  const first = ring[0];
+  const last = ring[ring.length - 1];
+  const pts = first[0] === last[0] && first[1] === last[1] ? ring.slice(0, -1) : ring;
+  const out = [pts[0]];
   let offset = 0;
-  for (let i = 1; i < ring.length; i++) {
-    const d = ring[i][0] - ring[i - 1][0];
-    if (d > 180) offset -= 360;
-    else if (d < -180) offset += 360;
-    out.push([ring[i][0] + offset, ring[i][1]]);
+  for (let i = 1; i < pts.length; i++) {
+    const d = pts[i][0] - pts[i - 1][0];
+    const poleTouch = isAtPole(pts[i][1]) || isAtPole(pts[i - 1][1]);
+    if (!poleTouch) {
+      if (d > 180) offset -= 360;
+      else if (d < -180) offset += 360;
+    }
+    out.push([pts[i][0] + offset, pts[i][1]]);
   }
   return out;
 }
@@ -189,21 +213,35 @@ function collectRawPoints(geometry) {
   return pts;
 }
 
-// A piece whose bbox is ~the full canvas width (Pacific/Arctic/Southern
-// Ocean/Ross Sea — all straddle the antimeridian) doesn't just have one
-// wide shape: on screen it's two disconnected chunks, one hugging each
-// edge of the map (see ringToPath's shift-duplicate comment). A single
-// label at the bbox center lands in the empty gap between them, on neither
-// visible chunk — so instead, cluster this piece's raw projected vertices
-// by which half of the canvas they fall in and place one label per
-// non-empty cluster.
+// A wide bbox alone doesn't mean a piece is visually split into two
+// disconnected chunks — Ross Sea and Pacific Ocean really are (they hug
+// opposite edges of the map with a wide empty gap between, so a label at
+// the bbox center used to land in that gap, on neither visible chunk), but
+// Arctic Ocean and Southern Ocean circle their pole in one continuous band
+// spanning the FULL canvas width with no real gap — giving those a second
+// label duplicated the name onto what reads as a single unbroken shape.
+// Distinguish the two cases by the largest gap between consecutive raw
+// vertices' x-coordinates: a genuine split leaves a wide empty stretch
+// (verified: Ross Sea ~830 native units, Pacific ~630) while a continuous
+// band's sparser sampling only ever leaves small gaps (Arctic ~140,
+// Southern Ocean ~230) — 0.3 canvas-widths cleanly separates the two.
 function computeLabelPoints(rawPoints, bbox) {
   const [minX, minY, maxX, maxY] = bbox;
-  if (maxX - minX < CANVAS_W * 0.9) {
+  const xs = rawPoints.map(([x]) => x).sort((a, b) => a - b);
+  let maxGap = 0;
+  let gapAt = 0;
+  for (let i = 1; i < xs.length; i++) {
+    const gap = xs[i] - xs[i - 1];
+    if (gap > maxGap) {
+      maxGap = gap;
+      gapAt = xs[i - 1];
+    }
+  }
+  if (maxGap < CANVAS_W * 0.3) {
     return [[+((minX + maxX) / 2).toFixed(1), +((minY + maxY) / 2).toFixed(1)]];
   }
-  const half = CANVAS_W / 2;
-  const clusters = [rawPoints.filter(([x]) => x < half), rawPoints.filter(([x]) => x >= half)].filter((c) => c.length);
+  const splitX = gapAt + maxGap / 2;
+  const clusters = [rawPoints.filter(([x]) => x <= splitX), rawPoints.filter(([x]) => x > splitX)].filter((c) => c.length);
   return clusters.map((c) => [
     +(c.reduce((s, [x]) => s + x, 0) / c.length).toFixed(1),
     +(c.reduce((s, [, y]) => s + y, 0) / c.length).toFixed(1),

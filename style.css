@@ -83,22 +83,23 @@
   --neon-violet: #a25bff;
   --neon-yellow: #f7ff3a;
 
-  /* "Land" color scheme (js/game.js's toggle-land-scheme switch, always
+  /* App-wide color scheme (js/game.js's toggle-land-scheme switch, always
      visible in the topbar, persisted to localStorage) — ONE shared choice
-     for every level's land, in whatever form that level renders it as:
-     USA's state pieces themselves (--piece-a/--piece-b, the puzzle-piece
-     gradient — used by both puzzleBoard.js's assembled pieces and
-     overviewBoard.js's placed states) AND the faint state-outline hint
-     behind city dots (--land-fill-faint/--land-stroke-faint,
-     .state-bg-path, cityQuizBoard.js/cityPinBoard.js); World's country
-     background layer (--land-fill/--land-stroke, .world-bg-path, more
-     opaque since nothing else marks land there) AND its sea/ocean pieces
-     reuse the same --piece-a/--piece-b gradient as USA's states (.sea-piece
-     in overviewBoard.js).
+     that reskins both the map AND the general UI chrome:
+     --piece-a/--piece-b (the puzzle-piece gradient — USA's assembled
+     states in puzzleBoard.js/overviewBoard.js, and World's sea/ocean
+     pieces via .sea-piece, same gradient reused) and the --land-fill and
+     --land-stroke variants (state-outline hint behind city dots,
+     .state-bg-path; World's country background layer, .world-bg-path) are
+     the MAP side; --neon-cyan/--neon-pink/--neon-violet are the GENERAL
+     side — the accent colors buttons, borders, highlights, and the HUD
+     use throughout the menu and in-game chrome (54/16/4 usages
+     respectively), so overriding just these three variables cascades a
+     full reskin without touching every individual component's CSS.
      Default here in :root is 'blue' — the original solarized-teal/violet
-     piece gradient and solarized-blue outline the USA level always used.
-     The '[data-land-scheme=gray]' block below overrides everything to a
-     neutral gray alternative. */
+     piece gradient and cyan/pink/violet neon accents everything always
+     had. The '[data-land-scheme=gray]' block below overrides everything
+     to a neutral, desaturated gray alternative. */
   --piece-a: #0f6f78;
   --piece-b: #5b3f9e;
   --piece-stroke: var(--neon-cyan);
@@ -119,6 +120,9 @@
   --land-fill-faint: rgba(88, 110, 117, 0.1);
   --land-stroke: rgba(101, 123, 131, 0.7);
   --land-stroke-faint: rgba(147, 161, 161, 0.35);
+  --neon-cyan: #93a1a1;
+  --neon-pink: #657b83;
+  --neon-violet: #586e75;
 }
 
 * { box-sizing: border-box; }
