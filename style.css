@@ -91,15 +91,31 @@
      pieces via .sea-piece, same gradient reused) and the --land-fill and
      --land-stroke variants (state-outline hint behind city dots,
      .state-bg-path; World's country background layer, .world-bg-path) are
-     the MAP side; --neon-cyan/--neon-pink/--neon-violet are the GENERAL
-     side — the accent colors buttons, borders, highlights, and the HUD
-     use throughout the menu and in-game chrome (54/16/4 usages
-     respectively), so overriding just these three variables cascades a
-     full reskin without touching every individual component's CSS.
+     the MAP side; --neon-cyan/--neon-pink/--neon-violet (PLUS their -rgb
+     twins below) are the GENERAL side — the accent colors buttons,
+     borders, highlights, and the HUD use throughout the menu and in-game
+     chrome, so overriding these cascades a full reskin without touching
+     every individual component's CSS. The -rgb variables exist because a
+     lot of glow/shadow effects need `rgba(…, 0.3)`-style partial opacity,
+     which can't read a hex custom property's channels directly — CSS has
+     no split-a-color function, so the only way to keep those reactive to
+     the scheme too is to also store each color as bare "r, g, b" and
+     interpolate it into rgba(var(--neon-cyan-rgb), 0.3) at each call site
+     (a hardcoded numeric literal like rgba(33, 246, 255, 0.3), of which
+     this file used to have 65 scattered across it, is invisible to a CSS
+     variable override — that's why the "Собери карту" card's glow
+     silently stayed violet under the gray scheme until this existed).
+     --neon-yellow is deliberately NOT part of this scheme — it's used for
+     hint/reveal highlights (a semantic "look here" signal, e.g.
+     .quiz-hint), not a decorative accent, so it should mean the same
+     thing regardless of which color scheme is active.
      Default here in :root is 'blue' — the original solarized-teal/violet
      piece gradient and cyan/pink/violet neon accents everything always
      had. The '[data-land-scheme=gray]' block below overrides everything
      to a neutral, desaturated gray alternative. */
+  --neon-cyan-rgb: 33, 246, 255;
+  --neon-pink-rgb: 255, 43, 214;
+  --neon-violet-rgb: 162, 91, 255;
   --piece-a: #0f6f78;
   --piece-b: #5b3f9e;
   --piece-stroke: var(--neon-cyan);
@@ -123,6 +139,9 @@
   --neon-cyan: #93a1a1;
   --neon-pink: #657b83;
   --neon-violet: #586e75;
+  --neon-cyan-rgb: 147, 161, 161;
+  --neon-pink-rgb: 101, 123, 131;
+  --neon-violet-rgb: 88, 110, 117;
 }
 
 * { box-sizing: border-box; }
@@ -147,8 +166,8 @@ html, body {
 
 body {
   background-image:
-    linear-gradient(rgba(33, 246, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(33, 246, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(var(--neon-cyan-rgb), 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--neon-cyan-rgb), 0.05) 1px, transparent 1px);
   background-size: 34px 34px;
 }
 
@@ -181,7 +200,7 @@ body {
   font-weight: 700;
   color: var(--neon-cyan);
   background: rgba(0, 20, 26, 0.75);
-  border: 1px solid rgba(33, 246, 255, 0.3);
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.3);
   border-radius: 4px;
   padding: 3px 8px;
   pointer-events: none;
@@ -206,7 +225,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 16px 28px;
-  border-bottom: 1px solid rgba(33, 246, 255, 0.25);
+  border-bottom: 1px solid rgba(var(--neon-cyan-rgb), 0.25);
   /* solid instead of semi-transparent + backdrop-filter: blur() — that
      combo, with the full-viewport scanlines overlay blending on top,
      produced visible vertical seam artifacts in some browsers */
@@ -222,7 +241,7 @@ body {
   font-weight: 700;
   letter-spacing: 2px;
   color: var(--base2);
-  text-shadow: 0 0 6px var(--neon-cyan), 0 0 14px rgba(33, 246, 255, 0.4);
+  text-shadow: 0 0 6px var(--neon-cyan), 0 0 14px rgba(var(--neon-cyan-rgb), 0.4);
   background: none;
   border: none;
   padding: 0;
@@ -231,18 +250,18 @@ body {
   transition: text-shadow 0.15s ease, transform 0.15s ease;
 }
 .brand:hover {
-  text-shadow: 0 0 10px var(--neon-cyan), 0 0 22px rgba(33, 246, 255, 0.6);
+  text-shadow: 0 0 10px var(--neon-cyan), 0 0 22px rgba(var(--neon-cyan-rgb), 0.6);
   transform: translateY(-1px);
 }
 .brand-icon {
   width: 30px;
   height: 30px;
   flex: none;
-  filter: drop-shadow(0 0 4px rgba(33, 246, 255, 0.5));
+  filter: drop-shadow(0 0 4px rgba(var(--neon-cyan-rgb), 0.5));
   transition: filter 0.15s ease, transform 0.15s ease;
 }
 .brand:hover .brand-icon {
-  filter: drop-shadow(0 0 8px rgba(33, 246, 255, 0.8));
+  filter: drop-shadow(0 0 8px rgba(var(--neon-cyan-rgb), 0.8));
   transform: rotate(-6deg);
 }
 
@@ -264,8 +283,8 @@ body {
 }
 .hud-item { color: var(--base0); white-space: nowrap; }
 .hud-chip {
-  border: 1px solid rgba(33, 246, 255, 0.35);
-  background: rgba(33, 246, 255, 0.06);
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.35);
+  background: rgba(var(--neon-cyan-rgb), 0.06);
   color: var(--neon-cyan);
   padding: 5px 13px;
   border-radius: 5px;
@@ -312,7 +331,7 @@ body {
 }
 .toggle input:checked + .toggle-track {
   border-color: var(--neon-cyan);
-  background: rgba(33, 246, 255, 0.1);
+  background: rgba(var(--neon-cyan-rgb), 0.1);
 }
 .toggle input:checked + .toggle-track .toggle-thumb {
   transform: translateX(18px);
@@ -344,8 +363,8 @@ body {
   transition: all 0.15s ease;
 }
 .btn:hover {
-  background: rgba(33, 246, 255, 0.12);
-  box-shadow: 0 0 12px rgba(33, 246, 255, 0.5);
+  background: rgba(var(--neon-cyan-rgb), 0.12);
+  box-shadow: 0 0 12px rgba(var(--neon-cyan-rgb), 0.5);
 }
 .btn-primary {
   background: linear-gradient(135deg, var(--neon-cyan), var(--neon-violet));
@@ -354,7 +373,7 @@ body {
   font-weight: 700;
 }
 .btn-primary:hover {
-  box-shadow: 0 0 18px rgba(162, 91, 255, 0.6), 0 0 18px rgba(33, 246, 255, 0.5);
+  box-shadow: 0 0 18px rgba(var(--neon-violet-rgb), 0.6), 0 0 18px rgba(var(--neon-cyan-rgb), 0.5);
   transform: translateY(-1px);
 }
 .btn-ghost {
@@ -364,7 +383,7 @@ body {
 .btn-ghost:hover {
   border-color: var(--neon-pink);
   color: var(--neon-pink);
-  box-shadow: 0 0 10px rgba(255, 43, 214, 0.4);
+  box-shadow: 0 0 10px rgba(var(--neon-pink-rgb), 0.4);
 }
 .btn-lg { padding: 13px 36px; font-size: 18px; }
 .btn:disabled {
@@ -397,8 +416,8 @@ body {
   color: var(--base3);
   text-shadow:
     0 0 8px var(--neon-cyan),
-    2px 0 0 rgba(255, 43, 214, 0.6),
-    -2px 0 0 rgba(33, 246, 255, 0.6);
+    2px 0 0 rgba(var(--neon-pink-rgb), 0.6),
+    -2px 0 0 rgba(var(--neon-cyan-rgb), 0.6);
   animation: glitch 6s infinite;
 }
 
@@ -512,22 +531,22 @@ body {
 .level-card:hover { border-color: var(--neon-cyan); }
 .level-card.selected {
   border-color: var(--neon-cyan);
-  box-shadow: 0 0 14px rgba(33, 246, 255, 0.35) inset;
-  background: rgba(33, 246, 255, 0.08);
+  box-shadow: 0 0 14px rgba(var(--neon-cyan-rgb), 0.35) inset;
+  background: rgba(var(--neon-cyan-rgb), 0.08);
 }
 .preset-card:hover { border-color: var(--neon-pink); }
 .preset-card.selected {
   border-color: var(--neon-pink);
-  box-shadow: 0 0 14px rgba(255, 43, 214, 0.3) inset;
-  background: rgba(255, 43, 214, 0.06);
+  box-shadow: 0 0 14px rgba(var(--neon-pink-rgb), 0.3) inset;
+  background: rgba(var(--neon-pink-rgb), 0.06);
 }
 
 .custom-count-row {
   margin-top: 10px;
   padding: 10px 16px;
-  border: 1px solid rgba(255, 43, 214, 0.3);
+  border: 1px solid rgba(var(--neon-pink-rgb), 0.3);
   border-radius: 9px;
-  background: rgba(255, 43, 214, 0.05);
+  background: rgba(var(--neon-pink-rgb), 0.05);
 }
 .custom-count-row label {
   display: block;
@@ -583,9 +602,9 @@ body {
   align-items: baseline;
   gap: 12px;
   padding: 12px 26px;
-  border: 1px solid rgba(33, 246, 255, 0.35);
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.35);
   border-radius: 9px;
-  background: rgba(33, 246, 255, 0.06);
+  background: rgba(var(--neon-cyan-rgb), 0.06);
 }
 .quiz-prompt-label {
   font-size: 14px;
@@ -595,7 +614,7 @@ body {
 .quiz-prompt strong {
   font-size: 22px;
   color: var(--neon-cyan);
-  text-shadow: 0 0 8px rgba(33, 246, 255, 0.5);
+  text-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.5);
 }
 
 /* .zoom-wrap never scrolls — it's just the fixed-size frame that anchors
@@ -613,9 +632,9 @@ body {
   height: 100%;
   overflow: hidden;
   cursor: grab;
-  border: 1px solid rgba(33, 246, 255, 0.25);
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.25);
   border-radius: 4px;
-  box-shadow: 0 0 30px rgba(33, 246, 255, 0.06) inset;
+  box-shadow: 0 0 30px rgba(var(--neon-cyan-rgb), 0.06) inset;
 }
 .zoom-viewport.panning { cursor: grabbing; }
 .zoom-viewport.panning .board-svg,
@@ -645,8 +664,8 @@ body {
   transition: all 0.15s ease;
 }
 .zoom-btn:hover {
-  background: rgba(33, 246, 255, 0.15);
-  box-shadow: 0 0 10px rgba(33, 246, 255, 0.4);
+  background: rgba(var(--neon-cyan-rgb), 0.15);
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.4);
 }
 .zoom-btn[data-action='reset'] { font-size: 16px; }
 
@@ -713,9 +732,9 @@ body {
   vector-effect: non-scaling-stroke;
 }
 .quiz-path:hover {
-  fill: rgba(33, 246, 255, 0.32);
+  fill: rgba(var(--neon-cyan-rgb), 0.32);
   stroke: var(--neon-cyan);
-  filter: drop-shadow(0 0 5px rgba(33, 246, 255, 0.5));
+  filter: drop-shadow(0 0 5px rgba(var(--neon-cyan-rgb), 0.5));
 }
 .quiz-path.quiz-used {
   fill: rgba(88, 110, 117, 0.15);
@@ -754,10 +773,10 @@ body {
    actually submits the answer, so a misclick can be corrected for free by
    just clicking somewhere else instead of it counting as a mistake. */
 .quiz-path.quiz-selected {
-  fill: rgba(33, 246, 255, 0.4);
+  fill: rgba(var(--neon-cyan-rgb), 0.4);
   stroke: var(--neon-cyan);
   stroke-width: 2;
-  filter: drop-shadow(0 0 10px rgba(33, 246, 255, 0.8)); /* static — see wrong-pulse comment */
+  filter: drop-shadow(0 0 10px rgba(var(--neon-cyan-rgb), 0.8)); /* static — see wrong-pulse comment */
   animation: selected-pulse 0.9s ease-in-out infinite;
 }
 @keyframes selected-pulse {
@@ -822,7 +841,7 @@ body {
   stroke: var(--land-stroke-faint);
   stroke-width: 1;
 }
-.state-bg-path.state-bg-inset { stroke: rgba(255, 43, 214, 0.25); }
+.state-bg-path.state-bg-inset { stroke: rgba(var(--neon-pink-rgb), 0.25); }
 
 /* World-map country context (js/seaQuizBoard.js, js/seaIdentifyBoard.js) —
    deliberately more solid than the .state-bg-path default above so
@@ -853,7 +872,7 @@ body {
 }
 .city-marker:hover .city-dot {
   fill: var(--neon-pink);
-  filter: drop-shadow(0 0 6px rgba(255, 43, 214, 0.7));
+  filter: drop-shadow(0 0 6px rgba(var(--neon-pink-rgb), 0.7));
 }
 .city-dot.city-used { fill: rgba(88, 110, 117, 0.6); }
 .city-marker:hover .city-dot.city-used {
@@ -971,7 +990,7 @@ body {
   overflow-y: auto;
   background: rgba(0, 20, 26, 0.97);
   border-radius: 9px;
-  box-shadow: 0 0 32px rgba(33, 246, 255, 0.3), 0 12px 36px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 0 32px rgba(var(--neon-cyan-rgb), 0.3), 0 12px 36px rgba(0, 0, 0, 0.55);
   z-index: 8;
   animation: info-popup-in 0.15s ease;
 }
@@ -1052,7 +1071,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border: 1px solid rgba(33, 246, 255, 0.25);
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.25);
   border-radius: 4px;
   background: rgba(0, 20, 26, 0.5);
   padding: 12px;
@@ -1082,8 +1101,8 @@ body {
 .overview-tab.active {
   border-color: var(--neon-cyan);
   color: var(--base3);
-  background: rgba(33, 246, 255, 0.1);
-  box-shadow: 0 0 10px rgba(33, 246, 255, 0.25) inset;
+  background: rgba(var(--neon-cyan-rgb), 0.1);
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.25) inset;
 }
 .overview-search {
   width: 100%;
@@ -1098,7 +1117,7 @@ body {
 .overview-search:focus {
   outline: none;
   border-color: var(--neon-cyan);
-  box-shadow: 0 0 8px rgba(33, 246, 255, 0.3);
+  box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.3);
 }
 .overview-list-scroll {
   flex: 1;
@@ -1117,14 +1136,14 @@ body {
      where a scrollbar is or isn't needed. */
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: rgba(33, 246, 255, 0.35) transparent;
+  scrollbar-color: rgba(var(--neon-cyan-rgb), 0.35) transparent;
 }
 .overview-list-scroll::-webkit-scrollbar { width: 8px; }
 .overview-list-scroll::-webkit-scrollbar-thumb {
-  background: rgba(33, 246, 255, 0.3);
+  background: rgba(var(--neon-cyan-rgb), 0.3);
   border-radius: 4px;
 }
-.overview-list-scroll::-webkit-scrollbar-thumb:hover { background: rgba(33, 246, 255, 0.5); }
+.overview-list-scroll::-webkit-scrollbar-thumb:hover { background: rgba(var(--neon-cyan-rgb), 0.5); }
 .overview-list-scroll::-webkit-scrollbar-track { background: transparent; }
 .overview-list-header {
   display: grid;
@@ -1173,7 +1192,7 @@ body {
 }
 .overview-item:hover {
   border-color: var(--neon-cyan);
-  background: rgba(33, 246, 255, 0.08);
+  background: rgba(var(--neon-cyan-rgb), 0.08);
 }
 .overview-item-main {
   display: flex;
@@ -1224,9 +1243,9 @@ body {
   align-items: baseline;
   justify-content: space-between;
   padding: 8px 10px;
-  border: 1px solid rgba(33, 246, 255, 0.35);
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.35);
   border-radius: 8px;
-  background: rgba(33, 246, 255, 0.08);
+  background: rgba(var(--neon-cyan-rgb), 0.08);
 }
 .elig-familiarity-label {
   font-family: var(--font-mono);
@@ -1326,7 +1345,7 @@ body {
   fill: var(--neon-cyan);
   stroke: rgba(0, 20, 26, 0.85);
   stroke-width: 1.5;
-  filter: drop-shadow(0 0 8px rgba(33, 246, 255, 0.8));
+  filter: drop-shadow(0 0 8px rgba(var(--neon-cyan-rgb), 0.8));
 }
 
 /* ---------------- ruler tool (js/overviewBoard.js's _renderRuler) ---------------- */
@@ -1432,8 +1451,8 @@ body {
   transition: all 0.15s ease;
 }
 .name-option-btn:hover:not(:disabled) {
-  background: rgba(33, 246, 255, 0.12);
-  box-shadow: 0 0 10px rgba(33, 246, 255, 0.4);
+  background: rgba(var(--neon-cyan-rgb), 0.12);
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.4);
 }
 .name-option-btn:disabled { cursor: not-allowed; }
 .name-option-btn.name-option-correct {
@@ -1462,14 +1481,14 @@ body {
   font-weight: 700;
   border-radius: 8px;
   border: 1px solid var(--neon-cyan);
-  background: rgba(33, 246, 255, 0.12);
+  background: rgba(var(--neon-cyan-rgb), 0.12);
   color: var(--neon-cyan);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .name-hint-btn:hover {
-  background: rgba(33, 246, 255, 0.25);
-  box-shadow: 0 0 10px rgba(33, 246, 255, 0.4);
+  background: rgba(var(--neon-cyan-rgb), 0.25);
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.4);
 }
 .name-input-wrap {
   position: relative;
@@ -1489,7 +1508,7 @@ body {
 .name-input:focus {
   outline: none;
   border-color: var(--neon-cyan);
-  box-shadow: 0 0 8px rgba(33, 246, 255, 0.3);
+  box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.3);
 }
 .name-match-icon {
   position: absolute;
@@ -1508,14 +1527,14 @@ body {
   font-weight: 700;
   border-radius: 8px;
   border: 1px solid var(--neon-cyan);
-  background: rgba(33, 246, 255, 0.12);
+  background: rgba(var(--neon-cyan-rgb), 0.12);
   color: var(--neon-cyan);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .name-confirm-btn:hover:not(:disabled) {
-  background: rgba(33, 246, 255, 0.25);
-  box-shadow: 0 0 10px rgba(33, 246, 255, 0.4);
+  background: rgba(var(--neon-cyan-rgb), 0.25);
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.4);
 }
 .name-confirm-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
@@ -1552,7 +1571,7 @@ body {
   stroke-width: 1.2;
   stroke-dasharray: 4 3;
 }
-.hint-path.hint-inset { stroke: rgba(255, 43, 214, 0.3); }
+.hint-path.hint-inset { stroke: rgba(var(--neon-pink-rgb), 0.3); }
 .board-svg.hide-hints .hint-layer { opacity: 0; }
 
 /* a piece sitting on the workspace (tray icons use .piece-shape too, but
@@ -1560,7 +1579,7 @@ body {
 .ws-piece { cursor: grab; }
 .ws-piece:hover .piece-shape {
   stroke: var(--neon-pink);
-  filter: drop-shadow(0 0 6px rgba(255, 43, 214, 0.7));
+  filter: drop-shadow(0 0 6px rgba(var(--neon-pink-rgb), 0.7));
 }
 .ws-piece.dragging { cursor: grabbing; }
 .ws-piece.dragging .piece-shape { filter: drop-shadow(0 0 10px var(--neon-pink)); }
@@ -1647,7 +1666,7 @@ body {
 }
 .piece:hover .piece-shape {
   stroke: var(--neon-pink);
-  filter: drop-shadow(0 0 6px rgba(255, 43, 214, 0.7));
+  filter: drop-shadow(0 0 6px rgba(var(--neon-pink-rgb), 0.7));
 }
 
 /* ---------------- finish bar ---------------- */
@@ -1671,7 +1690,7 @@ body {
   border: 1px solid var(--neon-cyan);
   border-radius: 12px;
   background: rgba(0, 20, 26, 0.9);
-  box-shadow: 0 0 24px rgba(33, 246, 255, 0.3);
+  box-shadow: 0 0 24px rgba(var(--neon-cyan-rgb), 0.3);
   backdrop-filter: blur(6px);
 }
 .win-bar-stats {
@@ -1685,7 +1704,7 @@ body {
 .tray,
 .screen-menu {
   scrollbar-width: thin; /* Firefox */
-  scrollbar-color: rgba(33, 246, 255, 0.35) transparent;
+  scrollbar-color: rgba(var(--neon-cyan-rgb), 0.35) transparent;
 }
 .tray::-webkit-scrollbar,
 .screen-menu::-webkit-scrollbar {
@@ -1694,12 +1713,12 @@ body {
 }
 .tray::-webkit-scrollbar-thumb,
 .screen-menu::-webkit-scrollbar-thumb {
-  background: rgba(33, 246, 255, 0.3);
+  background: rgba(var(--neon-cyan-rgb), 0.3);
   border-radius: 4px;
 }
 .tray::-webkit-scrollbar-thumb:hover,
 .screen-menu::-webkit-scrollbar-thumb:hover {
-  background: rgba(33, 246, 255, 0.5);
+  background: rgba(var(--neon-cyan-rgb), 0.5);
 }
 .tray::-webkit-scrollbar-track,
 .screen-menu::-webkit-scrollbar-track {
