@@ -144,6 +144,10 @@
   --land-fill-faint: rgba(38, 139, 210, 0.08);
   --land-stroke: rgba(88, 173, 224, 0.6);
   --land-stroke-faint: rgba(147, 161, 161, 0.35);
+  /* .quiz-path's base fill (clickable states in "Найди штат", seas in
+     "Найди море") — same Solarized-blue-as-hardcoded-literal issue as
+     everything above, just missed on the first sweep. */
+  --quiz-fill-rgb: 38, 139, 210;
 
   --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', 'SFMono-Regular', ui-monospace, 'Courier New', monospace;
 
@@ -174,6 +178,7 @@
   --land-fill-faint: rgba(92, 92, 92, 0.1);
   --land-stroke: rgba(110, 110, 110, 0.7);
   --land-stroke-faint: rgba(158, 158, 158, 0.35);
+  --quiz-fill-rgb: 120, 120, 120;
   /* The accent itself is red, not gray — everything above this point is
      the neutral base (backgrounds, piece fills, panel/board tones);
      these three (+ -rgb twins, + the panel-border glow) are the only
@@ -764,7 +769,7 @@ body {
     rgba(var(--ink-rgb), 0.55);
 }
 .quiz-path {
-  fill: rgba(38, 139, 210, 0.22);
+  fill: rgba(var(--quiz-fill-rgb), 0.22);
   stroke: rgba(147, 161, 161, 0.5);
   stroke-width: 1.2;
   cursor: pointer;
