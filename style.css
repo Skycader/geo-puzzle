@@ -116,6 +116,27 @@
   --neon-cyan-rgb: 33, 246, 255;
   --neon-pink-rgb: 255, 43, 214;
   --neon-violet-rgb: 162, 91, 255;
+  /* Two more hardcoded-elsewhere accents that turned out to be just as
+     invisible to the scheme override as the rgba() shadows above: the
+     page's own background wash (radial-gradient's blue blend-point,
+     html/body) and a dim Solarized-violet (#6c71c4) used for .panel's
+     border and a couple of subtle vignette glows (.quiz-svg/.board-svg,
+     .tray) — neither went through a variable at all before. */
+  --bg-glow: #0a3d4a;
+  --violet-glow-rgb: 108, 113, 196;
+  /* The panel/card/board backgrounds turned out to be the BIGGEST source
+     of leftover blue, bigger than any accent color: --base03/--base02
+     (Solarized's own dark-teal base tones) and a hand-picked even-darker
+     near-black teal (0, 20, 26 — used for SVG board backgrounds and
+     text-shadow "readability" behind labels) are copy-pasted as literal
+     rgba() dozens of times each throughout this file, plus the topbar's
+     own solid #041a21. None of that is reachable by overriding an accent
+     variable — it needs its own set, same reasoning as --neon-cyan-rgb
+     above. */
+  --base03-rgb: 0, 43, 54;
+  --base02-rgb: 7, 54, 66;
+  --ink-rgb: 0, 20, 26;
+  --topbar-bg: #041a21;
   --piece-a: #0f6f78;
   --piece-b: #5b3f9e;
   --piece-stroke: var(--neon-cyan);
@@ -128,20 +149,43 @@
 
   color-scheme: dark;
 }
+/* Every value below is a TRUE achromatic gray (R=G=B) — the first pass at
+   this scheme reused Solarized's own base01/base00/base1 tones, which
+   LOOK gray in isolation but all still carry Solarized's inherent cool
+   blue-cyan undertone (that's the whole "Solarized" palette identity), so
+   the menu background and every accent kept reading as faintly cyan/blue
+   even with the scheme set to "gray". Picking real R=G=B values at
+   matching lightness tiers is what actually removes the last bit of hue. */
 :root[data-land-scheme='gray'] {
-  --piece-a: #073642;
-  --piece-b: #586e75;
-  --piece-stroke: var(--base1);
-  --land-fill: rgba(88, 110, 117, 0.45);
-  --land-fill-faint: rgba(88, 110, 117, 0.1);
-  --land-stroke: rgba(101, 123, 131, 0.7);
-  --land-stroke-faint: rgba(147, 161, 161, 0.35);
-  --neon-cyan: #93a1a1;
-  --neon-pink: #657b83;
-  --neon-violet: #586e75;
-  --neon-cyan-rgb: 147, 161, 161;
-  --neon-pink-rgb: 101, 123, 131;
-  --neon-violet-rgb: 88, 110, 117;
+  /* Solarized's base scale itself, neutralized — every var(--baseNN) that
+     wasn't already covered by a more specific override above (body text,
+     secondary/muted text, panel h2 headings, etc. all read straight off
+     these) picks this up for free. */
+  --base03: #1a1a1a;
+  --base02: #262626;
+  --base01: #5c5c5c;
+  --base00: #6e6e6e;
+  --base0: #8a8a8a;
+  --base1: #9e9e9e;
+  --piece-a: #262626;
+  --piece-b: #5c5c5c;
+  --piece-stroke: #9e9e9e;
+  --land-fill: rgba(92, 92, 92, 0.45);
+  --land-fill-faint: rgba(92, 92, 92, 0.1);
+  --land-stroke: rgba(110, 110, 110, 0.7);
+  --land-stroke-faint: rgba(158, 158, 158, 0.35);
+  --neon-cyan: #9e9e9e;
+  --neon-pink: #6e6e6e;
+  --neon-violet: #5c5c5c;
+  --neon-cyan-rgb: 158, 158, 158;
+  --neon-pink-rgb: 110, 110, 110;
+  --neon-violet-rgb: 92, 92, 92;
+  --bg-glow: #262626;
+  --violet-glow-rgb: 92, 92, 92;
+  --base03-rgb: 26, 26, 26;
+  --base02-rgb: 38, 38, 38;
+  --ink-rgb: 20, 20, 20;
+  --topbar-bg: #141414;
 }
 
 * { box-sizing: border-box; }
@@ -156,7 +200,7 @@
 html, body {
   margin: 0;
   height: 100%;
-  background: radial-gradient(ellipse at 50% -10%, #0a3d4a 0%, var(--base03) 55%) fixed;
+  background: radial-gradient(ellipse at 50% -10%, var(--bg-glow) 0%, var(--base03) 55%) fixed;
   color: var(--base1);
   font-family: var(--font-mono);
   overflow: hidden;
@@ -199,7 +243,7 @@ body {
   font-size: 13px;
   font-weight: 700;
   color: var(--neon-cyan);
-  background: rgba(0, 20, 26, 0.75);
+  background: rgba(var(--ink-rgb), 0.75);
   border: 1px solid rgba(var(--neon-cyan-rgb), 0.3);
   border-radius: 4px;
   padding: 3px 8px;
@@ -229,7 +273,7 @@ body {
   /* solid instead of semi-transparent + backdrop-filter: blur() — that
      combo, with the full-viewport scanlines overlay blending on top,
      produced visible vertical seam artifacts in some browsers */
-  background: #041a21;
+  background: var(--topbar-bg);
   z-index: 10;
 }
 
@@ -315,7 +359,7 @@ body {
   height: 24px;
   border-radius: 999px;
   border: 1px solid var(--base01);
-  background: rgba(0, 43, 54, 0.6);
+  background: rgba(var(--base03-rgb), 0.6);
   transition: border-color 0.15s ease, background 0.15s ease;
   flex: none;
 }
@@ -487,8 +531,8 @@ body {
      always did, with any leftover space sitting empty below it. */
   display: flex;
   flex-direction: column;
-  border: 1px solid rgba(108, 113, 196, 0.35);
-  background: rgba(7, 54, 66, 0.45);
+  border: 1px solid rgba(var(--violet-glow-rgb), 0.35);
+  background: rgba(var(--base02-rgb), 0.45);
   border-radius: 12px;
   padding: 10px 18px 14px;
 }
@@ -512,7 +556,7 @@ body {
   text-align: left;
   cursor: pointer;
   border: 1px solid var(--base01);
-  background: rgba(0, 43, 54, 0.5);
+  background: rgba(var(--base03-rgb), 0.5);
   color: var(--base1);
   border-radius: 9px;
   padding: 9px 14px;
@@ -654,7 +698,7 @@ body {
   height: 38px;
   border-radius: 7px;
   border: 1px solid var(--neon-cyan);
-  background: rgba(0, 20, 26, 0.8);
+  background: rgba(var(--ink-rgb), 0.8);
   color: var(--neon-cyan);
   font-family: var(--font-mono);
   font-size: 19px;
@@ -708,8 +752,8 @@ body {
   display: block;
   cursor: grab;
   background:
-    radial-gradient(circle at 50% 0%, rgba(108, 113, 196, 0.08), transparent 60%),
-    rgba(0, 20, 26, 0.55);
+    radial-gradient(circle at 50% 0%, rgba(var(--violet-glow-rgb), 0.08), transparent 60%),
+    rgba(var(--ink-rgb), 0.55);
 }
 .quiz-path {
   fill: rgba(38, 139, 210, 0.22);
@@ -825,7 +869,7 @@ body {
   dominant-baseline: middle;
   pointer-events: none;
   paint-order: stroke;
-  stroke: rgba(0, 20, 26, 0.75);
+  stroke: rgba(var(--ink-rgb), 0.75);
   stroke-width: 3px;
 }
 /* The neighbor's label in the post-answer reveal (js/neighborBoard.js's
@@ -864,7 +908,7 @@ body {
 .city-hit { fill: transparent; cursor: pointer; }
 .city-dot {
   fill: var(--neon-cyan);
-  stroke: rgba(0, 20, 26, 0.8);
+  stroke: rgba(var(--ink-rgb), 0.8);
   /* r and stroke-width are set inline in JS, rescaled to stay a constant
      screen size as the board zoom level changes. */
   pointer-events: none;
@@ -896,7 +940,7 @@ body {
 
 .overview-city-dot {
   fill: var(--neon-pink);
-  stroke: rgba(0, 20, 26, 0.85);
+  stroke: rgba(var(--ink-rgb), 0.85);
   /* r and stroke-width are set inline in JS, rescaled to stay a constant
      screen size as the board zoom level changes. */
   cursor: default;
@@ -907,7 +951,7 @@ body {
    (_layoutCityLeader), these rules are just paint. */
 .overview-city-point {
   fill: var(--base3);
-  stroke: rgba(0, 20, 26, 0.85);
+  stroke: rgba(var(--ink-rgb), 0.85);
   pointer-events: none;
 }
 .overview-city-leader {
@@ -923,7 +967,7 @@ body {
   dominant-baseline: alphabetic;
   pointer-events: none;
   paint-order: stroke;
-  stroke: rgba(0, 20, 26, 0.85);
+  stroke: rgba(var(--ink-rgb), 0.85);
   /* font-size, stroke-width and x/y are all set inline in JS. */
   transition: opacity 0.15s ease;
 }
@@ -944,7 +988,7 @@ body {
    there's no true physical radius to stay fixed to. */
 .overview-place-dot {
   fill: var(--neon-violet);
-  stroke: rgba(0, 20, 26, 0.85);
+  stroke: rgba(var(--ink-rgb), 0.85);
   cursor: default;
 }
 
@@ -988,7 +1032,7 @@ body {
   width: 480px;
   max-height: 80vh;
   overflow-y: auto;
-  background: rgba(0, 20, 26, 0.97);
+  background: rgba(var(--ink-rgb), 0.97);
   border-radius: 9px;
   box-shadow: 0 0 32px rgba(var(--neon-cyan-rgb), 0.3), 0 12px 36px rgba(0, 0, 0, 0.55);
   z-index: 8;
@@ -1073,7 +1117,7 @@ body {
   gap: 10px;
   border: 1px solid rgba(var(--neon-cyan-rgb), 0.25);
   border-radius: 4px;
-  background: rgba(0, 20, 26, 0.5);
+  background: rgba(var(--ink-rgb), 0.5);
   padding: 12px;
   min-height: 0;
 }
@@ -1109,7 +1153,7 @@ body {
   font-family: var(--font-mono);
   font-size: 14px;
   color: var(--base2);
-  background: rgba(0, 43, 54, 0.6);
+  background: rgba(var(--base03-rgb), 0.6);
   border: 1px solid var(--base01);
   border-radius: 6px;
   padding: 8px 10px;
@@ -1185,7 +1229,7 @@ body {
   cursor: pointer;
   border: 1px solid transparent;
   border-radius: 5px;
-  background: rgba(0, 43, 54, 0.4);
+  background: rgba(var(--base03-rgb), 0.4);
   color: var(--base1);
   padding: 7px 10px;
   transition: all 0.15s ease;
@@ -1325,7 +1369,7 @@ body {
 /* ---------------- pin placement mode ---------------- */
 
 .pin path {
-  stroke: rgba(0, 20, 26, 0.85);
+  stroke: rgba(var(--ink-rgb), 0.85);
   stroke-width: 1.5;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
@@ -1343,7 +1387,7 @@ body {
 }
 .pin-true-mark {
   fill: var(--neon-cyan);
-  stroke: rgba(0, 20, 26, 0.85);
+  stroke: rgba(var(--ink-rgb), 0.85);
   stroke-width: 1.5;
   filter: drop-shadow(0 0 8px rgba(var(--neon-cyan-rgb), 0.8));
 }
@@ -1355,7 +1399,7 @@ body {
    unambiguously as "a measurement overlay" rather than map data. */
 .ruler-point {
   fill: var(--orange);
-  stroke: rgba(0, 20, 26, 0.85);
+  stroke: rgba(var(--ink-rgb), 0.85);
   cursor: move;
 }
 .ruler-segment {
@@ -1374,7 +1418,7 @@ body {
   dominant-baseline: middle;
   pointer-events: none;
   paint-order: stroke;
-  stroke: rgba(0, 20, 26, 0.85);
+  stroke: rgba(var(--ink-rgb), 0.85);
 }
 
 .ruler-readout {
@@ -1383,7 +1427,7 @@ body {
   left: 14px;
   z-index: 6;
   min-width: 140px;
-  background: rgba(0, 20, 26, 0.85);
+  background: rgba(var(--ink-rgb), 0.85);
   border: 1px solid var(--orange);
   border-radius: 8px;
   padding: 8px 10px;
@@ -1445,7 +1489,7 @@ body {
   padding: 10px 20px;
   border-radius: 8px;
   border: 1px solid var(--neon-cyan);
-  background: rgba(0, 43, 54, 0.6);
+  background: rgba(var(--base03-rgb), 0.6);
   color: var(--base2);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1500,7 +1544,7 @@ body {
   font-family: var(--font-mono);
   font-size: 15px;
   color: var(--base2);
-  background: rgba(0, 43, 54, 0.6);
+  background: rgba(var(--base03-rgb), 0.6);
   border: 1px solid var(--base01);
   border-radius: 8px;
   padding: 10px 34px 10px 14px; /* right padding leaves room for the match icon */
@@ -1559,8 +1603,8 @@ body {
   display: block;
   cursor: grab;
   background:
-    radial-gradient(circle at 50% 0%, rgba(108, 113, 196, 0.08), transparent 60%),
-    rgba(0, 20, 26, 0.55);
+    radial-gradient(circle at 50% 0%, rgba(var(--violet-glow-rgb), 0.08), transparent 60%),
+    rgba(var(--ink-rgb), 0.55);
 }
 
 /* faint full-map watermark: a non-interactive assembly reference */
@@ -1600,7 +1644,7 @@ body {
   dominant-baseline: middle;
   pointer-events: none;
   paint-order: stroke;
-  stroke: rgba(0, 20, 26, 0.7);
+  stroke: rgba(var(--ink-rgb), 0.7);
   transition: opacity 0.15s ease;
 }
 
@@ -1630,9 +1674,9 @@ body {
   justify-content: center;
   gap: 4px;
   padding: 10px;
-  border: 1px solid rgba(108, 113, 196, 0.3);
+  border: 1px solid rgba(var(--violet-glow-rgb), 0.3);
   border-radius: 8px;
-  background: rgba(7, 54, 66, 0.35);
+  background: rgba(var(--base02-rgb), 0.35);
 }
 
 .piece {
@@ -1689,7 +1733,7 @@ body {
   padding: 14px 24px;
   border: 1px solid var(--neon-cyan);
   border-radius: 12px;
-  background: rgba(0, 20, 26, 0.9);
+  background: rgba(var(--ink-rgb), 0.9);
   box-shadow: 0 0 24px rgba(var(--neon-cyan-rgb), 0.3);
   backdrop-filter: blur(6px);
 }
