@@ -47,6 +47,11 @@ const ROUNDS_PANEL_TEXT = {
   'sea-quiz': { heading: 'Раунд', label: 'Сколько морей/океанов спросить', prompt: 'Найди на карте:' },
 };
 
+// Global "land color scheme" toggle (topbar, always visible, independent
+// of level/mode) — one persisted choice for every level's land layer, see
+// style.css's --land-fill/--land-stroke variables and _initLandScheme.
+const LAND_SCHEME_STORAGE_KEY = 'geoPuzzleLandScheme';
+
 function formatTime(totalSeconds) {
   const m = Math.floor(totalSeconds / 60)
     .toString()
@@ -86,12 +91,49 @@ export class Game {
     this.timerHandle = null;
 
     this._cacheDom();
+    this._initLandScheme();
     this._renderLevelList();
     this._renderModeList();
     this._renderPresetList();
     this._renderOverviewList();
     this._bindEvents();
     this._applyModeVisibility();
+  }
+
+  // Reads the persisted global land-color choice ('blue' default — the
+  // original look every level always had | 'gray'), applies it as a
+  // data-attribute on <html> (style.css's --piece-a/--piece-b and
+  // --land-fill/--land-stroke variables key off it, covering both actual
+  // state/sea pieces and the secondary background-context layers), and
+  // wires the topbar toggle to change + persist it. Independent of
+  // level/mode — see the toggle's markup in index.html, deliberately a
+  // sibling of .hud, not inside it.
+  _initLandScheme() {
+    let scheme = 'blue';
+    try {
+      const saved = localStorage.getItem(LAND_SCHEME_STORAGE_KEY);
+      if (saved === 'blue' || saved === 'gray') scheme = saved;
+    } catch {
+      // Storage can fail (private browsing, quota, disabled) — falls back
+      // to the default for this session, same as EligibilityList's own
+      // localStorage guard.
+    }
+    this._applyLandScheme(scheme);
+    this.el.toggleLandScheme.addEventListener('change', (ev) => {
+      this._applyLandScheme(ev.target.checked ? 'blue' : 'gray');
+      try {
+        localStorage.setItem(LAND_SCHEME_STORAGE_KEY, this.landScheme);
+      } catch {
+        // Non-fatal — the choice still applies for the current session.
+      }
+    });
+  }
+
+  _applyLandScheme(scheme) {
+    this.landScheme = scheme;
+    document.documentElement.dataset.landScheme = scheme;
+    this.el.toggleLandScheme.checked = scheme === 'blue';
+    this.el.toggleLandSchemeText.textContent = scheme === 'blue' ? 'Земля: синяя' : 'Земля: серая';
   }
 
   _cacheDom() {
@@ -145,6 +187,8 @@ export class Game {
       toggleLabelsText: document.getElementById('toggle-labels-text'),
       togglePlacesWrap: document.getElementById('toggle-places-wrap'),
       togglePlaces: document.getElementById('toggle-places'),
+      toggleLandScheme: document.getElementById('toggle-land-scheme'),
+      toggleLandSchemeText: document.getElementById('toggle-land-scheme-text'),
     };
   }
 
@@ -766,7 +810,12 @@ export class Game {
 
   _startOverview(level) {
     const overviewMode = OVERVIEW_MODES.find((m) => m.id === this.overviewModeId) || OVERVIEW_MODES[0];
-    this.labelsVisible = overviewMode.id === 'full';
+    // Seas vary wildly in size and cluster tightly in places (Mediterranean/
+    // Black/Red/Persian Gulf, Caribbean/Gulf of Mexico…), unlike states —
+    // their full Russian names all showing at once overlapped into an
+    // unreadable mess. Default off regardless of preset; still toggleable
+    // via "Подписи" for whoever wants it anyway.
+    this.labelsVisible = overviewMode.id === 'full' && level.id !== 'world';
     this.citiesVisible = true;
     this.placesVisible = true;
 

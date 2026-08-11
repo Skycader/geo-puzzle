@@ -182,7 +182,7 @@ export class OverviewBoard {
     for (const p of this.level.pieces) {
       const path = document.createElementNS(SVG_NS, 'path');
       path.setAttribute('d', p.d);
-      path.setAttribute('class', 'piece-shape placed');
+      path.setAttribute('class', 'piece-shape placed' + (this.level.id === 'world' ? ' sea-piece' : ''));
       path.setAttribute('fill', 'url(#piece-grad)');
       const title = document.createElementNS(SVG_NS, 'title');
       title.textContent = `${p.ru} (${p.name})`;
@@ -193,7 +193,10 @@ export class OverviewBoard {
       label.setAttribute('x', p.cx);
       label.setAttribute('y', p.cy);
       label.setAttribute('class', 'piece-label');
-      label.textContent = p.id;
+      // USA states: a short 2-letter code reads fine directly on the map.
+      // World seas have no such code — `.id` is a long slug ("gulf_of_mexico"),
+      // which was rendering as literal, cluttered slug text on the map.
+      label.textContent = this.level.id === 'world' ? p.ru : p.id;
       this.svg.appendChild(label);
       this.allLabelEls.push(label);
       this.stateLabels.push({ el: label });
@@ -786,11 +789,31 @@ export class OverviewBoard {
     return panel;
   }
 
-  // Effective area (km²) of an item — states carry a real `area` field
-  // (see build_usa_level.js); cities only store a radius, so their area is
-  // derived (they're rendered as a circle of that radius to begin with).
+  // Effective area (km²) of an item — states and (world level) seas both
+  // carry a real `area` field (see build_usa_level.js / build_world_seas.js);
+  // cities only store a radius, so their area is derived (they're rendered
+  // as a circle of that radius to begin with).
   _areaOf(it) {
     return this.activeTab === 'states' ? it.area : Math.PI * it.radiusKm * it.radiusKm;
+  }
+
+  // 'states': short `.id` codes (AL, CA…) fit a dedicated abbreviation
+  // column — except on the world level, where this same tab lists seas
+  // (see the tab-label swap in _buildSidePanel) whose `.id` is a long slug
+  // ("pacific_ocean"), not a short code. 'cities': capital/silhouette
+  // markers + a state sub-label. Everything else (seas, places) just gets
+  // a plain name — this used to fall into the 'cities' template by
+  // default for anything not 'states'/'places', which rendered a literal
+  // "undefined" sub-label for seas (no `.state` field) — same bug already
+  // fixed in js/eligibilityList.js's equivalent method.
+  _mainColumnHtml(it) {
+    if (this.activeTab === 'states' && this.level.id !== 'world') {
+      return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span>`;
+    }
+    if (this.activeTab === 'cities') {
+      return `<span class="overview-item-main"><span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
+    }
+    return `<span class="overview-item-main"><span class="overview-item-name">${it.ru}</span></span>`;
   }
 
   // Hover tooltip for a city marker (dot or real-boundary shape alike) —

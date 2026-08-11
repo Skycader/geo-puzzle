@@ -50,12 +50,52 @@ const CANVAS_H = 180 * SCALE;
 const KM_PER_DEGREE_AT_EQUATOR = 111.32;
 const KM_PER_UNIT = KM_PER_DEGREE_AT_EQUATOR / SCALE;
 
+// Antimeridian handling: raw longitudes are stored in [-180, 180], but a
+// ring that actually crosses the ±180° seam (the Pacific, the Arctic/
+// Southern Ocean, Ross Sea, Russia, Fiji…) has consecutive points that jump
+// from ~+179° to ~-179° (or vice versa) — geographically adjacent, but a
+// naive project()+line-to draws a spurious straight chord all the way
+// across the map between them. That stray chord was rendering as either a
+// phantom filled rectangle or an unfilled "hole" bitten out of a nearby
+// shape (SVG's nonzero fill rule), depending on which sub-ring it turned
+// up in.
+//
+// Fix: unwrap each ring's longitudes first (accumulate ±360° whenever a
+// step exceeds 180°, so the sequence becomes spatially continuous, even if
+// that pushes some points outside the canvas' native [0, CANVAS_W] range),
+// then, if projecting that ring lands partly outside the canvas, render it
+// TWICE more — shifted by ∓CANVAS_W (equivalent to ∓360° of longitude) —
+// so whichever wrapped copy actually falls on-screen draws correctly. The
+// off-screen copies are harmless (just extra path data that paints outside
+// the viewBox).
+function unwrapRingLons(ring) {
+  const out = [ring[0]];
+  let offset = 0;
+  for (let i = 1; i < ring.length; i++) {
+    const d = ring[i][0] - ring[i - 1][0];
+    if (d > 180) offset -= 360;
+    else if (d < -180) offset += 360;
+    out.push([ring[i][0] + offset, ring[i][1]]);
+  }
+  return out;
+}
+function projectRingPoints(ring) {
+  return unwrapRingLons(ring).map(([lon, lat]) => project(lon, lat));
+}
 function ringToPath(ring) {
-  return (
-    'M ' +
-    ring.map(([lon, lat]) => project(lon, lat).map((n) => n.toFixed(2)).join(',')).join(' L ') +
-    ' Z'
-  );
+  const pts = projectRingPoints(ring);
+  const xs = pts.map(([x]) => x);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const shifts = [0];
+  if (minX < 0) shifts.push(CANVAS_W);
+  if (maxX > CANVAS_W) shifts.push(-CANVAS_W);
+  return shifts
+    .map(
+      (shift) =>
+        'M ' + pts.map(([x, y]) => `${(x + shift).toFixed(2)},${y.toFixed(2)}`).join(' L ') + ' Z'
+    )
+    .join(' ');
 }
 function geometryToPath(geometry) {
   if (geometry.type === 'Polygon') return geometry.coordinates.map(ringToPath).join(' ');
@@ -89,8 +129,14 @@ function slugify(name) {
 // by the caller via KM_PER_UNIT². Same formula as js/utils.js's
 // polygonArea (kept inline here rather than imported since this script
 // runs under plain Node/CommonJS, not as an ES module like the app code).
+// Uses the same unwrapped points as ringToPath (shoelace is translation-
+// invariant, so it doesn't matter that they may sit outside the canvas'
+// nominal x-range) — computing it from the raw wrapped coordinates instead
+// would sum the area of the same self-intersecting shape ringToPath used
+// to draw before the antimeridian fix, which is wrong for any
+// seam-crossing ring (Pacific, Arctic/Southern Ocean, Ross Sea, Russia…).
 function ringArea(ring) {
-  const pts = ring.map(([lon, lat]) => project(lon, lat));
+  const pts = projectRingPoints(ring);
   let sum = 0;
   for (let i = 0; i < pts.length; i++) {
     const [x1, y1] = pts[i];

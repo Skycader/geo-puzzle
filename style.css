@@ -83,12 +83,42 @@
   --neon-violet: #a25bff;
   --neon-yellow: #f7ff3a;
 
+  /* "Land" color scheme (js/game.js's toggle-land-scheme switch, always
+     visible in the topbar, persisted to localStorage) — ONE shared choice
+     for every level's land, in whatever form that level renders it as:
+     USA's state pieces themselves (--piece-a/--piece-b, the puzzle-piece
+     gradient — used by both puzzleBoard.js's assembled pieces and
+     overviewBoard.js's placed states) AND the faint state-outline hint
+     behind city dots (--land-fill-faint/--land-stroke-faint,
+     .state-bg-path, cityQuizBoard.js/cityPinBoard.js); World's country
+     background layer (--land-fill/--land-stroke, .world-bg-path, more
+     opaque since nothing else marks land there) AND its sea/ocean pieces
+     reuse the same --piece-a/--piece-b gradient as USA's states (.sea-piece
+     in overviewBoard.js).
+     Default here in :root is 'blue' — the original solarized-teal/violet
+     piece gradient and solarized-blue outline the USA level always used.
+     The '[data-land-scheme=gray]' block below overrides everything to a
+     neutral gray alternative. */
   --piece-a: #0f6f78;
   --piece-b: #5b3f9e;
+  --piece-stroke: var(--neon-cyan);
+  --land-fill: rgba(38, 139, 210, 0.4);
+  --land-fill-faint: rgba(38, 139, 210, 0.08);
+  --land-stroke: rgba(88, 173, 224, 0.6);
+  --land-stroke-faint: rgba(147, 161, 161, 0.35);
 
   --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', 'SFMono-Regular', ui-monospace, 'Courier New', monospace;
 
   color-scheme: dark;
+}
+:root[data-land-scheme='gray'] {
+  --piece-a: #073642;
+  --piece-b: #586e75;
+  --piece-stroke: var(--base1);
+  --land-fill: rgba(88, 110, 117, 0.45);
+  --land-fill-faint: rgba(88, 110, 117, 0.1);
+  --land-stroke: rgba(101, 123, 131, 0.7);
+  --land-stroke-faint: rgba(147, 161, 161, 0.35);
 }
 
 * { box-sizing: border-box; }
@@ -212,6 +242,13 @@ body {
   transform: rotate(-6deg);
 }
 
+/* Always visible (a sibling of .hud, not inside it — .hud is `hidden` on
+   the menu screen, but this toggle should stay reachable everywhere, per
+   its own global/persisted scope). Sits between the brand and the
+   right-aligned .hud group — margin-left:auto below on .hud is what pushes
+   the hud group to the far right whether or not this toggle exists. */
+.land-scheme-toggle { margin-left: 20px; }
+
 .hud {
   display: flex;
   flex-wrap: wrap;
@@ -219,6 +256,7 @@ body {
   justify-content: flex-end;
   gap: 10px 18px;
   font-size: 15px;
+  margin-left: auto;
 }
 .hud-item { color: var(--base0); white-space: nowrap; }
 .hud-chip {
@@ -657,6 +695,19 @@ body {
   cursor: pointer;
   transition: fill 0.15s ease, stroke 0.15s ease, filter 0.15s ease;
 }
+/* Seas/oceans (js/seaQuizBoard.js's outlines, js/seaIdentifyBoard.js's
+   highlighted target — both carry this extra class alongside .quiz-path)
+   get exclusively dashed borders, reading as "water" at a glance versus
+   states'/countries' solid ones. vector-effect: non-scaling-stroke (same
+   technique .pin-connector already relies on for a constant-screen stroke
+   width) also applies to stroke-dasharray, so the dash length dynamically
+   stays a constant, readable screen size at every zoom level instead of
+   stretching into a few giant dashes when zoomed in or shrinking into a
+   solid-looking line when zoomed out. */
+.quiz-path.sea-path {
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+}
 .quiz-path:hover {
   fill: rgba(33, 246, 255, 0.32);
   stroke: var(--neon-cyan);
@@ -763,25 +814,25 @@ body {
 
 .state-bg-layer { pointer-events: none; }
 .state-bg-path {
-  fill: rgba(38, 139, 210, 0.08);
-  stroke: rgba(147, 161, 161, 0.35);
+  fill: var(--land-fill-faint);
+  stroke: var(--land-stroke-faint);
   stroke-width: 1;
 }
 .state-bg-path.state-bg-inset { stroke: rgba(255, 43, 214, 0.25); }
 
 /* World-map country context (js/seaQuizBoard.js, js/seaIdentifyBoard.js) —
-   solid dark-blue land (Solarized base01/base00, matching the rest of the
-   UI's palette), deliberately more solid than the .state-bg-path default
-   above so continents read as land at a glance instead of blending into
-   the plain-dark-navy ocean background (the default is a near-invisible
-   0.08-alpha wash, tuned for the USA level where it sits *behind* the
-   interactive .quiz-path states and shouldn't compete with them — wrong
-   call for a world map where the land itself needs to be legible). The
-   target sea/ocean is highlighted in yellow/gold (.quiz-hint) precisely so
-   it reads as the "special" zone against this deliberately muted land. */
+   deliberately more solid than the .state-bg-path default above so
+   continents read as land at a glance instead of blending into the plain-
+   dark-navy ocean background (the faint wash above is tuned for the USA
+   level where it sits *behind* the interactive .quiz-path states and
+   shouldn't compete with them — wrong call for a world map where the land
+   itself needs to be legible). Same --land-fill/--land-stroke scheme as
+   .state-bg-path (see :root) — just the opaque variant, not the faint one.
+   The target sea/ocean is highlighted in yellow/gold (.quiz-hint)
+   precisely so it reads as the "special" zone against this land. */
 .world-bg-path {
-  fill: rgba(88, 110, 117, 0.45);
-  stroke: rgba(101, 123, 131, 0.7);
+  fill: var(--land-fill);
+  stroke: var(--land-stroke);
   stroke-width: 0.6;
 }
 
@@ -1572,10 +1623,23 @@ body {
   filter: drop-shadow(0 0 10px var(--neon-pink));
 }
 
+/* stroke driven by --piece-stroke (see :root's land-scheme block) — was
+   hardcoded to var(--neon-cyan) before, so toggling to "gray" changed the
+   fill but the border stayed neon-cyan (read as "still blue" to anyone
+   looking at it), even though the land-scheme toggle is meant to be a
+   single unified choice covering the whole piece, border included. */
 .piece-shape {
-  stroke: var(--neon-cyan);
+  stroke: var(--piece-stroke);
   stroke-width: 1.4;
-  transition: filter 0.15s ease;
+  transition: filter 0.15s ease, stroke 0.15s ease;
+}
+/* Overview mode's world-level sea/ocean pieces (js/overviewBoard.js adds
+   this class only when level.id === 'world') — same dashed-water language
+   as .quiz-path.sea-path above, for the same reason and via the same
+   non-scaling-stroke mechanism. */
+.piece-shape.sea-piece {
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
 }
 .piece:hover .piece-shape {
   stroke: var(--neon-pink);
