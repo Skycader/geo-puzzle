@@ -430,6 +430,12 @@ body {
   font-weight: 700;
 }
 .btn-primary:hover {
+  /* .btn-primary is also .btn, and .btn:hover's `background: rgba(…, 0.12)`
+     (class+pseudo-class) beats .btn-primary's plain-class gradient on
+     specificity alone, regardless of source order — so without reasserting
+     it here, hovering "Играть" replaced its solid gradient with a
+     near-transparent wash, reading as the whole button going see-through. */
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-violet));
   box-shadow: 0 0 18px rgba(var(--neon-violet-rgb), 0.6), 0 0 18px rgba(var(--neon-cyan-rgb), 0.5);
   transform: translateY(-1px);
 }

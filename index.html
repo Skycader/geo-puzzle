@@ -4,7 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GEO PUZZLE — США</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" id="favicon-link" />
+  <!-- Applies the saved color scheme to <html> before the stylesheet below
+       even loads, let alone before js/game.js's Game constructor runs (that
+       one fires on DOMContentLoaded, well after first paint) — without
+       this, the page always paints once with the default "blue" :root
+       values, THEN visibly snaps to "gray" a beat later for anyone who'd
+       picked it. Must stay a blocking inline script (not `defer`/a module)
+       specifically so it runs before rendering starts; keep the storage
+       key in sync with js/game.js's LAND_SCHEME_STORAGE_KEY. -->
+  <script>
+    (function () {
+      try {
+        var scheme = localStorage.getItem('geoPuzzleLandScheme');
+        if (scheme === 'gray') document.documentElement.dataset.landScheme = scheme;
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -16,15 +32,15 @@
         <svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true">
           <defs>
             <linearGradient id="brand-piece-grad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#21f6ff" />
-              <stop offset="1" stop-color="#a25bff" />
+              <stop offset="0" stop-color="var(--neon-cyan)" />
+              <stop offset="1" stop-color="var(--neon-violet)" />
             </linearGradient>
           </defs>
-          <rect x="2" y="2" width="60" height="60" rx="14" fill="#04222b" stroke="#21f6ff" stroke-opacity="0.4" stroke-width="1.5" />
+          <rect x="2" y="2" width="60" height="60" rx="14" fill="#04222b" stroke="var(--neon-cyan)" stroke-opacity="0.4" stroke-width="1.5" />
           <path
             d="M 17,17 L 47,17 L 47,25 A 6.5,6.5 0 0 1 47,38 L 47,47 L 38,47 A 6.5,6.5 0 0 1 25,47 L 17,47 Z"
             fill="url(#brand-piece-grad)"
-            stroke="#0a3d4a"
+            stroke="var(--bg-glow)"
             stroke-width="1.2"
           />
         </svg>

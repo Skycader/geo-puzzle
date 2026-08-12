@@ -135,6 +135,32 @@ export class Game {
     this.landScheme = scheme;
     document.documentElement.dataset.landScheme = scheme;
     this.el.toggleLandScheme.checked = scheme === 'blue';
+    this._updateFavicon();
+  }
+
+  // The browser tab's favicon (index.html's <link id="favicon-link">) is a
+  // separate static resource in its own isolated document context — unlike
+  // the in-page brand icon (also inline SVG, right next to this button),
+  // it has no access to this page's CSS custom properties, so var(--neon-cyan)
+  // inside favicon.svg itself would just resolve to nothing. Rebuilding it
+  // as a data: URI with the CURRENT resolved colors baked in, every time
+  // the scheme changes, is what keeps it in sync — same shape as
+  // favicon.svg, just regenerated rather than swapped between two static
+  // files, so it stays correct for whatever scheme exists later too.
+  _updateFavicon() {
+    const cs = getComputedStyle(document.documentElement);
+    const cyan = cs.getPropertyValue('--neon-cyan').trim();
+    const violet = cs.getPropertyValue('--neon-violet').trim();
+    const bgGlow = cs.getPropertyValue('--bg-glow').trim();
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">` +
+      `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
+      `<stop offset="0" stop-color="${cyan}"/><stop offset="1" stop-color="${violet}"/>` +
+      `</linearGradient></defs>` +
+      `<rect x="2" y="2" width="60" height="60" rx="14" fill="#04222b" stroke="${cyan}" stroke-opacity="0.4" stroke-width="1.5"/>` +
+      `<path d="M 17,17 L 47,17 L 47,25 A 6.5,6.5 0 0 1 47,38 L 47,47 L 38,47 A 6.5,6.5 0 0 1 25,47 L 17,47 Z" fill="url(#g)" stroke="${bgGlow}" stroke-width="1.2"/>` +
+      `</svg>`;
+    this.el.faviconLink.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
   }
 
   _cacheDom() {
@@ -189,6 +215,7 @@ export class Game {
       togglePlacesWrap: document.getElementById('toggle-places-wrap'),
       togglePlaces: document.getElementById('toggle-places'),
       toggleLandScheme: document.getElementById('toggle-land-scheme'),
+      faviconLink: document.getElementById('favicon-link'),
     };
   }
 
@@ -810,12 +837,14 @@ export class Game {
 
   _startOverview(level) {
     const overviewMode = OVERVIEW_MODES.find((m) => m.id === this.overviewModeId) || OVERVIEW_MODES[0];
-    // Seas vary wildly in size and cluster tightly in places (Mediterranean/
-    // Black/Red/Persian Gulf, Caribbean/Gulf of Mexico…), unlike states —
-    // their full Russian names all showing at once overlapped into an
-    // unreadable mess. Default off regardless of preset; still toggleable
-    // via "Подписи" for whoever wants it anyway.
-    this.labelsVisible = overviewMode.id === 'full' && level.id !== 'world';
+    // Explicitly choosing "Полная информация" means labels ON, full stop —
+    // even for the world level, where seas cluster tightly enough
+    // (Mediterranean/Black/Red/Persian Gulf, Caribbean/Gulf of Mexico…)
+    // that it used to look messy, so this silently forced labels off
+    // regardless of what the player picked. Silently overriding an
+    // explicit choice is worse than a cluttered map — "Подписи" already
+    // lets anyone turn labels back off with one click.
+    this.labelsVisible = overviewMode.id === 'full';
     this.citiesVisible = true;
     this.placesVisible = true;
 

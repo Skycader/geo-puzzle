@@ -106,7 +106,11 @@ export class OverviewBoard {
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
     this.placesById = new Map(); // id -> { data, dotEl }
-    this.activeTab = 'states';
+    // World's side panel splits level.pieces into three tabs by name
+    // instead of USA's states/cities/places (world has no cities/places at
+    // all — see _pieceCategory) — 'oceans' first since that's the smallest,
+    // most-recognizable group.
+    this.activeTab = this.level.id === 'world' ? 'oceans' : 'states';
     this.searchQuery = '';
     this.sortBy = null; // null (alphabetical) | 'area'
     this.sortDir = 'desc';
@@ -757,11 +761,17 @@ export class OverviewBoard {
   _buildSidePanel() {
     const panel = document.createElement('div');
     panel.className = 'overview-panel';
+    const tabsHtml =
+      this.level.id === 'world'
+        ? `<button type="button" class="overview-tab active" data-tab="oceans">Океаны</button>
+           <button type="button" class="overview-tab" data-tab="seas">Моря</button>
+           <button type="button" class="overview-tab" data-tab="other">Остальное</button>`
+        : `<button type="button" class="overview-tab active" data-tab="states">Штаты</button>
+           <button type="button" class="overview-tab" data-tab="cities">Города</button>
+           <button type="button" class="overview-tab" data-tab="places">Места</button>`;
     panel.innerHTML = `
       <div class="overview-tabs">
-        <button type="button" class="overview-tab active" data-tab="states">${this.level.id === 'world' ? 'Моря' : 'Штаты'}</button>
-        <button type="button" class="overview-tab" data-tab="cities">Города</button>
-        <button type="button" class="overview-tab" data-tab="places">Места</button>
+        ${tabsHtml}
       </div>
       <input type="text" class="overview-search" placeholder="Поиск..." autocomplete="off" />
       <div class="overview-list-header">
@@ -800,25 +810,45 @@ export class OverviewBoard {
     return panel;
   }
 
+  // World's three tabs ('oceans'/'seas'/'other') aren't a real field on the
+  // piece data — they're derived from the Russian name itself, checked in
+  // this order so "океан" is claimed before the "мор" stem gets a chance
+  // (an ocean's name never also contains "море", so order only matters for
+  // readability, not correctness). Everything left over (gulfs/bays —
+  // "залив" — plus Hudson Bay/Baffin Bay's "залив" naming) falls to
+  // 'other'. Lowercased first — several names START with "Море ..."
+  // (capital М), which a plain .includes('мор') silently never matched,
+  // dumping every one of those into 'other' instead of 'seas'.
+  _pieceCategory(piece) {
+    const ru = piece.ru.toLowerCase();
+    if (ru.includes('океан')) return 'oceans';
+    if (ru.includes('мор')) return 'seas';
+    return 'other';
+  }
+
+  _isPieceTab() {
+    return this.activeTab === 'states' || this.activeTab === 'oceans' || this.activeTab === 'seas' || this.activeTab === 'other';
+  }
+
   // Effective area (km²) of an item — states and (world level) seas both
   // carry a real `area` field (see build_usa_level.js / build_world_seas.js);
   // cities only store a radius, so their area is derived (they're rendered
   // as a circle of that radius to begin with).
   _areaOf(it) {
-    return this.activeTab === 'states' ? it.area : Math.PI * it.radiusKm * it.radiusKm;
+    return this._isPieceTab() ? it.area : Math.PI * it.radiusKm * it.radiusKm;
   }
 
   // 'states': short `.id` codes (AL, CA…) fit a dedicated abbreviation
-  // column — except on the world level, where this same tab lists seas
-  // (see the tab-label swap in _buildSidePanel) whose `.id` is a long slug
-  // ("pacific_ocean"), not a short code. 'cities': capital/silhouette
-  // markers + a state sub-label. Everything else (seas, places) just gets
-  // a plain name — this used to fall into the 'cities' template by
-  // default for anything not 'states'/'places', which rendered a literal
-  // "undefined" sub-label for seas (no `.state` field) — same bug already
-  // fixed in js/eligibilityList.js's equivalent method.
+  // column — world's 'oceans'/'seas'/'other' tabs never take this branch
+  // (their `.id` is a long slug like "pacific_ocean", not a short code).
+  // 'cities': capital/silhouette markers + a state sub-label. Everything
+  // else (world's seas, USA's places) just gets a plain name — this used
+  // to fall into the 'cities' template by default for anything not
+  // 'states'/'places', which rendered a literal "undefined" sub-label for
+  // seas (no `.state` field) — same bug already fixed in
+  // js/eligibilityList.js's equivalent method.
   _mainColumnHtml(it) {
-    if (this.activeTab === 'states' && this.level.id !== 'world') {
+    if (this.activeTab === 'states') {
       return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span>`;
     }
     if (this.activeTab === 'cities') {
@@ -845,7 +875,14 @@ export class OverviewBoard {
   }
 
   _renderList() {
-    const items = this.activeTab === 'states' ? this.level.pieces : this.activeTab === 'places' ? this.level.places : this.level.cities;
+    const items =
+      this.activeTab === 'states'
+        ? this.level.pieces
+        : this.activeTab === 'oceans' || this.activeTab === 'seas' || this.activeTab === 'other'
+          ? this.level.pieces.filter((p) => this._pieceCategory(p) === this.activeTab)
+          : this.activeTab === 'places'
+            ? this.level.places
+            : this.level.cities;
     const q = this.searchQuery;
     const filtered = q
       ? items.filter((it) => it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q))
@@ -879,7 +916,7 @@ export class OverviewBoard {
       const areaStr = showArea ? Math.round(this._areaOf(it)).toLocaleString('ru-RU') + ' км²' : '';
       row.innerHTML = this._mainColumnHtml(it) + `<span class="overview-item-area">${areaStr}</span>`;
       row.addEventListener('click', () => {
-        if (this.activeTab === 'states') this._focusState(it.id);
+        if (this._isPieceTab()) this._focusState(it.id);
         else if (this.activeTab === 'places') this._focusPlace(it.id);
         else this._focusCity(it.id);
       });
