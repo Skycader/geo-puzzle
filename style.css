@@ -1473,6 +1473,53 @@ body {
 }
 .ruler-readout-clear:hover { border-color: var(--orange); color: var(--orange); }
 
+/* ---------------- right-click map context menu (js/overviewBoard.js's _openContextMenu) ---------------- */
+
+.map-context-menu {
+  position: absolute;
+  z-index: 9; /* above .info-popup's 8 — the two never coexist in practice, but if they did the menu should win */
+  min-width: 220px;
+  background: rgba(var(--ink-rgb), 0.97);
+  border: 1px solid var(--neon-cyan);
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 0 24px rgba(var(--neon-cyan-rgb), 0.25), 0 12px 28px rgba(0, 0, 0, 0.55);
+  animation: map-context-menu-in 0.12s ease;
+}
+@keyframes map-context-menu-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+.map-context-menu-coords {
+  padding: 6px 10px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--base01);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: var(--base0);
+  white-space: nowrap;
+}
+.map-context-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  color: var(--base2);
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  padding: 9px 10px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.map-context-menu-item:hover { background: rgba(var(--neon-cyan-rgb), 0.12); color: var(--neon-cyan); }
+.map-context-menu-item:disabled { color: var(--base01); cursor: not-allowed; }
+.map-context-menu-item:disabled:hover { background: transparent; }
+
 .city-actions {
   flex: none;
   display: flex;

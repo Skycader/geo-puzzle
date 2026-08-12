@@ -2,6 +2,7 @@ import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } fro
 import { mark } from './perfDebug.js';
 import { polygonArea } from './utils.js';
 import { buildStateBackground } from './mapBackground.js';
+import { nativeToLonLat, formatLonLat } from './geoCoords.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const STATE_LABEL_PX = 12;
@@ -124,6 +125,7 @@ export class OverviewBoard {
     this._infoPopupEl = null;
     this._infoConnectorEl = null;
     this.rulerPoints = []; // { x, y } in native units, in placement order — see _renderRuler
+    this._contextMenuEl = null;
 
     // Perf instrumentation — instance-level overrides (shadow the
     // prototype methods) so the onVisibleRectChange/onZoomChange
@@ -632,13 +634,90 @@ export class OverviewBoard {
   // 'contextmenu' already only fires for a genuine right-click, and (per
   // zoomPan.js) the pan machinery ignores non-left buttons entirely, so
   // there's no risk of a right-click ever starting a pan underneath this.
+  // Right-clicking an EXISTING ruler point still deletes it directly, no
+  // menu — that's an unambiguous action that doesn't benefit from one.
+  // Right-clicking anywhere else opens the coordinates/actions menu
+  // instead of placing a point immediately (previous behavior) — adding a
+  // point is now one of that menu's options ("Добавить точку").
   _onMapContextMenu(ev) {
     ev.preventDefault();
     const pt = this._clientToNative(ev.clientX, ev.clientY);
     const hitIndex = this._hitTestRulerPoint(pt);
-    if (hitIndex !== -1) this.rulerPoints.splice(hitIndex, 1);
-    else this.rulerPoints.push(pt);
-    this._renderRuler();
+    if (hitIndex !== -1) {
+      this.rulerPoints.splice(hitIndex, 1);
+      this._renderRuler();
+      return;
+    }
+    this._openContextMenu(ev.clientX, ev.clientY, pt);
+  }
+
+  // Coordinates come from js/geoCoords.js — a different inverse-projection
+  // formula per level (equirectangular for world/countries, Albers +
+  // per-inset for USA), so this stays entirely level-agnostic and just
+  // asks for whatever nativeToLonLat can figure out; null (a future level
+  // with no known projection) degrades to "Добавить точку" still working,
+  // with the coordinate-dependent actions disabled rather than crashing.
+  _openContextMenu(clientX, clientY, nativePt) {
+    this._closeContextMenu();
+    const coords = nativeToLonLat(this.level, nativePt.x, nativePt.y);
+
+    const menu = document.createElement('div');
+    menu.className = 'map-context-menu';
+    menu.innerHTML = `
+      <div class="map-context-menu-coords">${coords ? formatLonLat(coords) : 'Координаты недоступны'}</div>
+      <button type="button" class="map-context-menu-item" data-action="add-point">Добавить точку</button>
+      <button type="button" class="map-context-menu-item" data-action="open-maps"${coords ? '' : ' disabled'}>Открыть в Google Maps</button>
+      <button type="button" class="map-context-menu-item" data-action="copy"${coords ? '' : ' disabled'}>Скопировать координаты</button>
+    `;
+    // Attached before positioning so offsetWidth/Height below reflect the
+    // menu's real rendered size, not 0 — then clamped to the map frame so
+    // a right-click near an edge doesn't spawn a menu that runs off it.
+    this.zoomWrap.appendChild(menu);
+    const wrapRect = this.zoomWrap.getBoundingClientRect();
+    const maxLeft = Math.max(8, wrapRect.width - menu.offsetWidth - 8);
+    const maxTop = Math.max(8, wrapRect.height - menu.offsetHeight - 8);
+    menu.style.left = `${Math.min(Math.max(clientX - wrapRect.left, 8), maxLeft)}px`;
+    menu.style.top = `${Math.min(Math.max(clientY - wrapRect.top, 8), maxTop)}px`;
+
+    menu.querySelector('[data-action="add-point"]').addEventListener('click', () => {
+      this.rulerPoints.push(nativePt);
+      this._renderRuler();
+      this._closeContextMenu();
+    });
+    if (coords) {
+      menu.querySelector('[data-action="open-maps"]').addEventListener('click', () => {
+        window.open(`https://www.google.com/maps?q=${coords.lat},${coords.lon}`, '_blank', 'noopener');
+        this._closeContextMenu();
+      });
+      menu.querySelector('[data-action="copy"]').addEventListener('click', () => {
+        navigator.clipboard?.writeText(`${coords.lat.toFixed(6)}, ${coords.lon.toFixed(6)}`).catch(() => {});
+        this._closeContextMenu();
+      });
+    }
+
+    this._contextMenuEl = menu;
+    // Capture phase so this always sees the click before any target's own
+    // stopPropagation (same reasoning cityPinBoard.js's pin drag relies
+    // on elsewhere) — otherwise clicking a ruler point to start dragging
+    // it (which stopPropagation()s) would leave this menu stuck open.
+    this._contextMenuOutsideHandler = (e) => {
+      if (!menu.contains(e.target)) this._closeContextMenu();
+    };
+    this._contextMenuKeyHandler = (e) => {
+      if (e.key === 'Escape') this._closeContextMenu();
+    };
+    window.addEventListener('pointerdown', this._contextMenuOutsideHandler, true);
+    window.addEventListener('keydown', this._contextMenuKeyHandler);
+  }
+
+  _closeContextMenu() {
+    if (!this._contextMenuEl) return;
+    this._contextMenuEl.remove();
+    this._contextMenuEl = null;
+    window.removeEventListener('pointerdown', this._contextMenuOutsideHandler, true);
+    window.removeEventListener('keydown', this._contextMenuKeyHandler);
+    this._contextMenuOutsideHandler = null;
+    this._contextMenuKeyHandler = null;
   }
 
   // Constant on-screen hit radius (like the point markers' own screen
@@ -1164,6 +1243,7 @@ export class OverviewBoard {
     this._destroyed = true;
     this._revealQueue = [];
     clearTimeout(this.focusTimeoutHandle);
+    this._closeContextMenu(); // removes its window-level listeners too, not just the DOM node
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }

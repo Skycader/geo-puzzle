@@ -48,7 +48,15 @@ const pieces = [
       [
         943.1,
         276.4
+      ],
+      [
+        903,
+        275.1
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Паханг"
     ],
     "neighbors": [
       "idn",
@@ -74,7 +82,15 @@ const pieces = [
       [
         347.9,
         402
+      ],
+      [
+        353.3,
+        460.4
       ]
+    ],
+    "labelSuffixes": [
+      "Айсен",
+      "Магальянес и Чилийская Антарктика"
     ],
     "neighbors": [
       "bol",
@@ -155,7 +171,15 @@ const pieces = [
       [
         367.5,
         400.6
+      ],
+      [
+        360,
+        461.8
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Огненная Земля"
     ],
     "neighbors": [
       "chl",
@@ -207,7 +231,15 @@ const pieces = [
       [
         830.6,
         214.7
+      ],
+      [
+        873.1,
+        247.8
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Андаманские и Никобарские острова"
     ],
     "neighbors": [
       "chn",
@@ -236,7 +268,20 @@ const pieces = [
       [
         908.2,
         170.8
+      ],
+      [
+        965.1,
+        186.8
+      ],
+      [
+        927.2,
+        226.6
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Шанхай",
+      "Хайнань"
     ],
     "neighbors": [
       "ind",
@@ -459,7 +504,15 @@ const pieces = [
       [
         687.4,
         308.1
+      ],
+      [
+        701.9,
+        307.7
       ]
+    ],
+    "labelSuffixes": [
+      "Пемба Южная",
+      "Занзибар Центрально-Южный"
     ],
     "neighbors": [
       "ken",
@@ -543,7 +596,20 @@ const pieces = [
       [
         583.8,
         138.8
+      ],
+      [
+        753.7,
+        355.6
+      ],
+      [
+        380.7,
+        241.1
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Реюньон",
+      "Мартиника"
     ],
     "neighbors": [
       "sur",
@@ -629,6 +695,9 @@ const pieces = [
         985.1,
         171.3
       ]
+    ],
+    "labelSuffixes": [
+      "Чеджудо"
     ],
     "neighbors": [
       "prk"
@@ -975,7 +1044,15 @@ const pieces = [
       [
         755.5,
         222.2
+      ],
+      [
+        764.1,
+        222.7
       ]
+    ],
+    "labelSuffixes": [
+      "Мусандам",
+      "Эш-Шаркия"
     ],
     "neighbors": [
       "are",
@@ -1084,6 +1161,9 @@ const pieces = [
         322.7
       ]
     ],
+    "labelSuffixes": [
+      "Пара"
+    ],
     "neighbors": [
       "bol",
       "per",
@@ -1169,7 +1249,16 @@ const pieces = [
       [
         893.1,
         90.7
+      ],
+      [
+        644.4,
+        112.9
       ]
+    ],
+    "labelSuffixes": [
+      "Чукотский автономный округ",
+      null,
+      "Калининградская область"
     ],
     "neighbors": [
       "chn",
@@ -1234,6 +1323,9 @@ const pieces = [
         124.5
       ]
     ],
+    "labelSuffixes": [
+      "Мекленбург — Передняя Померания"
+    ],
     "neighbors": [
       "france",
       "cze",
@@ -1264,7 +1356,15 @@ const pieces = [
       [
         658.6,
         100.2
+      ],
+      [
+        648.5,
+        99.5
       ]
+    ],
+    "labelSuffixes": [
+      "Сааремаа",
+      "Хийумаа"
     ],
     "neighbors": [
       "rus",
@@ -1316,7 +1416,20 @@ const pieces = [
       [
         620.9,
         82.3
+      ],
+      [
+        626.7,
+        36.4
+      ],
+      [
+        648.4,
+        62
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Шпицберген",
+      "Финнмарк"
     ],
     "neighbors": [
       "rus",
@@ -1342,7 +1455,15 @@ const pieces = [
       [
         629.6,
         86.9
+      ],
+      [
+        635.2,
+        104.1
       ]
+    ],
+    "labelSuffixes": [
+      "Кальмар",
+      "Готланд"
     ],
     "neighbors": [
       "norway",
@@ -1369,6 +1490,9 @@ const pieces = [
         81.6
       ]
     ],
+    "labelSuffixes": [
+      "Варсинайс-Суоми"
+    ],
     "neighbors": [
       "rus",
       "norway",
@@ -1394,6 +1518,9 @@ const pieces = [
         916.2,
         234.7
       ]
+    ],
+    "labelSuffixes": [
+      "Кьензянг"
     ],
     "neighbors": [
       "chn",
@@ -1609,6 +1736,9 @@ const pieces = [
         158.9
       ]
     ],
+    "labelSuffixes": [
+      "Бабекский район"
+    ],
     "neighbors": [
       "rus",
       "geo",
@@ -1664,6 +1794,9 @@ const pieces = [
         163.2
       ]
     ],
+    "labelSuffixes": [
+      "Текирдаг"
+    ],
     "neighbors": [
       "cyp",
       "syr",
@@ -1694,7 +1827,20 @@ const pieces = [
       [
         564.6,
         158.7
+      ],
+      [
+        523,
+        197.5
+      ],
+      [
+        526.1,
+        198.5
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Санта-Крус-де-Тенерифе",
+      "Лас-Пальмас"
     ],
     "neighbors": [
       "france",
@@ -1800,7 +1946,15 @@ const pieces = [
       [
         606.1,
         108.1
+      ],
+      [
+        614,
+        110.3
       ]
+    ],
+    "labelSuffixes": [
+      "Ховедстаден",
+      "Зеландия"
     ],
     "neighbors": [
       "deu"
@@ -1854,6 +2008,9 @@ const pieces = [
         606.6,
         178.8
       ]
+    ],
+    "labelSuffixes": [
+      "Меденин"
     ],
     "neighbors": [
       "lby",
@@ -2018,7 +2175,15 @@ const pieces = [
       [
         567.9,
         115.3
+      ],
+      [
+        554.6,
+        102
       ]
+    ],
+    "labelSuffixes": [
+      "Шетландские острова",
+      "Внешние Гебриды"
     ],
     "neighbors": [
       "irl"
@@ -2042,7 +2207,15 @@ const pieces = [
       [
         648.3,
         161.7
+      ],
+      [
+        655.7,
+        175.3
       ]
+    ],
+    "labelSuffixes": [
+      "Южные Эгейские острова",
+      "Крит"
     ],
     "neighbors": [
       "mkd",
@@ -2101,6 +2274,9 @@ const pieces = [
         538.3,
         260.6
       ]
+    ],
+    "labelSuffixes": [
+      "Южная провинция"
     ],
     "neighbors": [
       "gin",
@@ -2267,6 +2443,9 @@ const pieces = [
         238.9
       ]
     ],
+    "labelSuffixes": [
+      "Дэбуб"
+    ],
     "neighbors": [
       "eth",
       "sdn",
@@ -2351,7 +2530,15 @@ const pieces = [
       [
         614.9,
         148.7
+      ],
+      [
+        604.9,
+        159.7
       ]
+    ],
+    "labelSuffixes": [
+      "Энна",
+      "Нуоро"
     ],
     "neighbors": [
       "france",
@@ -2410,6 +2597,9 @@ const pieces = [
         183.8
       ]
     ],
+    "labelSuffixes": [
+      "Хормозган"
+    ],
     "neighbors": [
       "aze",
       "tur",
@@ -2439,6 +2629,9 @@ const pieces = [
         594,
         120.7
       ]
+    ],
+    "labelSuffixes": [
+      "Зеландия"
     ],
     "neighbors": [
       "deu",
@@ -2660,6 +2853,9 @@ const pieces = [
         632.2,
         327.5
       ]
+    ],
+    "labelSuffixes": [
+      "Кабинда"
     ],
     "neighbors": [
       "cog",
@@ -2907,6 +3103,9 @@ const pieces = [
         239.6
       ]
     ],
+    "labelSuffixes": [
+      "Пхукет"
+    ],
     "neighbors": [
       "mys",
       "khm",
@@ -2957,6 +3156,9 @@ const pieces = [
         343.4,
         227.4
       ]
+    ],
+    "labelSuffixes": [
+      "Западный департамент"
     ],
     "neighbors": [
       "dom"
@@ -3035,6 +3237,9 @@ const pieces = [
         194.2
       ]
     ],
+    "labelSuffixes": [
+      "Джахра"
+    ],
     "neighbors": [
       "irq",
       "sau"
@@ -3112,6 +3317,9 @@ const pieces = [
         316.2
       ]
     ],
+    "labelSuffixes": [
+      "Окуси-Амбено"
+    ],
     "neighbors": [
       "idn"
     ]
@@ -3135,6 +3343,9 @@ const pieces = [
         942.7,
         273.6
       ]
+    ],
+    "labelSuffixes": [
+      "Тембуронг"
     ],
     "neighbors": [
       "mys"
@@ -3321,6 +3532,9 @@ const pieces = [
         220.2
       ]
     ],
+    "labelSuffixes": [
+      "Ракхайн"
+    ],
     "neighbors": [
       "ind",
       "chn",
@@ -3348,6 +3562,9 @@ const pieces = [
         864.7,
         211.6
       ]
+    ],
+    "labelSuffixes": [
+      "Барисал"
     ],
     "neighbors": [
       "ind",
@@ -3534,7 +3751,15 @@ const pieces = [
       [
         325.2,
         292.6
+      ],
+      [
+        319.6,
+        297.1
       ]
+    ],
+    "labelSuffixes": [
+      "Галапагос",
+      "Гуаяс"
     ],
     "neighbors": [
       "per",
@@ -3612,7 +3837,20 @@ const pieces = [
       [
         550.5,
         161
+      ],
+      [
+        494.6,
+        167.1
+      ],
+      [
+        521.6,
+        183.2
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Азорские острова",
+      "Мадейра"
     ],
     "neighbors": [
       "esp"
@@ -3993,7 +4231,20 @@ const pieces = [
       [
         248.5,
         102.6
+      ],
+      [
+        396.7,
+        132.1
+      ],
+      [
+        381.7,
+        140.3
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Ньюфаундленд и Лабрадор",
+      "Новая Шотландия"
     ],
     "neighbors": [
       "usa"
@@ -4017,7 +4268,15 @@ const pieces = [
       [
         248,
         211.4
+      ],
+      [
+        216.4,
+        195.2
       ]
+    ],
+    "labelSuffixes": [
+      "Нижняя Калифорния",
+      "Сонора"
     ],
     "neighbors": [
       "gtm",
@@ -4095,6 +4354,9 @@ const pieces = [
         265.2
       ]
     ],
+    "labelSuffixes": [
+      "Дельта-Амакуро"
+    ],
     "neighbors": [
       "guy",
       "bra",
@@ -4119,7 +4381,15 @@ const pieces = [
       [
         1037.6,
         309.2
+      ],
+      [
+        1056.8,
+        296.1
       ]
+    ],
+    "labelSuffixes": [
+      "Автономный регион Бугенвиль",
+      "Новая Ирландия"
     ],
     "neighbors": [
       "idn"
@@ -4170,6 +4440,9 @@ const pieces = [
         728.1,
         237
       ]
+    ],
+    "labelSuffixes": [
+      "Хадрамаут"
     ],
     "neighbors": [
       "omn",
@@ -4222,6 +4495,9 @@ const pieces = [
         609.5,
         283
       ]
+    ],
+    "labelSuffixes": [
+      "Южный Биоко"
     ],
     "neighbors": [
       "cmr",
@@ -4316,7 +4592,20 @@ const pieces = [
       [
         1005.9,
         369.8
+      ],
+      [
+        937.7,
+        370.5
+      ],
+      [
+        1045.1,
+        422.5
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Западная Австралия",
+      "Тасмания"
     ],
     "neighbors": []
   },
@@ -4338,7 +4627,20 @@ const pieces = [
       [
         443.4,
         48.8
+      ],
+      [
+        501.6,
+        55.9
+      ],
+      [
+        491,
+        61.7
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Гренландский национальный парк",
+      "Сермерсоок"
     ],
     "neighbors": []
   },
@@ -4366,6 +4668,10 @@ const pieces = [
         345
       ]
     ],
+    "labelSuffixes": [
+      null,
+      "Северный округ"
+    ],
     "neighbors": []
   },
   {
@@ -4391,6 +4697,10 @@ const pieces = [
         1121.6,
         428.8
       ]
+    ],
+    "labelSuffixes": [
+      "Чатем",
+      "Уаикато"
     ],
     "neighbors": []
   },
@@ -4566,7 +4876,20 @@ const pieces = [
       [
         1017.5,
         170.7
+      ],
+      [
+        985.4,
+        203.3
+      ],
+      [
+        995.1,
+        190.1
       ]
+    ],
+    "labelSuffixes": [
+      null,
+      "Окинава",
+      "Кагосима"
     ],
     "neighbors": []
   },
@@ -5117,6 +5440,9 @@ const pieces = [
         24.2,
         331.6
       ]
+    ],
+    "labelSuffixes": [
+      "Туамасага"
     ],
     "neighbors": []
   },

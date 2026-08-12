@@ -246,7 +246,13 @@ function buildInset(feature, targetW, targetH, offsetX, offsetY) {
   }
 
   const canvasRings = rings.map((ring) => ring.map(project));
-  return buildPieceFromRings(canvasRings);
+  // Projection constants exposed alongside the piece — js/geoCoords.js's
+  // browser-side inverse (right-click "coordinates" context menu) needs
+  // these to convert a click back to lon/lat for anything landing inside
+  // this inset's own bbox, which uses this simple formula, not the main
+  // Albers one below.
+  const projection = { lonMin, cosLat, s, offsetX: offsetX + padX, offsetY: offsetY + padY, latMax };
+  return { ...buildPieceFromRings(canvasRings), projection };
 }
 
 const INSET_Y = TARGET_H + 40;
@@ -330,9 +336,23 @@ out += `  title: 'США: штаты',\n`;
 out += `  subtitle: 'Собери и соедини все 50 штатов',\n`;
 out += `  canvas: { width: ${Math.round(CANVAS_W)}, height: ${Math.round(CANVAS_H)} },\n`;
 out += `  kmPerUnit: ${kmPerUnit.toFixed(6)}, // canvas units -> real-world km, for the on-map scale bar\n`;
+// Lets js/geoCoords.js's browser-side inverse (right-click "coordinates"
+// context menu) convert a canvas click back to lon/lat — the main Albers
+// conic covers the 48 contiguous states + DC; `insets` (below, attached
+// per-piece since AK/HI each carry their own independent projection —
+// see buildInset) covers Alaska/Hawaii's corner boxes separately, since
+// neither uses the main projection at all.
+out += `  projection: {\n`;
+out += `    type: 'albers',\n`;
+out += `    minX: ${minX}, minY: ${minY}, scale: ${scale}, marginPx: ${MARGIN},\n`;
+out += `    phi1Deg: 29.5, phi2Deg: 45.5, phi0Deg: 23, lambda0Deg: -96,\n`;
+out += `  },\n`;
 out += `  pieces: [\n`;
 for (const p of pieces) {
-  out += `    { id: '${p.id}', name: '${esc(p.name)}', ru: '${esc(p.ru)}', cx: ${p.cx.toFixed(1)}, cy: ${p.cy.toFixed(1)}, bbox: [${p.bbox.map((v) => v.toFixed(1)).join(', ')}]${p.inset ? ', inset: true' : ''}, area: ${p.area}, neighbors: [${(p.neighbors || []).map((n2) => `'${n2}'`).join(', ')}],\n      d: '${p.d}' },\n`;
+  const projStr = p.projection
+    ? `, projection: { lonMin: ${p.projection.lonMin}, latMax: ${p.projection.latMax}, cosLat: ${p.projection.cosLat}, s: ${p.projection.s}, offsetX: ${p.projection.offsetX}, offsetY: ${p.projection.offsetY} }`
+    : '';
+  out += `    { id: '${p.id}', name: '${esc(p.name)}', ru: '${esc(p.ru)}', cx: ${p.cx.toFixed(1)}, cy: ${p.cy.toFixed(1)}, bbox: [${p.bbox.map((v) => v.toFixed(1)).join(', ')}]${p.inset ? ', inset: true' : ''}, area: ${p.area}, neighbors: [${(p.neighbors || []).map((n2) => `'${n2}'`).join(', ')}]${projStr},\n      d: '${p.d}' },\n`;
 }
 out += `  ],\n`;
 out += `};\n`;
