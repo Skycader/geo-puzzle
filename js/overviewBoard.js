@@ -193,28 +193,39 @@ export class OverviewBoard {
       path.appendChild(title);
       this.svg.appendChild(path);
 
-      // Usually one label at [cx, cy] — world pieces carry a `labelPoints`
-      // array instead (see scripts/build_world_seas.js's computeLabelPoints):
-      // seas that straddle the antimeridian (Pacific, Arctic/Southern
-      // Ocean, Ross Sea) render as two disconnected on-screen chunks, and a
-      // single label at the bbox center used to land in the empty gap
-      // between them, on neither chunk — so those get one label per
-      // visible chunk instead. USA states have no `labelPoints` field, so
-      // they always fall back to the single [cx, cy] point, unchanged.
+      // Usually one label at [cx, cy] — world/countries pieces carry a
+      // `labelPoints` array instead (see scripts/build_world_seas.js's/
+      // build_countries_level.js's computeLabelPoints): pieces that
+      // straddle the antimeridian (Pacific, Arctic/Southern Ocean, Ross
+      // Sea, Russia) render as two disconnected on-screen chunks, and a
+      // single label at the center used to land in the empty gap between
+      // them, on neither chunk — so those get one label per visible chunk
+      // instead. USA itself is a further one-off special case — see
+      // build_countries_level.js's applyUsaLabels — with a parallel
+      // `labelSuffixes` array (mainland/Alaska/Hawaii are disconnected,
+      // not just antimeridian-split, so those get "США", "США - Аляска",
+      // "США - Гавайи" rather than the bare name repeated three times).
+      // USA states have no `labelPoints` field, so they always fall back
+      // to the single [cx, cy] point, unchanged.
       const labelPoints = p.labelPoints || [[p.cx, p.cy]];
-      for (const [lx, ly] of labelPoints) {
+      labelPoints.forEach(([lx, ly], i) => {
         const label = document.createElementNS(SVG_NS, 'text');
         label.setAttribute('x', lx);
         label.setAttribute('y', ly);
         label.setAttribute('class', 'piece-label');
         // USA states: a short 2-letter code reads fine directly on the map.
-        // World seas have no such code — `.id` is a long slug ("gulf_of_mexico"),
-        // which was rendering as literal, cluttered slug text on the map.
-        label.textContent = this.level.id === 'world' ? p.ru : p.id;
+        // World seas and countries have no such reliably-short code — a
+        // sea's `.id` is a long slug ("gulf_of_mexico"), and while a
+        // country's `.id` IS its ISO_A3 code where one exists, ~20% fall
+        // back to slugify(name) ("south_ossetia") where it doesn't — both
+        // rendered as literal, cluttered slug text on the map before this.
+        const baseName = this.level.id === 'usa' ? p.id : p.ru;
+        const suffix = p.labelSuffixes?.[i];
+        label.textContent = suffix ? `${baseName} - ${suffix}` : baseName;
         this.svg.appendChild(label);
         this.allLabelEls.push(label);
         this.stateLabels.push({ el: label });
-      }
+      });
       this.statesById.set(p.id, { data: p, pathEl: path });
     }
 
@@ -766,7 +777,13 @@ export class OverviewBoard {
         ? `<button type="button" class="overview-tab active" data-tab="oceans">Океаны</button>
            <button type="button" class="overview-tab" data-tab="seas">Моря</button>
            <button type="button" class="overview-tab" data-tab="other">Остальное</button>`
-        : `<button type="button" class="overview-tab active" data-tab="states">Штаты</button>
+        : this.level.id === 'countries'
+          ? // Countries has no cities/places (levels/countries.js: cities: [],
+            // places: []) — a single tab, same reasoning as world's
+            // Океаны/Моря/Остальное replacing Штаты/Города/Места instead of
+            // showing two permanently-empty tabs.
+            `<button type="button" class="overview-tab active" data-tab="states">Страны</button>`
+          : `<button type="button" class="overview-tab active" data-tab="states">Штаты</button>
            <button type="button" class="overview-tab" data-tab="cities">Города</button>
            <button type="button" class="overview-tab" data-tab="places">Места</button>`;
     panel.innerHTML = `
@@ -839,16 +856,20 @@ export class OverviewBoard {
   }
 
   // 'states': short `.id` codes (AL, CA…) fit a dedicated abbreviation
-  // column — world's 'oceans'/'seas'/'other' tabs never take this branch
-  // (their `.id` is a long slug like "pacific_ocean", not a short code).
-  // 'cities': capital/silhouette markers + a state sub-label. Everything
-  // else (world's seas, USA's places) just gets a plain name — this used
-  // to fall into the 'cities' template by default for anything not
-  // 'states'/'places', which rendered a literal "undefined" sub-label for
-  // seas (no `.state` field) — same bug already fixed in
-  // js/eligibilityList.js's equivalent method.
+  // column — scoped to level.id === 'usa' specifically, not just
+  // activeTab === 'states', since the countries level's "Страны" tab ALSO
+  // uses activeTab 'states' (see _buildSidePanel) but a country's `.id` is
+  // its ISO_A3 code where one exists and a full slugify(name) like
+  // "south_ossetia" where it doesn't — not reliably short either way
+  // (world's 'oceans'/'seas'/'other' tabs sidestep this by never using
+  // activeTab 'states' at all). 'cities': capital/silhouette markers + a
+  // state sub-label. Everything else (world's seas, countries, USA's
+  // places) just gets a plain name — this used to fall into the 'cities'
+  // template by default for anything not 'states'/'places', which
+  // rendered a literal "undefined" sub-label for seas (no `.state` field)
+  // — same bug already fixed in js/eligibilityList.js's equivalent method.
   _mainColumnHtml(it) {
-    if (this.activeTab === 'states') {
+    if (this.activeTab === 'states' && this.level.id === 'usa') {
       return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span>`;
     }
     if (this.activeTab === 'cities') {

@@ -37,7 +37,11 @@ const ADAPTIVE_SUCCESS_SCOPE_BY_MODE = {
 
 // 'city-place' isn't here — its heading/label/prompt depend on its own two
 // toggles (entity, interaction), computed by _cityPlaceRoundsText() instead
-// of a static per-mode lookup.
+// of a static per-mode lookup. quiz/name-state/neighbor/identify are
+// shared between levels.usa and levels.countries (see js/modes.js's
+// `levels` arrays) — the "штатов" wording is wrong on the countries level,
+// so this is looked up per (mode, level) pair via _roundsPanelText() below
+// rather than by mode id alone.
 const ROUNDS_PANEL_TEXT = {
   quiz: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: 'Найди на карте:' },
   'name-state': { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
@@ -45,6 +49,23 @@ const ROUNDS_PANEL_TEXT = {
   identify: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
   'sea-identify': { heading: 'Раунд', label: 'Сколько морей/океанов спросить', prompt: '' },
   'sea-quiz': { heading: 'Раунд', label: 'Сколько морей/океанов спросить', prompt: 'Найди на карте:' },
+};
+const ROUNDS_PANEL_TEXT_COUNTRIES = {
+  quiz: { heading: 'Раунд', label: 'Сколько стран спросить', prompt: 'Найди на карте:' },
+  'name-state': { heading: 'Раунд', label: 'Сколько стран спросить', prompt: '' },
+  neighbor: { heading: 'Раунд', label: 'Сколько стран спросить', prompt: '' },
+  identify: { heading: 'Раунд', label: 'Сколько стран спросить', prompt: '' },
+};
+
+// Mode-card title/desc for the same 4 shared modes, on the countries
+// level — MODES' own title/desc say "штат" (grammatically masculine),
+// which doesn't just read oddly on the countries level, it's flat wrong
+// ("страну" is feminine accusative, not a drop-in swap of one word).
+const MODE_CARD_TEXT_COUNTRIES = {
+  quiz: { title: 'Найди страну', desc: 'Кликни страну по названию' },
+  'name-state': { title: 'Назови страну', desc: 'Назови подсвеченную страну' },
+  neighbor: { title: 'Назови соседа', desc: 'Назови соседнюю страну' },
+  identify: { title: 'Определи страну', desc: 'Угадай страну по форме' },
 };
 
 // Global "land color scheme" toggle (topbar, always visible, independent
@@ -260,7 +281,8 @@ export class Game {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'preset-card' + (mode.id === this.modeId ? ' selected' : '');
-      card.innerHTML = `<strong>${mode.title}</strong><p>${mode.desc}</p>`;
+      const text = (this.levelId === 'countries' && MODE_CARD_TEXT_COUNTRIES[mode.id]) || mode;
+      card.innerHTML = `<strong>${text.title}</strong><p>${text.desc}</p>`;
       card.addEventListener('click', () => {
         this.modeId = mode.id;
         this.el.modeList.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
@@ -320,7 +342,11 @@ export class Game {
       return;
     }
 
-    const text = isCityPlace ? this._cityPlaceRoundsText() : ROUNDS_PANEL_TEXT[this.modeId];
+    const text = isCityPlace
+      ? this._cityPlaceRoundsText()
+      : this.levelId === 'countries' && ROUNDS_PANEL_TEXT_COUNTRIES[this.modeId]
+        ? ROUNDS_PANEL_TEXT_COUNTRIES[this.modeId]
+        : ROUNDS_PANEL_TEXT[this.modeId];
     this.el.quizPanelHeading.textContent = text.heading;
     this.el.quizCountLabel.textContent = text.label;
     this.el.quizPromptLabel.textContent = text.prompt;
@@ -330,8 +356,9 @@ export class Game {
     this.eligibilityList = null;
 
     if (hasEligibility) {
-      const kind = isSeaIdentify || isSeaQuiz ? 'seas' : isQuiz || isNameState || isNeighbor || isIdentify ? 'states' : this.cityPlaceEntity;
-      const items = kind === 'states' || kind === 'seas' ? level.pieces : kind === 'places' ? level.places : level.cities;
+      const isSharedStateMode = isQuiz || isNameState || isNeighbor || isIdentify;
+      const kind = isSeaIdentify || isSeaQuiz ? 'seas' : isSharedStateMode ? (this.levelId === 'countries' ? 'countries' : 'states') : this.cityPlaceEntity;
+      const items = kind === 'states' || kind === 'seas' || kind === 'countries' ? level.pieces : kind === 'places' ? level.places : level.cities;
       // Adaptive mode's success streak — shown here so the player can see,
       // right where they're picking which states to include, which ones
       // are still giving them trouble in whichever mode they're setting up.
@@ -390,13 +417,35 @@ export class Game {
     this.el.btnStart.disabled = eligibleCount === 0;
   }
 
+  // "Найди штат"-style mode heading text — same MODE_CARD_TEXT_COUNTRIES
+  // titles already used for the mode-selection cards, reused here for the
+  // in-game HUD heading so the two never drift apart.
+  _modeHeadingText(modeId, fallback) {
+    return (this.levelId === 'countries' && MODE_CARD_TEXT_COUNTRIES[modeId]?.title) || fallback;
+  }
+
+  // "Ошибок: N из M штатов" — genitive plural of the piece noun, level-aware.
+  _pieceWordGenitive() {
+    return this.levelId === 'countries' ? 'стран' : 'штатов';
+  }
+
+  // NEIGHBOR_DIFFICULTIES/IDENTIFY_DIFFICULTIES's rotated-shape tier says
+  // "Штат повёрнут…" (masculine, agreeing with штат) — on the countries
+  // level this isn't just oddly worded, it's grammatically wrong (страна
+  // is feminine: "повёрнут" needs to be "повёрнута"). Everything else in
+  // both arrays is already level-agnostic ("Впиши название сам" etc), so
+  // this one substitution is the only thing that needs fixing here.
+  _countryAwareDesc(desc) {
+    return this.levelId === 'countries' ? desc.replace('Штат повёрнут', 'Страна повёрнута') : desc;
+  }
+
   _renderDifficultyList(diffs, currentId, onSelect) {
     this.el.nameStateDifficultyEl.innerHTML = '';
     for (const diff of diffs) {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'preset-card' + (diff.id === currentId ? ' selected' : '');
-      card.innerHTML = `<strong>${diff.title}</strong><p>${diff.desc}</p>`;
+      card.innerHTML = `<strong>${diff.title}</strong><p>${this._countryAwareDesc(diff.desc)}</p>`;
       card.addEventListener('click', () => {
         onSelect(diff.id);
         this.el.nameStateDifficultyEl.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
@@ -611,7 +660,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.quizPrompt.hidden = false;
 
-    this.el.hudLevel.textContent = `${level.title} · Найди штат (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('quiz', 'Найди штат')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Ошибки: 0';
@@ -628,7 +677,7 @@ export class Game {
       onFinish: (stats) =>
         this._onFinish(
           'РАУНД ЗАВЕРШЁН',
-          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} штатов`
+          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} ${this._pieceWordGenitive()}`
         ),
     });
   }
@@ -642,7 +691,7 @@ export class Game {
     // the answer.
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${level.title} · Назови штат (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('name-state', 'Назови штат')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Ошибки: 0';
@@ -660,7 +709,7 @@ export class Game {
       onFinish: (stats) =>
         this._onFinish(
           'РАУНД ЗАВЕРШЁН',
-          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} штатов`
+          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} ${this._pieceWordGenitive()}`
         ),
     });
   }
@@ -673,7 +722,7 @@ export class Game {
     // state + glowing border), same reasoning as _startNameState.
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${level.title} · Назови соседа (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${level.title} · Назови соседа (${this.quizRounds})`; // "соседа" itself needs no state/country-specific wording
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Ошибки: 0';
@@ -696,7 +745,7 @@ export class Game {
       onFinish: (stats) =>
         this._onFinish(
           'РАУНД ЗАВЕРШЁН',
-          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} штатов`
+          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} ${this._pieceWordGenitive()}`
         ),
     });
   }
@@ -707,7 +756,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${level.title} · Определи штат (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('identify', 'Определи штат')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Ошибки: 0';
@@ -728,7 +777,7 @@ export class Game {
       onFinish: (stats) =>
         this._onFinish(
           'РАУНД ЗАВЕРШЁН',
-          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} штатов`
+          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} ${this._pieceWordGenitive()}`
         ),
     });
   }
@@ -873,7 +922,7 @@ export class Game {
     // of stating a count of zero for something that isn't there at all.
     // World's pieces are oceans/seas/gulfs, not generic "шт." — "акваторий"
     // (water body) covers all three without a per-category breakdown.
-    const pieceUnit = level.id === 'world' ? 'акваторий' : 'шт.';
+    const pieceUnit = level.id === 'world' ? 'акваторий' : level.id === 'countries' ? 'стран' : 'шт.';
     const progressParts = [`${level.pieces.length} ${pieceUnit}`];
     if (level.cities.length) progressParts.push(`${level.cities.length} гор.`);
     if (level.places.length) progressParts.push(`${level.places.length} мест`);

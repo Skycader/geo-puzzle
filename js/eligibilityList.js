@@ -30,20 +30,22 @@ export class EligibilityList {
     return this.selected;
   }
 
-  // States and seas both carry a real precomputed `.area` (km², built into
-  // the level data); cities/places only store a radius, so their area is
-  // derived (they're rendered as a circle of that radius to begin with).
+  // States, seas, and countries all carry a real precomputed `.area` (km²,
+  // built into the level data); cities/places only store a radius, so
+  // their area is derived (they're rendered as a circle of that radius to
+  // begin with).
   _areaOf(it) {
-    return this.kind === 'states' || this.kind === 'seas' ? it.area : Math.PI * it.radiusKm * it.radiusKm;
+    return this.kind === 'states' || this.kind === 'seas' || this.kind === 'countries' ? it.area : Math.PI * it.radiusKm * it.radiusKm;
   }
 
   // 'states': short `.id` codes (AL, CA…) fit a dedicated abbreviation
   // column. 'cities': capital/silhouette markers + a state sub-label.
-  // Everything else ('places', 'seas' — whose `.id` is a full slug like
-  // "pacific_ocean", not a short code, and neither has `.state`) just gets
-  // a plain name — this used to fall into the 'cities' template by
-  // default, which rendered a literal "undefined" sub-label for anything
-  // without a `.state` field.
+  // Everything else ('places', 'seas', 'countries' — a country's `.id` is
+  // its ISO_A3 code where one exists, but ~20% fall back to a full
+  // slugify(name) like "south_ossetia" when it doesn't, so it's not
+  // reliably short either) just gets a plain name — this used to fall
+  // into the 'cities' template by default, which rendered a literal
+  // "undefined" sub-label for anything without a `.state` field.
   _mainColumnHtml(it) {
     if (this.kind === 'states') {
       return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span>`;
