@@ -549,13 +549,19 @@ export class Game {
     else if (this.modeId === 'overview') this._startOverview(level);
     else this._startPuzzle(level);
 
-    this.seconds = 0;
-    this.el.hudTimer.textContent = formatTime(0);
+    // Overview is free browsing, not a timed challenge — nothing it shows
+    // (win bar, round stats, "Время: …" in _onFinish) ever reads this, so
+    // a running stopwatch there is just noise.
     clearInterval(this.timerHandle);
-    this.timerHandle = setInterval(() => {
-      this.seconds++;
-      this.el.hudTimer.textContent = formatTime(this.seconds);
-    }, 1000);
+    this.el.hudTimer.hidden = this.modeId === 'overview';
+    if (this.modeId !== 'overview') {
+      this.seconds = 0;
+      this.el.hudTimer.textContent = formatTime(0);
+      this.timerHandle = setInterval(() => {
+        this.seconds++;
+        this.el.hudTimer.textContent = formatTime(this.seconds);
+      }, 1000);
+    }
   }
 
   _startPuzzle(level) {
@@ -863,7 +869,15 @@ export class Game {
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Обзор`;
-    this.el.hudProgress.textContent = `${level.pieces.length} шт. · ${level.cities.length} гор. · ${level.places.length} мест`;
+    // Omit "0 гор. · 0 мест" entirely for levels with none (world) instead
+    // of stating a count of zero for something that isn't there at all.
+    // World's pieces are oceans/seas/gulfs, not generic "шт." — "акваторий"
+    // (water body) covers all three without a per-category breakdown.
+    const pieceUnit = level.id === 'world' ? 'акваторий' : 'шт.';
+    const progressParts = [`${level.pieces.length} ${pieceUnit}`];
+    if (level.cities.length) progressParts.push(`${level.cities.length} гор.`);
+    if (level.places.length) progressParts.push(`${level.places.length} мест`);
+    this.el.hudProgress.textContent = progressParts.join(' · ');
     this.el.hudGroups.hidden = true;
 
     // the side list panel eats into the map's available width — the
