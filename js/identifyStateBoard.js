@@ -2,6 +2,7 @@ import { shuffle, clamp, levenshtein, weightedSampleWithoutReplacement } from '.
 import { playSnap, playError, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { loadSuccessStats, recordOutcome } from './successStats.js';
+import { addCoins } from './coins.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 // Distinct scope — identifying a state from its bare, isolated shape is a
@@ -94,7 +95,11 @@ export class IdentifyStateBoard {
       this.hintBtn.addEventListener('click', () => this._revealHint());
     }
     this.feedbackEl = bar.querySelector('.name-feedback');
-    this.container.appendChild(bar);
+    // Not appended here — this.zoomWrap doesn't exist yet (built fresh
+    // every round by _renderRoundBoard, which re-parents this same
+    // persistent element into whichever wrap is current). See
+    // nameStateBoard.js's _buildAnswerBar for why it lives inside the map
+    // at all rather than reserving its own flow height.
     this.answerBar = bar;
   }
 
@@ -152,7 +157,8 @@ export class IdentifyStateBoard {
     this.svg.appendChild(path);
 
     this.zoomViewport.appendChild(this.svg);
-    this.container.insertBefore(this.zoomWrap, this.answerBar);
+    this.container.appendChild(this.zoomWrap);
+    this.zoomWrap.appendChild(this.answerBar); // re-parents the persistent bar into this round's fresh wrap
 
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, { panFromAnywhere: true });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
@@ -202,6 +208,10 @@ export class IdentifyStateBoard {
     playSnap();
     this.correct++;
     if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.roundNeededHelp);
+    // First-pass rewards system — "Определи штат" only, for now (see
+    // js/coins.js). One coin per correct answer, hint or no hint; no
+    // per-source bookkeeping beyond the shared balance itself.
+    addCoins(1);
     this.feedbackEl.textContent = 'Верно!';
     this.feedbackEl.classList.remove('name-feedback-wrong');
     this.feedbackEl.classList.add('name-feedback-correct');

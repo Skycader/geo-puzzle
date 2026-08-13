@@ -154,7 +154,8 @@ export class NeighborBoard {
     // advances too — native <button> behavior — without needing a separate
     // keydown listener for it.
     this.nextBtn.addEventListener('click', () => this._advance());
-    this.container.appendChild(bar);
+    // Not appended here — see identifyStateBoard.js's _buildAnswerBar
+    // comment (same per-round zoomWrap-rebuild pattern).
     this.answerBar = bar;
   }
 
@@ -287,7 +288,8 @@ export class NeighborBoard {
     }
 
     this.zoomViewport.appendChild(this.svg);
-    this.container.insertBefore(this.zoomWrap, this.answerBar);
+    this.container.appendChild(this.zoomWrap);
+    this.zoomWrap.appendChild(this.answerBar); // re-parents the persistent bar into this round's fresh wrap
 
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, { panFromAnywhere: true });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));

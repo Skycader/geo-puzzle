@@ -21,12 +21,6 @@ const LEADER_STROKE_PX = 1.2;
 const LEADER_PAD_PX = 3; // horizontal run's overshoot past the text on the far end
 const LEADER_TEXT_GAP_PX = 3; // gap between the horizontal run and the text sitting above it
 
-// Width of the side list panel — game.js subtracts this from the available
-// width before computing the board's fit scale, so the map doesn't get
-// squeezed by a panel it doesn't know about yet. Keep in sync with
-// .overview-panel's width in style.css.
-export const OVERVIEW_PANEL_W = 300;
-
 const STATE_FOCUS_FILL = 0.6; // fraction of the viewport a focused state's bbox should fill
 const CITY_POINT_FOCUS_FILL = 0.08; // fraction of the viewport a focused point-city's dot should fill
 const FOCUS_DURATION_MS = 3000; // how long a click's highlight stays lit before auto-clearing
@@ -145,6 +139,10 @@ export class OverviewBoard {
   _build() {
     const { width, height } = this.level.canvas;
     this.container.innerHTML = '';
+    // innerHTML='' clears children but not the container's own classList —
+    // without this, a panel left collapsed from a previous Overview
+    // session would silently carry over into a fresh one.
+    this.container.classList.remove('panel-collapsed');
 
     const baseW = Math.round(width * this.scale);
     const baseH = Math.round(height * this.scale);
@@ -378,7 +376,7 @@ export class OverviewBoard {
     // clamping and the initial virtualization pass), which reads 0 on a
     // detached element.
     this.wrapEl.appendChild(this.zoomWrap);
-    this.wrapEl.appendChild(this._buildSidePanel());
+    this._buildSidePanel();
     this.container.appendChild(this.wrapEl);
     this._calibrateCharWidth();
 
@@ -935,7 +933,33 @@ export class OverviewBoard {
     });
 
     this._renderList();
-    return panel;
+    // Appended to this.container (#board-container), NOT this.wrapEl
+    // (.overview-wrap) — the wrap's own box can be taller/wider than the
+    // actual screen now that the map uses "cover" fit (see
+    // game.js's _computeScale), which is fine for the map itself but was
+    // pushing the panel's top (search, column headers) off-screen along
+    // with it. #board-container's box stays tied to the real available
+    // space (min-height:0 in its own CSS) regardless of the map
+    // overflowing it, so anchoring here instead keeps the panel fully
+    // on-screen. See style.css's #board-container comment.
+    this.container.appendChild(panel);
+
+    // Collapse/expand tab — the list floats over the map now (no reserved
+    // width for it), so being able to tuck it away to see the map
+    // underneath matters more than it did when it just sat in its own
+    // column. State lives on this.container (a class, not a field on
+    // `this`) since that's what both .overview-panel's and this button's
+    // CSS key off of — see style.css's .panel-collapsed rules.
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'overview-panel-toggle';
+    toggle.textContent = '▸';
+    toggle.title = 'Свернуть/развернуть список';
+    toggle.addEventListener('click', () => {
+      const collapsed = this.container.classList.toggle('panel-collapsed');
+      toggle.textContent = collapsed ? '◂' : '▸';
+    });
+    this.container.appendChild(toggle);
   }
 
   // World's three tabs ('oceans'/'seas'/'other') aren't a real field on the

@@ -7,8 +7,10 @@ import { CityQuizBoard } from './cityQuizBoard.js';
 import { CityPinBoard } from './cityPinBoard.js';
 import { SeaIdentifyBoard } from './seaIdentifyBoard.js';
 import { SeaQuizBoard } from './seaQuizBoard.js';
-import { OverviewBoard, OVERVIEW_PANEL_W } from './overviewBoard.js';
+import { OverviewBoard } from './overviewBoard.js';
 import { EligibilityList } from './eligibilityList.js';
+import { getCoins, spendAllCoins, onCoinsChanged } from './coins.js';
+import { SCREEN_EDGE_MARGIN_PX } from './constants.js';
 import { clamp } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
 import {
@@ -72,6 +74,10 @@ const MODE_CARD_TEXT_COUNTRIES = {
 // of level/mode) — one persisted choice for every level's land layer, see
 // style.css's --land-fill/--land-stroke variables and _initLandScheme.
 const LAND_SCHEME_STORAGE_KEY = 'geoPuzzleLandScheme';
+// How far above the map's own rendered bottom edge the finish button sits
+// (see _positionWinBar) — comfortably more than half the button's own
+// height so it never straddles that edge.
+const WIN_BAR_INSET_PX = 32;
 
 function formatTime(totalSeconds) {
   const m = Math.floor(totalSeconds / 60)
@@ -113,6 +119,7 @@ export class Game {
 
     this._cacheDom();
     this._initLandScheme();
+    this._initCoins();
     this._renderLevelList();
     this._renderModeList();
     this._renderPresetList();
@@ -184,6 +191,28 @@ export class Game {
     this.el.faviconLink.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
   }
 
+  // First-pass rewards system (see js/coins.js) — a single shared balance,
+  // shown in the topbar (a sibling of .hud, same reasoning as the
+  // land-scheme toggle: it's global/persisted, not tied to whatever's
+  // currently on screen, so it stays visible on the menu too). The board
+  // that actually earns coins (identifyStateBoard.js, for now) calls
+  // addCoins() directly rather than routing through game.js — this just
+  // displays whatever balance results. No separate "Списать" button —
+  // the balance display itself IS the button; clicking it writes the
+  // whole thing off.
+  _initCoins() {
+    this._renderCoinBalance(getCoins());
+    onCoinsChanged((balance) => this._renderCoinBalance(balance));
+    this.el.coinBalance.addEventListener('click', () => {
+      spendAllCoins();
+    });
+  }
+
+  _renderCoinBalance(balance) {
+    this.el.coinBalanceValue.textContent = balance;
+    this.el.coinBalance.disabled = balance === 0;
+  }
+
   _cacheDom() {
     this.el = {
       screenMenu: document.getElementById('screen-menu'),
@@ -236,6 +265,8 @@ export class Game {
       togglePlaces: document.getElementById('toggle-places'),
       toggleLandScheme: document.getElementById('toggle-land-scheme'),
       faviconLink: document.getElementById('favicon-link'),
+      coinBalance: document.getElementById('coin-balance'),
+      coinBalanceValue: document.getElementById('coin-balance-value'),
     };
   }
 
@@ -556,7 +587,7 @@ export class Game {
       this.placesVisible = ev.target.checked;
       if (this.board?.setPlacesVisible) this.board.setPlacesVisible(this.placesVisible);
     });
-    // Keeps the finish button centered in the gap below the map (see
+    // Keeps the finish button anchored to the map's actual edge (see
     // _positionWinBar) if the window resizes while it's showing — a no-op
     // whenever the bar is hidden, so this doesn't need its own
     // add/remove lifecycle around each round.
@@ -567,18 +598,29 @@ export class Game {
 
   _availableHeight(extraReserve = 0) {
     const headerH = document.querySelector('.topbar').offsetHeight || 64;
-    const screenPadV = 32; // .screen-game padding-top + padding-bottom
+    const screenPadV = SCREEN_EDGE_MARGIN_PX * 2; // .screen-game padding-top + padding-bottom
     return window.innerHeight - headerH - screenPadV - extraReserve;
   }
 
-  _computeScale(canvas, availH, availWOverride) {
-    const availW = availWOverride ?? window.innerWidth - 48;
+  // `cover`: fills the ENTIRE available box with no gap on any side —
+  // Math.max means whichever dimension doesn't need cropping still
+  // overflows it slightly, same idea as CSS `background-size: cover`.
+  // Every free-pan/zoom viewing mode wants this now (the map is meant to
+  // be monolithic, edge-to-edge, no letterboxing "padding" from preserving
+  // the whole canvas's aspect ratio — see .zoom-viewport/.screen-game).
+  // Puzzle mode is the one exception (the default, `cover: false` /
+  // Math.min = CSS `contain`): the WHOLE target outline has to stay
+  // visible for players to see where every remaining piece goes, so it
+  // can never crop any part of it off-screen.
+  _computeScale(canvas, availH, availWOverride, cover = false) {
+    const availW = availWOverride ?? window.innerWidth - SCREEN_EDGE_MARGIN_PX * 2;
     // No reason to cap this at native (1x) resolution — it's all vector
     // SVG, so it stays crisp at any size. Filling the available screen
     // space is what makes the map (and its text/pieces) actually
     // comfortable to read instead of floating small in the middle of a
     // big monitor.
-    return clamp(Math.min(availW / canvas.width, availH / canvas.height), 0.2, 3);
+    const fit = cover ? Math.max(availW / canvas.width, availH / canvas.height) : Math.min(availW / canvas.width, availH / canvas.height);
+    return clamp(fit, 0.2, 3);
   }
 
   startGame() {
@@ -638,7 +680,7 @@ export class Game {
     // needing to scroll (small piece counts get full-size icons, large
     // ones shrink to fit).
     const availH = this._availableHeight();
-    const availW = window.innerWidth - 48;
+    const availW = window.innerWidth - SCREEN_EDGE_MARGIN_PX * 2;
     const trayBandH = clamp(availH * 0.28, 110, 280);
     const boardBandH = availH - trayBandH - 14;
     const scale = this._computeScale(level.canvas, boardBandH);
@@ -666,8 +708,7 @@ export class Game {
     this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Ошибки: 0';
 
-    const promptH = this.el.quizPrompt.offsetHeight + 14; // + gap to the map
-    const scale = this._computeScale(level.canvas, this._availableHeight(promptH));
+    const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new QuizBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
       eligibleIds: this.eligibilityList?.getSelectedIds(),
@@ -693,8 +734,7 @@ export class Game {
     this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Ошибки: 0';
 
-    const answerBarH = 110; // the board builds its own options/input bar below the map
-    const scale = this._computeScale(level.canvas, this._availableHeight(answerBarH));
+    const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new NameStateBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
       eligibleIds: this.eligibilityList?.getSelectedIds(),
@@ -725,15 +765,14 @@ export class Game {
     // shape, not the fixed full canvas) — so it needs the raw available
     // pixel space to fit against each round, not a single pre-computed
     // scale for the whole (unused, here) canvas.
-    const answerBarH = 110; // the board builds its own options/input bar below the map
     this.board = new NeighborBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       difficulty: this.neighborDifficulty,
       levelId: this.levelId,
       adaptive: this.adaptiveMode,
-      availW: window.innerWidth - 48,
-      availH: this._availableHeight(answerBarH),
+      availW: window.innerWidth - SCREEN_EDGE_MARGIN_PX * 2,
+      availH: this._availableHeight(),
       onProgress: (p) => this._onNameStateProgress(p),
       onFinish: () => this._onFinish(),
     });
@@ -753,15 +792,14 @@ export class Game {
     // Same per-round isolated-shape cropping as _startNeighbor — see its
     // comment for why raw available pixel space is passed instead of a
     // single pre-computed scale.
-    const answerBarH = 110;
     this.board = new IdentifyStateBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       difficulty: this.identifyDifficulty,
       levelId: this.levelId,
       adaptive: this.adaptiveMode,
-      availW: window.innerWidth - 48,
-      availH: this._availableHeight(answerBarH),
+      availW: window.innerWidth - SCREEN_EDGE_MARGIN_PX * 2,
+      availH: this._availableHeight(),
       onProgress: (p) => this._onNameStateProgress(p),
       onFinish: () => this._onFinish(),
     });
@@ -783,8 +821,7 @@ export class Game {
     // sea shapes read as "the gap between coastlines", so cropping away the
     // land context (as states can afford to, being self-contained shapes)
     // left the target floating in blank space. See seaIdentifyBoard.js.
-    const answerBarH = 110;
-    const scale = this._computeScale(level.canvas, this._availableHeight(answerBarH));
+    const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new SeaIdentifyBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
       eligibleIds: this.eligibilityList?.getSelectedIds(),
@@ -806,8 +843,7 @@ export class Game {
     this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Ошибки: 0';
 
-    const promptH = this.el.quizPrompt.offsetHeight + 14;
-    const scale = this._computeScale(level.canvas, this._availableHeight(promptH));
+    const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new SeaQuizBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
       eligibleIds: this.eligibilityList?.getSelectedIds(),
@@ -836,9 +872,7 @@ export class Game {
 
     if (isPin) {
       this.el.hudGroups.textContent = 'Ср. ошибка: —';
-      const promptH = this.el.quizPrompt.offsetHeight + 14;
-      const actionBarH = 60; // the board builds its own confirm/next bar below the map
-      const scale = this._computeScale(level.canvas, this._availableHeight(promptH + actionBarH));
+      const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
       this.board = new CityPinBoard(this.el.boardContainer, level, {
         rounds: this.quizRounds,
         items,
@@ -848,8 +882,7 @@ export class Game {
       });
     } else {
       this.el.hudGroups.textContent = 'Ошибки: 0';
-      const promptH = this.el.quizPrompt.offsetHeight + 14;
-      const scale = this._computeScale(level.canvas, this._availableHeight(promptH));
+      const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
       this.board = new CityQuizBoard(this.el.boardContainer, level, {
         rounds: this.quizRounds,
         items,
@@ -900,11 +933,11 @@ export class Game {
     this.el.hudProgress.textContent = progressParts.join(' · ');
     this.el.hudGroups.hidden = true;
 
-    // the side list panel eats into the map's available width — the
-    // default _computeScale width doesn't know about it, so pass an
-    // override (kept in sync with .overview-panel's CSS width).
-    const availW = window.innerWidth - 48 - OVERVIEW_PANEL_W - 14;
-    const scale = this._computeScale(level.canvas, this._availableHeight(), availW);
+    // The side list panel floats OVER the map now (position:absolute, see
+    // .overview-panel) rather than sharing the row's width with it, so the
+    // map's own scale no longer needs to account for it — same calculation
+    // as every other mode.
+    const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new OverviewBoard(this.el.boardContainer, level, {
       scale,
       labelsVisible: this.labelsVisible,
@@ -937,31 +970,34 @@ export class Game {
 
   _onFinish() {
     clearInterval(this.timerHandle);
-    // A small bottom bar rather than a modal — a full-screen overlay blocked
-    // the finished map right when the player most wants to look at it (e.g.
-    // the assembled puzzle). No stats text — nobody reads it once the round
-    // is over, and it used to sit next to leftover in-round UI (the 4-option
-    // buttons or text input various boards build below the map), which
-    // stayed live and clickable after the round had already ended. Both are
-    // just noise now: hide whatever answer UI the board built, and leave
-    // only the way back to the menu.
+    // Floats INSIDE the map (see .win-bar's own comment) rather than a
+    // modal — a full-screen overlay blocked the finished map right when
+    // the player most wants to look at it (e.g. the assembled puzzle). No
+    // stats text — nobody reads it once the round is over, and it used to
+    // sit next to leftover in-round UI (the 4-option buttons or text input
+    // various boards build below the map), which stayed live and
+    // clickable after the round had already ended. Both are just noise
+    // now: hide whatever answer UI the board built, and leave only the way
+    // back to the menu.
     this.el.quizPrompt.hidden = true;
     this.el.boardContainer.querySelectorAll('.name-answer-bar, .city-actions').forEach((el) => { el.hidden = true; });
     this.el.winBar.hidden = false;
     this._positionWinBar();
   }
 
-  // Centered in the gap between the map's own bottom edge and the
-  // viewport's bottom edge — not a fixed offset from the screen edge,
-  // which either sat flush against the map (tall maps/small screens) or
-  // floated in the middle of a lot of empty space (short maps/tall
-  // screens). `.zoom-wrap` is every board's own pan/zoom container, sized
-  // to the actual rendered map regardless of mode, so its rect is the
-  // right "bottom of the map" reference across puzzle/quiz/name-state/etc.
+  // Anchored to the actual rendered map (this.board.zoomWrap — every board
+  // class exposes it, exactly sized to its own rendered pixels), not the
+  // viewport. A fixed viewport-relative offset could straddle the map's
+  // own bottom edge — half on the map, half in the letterboxing gap below
+  // it — whenever the map doesn't fill the full available height (see
+  // .quiz-prompt's comment on aspect-ratio letterboxing). WIN_BAR_INSET_PX
+  // keeps the button clearly inside that edge instead of flush against it.
   _positionWinBar() {
-    const mapEl = this.el.boardContainer.querySelector('.zoom-wrap') || this.el.boardContainer;
-    const mapBottom = mapEl.getBoundingClientRect().bottom;
-    this.el.winBar.style.top = `${(mapBottom + window.innerHeight) / 2}px`;
+    const mapEl = this.board?.zoomWrap;
+    if (!mapEl) return;
+    const rect = mapEl.getBoundingClientRect();
+    this.el.winBar.style.left = `${rect.left + rect.width / 2}px`;
+    this.el.winBar.style.top = `${rect.bottom - WIN_BAR_INSET_PX}px`;
   }
 
   _goMenu() {

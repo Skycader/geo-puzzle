@@ -46,11 +46,6 @@
         </svg>
         <span class="brand-text">GEO PUZZLE</span>
       </button>
-      <label class="toggle land-scheme-toggle" id="toggle-land-scheme-wrap" title="Цветовая схема — карта, меню и кнопки">
-        <input type="checkbox" id="toggle-land-scheme" />
-        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-        <span class="toggle-text" id="toggle-land-scheme-text">Цветовая схема</span>
-      </label>
       <div class="hud" id="hud" hidden>
         <span id="hud-level" class="hud-item"></span>
         <span id="hud-progress" class="hud-item hud-chip">0/0</span>
@@ -72,6 +67,20 @@
           <span class="toggle-text">Места</span>
         </label>
         <button id="btn-menu" class="btn btn-ghost">Меню</button>
+      </div>
+      <div class="topbar-right">
+        <button type="button" class="coin-balance" id="coin-balance" title="Монеты за верные ответы в «Определи штат» — нажми, чтобы списать баланс">
+          <svg class="coin-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+            <circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.65" />
+          </svg>
+          <span id="coin-balance-value">0</span>
+        </button>
+        <label class="toggle land-scheme-toggle" id="toggle-land-scheme-wrap" title="Цветовая схема — карта, меню и кнопки">
+          <input type="checkbox" id="toggle-land-scheme" />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text" id="toggle-land-scheme-text">Цветовая схема</span>
+        </label>
       </div>
     </header>
 

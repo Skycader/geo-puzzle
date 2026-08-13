@@ -173,7 +173,14 @@ export class NameStateBoard {
       this.hintBtn.addEventListener("click", () => this._revealHint());
     }
     this.feedbackEl = bar.querySelector(".name-feedback");
-    this.container.appendChild(bar);
+    // Lives INSIDE the map (a child of .zoom-wrap, itself position:relative
+    // and sized to the map's own rendered pixels) rather than a sibling row
+    // that reserves its own flow height — same "don't push the map around"
+    // rule as game.js's win-bar/quiz-prompt overlays. Reserving that height
+    // (see the old answerBarH in game.js, now removed) skewed the fit
+    // calculation toward being height-constrained on wide maps, producing
+    // more left/right letterboxing than necessary.
+    this.zoomWrap.appendChild(bar);
     this.answerBar = bar;
   }
 

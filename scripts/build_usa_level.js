@@ -126,7 +126,14 @@ const bboxW = maxX - minX;
 const bboxH = maxY - minY;
 const scale = TARGET_W / bboxW;
 const TARGET_H = bboxH * scale;
-const MARGIN = 18;
+// Blank border baked directly into the canvas/viewBox itself (every
+// projected coordinate gets +MARGIN) — the map is meant to be monolithic,
+// filling its container edge-to-edge with no border of its own (see
+// style.css's .zoom-viewport), so this only needs to be just wide enough
+// that a border state's own stroke doesn't get clipped by the viewBox
+// edge, not a decorative gutter. Was 18 (a ~2% gap on every side, clearly
+// visible now that the surrounding CSS layer's own padding/border are 0).
+const MARGIN = 3;
 
 // The Albers formulas above operate on a unit sphere (radius 1), so 1
 // projected unit there = 1 Earth radius. `scale` converts those units to

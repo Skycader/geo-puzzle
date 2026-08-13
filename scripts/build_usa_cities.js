@@ -57,7 +57,7 @@ for (const f of geo.features) {
 }
 const TARGET_W = 960;
 const scale = TARGET_W / (maxX - minX);
-const MARGIN = 18;
+const MARGIN = 3; // must match build_usa_level.js's own MARGIN exactly
 function toCanvasMain([lon, lat]) {
   const [x, y] = albers([lon, lat]);
   return [(x - minX) * scale + MARGIN, (y - minY) * scale + MARGIN];

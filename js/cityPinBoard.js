@@ -114,7 +114,10 @@ export class CityPinBoard {
     this.confirmBtn.disabled = true;
     this.confirmBtn.addEventListener('click', () => this._confirm());
     this.nextBtn.addEventListener('click', () => this._next());
-    this.container.appendChild(bar);
+    // Lives INSIDE the map (a child of .zoom-wrap) rather than a sibling
+    // row that reserves its own flow height — same rule as
+    // nameStateBoard.js's answer bar; see its comment for why.
+    this.zoomWrap.appendChild(bar);
     this.actionBar = bar;
   }
 

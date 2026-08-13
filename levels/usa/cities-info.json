@@ -98,5 +98,360 @@
     "extract": "Гонолулу — город на острове Оаху Гавайского архипелага, столица и крупнейший город штата Гавайи и округа Гонолулу.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Downtown_Honolulu_from_P%C5%ABowaina_%28Punchbowl_Crater%29.jpg/330px-Downtown_Honolulu_from_P%C5%ABowaina_%28Punchbowl_Crater%29.jpg",
     "wikiUrl": "https://ru.wikipedia.org/wiki/Гонолулу"
+  },
+  "montgomery": {
+    "extract": "Монтго́мери — административный центр и второй по численности населения город штата Алабама, США. Также является административным центром одноименного округа Монтгомери. Расположен на реке Алабама.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Alabama_State_Capitol%2C_Montgomery%2C_West_view_20160713_1.jpg/330px-Alabama_State_Capitol%2C_Montgomery%2C_West_view_20160713_1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D0%BD%D1%82%D0%B3%D0%BE%D0%BC%D0%B5%D1%80%D0%B8_(%D0%90%D0%BB%D0%B0%D0%B1%D0%B0%D0%BC%D0%B0)"
+  },
+  "birmingham": {
+    "extract": "Би́рмингем — крупнейший город американского штата Алабама. На 2018 год население города составляло 209 880 человек, а население агломерации — более 1,15 миллиона человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Birmingham_AL_Montage.jpg/330px-Birmingham_AL_Montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B8%D1%80%D0%BC%D0%B8%D0%BD%D0%B3%D0%B5%D0%BC_(%D0%90%D0%BB%D0%B0%D0%B1%D0%B0%D0%BC%D0%B0)"
+  },
+  "juneau": {
+    "extract": "Джу́но — город в США, административный центр штата Аляска. Население — 33 026 человек (2015).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Queen_Elizabeth_%28ship%2C_2010%29_in_Juneau%2C_Alaska_2024-08-15.jpg/330px-Queen_Elizabeth_%28ship%2C_2010%29_in_Juneau%2C_Alaska_2024-08-15.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B6%D1%83%D0%BD%D0%BE_(%D0%90%D0%BB%D1%8F%D1%81%D0%BA%D0%B0)"
+  },
+  "anchorage": {
+    "extract": "А́нкоридж, или Анко́ридж , — город в США, расположенный в южной части штата Аляска. В Анкоридже проживает свыше 291 247 человек, это самый северный город в США среди городов с населением более 100 тысяч человек. Является крупнейшим городом на Аляске. 40 % населения штата проживают в Анкоридже, только Нью-Йорк имеет больший процент жителей, проживающих в крупнейшем городе штата. Крупный транспортный узел (порт).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Downtown_Anchorage%2C_Alaska.jpg/330px-Downtown_Anchorage%2C_Alaska.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BD%D0%BA%D0%BE%D1%80%D0%B8%D0%B4%D0%B6"
+  },
+  "tucson": {
+    "extract": "Тусо́н — крупный город в штате Аризона (США) и административный центр округа Пима. Является одним из быстрорастущих городов США. Население непосредственно города — 545 975 жителей (2018), это второй по величине город штата Аризона после столицы штата — Финикса.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Flag_of_Tucson%2C_Arizona.svg/langru-330px-Flag_of_Tucson%2C_Arizona.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D1%83%D1%81%D0%BE%D0%BD"
+  },
+  "little_rock": {
+    "extract": "Литл-Рок — столица и крупнейший город штата Арканзас, США. Население — 197,881 тыс. человек (2018). Является центром агломерации, насчитывавшей в 2010 году 699,8 тыс. жителей.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Arkansas_State_Capitol%2C_Woodlane_Street_and_Capitol_Avenue%2C_Little_Rock%2C_AR_-_54013704517.jpg/330px-Arkansas_State_Capitol%2C_Woodlane_Street_and_Capitol_Avenue%2C_Little_Rock%2C_AR_-_54013704517.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%B8%D1%82%D0%BB-%D0%A0%D0%BE%D0%BA"
+  },
+  "san_diego": {
+    "extract": "Сан-Дие́го — город на юго-западе США на берегу Тихого океана на границе с Мексикой, административный центр округа Сан-Диего в штате Калифорния.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/US_Navy_110212-N-8158F-106_A_formation_of_F-A-18_Super_Hornets_fly_over_San_Diego_Harbor_while_participating_in_the_Parade_of_Flight.jpg/330px-US_Navy_110212-N-8158F-106_A_formation_of_F-A-18_Super_Hornets_fly_over_San_Diego_Harbor_while_participating_in_the_Parade_of_Flight.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD-%D0%94%D0%B8%D0%B5%D0%B3%D0%BE"
+  },
+  "san_jose": {
+    "extract": "Сан-Хосе́ — город в Калифорнии, по численности населения третий в штате после Лос-Анджелеса и Сан-Диего и десятый в США. Находится на западе штата Калифорния в северной части штата к югу от Сан-Франциско. Административный центр округа Санта-Клара. Население 1,013 млн человек (2020). Неофициальная столица Кремниевой долины.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Downtown_San_Jose_%2830001966530%29.jpg/330px-Downtown_San_Jose_%2830001966530%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD-%D0%A5%D0%BE%D1%81%D0%B5_(%D0%9A%D0%B0%D0%BB%D0%B8%D1%84%D0%BE%D1%80%D0%BD%D0%B8%D1%8F)"
+  },
+  "hartford": {
+    "extract": "Ха́ртфорд — город на северо-востоке США, столица штата Коннектикут. Расположен в округе Хартфорд на берегу реки Коннектикут. В 2020 году население города составляло 121 054 человек. Город является третьим по величине в штате после Бриджпорта и Нью-Хейвена. Агломерация Хартфорда занимает 45-е место по численности населения в США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Hartford%2C_CT_skyline_%28cropped%29.jpg/330px-Hartford%2C_CT_skyline_%28cropped%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D0%B0%D1%80%D1%82%D1%84%D0%BE%D1%80%D0%B4_(%D0%9A%D0%BE%D0%BD%D0%BD%D0%B5%D0%BA%D1%82%D0%B8%D0%BA%D1%83%D1%82)"
+  },
+  "dover": {
+    "extract": "До́вер — город в США, административный центр штата Делавэр и округа Кент. В 2010 году население города составляло 36 047 человек: второй по количеству жителей и первый по площади в штате.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Dover_Delaware.jpg/330px-Dover_Delaware.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%BE%D0%B2%D0%B5%D1%80_(%D0%94%D0%B5%D0%BB%D0%B0%D0%B2%D1%8D%D1%80)"
+  },
+  "tallahassee": {
+    "extract": "Таллаха́сси — город в округе Лион, столица штата Флорида, третьего по населению штата в Соединённых Штатах Америки.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Tallahassee_Header_for_Wikipedia_2.png/330px-Tallahassee_Header_for_Wikipedia_2.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%B0%D0%BB%D0%BB%D0%B0%D1%85%D0%B0%D1%81%D1%81%D0%B8"
+  },
+  "jacksonville": {
+    "extract": "Джэ́ксонвилл — самый густонаселённый город в американском штате Флорида и двенадцатый по численности населения город в США. Территориально относится к округу Дувол. С 1968 года город и округ имеют единое управление, в результате чего Джэксонвилл стал самым крупным по территории городом в континентальных США. По данным переписи 2020 года, в самом городе проживает 949 611 жителей, а вместе с окрестностями — 1 733 937.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/JXFL2011N.png/330px-JXFL2011N.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B6%D1%8D%D0%BA%D1%81%D0%BE%D0%BD%D0%B2%D0%B8%D0%BB%D0%BB"
+  },
+  "orlando": {
+    "extract": "Орла́ндо — город и административный центр округа Ориндж, штат Флорида, США. Расположен в Центральной Флориде. Является четвёртым по численности населения и самым густонаселённым городом штата с населением 308 тыс. чел. по данным переписи 2020 года. Aгломерация Орландо с населением почти 3 млн чел. — третья во Флориде и 20-я в США. Город долгое время являлся небольшим поселением в тропической заболоченной сельве, кишащей москитами и аллигаторами. Однако, как и другие крупные города «солнечного пояса», Орландо быстро рос в течение 1980-х годов и в первом десятилетии XXI века. Орландо был назван в честь Орландо Ривса, по одному из предположений, солдата армии США, который участвовал во второй войне с семинолами и погиб в этой области.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Orlando_collage.jpg/330px-Orlando_collage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9E%D1%80%D0%BB%D0%B0%D0%BD%D0%B4%D0%BE_(%D0%A4%D0%BB%D0%BE%D1%80%D0%B8%D0%B4%D0%B0)"
+  },
+  "boise": {
+    "extract": "Бо́йсе — административный центр и крупнейший город штата Айдахо, США, и окружной центр округа Эйда.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Idaho_Capitol_Building.JPG/330px-Idaho_Capitol_Building.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%BE%D0%B9%D1%81%D0%B5_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)"
+  },
+  "springfield_il": {
+    "extract": "Спри́нгфилд — город на Среднем Западе США, столица штата Иллинойс. Население — 113,2 тыс. человек (2020).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Illinois_State_Capitol%2C_Capitol_Avenue_and_2nd_Street%2C_Springfield%2C_IL_-_53319249690.jpg/330px-Illinois_State_Capitol%2C_Capitol_Avenue_and_2nd_Street%2C_Springfield%2C_IL_-_53319249690.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%BF%D1%80%D0%B8%D0%BD%D0%B3%D1%84%D0%B8%D0%BB%D0%B4_(%D0%98%D0%BB%D0%BB%D0%B8%D0%BD%D0%BE%D0%B9%D1%81)"
+  },
+  "indianapolis": {
+    "extract": "Индиана́полис, сокр. — И́нди — город на Среднем Западе США, административный центр и самый населённый город штата Индиана и округа Марион. Население в городской черте — 882 039 человек, в то время как в пределах агломерации проживают 2 091 019 человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Indianapolis-1872528.jpg/330px-Indianapolis-1872528.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%98%D0%BD%D0%B4%D0%B8%D0%B0%D0%BD%D0%B0%D0%BF%D0%BE%D0%BB%D0%B8%D1%81"
+  },
+  "des_moines": {
+    "extract": "Де-Мойн — город в США в центральной части штата Айова, у впадения реки Раккун в реку Де-Мойн. Административный центр штата Айова и округа Полк. 203,4 тыс. жителей (2010), с пригородами — 569,6 тыс. жителей — крупнейший город штата.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Flag_of_Des_Moines%2C_Iowa.svg/langru-330px-Flag_of_Des_Moines%2C_Iowa.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B5-%D0%9C%D0%BE%D0%B9%D0%BD"
+  },
+  "topeka": {
+    "extract": "Топи́ка — город в центральной части США, административный центр штата Канзас и округа Шони. Население составляет 125,9 тысячи человек (2018).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Topeka_Kansas_collage_by_Ian_Ballinger.jpg/330px-Topeka_Kansas_collage_by_Ian_Ballinger.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%BA%D0%B0_(%D0%9A%D0%B0%D0%BD%D0%B7%D0%B0%D1%81)"
+  },
+  "wichita": {
+    "extract": "Уи́чито — город в США, крупнейший населённый пункт штата Канзас. Расположен в южной части штата Канзас на реке Арканзас в округе Седжуик.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Downtown_Wichita.jpg/330px-Downtown_Wichita.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A3%D0%B8%D1%87%D0%B8%D1%82%D0%BE"
+  },
+  "frankfort": {
+    "extract": "Фра́нкфорт — город, расположенный в округе Франклин с населением в 25 527 человек (2010). Является административным центром штата Кентукки и окружным центром округа Франклин.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Frankfort_kentucky.jpg/330px-Frankfort_kentucky.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A4%D1%80%D0%B0%D0%BD%D0%BA%D1%84%D0%BE%D1%80%D1%82_(%D0%9A%D0%B5%D0%BD%D1%82%D1%83%D0%BA%D0%BA%D0%B8)"
+  },
+  "louisville": {
+    "extract": "Лу́исвилл — самый большой город в американском штате Кентукки. Он считается 17-м или 27-м по количеству населения в Соединённых Штатах в зависимости от способа подсчёта. Поселение, которое потом стало городом Луисвилл, основано в 1778 году Джорджем Роджерсом Кларком и было названо в честь французского короля Людовика XVI.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Louisville_montage.jpg/330px-Louisville_montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D1%83%D0%B8%D1%81%D0%B2%D0%B8%D0%BB%D0%BB"
+  },
+  "baton_rouge": {
+    "extract": "Ба́тон-Руж — город на юго-востоке США, столица и второй по количеству населения город штата Луизиана, административный центр прихода Ист-Батон-Руж. Население 220 236 человек (2019), в агломерации насчитывается свыше 850 тыс. человек. В городе проживает значительное количество беженцев из соседнего Нового Орлеана, пострадавшего в результате урагана Катрина, в результате чего на время город стал крупнейшим в штате.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Tiger_Stadium_%28LSU%29_at_Night.jpg/330px-Tiger_Stadium_%28LSU%29_at_Night.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D1%82%D0%BE%D0%BD-%D0%A0%D1%83%D0%B6"
+  },
+  "augusta": {
+    "extract": "Ога́ста — город на северо-востоке США, столица штата Мэн и округа Кеннебек. При переписи населения 2010 года население составляло 19 136 человек, в 2000 году оно составляло 18 560 человек. Это третий город-столица штата по наименьшему количеству человек после Монтпилиера и Пирра. Огаста расположена на реке Кеннебек. В городе находится Университет штата Мэн в Огасте.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Augusta%2C_Maine_downtown.jpg/330px-Augusta%2C_Maine_downtown.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9E%D0%B3%D0%B0%D1%81%D1%82%D0%B0_(%D0%9C%D1%8D%D0%BD)"
+  },
+  "annapolis": {
+    "extract": "Анна́полис — город в США, столица штата Мэриленд и округа Анн-Арандел. Население — 38 394 человека по переписи 2010 года.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Thurgood_Marshall_statue_and_Maryland_State_House.jpg/330px-Thurgood_Marshall_statue_and_Maryland_State_House.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BD%D0%BD%D0%B0%D0%BF%D0%BE%D0%BB%D0%B8%D1%81_(%D0%9C%D1%8D%D1%80%D0%B8%D0%BB%D0%B5%D0%BD%D0%B4)"
+  },
+  "baltimore": {
+    "extract": "Ба́лтимор — город на востоке США, крупнейший населённый пункт штата Мэриленд. Основан в 1729 году.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Fell%27s_Point_Aerial_2022.jpg/330px-Fell%27s_Point_Aerial_2022.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%BB%D1%82%D0%B8%D0%BC%D0%BE%D1%80"
+  },
+  "lansing": {
+    "extract": "Ла́нсинг — город в США, столица штата Мичиган. Назван уроженцами Лансинга штата Нью-Йорк в честь своего города.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Michigan_state_capitol.jpg/330px-Michigan_state_capitol.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%B0%D0%BD%D1%81%D0%B8%D0%BD%D0%B3"
+  },
+  "detroit": {
+    "extract": "Детро́йт — город на севере США, в штате Мичиган. Расположен в юго-восточном углу штата, на реке Детройт, на границе с Канадой. Население города — 639 111 человек (2020), детройтской агломерации — 4 292 060 человек (2013).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Detroit_Skyline_%28123143197%29.jpeg/330px-Detroit_Skyline_%28123143197%29.jpeg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B5%D1%82%D1%80%D0%BE%D0%B9%D1%82"
+  },
+  "saint_paul": {
+    "extract": "Сент-Пол — город на севере Соединённых Штатов Америки, столица штата Миннесота, административный центр округа Рамси. Население — 311 527 человек. Образует агломерацию с Миннеаполисом общей численностью населения более 3,5 млн человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Saint_paul_mn.jpg/330px-Saint_paul_mn.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B5%D0%BD%D1%82-%D0%9F%D0%BE%D0%BB_(%D0%9C%D0%B8%D0%BD%D0%BD%D0%B5%D1%81%D0%BE%D1%82%D0%B0)"
+  },
+  "minneapolis": {
+    "extract": "Миннеа́полис — город на севере США, крупнейший город штата Миннесота и округа Хеннепин. Население — 422 331 человек (2017). Находится на берегах реки Миссисипи. Миннеаполис примыкает к Сент-Полу, столице штата и второму городу по величине. Вместе они образуют столичный район «Города-близнецы». Агломерация — 3,6 млн человек. Ос­но­ван в 1856 году.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Minneapolis_Skyline_looking_south.jpg/330px-Minneapolis_Skyline_looking_south.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B8%D0%BD%D0%BD%D0%B5%D0%B0%D0%BF%D0%BE%D0%BB%D0%B8%D1%81"
+  },
+  "jackson": {
+    "extract": "Джэ́ксон — столица и крупнейший город штата Миссисипи на юге США с населением около 170 тыс. человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/State_of_Mississippi_State_Capitol_%2827565754440%29.jpg/330px-State_of_Mississippi_State_Capitol_%2827565754440%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B6%D1%8D%D0%BA%D1%81%D0%BE%D0%BD_(%D0%9C%D0%B8%D1%81%D1%81%D0%B8%D1%81%D0%B8%D0%BF%D0%B8)"
+  },
+  "jefferson_city": {
+    "extract": "Дже́фферсон-Си́ти — столица штата Миссури, США, также является главным городом округа Кол.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Jefferson_City.jpg/330px-Jefferson_City.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B6%D0%B5%D1%84%D1%84%D0%B5%D1%80%D1%81%D0%BE%D0%BD-%D0%A1%D0%B8%D1%82%D0%B8_(%D0%9C%D0%B8%D1%81%D1%81%D1%83%D1%80%D0%B8)"
+  },
+  "st_louis": {
+    "extract": "Сент-Лу́ис — независимый город в США, в штате Миссури.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/St._Louis_Art_Museum.JPG/330px-St._Louis_Art_Museum.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B5%D0%BD%D1%82-%D0%9B%D1%83%D0%B8%D1%81"
+  },
+  "kansas_city": {
+    "extract": "Канзас-Сити — город в США, на западной границе штата Миссури, на берегу реки Миссури. Население 508 090 человек (2020). Вместе с расположенным на другом берегу Миссури одноимённым городом штата Канзас и рядом других населённых пунктов образует конурбацию Канзас-Сити с населением около 2 млн человек. Для отличия от канзасского Канзас-Сити — миссурийский Канзас-Сити использует аббревиатуру KCMO.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Kansas_City_-_Downtown_-_panoramio_%2815%29.jpg/330px-Kansas_City_-_Downtown_-_panoramio_%2815%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D0%BD%D0%B7%D0%B0%D1%81-%D0%A1%D0%B8%D1%82%D0%B8_(%D0%9C%D0%B8%D1%81%D1%81%D1%83%D1%80%D0%B8)"
+  },
+  "helena": {
+    "extract": "Хе́лена, также Хели́на — город в США, столица штата Монтана и административный центр округа Льюис-энд-Кларк. Население — 32 091 человек (2020 год).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Cathedral_of_Saint_Helena_Montana%2C_Side_View%2C_2025.jpg/330px-Cathedral_of_Saint_Helena_Montana%2C_Side_View%2C_2025.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D0%B5%D0%BB%D0%B5%D0%BD%D0%B0_(%D0%9C%D0%BE%D0%BD%D1%82%D0%B0%D0%BD%D0%B0)"
+  },
+  "lincoln": {
+    "extract": "Ли́нкольн — город в северной половине центральной части США, административный центр штата Небраска и округа Ланкастер. Численность населения, по данным переписи 2020 года, составляет 291 082 человек. Второй по количеству жителей город в Небраске.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Flag_of_Lincoln%2C_Nebraska_%282022%29.svg/langru-330px-Flag_of_Lincoln%2C_Nebraska_%282022%29.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%B8%D0%BD%D0%BA%D0%BE%D0%BB%D1%8C%D0%BD_(%D0%9D%D0%B5%D0%B1%D1%80%D0%B0%D1%81%D0%BA%D0%B0)"
+  },
+  "omaha": {
+    "extract": "О́маха, или Ома́ха — крупнейший город штата Небраска, находящийся на его восточной границе, окружной центр округа Дуглас. Расположен на берегу реки Миссури, в примерно 30 километрах к северу от устья реки Платт. По оценке бюро переписи населения США в 2017 году в городе проживает 466 893 человек. Город с его пригородами является 60-м среди крупнейших агломераций США с населением 895 151 человек, проживающих в восьми округах. Название города происходит от индейского племени омаха, которое с XVII века проживало на северо-востоке современной Небраски. В 2008 году журнал Kiplinger’s Personal Finance отдал Омахе 3-е место в своём списке самых привлекательных для жизни городов США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Compilation_of_images_of_Omaha%2C_Nebraska%2C_omahacollage.tif/lossless-page1-330px-Compilation_of_images_of_Omaha%2C_Nebraska%2C_omahacollage.tif.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9E%D0%BC%D0%B0%D1%85%D0%B0"
+  },
+  "carson_city": {
+    "extract": "Ка́рсон-Си́ти — столица штата Невада (США). По данным 2010 года население города составляло 55 274 человека. Карсон-Сити — независимый город.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Carson_city_nevada_capitol.jpg/330px-Carson_city_nevada_capitol.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D1%80%D1%81%D0%BE%D0%BD-%D0%A1%D0%B8%D1%82%D0%B8_(%D0%9D%D0%B5%D0%B2%D0%B0%D0%B4%D0%B0)"
+  },
+  "concord": {
+    "extract": "Ко́нкорд — город на северо-востоке США, административный центр штата Нью-Гэмпшир и округа Мерримак. Население — 42,7 тыс. человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Main_Street%2C_Concord%2C_NH_%2849211329126%29.jpg/330px-Main_Street%2C_Concord%2C_NH_%2849211329126%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%BE%D0%BD%D0%BA%D0%BE%D1%80%D0%B4_(%D0%9D%D1%8C%D1%8E-%D0%93%D1%8D%D0%BC%D0%BF%D1%88%D0%B8%D1%80)"
+  },
+  "trenton": {
+    "extract": "Тре́нтон — город на восточном побережье США, столица штата Нью-Джерси.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Flag_of_Trenton%2C_New_Jersey.svg/langru-330px-Flag_of_Trenton%2C_New_Jersey.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D1%80%D0%B5%D0%BD%D1%82%D0%BE%D0%BD_(%D0%9D%D1%8C%D1%8E-%D0%94%D0%B6%D0%B5%D1%80%D1%81%D0%B8)"
+  },
+  "newark": {
+    "extract": "Нью́арк — город на северо-востоке США, крупнейший город штата Нью-Джерси и административный центр округа Эссекс. Население около 282 тыс. чел. (2019).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/2021-09-19_Newark.jpg/330px-2021-09-19_Newark.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D1%8C%D1%8E%D0%B0%D1%80%D0%BA_(%D0%9D%D1%8C%D1%8E-%D0%94%D0%B6%D0%B5%D1%80%D1%81%D0%B8)"
+  },
+  "santa_fe": {
+    "extract": "Са́нта-Фе — город на юге США, административный центр штата Нью-Мексико, а также административный центр и крупнейший город округа Санта-Фе. Население — 67 947 человек (2010 г.).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Santa_Fe%2C_New_Mexico%2C_USA_5-2024_24.jpg/330px-Santa_Fe%2C_New_Mexico%2C_USA_5-2024_24.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD%D1%82%D0%B0-%D0%A4%D0%B5_(%D0%9D%D1%8C%D1%8E-%D0%9C%D0%B5%D0%BA%D1%81%D0%B8%D0%BA%D0%BE)"
+  },
+  "albuquerque": {
+    "extract": "Альбуке́рке — город на юго-западе США, крупнейший город штата Нью-Мексико, административный центр округа Берналийо. Население по оценке на 2018 год составляет 560 218 человек, это 32-й по населению город США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Albuquerque_Infobox_Photo.png/330px-Albuquerque_Infobox_Photo.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BB%D1%8C%D0%B1%D1%83%D0%BA%D0%B5%D1%80%D0%BA%D0%B5"
+  },
+  "albany": {
+    "extract": "О́лбани — город на северо-востоке США, столица штата Нью-Йорк и округа Олбани. Население собственно города составляет 99,2 тыс., население городской агломерации 899,2 тыс. человек (2020).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Albany_New_York_Compilation.jpg/330px-Albany_New_York_Compilation.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9E%D0%BB%D0%B1%D0%B0%D0%BD%D0%B8_(%D0%9D%D1%8C%D1%8E-%D0%99%D0%BE%D1%80%D0%BA)"
+  },
+  "raleigh": {
+    "extract": "Ро́ли — город и административный центр штата Северная Каролина в Соединённых Штатах Америки. Роли называют «дубовым городом», так как он славится своими дубравами. Это второй по величине город Северной Каролины, 42-й в США и один из самых быстрорастущих городов страны. Город назван в честь английского государственного деятеля, первооткрывателя и поэта Уолтера Рэли.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Downtown-Raleigh-from-South-Saunders-20080325.jpeg/330px-Downtown-Raleigh-from-South-Saunders-20080325.jpeg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A0%D0%BE%D0%BB%D0%B8"
+  },
+  "charlotte": {
+    "extract": "Ша́рлотт — город в США. Самый крупный город в штате Северная Каролина, по численности населения Шарлотт занимает семнадцатое место среди крупнейших городов США. Город расположен на границе с Южной Каролиной в округе Мекленберг, административным центром которого он и является.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Charlotte_collage.jpg/330px-Charlotte_collage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A8%D0%B0%D1%80%D0%BB%D0%BE%D1%82%D1%82_(%D0%A1%D0%B5%D0%B2%D0%B5%D1%80%D0%BD%D0%B0%D1%8F_%D0%9A%D0%B0%D1%80%D0%BE%D0%BB%D0%B8%D0%BD%D0%B0)"
+  },
+  "bismarck": {
+    "extract": "Би́смарк — город в Соединённых Штатах Америки, столица штата Северная Дакота и административный центр округа Берли.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/2009-0521-CDNtrip049-ND-Bismarck-McKenziePatterson.jpg/330px-2009-0521-CDNtrip049-ND-Bismarck-McKenziePatterson.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B8%D1%81%D0%BC%D0%B0%D1%80%D0%BA_(%D0%A1%D0%B5%D0%B2%D0%B5%D1%80%D0%BD%D0%B0%D1%8F_%D0%94%D0%B0%D0%BA%D0%BE%D1%82%D0%B0)"
+  },
+  "columbus": {
+    "extract": "Колу́мбус — пятнадцатый по численности населения город США, столица и крупнейший город штата Огайо расположенный сразу в трёх округах: Делавэр, Франклин и Фэрфилд.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Ohio_Statehouse_exterior_02.jpg/330px-Ohio_Statehouse_exterior_02.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%BE%D0%BB%D1%83%D0%BC%D0%B1%D1%83%D1%81_(%D0%9E%D0%B3%D0%B0%D0%B9%D0%BE)"
+  },
+  "cleveland": {
+    "extract": "Кли́вленд — город на се­ве­ро-вос­то­ке США, второй по величине в штате Огайо; главный город округа Кайахога. Расположен на южном берегу озера Эри, на реке Кайахога, на международной морской границе между США и Канадой, приблизительно в 100 км к западу от границы со штатом Пенсильвания.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Cleveland_photomontage_2016.jpg/330px-Cleveland_photomontage_2016.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%BB%D0%B8%D0%B2%D0%BB%D0%B5%D0%BD%D0%B4"
+  },
+  "oklahoma_city": {
+    "extract": "Оклахо́ма-Си́ти — крупнейший город и столица штата Оклахома, административный центр округа Оклахома. Население 591 967 жителей (2011), в агломерации — почти 1,3 млн.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Downtown_Oklahoma_City_skyline_at_twilight.jpg/330px-Downtown_Oklahoma_City_skyline_at_twilight.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9E%D0%BA%D0%BB%D0%B0%D1%85%D0%BE%D0%BC%D0%B0-%D0%A1%D0%B8%D1%82%D0%B8"
+  },
+  "tulsa": {
+    "extract": "Та́лса — второй по величине город штата Оклахома с населением около 390 тысяч жителей. Является основным муниципалитетом в городской агломерации Талса. Также Талса находится на 47-м месте среди самых населённых городов США. Город — центр округа Талса, наиболее густонаселённого в Оклахоме. Расположен между округами Осейдж, Роджерс и Вэгонир.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Tulsa_skyline_aerial%2C_April_2023.jpg/330px-Tulsa_skyline_aerial%2C_April_2023.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%B0%D0%BB%D1%81%D0%B0"
+  },
+  "salem": {
+    "extract": "Се́йлем — город на северо-западе США, административный центр округа Марион и столица штата Орегон. По переписи 2020 года население составило 175 535 человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Oregon_State_Capitol%2C_Andr%C3%A9_Orso_%286501975671%29.jpg/330px-Oregon_State_Capitol%2C_Andr%C3%A9_Orso_%286501975671%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B5%D0%B9%D0%BB%D0%B5%D0%BC_(%D0%9E%D1%80%D0%B5%D0%B3%D0%BE%D0%BD)"
+  },
+  "portland_or": {
+    "extract": "По́ртленд — город, расположенный на северо-западе Соединённых Штатов, у слияния рек Уилламетт и Колумбия в штате Орегон.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Oregon_Convention_Center_Dusk_1.jpg/330px-Oregon_Convention_Center_Dusk_1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%BE%D1%80%D1%82%D0%BB%D0%B5%D0%BD%D0%B4_(%D0%9E%D1%80%D0%B5%D0%B3%D0%BE%D0%BD)"
+  },
+  "harrisburg": {
+    "extract": "Га́ррисберг — столица американского штата Пенсильвания и административный центр округа Дофин, на реке Саскуэханна, в 169 км к западу от Филадельфии. Находится в центре крупной агломерации с населением около 530 тыс. жит. (2010), из них в пределах городской черты проживает 54,5 тыс.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Pennsylvania_State_Capitol%2C_Harrisburg%2C_PA_-_52441642490.jpg/330px-Pennsylvania_State_Capitol%2C_Harrisburg%2C_PA_-_52441642490.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%93%D0%B0%D1%80%D1%80%D0%B8%D1%81%D0%B1%D0%B5%D1%80%D0%B3"
+  },
+  "pittsburgh": {
+    "extract": "Пи́ттсбург — второй по величине город в штате Пенсильвания, США. Город является экономическим, культурным, научным и транспортным ядром региона Большой Питтсбург. Возникший на месте слияния рек Аллегейни и Мононгахила, вместе образующих реку Огайо, современный Питтсбург узнаваем по своему центру — так называемому «Золотому треугольнику» с его небоскрёбами, торговыми и офисными центрами, театрами и мостами. В границах города на площади в 151 км² проживает 300 000 человек. Питтсбург окружён многочисленными пригородами и посёлками городского типа, составляющими округ Аллегейни с совокупным населением более 1,2 млн жителей. Ряд исследований относят Питтсбург к мегалополису Чипитс, или мегалополису Великих озёр, который, по мнению авторов, простирается от Чикаго до Питтсбурга.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Montage_Pittsburgh.jpg/330px-Montage_Pittsburgh.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%B8%D1%82%D1%82%D1%81%D0%B1%D1%83%D1%80%D0%B3"
+  },
+  "providence": {
+    "extract": "Про́виденс — столица и самый населённый город штата Род-Айленд (США). Провиденс — экономический, культурный и политический центр Род-Айленда. Население — 178 042 человека (2010).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Waterplace_Towers_and_Blue_Cross_building.jpg/330px-Waterplace_Towers_and_Blue_Cross_building.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D1%80%D0%BE%D0%B2%D0%B8%D0%B4%D0%B5%D0%BD%D1%81"
+  },
+  "columbia": {
+    "extract": "Колу́мбия — столица и второй по количеству жителей город американского штата Южная Каролина; административный центр округа Ричленд. 1 июля 2013 года население города составляло 133 358 человек. В городе расположены Капитолий штата и Университет Южной Каролины.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Fall_skyline_of_Columbia_SC_from_Arsenal_Hill.jpg/330px-Fall_skyline_of_Columbia_SC_from_Arsenal_Hill.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%BE%D0%BB%D1%83%D0%BC%D0%B1%D0%B8%D1%8F_(%D0%AE%D0%B6%D0%BD%D0%B0%D1%8F_%D0%9A%D0%B0%D1%80%D0%BE%D0%BB%D0%B8%D0%BD%D0%B0)"
+  },
+  "pierre": {
+    "extract": "Пирр — административный центр штата Южная Дакота в США. Население города — 13 646 человек (2010).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/South_Dakota_State_Capitol%2C_Capitol_Avenue%2C_Pierre%2C_SD_-_53748063274.jpg/330px-South_Dakota_State_Capitol%2C_Capitol_Avenue%2C_Pierre%2C_SD_-_53748063274.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%B8%D1%80%D1%80_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)"
+  },
+  "memphis": {
+    "extract": "Ме́мфис — город в штате Теннесси на юге США. Один из крупнейших экономических центров юга страны. Расположен на юго-западе штата в округе Шелби на левом берегу реки Миссисипи, при впадении в неё реки Уолф.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Memphis_Beale_Street.jpg/330px-Memphis_Beale_Street.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B5%D0%BC%D1%84%D0%B8%D1%81_(%D0%A2%D0%B5%D0%BD%D0%BD%D0%B5%D1%81%D1%81%D0%B8)"
+  },
+  "san_antonio": {
+    "extract": "Сан-Анто́нио — город в США, расположенный на юге штата Техас. Административный центр округа Бэр. Сан-Антонио является 2-м по численности городом Техаса и 7-м по США. Центр промышленности и туризма. В Сан-Антонио находится крепость Аламо — символ обретения независимости Техаса. Популярное место отдыха у туристов, три миллиона которых ежегодно прибывает в город — набережная Сан-Антонио, расположенная на одноимённой реке.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Never_Forget1.jpg/330px-Never_Forget1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD-%D0%90%D0%BD%D1%82%D0%BE%D0%BD%D0%B8%D0%BE"
+  },
+  "dallas": {
+    "extract": "Да́ллас — город в США, расположенный в северо-восточной части штата Техас на реке Тринити. Административный центр округа Даллас. Вместе с Форт-Уэртом и другими городами агломерации Даллас составляет конурбацию «Даллас — Форт-Уэрт». Даллас является третьим по численности городом Техаса и 9-м по США ; сама конурбация «Даллас — Форт-Уэрт» является 4-й по численности среди агломераций США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/21-12-064-road.jpg/330px-21-12-064-road.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B0%D0%BB%D0%BB%D0%B0%D1%81"
+  },
+  "fort_worth": {
+    "extract": "Форт-Уэ́рт — город в США, расположенный в центрально-восточной части штата Техас.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/0011Tarrant_County_Courthouse_Full_E_Fort_Worth_Texas.jpg/330px-0011Tarrant_County_Courthouse_Full_E_Fort_Worth_Texas.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A4%D0%BE%D1%80%D1%82-%D0%A3%D1%8D%D1%80%D1%82"
+  },
+  "el_paso": {
+    "extract": "Эль-Па́со — город в США, расположенный в западной части штата Техас, на реке Рио-Гранде. Административный центр округа Эль-Пасо. В ряде русскоязычных источников описывается как Эль Пасо, Эльпасо или Эль-Пазо.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/El_Paso_montage.png/330px-El_Paso_montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%AD%D0%BB%D1%8C-%D0%9F%D0%B0%D1%81%D0%BE_(%D0%A2%D0%B5%D1%85%D0%B0%D1%81)"
+  },
+  "montpelier": {
+    "extract": "Монтпи́лиер — город в США, административный центр штата Вермонт.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/MainStMontpelier.JPG/330px-MainStMontpelier.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D0%BD%D1%82%D0%BF%D0%B8%D0%BB%D0%B8%D0%B5%D1%80_(%D0%92%D0%B5%D1%80%D0%BC%D0%BE%D0%BD%D1%82)"
+  },
+  "richmond": {
+    "extract": "Ри́чмонд — город на востоке Соединённых Штатов Америки, административный центр штата Виргиния.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Collage_of_Landmarks_in_Richmond%2C_Virginia_v_1.jpg/330px-Collage_of_Landmarks_in_Richmond%2C_Virginia_v_1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A0%D0%B8%D1%87%D0%BC%D0%BE%D0%BD%D0%B4_(%D0%92%D0%B8%D1%80%D0%B3%D0%B8%D0%BD%D0%B8%D1%8F)"
+  },
+  "virginia_beach": {
+    "extract": "Верджи́ния-Бич, Вирджи́ния-Бич, Виргиния-Бич — город в США, расположенный на юго-востоке штата Виргиния. Самый крупный город в штате и 44-й по населению в США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Virginia_Beach_from_Fishing_Pier.jpg/330px-Virginia_Beach_from_Fishing_Pier.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B5%D1%80%D0%B4%D0%B6%D0%B8%D0%BD%D0%B8%D1%8F-%D0%91%D0%B8%D1%87"
+  },
+  "langley": {
+    "extract": "Лэнгли — невключённая территория в статистически обособленной местности Мак-Лейн в округе Фэрфакс в штате Виргиния, США. Расположен в 13 км от столицы США Вашингтона и является его «спальным районом».",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Langley_High_School.jpg/330px-Langley_High_School.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D1%8D%D0%BD%D0%B3%D0%BB%D0%B8"
+  },
+  "olympia": {
+    "extract": "Оли́мпия — город в США, административный центр штата Вашингтон и округа Терстон.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Olympia_Collage.jpg/330px-Olympia_Collage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9E%D0%BB%D0%B8%D0%BC%D0%BF%D0%B8%D1%8F_(%D0%92%D0%B0%D1%88%D0%B8%D0%BD%D0%B3%D1%82%D0%BE%D0%BD)"
+  },
+  "charleston_wv": {
+    "extract": "Ча́рлстон — административный центр американского штата Западная Виргиния и округа Канова, а также самый населенный город штата. В 2010 году население города составляло 51,4 тыс. человек, вместе с пригородами — 304,2 тыс.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Flag_of_Charleston%2C_West_Virginia.svg/langru-330px-Flag_of_Charleston%2C_West_Virginia.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A7%D0%B0%D1%80%D0%BB%D1%81%D1%82%D0%BE%D0%BD_(%D0%97%D0%B0%D0%BF%D0%B0%D0%B4%D0%BD%D0%B0%D1%8F_%D0%92%D0%B8%D1%80%D0%B3%D0%B8%D0%BD%D0%B8%D1%8F)"
+  },
+  "madison": {
+    "extract": "Ма́дисон — город в Соединённых Штатах Америки, административный центр штата Висконсин. Население — 269 196 человека (2021), это второй город по населению в Висконсине после Милуоки и 81-й в США. Население с пригородами превышает 654 тысячи человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Wisconsin_State_Capitol_Building_6.jpg/330px-Wisconsin_State_Capitol_Building_6.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D0%B4%D0%B8%D1%81%D0%BE%D0%BD_(%D0%92%D0%B8%D1%81%D0%BA%D0%BE%D0%BD%D1%81%D0%B8%D0%BD)"
+  },
+  "milwaukee": {
+    "extract": "Милуо́ки — город на севере США, административный центр одноимённого округа в штате Висконсин. Порт на берегу озера Мичиган. При населении 569 330 человек (2021 год), город занимает первое место по населённости в Висконсине и 31-е место — в США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Milwaukee_Collage_New.jpg/330px-Milwaukee_Collage_New.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B8%D0%BB%D1%83%D0%BE%D0%BA%D0%B8"
+  },
+  "cheyenne": {
+    "extract": "Шайе́нн — город на северо-западе США, административный центр и крупнейший город штата Вайоминг. Население — 63,9 тыс. человек (2018).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/CheyenneWY_downtown.jpg/330px-CheyenneWY_downtown.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A8%D0%B0%D0%B9%D0%B5%D0%BD%D0%BD_(%D0%92%D0%B0%D0%B9%D0%BE%D0%BC%D0%B8%D0%BD%D0%B3)"
   }
 }

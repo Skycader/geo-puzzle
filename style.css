@@ -82,6 +82,10 @@
   --neon-pink: #ff2bd6;
   --neon-violet: #a25bff;
   --neon-yellow: #f7ff3a;
+  /* Not part of the land-scheme override below (same "means the same thing
+     regardless of scheme" reasoning as --neon-yellow itself) — only needed
+     once here, for .coin-balance's rgba() border/background tint. */
+  --neon-yellow-rgb: 247, 255, 58;
 
   /* App-wide color scheme (js/game.js's toggle-land-scheme switch, always
      visible in the topbar, persisted to localStorage) — ONE shared choice
@@ -179,6 +183,15 @@
   --land-stroke: rgba(110, 110, 110, 0.7);
   --land-stroke-faint: rgba(158, 158, 158, 0.35);
   --quiz-fill-rgb: 120, 120, 120;
+  /* --green (correct-answer/match feedback — .name-match-yes,
+     .name-feedback-correct, etc.) was left untouched by the first pass at
+     this scheme and kept its default Solarized olive tone, which reads as
+     a stray leftover accent against an otherwise fully gray+red palette —
+     the ONE thing on screen that's neither. A bright near-white gray still
+     reads clearly as "correct" (via contrast/brightness against the red
+     "wrong" color and the darker neutral tones) without introducing a hue
+     the rest of this scheme deliberately avoids. */
+  --green: #e8e8e8;
   /* The accent itself is red, not gray — everything above this point is
      the neutral base (backgrounds, piece fills, panel/board tones);
      these three (+ -rgb twins, + the panel-border glow) are the only
@@ -322,12 +335,45 @@ body {
   transform: rotate(-6deg);
 }
 
-/* Always visible (a sibling of .hud, not inside it — .hud is `hidden` on
-   the menu screen, but this toggle should stay reachable everywhere, per
-   its own global/persisted scope). Sits between the brand and the
-   right-aligned .hud group — margin-left:auto below on .hud is what pushes
-   the hud group to the far right whether or not this toggle exists. */
-.land-scheme-toggle { margin-left: 20px; }
+/* Always-visible tail group (coin balance + land-scheme toggle) — both are
+   global/persisted values, not tied to whatever's on screen, so they stay
+   reachable even on the menu, where .hud itself is `hidden`. Sits after
+   .hud in markup order, with its own margin-left:auto so it still gets
+   pushed to the far right on its own when .hud contributes nothing to
+   layout (hidden = 0 width) — when .hud IS visible, ITS OWN
+   margin-left:auto (below) already eats the available space, and this
+   group just sits flush after it, landing in the same place either way. */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-left: auto;
+}
+
+/* Just an icon + number, no chip/border/background — a boxed "balance
+   card" style read as too heavy for a value that updates as a side effect
+   of playing, not something the player deliberately manages. The whole
+   thing IS the "Списать" action (click anywhere on it to zero the
+   balance), rather than a separate button crowding the same small space. */
+.coin-balance {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--neon-yellow);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+.coin-balance:hover:not(:disabled) { filter: drop-shadow(0 0 4px rgba(var(--neon-yellow-rgb), 0.6)); }
+.coin-balance:disabled { opacity: 0.4; cursor: default; }
+.coin-icon { width: 16px; height: 16px; flex: none; }
+
+.land-scheme-toggle { margin: 0; }
 
 .hud {
   display: flex;
@@ -627,17 +673,33 @@ body {
 /* ---------------- game screen ---------------- */
 
 .screen-game {
+  position: relative; /* anchors .quiz-prompt's overlay below */
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 22px;
+  /* Keep in sync with js/game.js's SCREEN_EDGE_MARGIN_PX (js/constants.js)
+     — the map is monolithic, flush against the header and every screen
+     edge, so this is 0, not just small. */
+  padding: 0;
   overflow: hidden;
-  gap: 14px;
+  gap: 0;
 }
 
 #board-container {
+  /* Anchors .overview-panel/.overview-panel-toggle (see overviewBoard.js —
+     they're appended here directly, not inside .overview-wrap) to the
+     REAL visible area. .overview-wrap's own box can be taller/wider than
+     the screen now that the map uses "cover" fit (game.js's
+     _computeScale) — that's fine for the map itself (it's meant to
+     overflow and get cropped), but the panel anchoring to that same
+     oversized box was inheriting the overflow, pushing its top (search,
+     column headers) and bottom off-screen. min-height:0 below already
+     keeps THIS box's own size tied to real flex-allocated space rather
+     than growing to fit an overflowing child, so anchoring here instead
+     fixes it. */
+  position: relative;
   margin: 0 auto;
   min-height: 0;
   display: flex;
@@ -659,15 +721,27 @@ body {
   width: 100%;
 }
 
+/* Same "lives inside the map, doesn't push it around" rule as .win-bar —
+   used to sit in normal flow above #board-container, reserving its own
+   full-width row (see js/game.js's now-removed promptH reservation) purely
+   to show a small centered pill; on a wide map (2:1 canvases especially)
+   that reserved height was the difference between the map being
+   height-constrained vs width-constrained, i.e. it made the left/right
+   letterboxing worse than it needed to be. */
 .quiz-prompt {
-  flex: none;
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
   display: flex;
   align-items: baseline;
   gap: 12px;
   padding: 12px 26px;
   border: 1px solid rgba(var(--neon-cyan-rgb), 0.35);
   border-radius: 9px;
-  background: rgba(var(--neon-cyan-rgb), 0.06);
+  background: rgba(var(--ink-rgb), 0.85);
+  backdrop-filter: blur(4px);
 }
 .quiz-prompt-label {
   font-size: 14px;
@@ -690,14 +764,14 @@ body {
   position: relative;
 }
 
+/* No border/frame — the map is monolithic, meant to read as one continuous
+   surface flush with the header/toolbar and every screen edge, not a
+   bordered "card" floating in the middle of the page. */
 .zoom-viewport {
   width: 100%;
   height: 100%;
   overflow: hidden;
   cursor: grab;
-  border: 1px solid rgba(var(--neon-cyan-rgb), 0.25);
-  border-radius: 4px;
-  box-shadow: 0 0 30px rgba(var(--neon-cyan-rgb), 0.06) inset;
 }
 .zoom-viewport.panning { cursor: grabbing; }
 .zoom-viewport.panning .board-svg,
@@ -1121,25 +1195,63 @@ body {
   stroke-dasharray: 4 3;
 }
 
-/* side list panel: search + tabbed state/city list, click-to-focus */
+/* side list panel: search + tabbed state/city list, click-to-focus. Floats
+   OVER the map (position:absolute, right edge) rather than sharing the
+   row's width with it — the map gets to use the full available width
+   regardless of whether the panel is showing (see game.js's _startOverview,
+   which no longer reserves OVERVIEW_PANEL_W out of the map's own scale
+   calculation). */
 .overview-wrap {
+  position: relative;
   display: flex;
   align-items: stretch;
-  gap: 14px;
 }
 .overview-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
   width: 300px;
-  height: 100%;
-  flex: none;
+  z-index: 15;
   display: flex;
   flex-direction: column;
   gap: 10px;
   border: 1px solid rgba(var(--neon-cyan-rgb), 0.25);
   border-radius: 4px;
-  background: rgba(var(--ink-rgb), 0.5);
+  background: rgba(var(--ink-rgb), 0.85);
+  backdrop-filter: blur(4px);
   padding: 12px;
   min-height: 0;
+  transition: transform 0.2s ease;
 }
+/* Collapsed: slides fully off past the right edge — the toggle tab (below)
+   stays in place so it's always reachable to bring the list back. The
+   state class lives on #board-container, not .overview-wrap — see
+   overviewBoard.js's _buildSidePanel for why panel/toggle are appended
+   there directly instead of nested inside the wrap. */
+#board-container.panel-collapsed .overview-panel {
+  transform: translateX(100%);
+}
+.overview-panel-toggle {
+  position: absolute;
+  top: 50%;
+  right: 300px;
+  transform: translateY(-50%);
+  z-index: 16;
+  width: 22px;
+  height: 56px;
+  padding: 0;
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.35);
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  background: rgba(var(--ink-rgb), 0.85);
+  color: var(--neon-cyan);
+  font-size: 12px;
+  cursor: pointer;
+  transition: right 0.2s ease;
+}
+.overview-panel-toggle:hover { background: rgba(var(--neon-cyan-rgb), 0.15); }
+#board-container.panel-collapsed .overview-panel-toggle { right: 0; }
 .overview-tabs {
   display: flex;
   gap: 6px;
@@ -1520,11 +1632,23 @@ body {
 .map-context-menu-item:disabled { color: var(--base01); cursor: not-allowed; }
 .map-context-menu-item:disabled:hover { background: transparent; }
 
+/* Lives INSIDE the map (a child of .zoom-wrap — see cityPinBoard.js's
+   _buildActionBar) instead of a sibling row that reserves its own flow
+   height below the map. Same rule/reasoning as .name-answer-bar. */
 .city-actions {
-  flex: none;
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  z-index: 20;
   display: flex;
   align-items: center;
   gap: 16px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: rgba(var(--ink-rgb), 0.85);
+  backdrop-filter: blur(4px);
+  max-width: calc(100% - 20px);
 }
 .pin-feedback {
   font-size: 15px;
@@ -1536,12 +1660,24 @@ body {
 
 .name-state-difficulty { margin-bottom: 10px; }
 
+/* Lives INSIDE the map (a child of .zoom-wrap — see nameStateBoard.js's
+   _buildAnswerBar) instead of a sibling row that reserves its own flow
+   height below the map. Same rule/reasoning as .quiz-prompt and .win-bar. */
 .name-answer-bar {
-  flex: none;
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  z-index: 20;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(var(--ink-rgb), 0.85);
+  backdrop-filter: blur(4px);
+  max-width: calc(100% - 20px);
 }
 
 .name-options {
@@ -1781,17 +1917,23 @@ body {
 
 /* ---------------- finish bar ---------------- */
 
-/* Not a full-screen modal — a backdrop covering the whole map blocked
-   exactly the thing the player just finished (the assembled puzzle, the
-   answered round) right when they'd want to look at it. Nothing outside
-   the button itself is clickable-blocked since there's no full-viewport
-   backdrop element at all. Just positioning here — the button (.btn-primary)
-   already has its own solid gradient fill, so an outer bordered/backgrounded
-   box around it read as a frame around a frame.
-   `top` is set inline by _positionWinBar() in js/game.js — centered in the
-   gap between the map's own bottom edge and the viewport's, not a fixed
-   distance from the screen edge, so it doesn't sit flush against the map
-   at large map sizes or float oddly far away at small ones. */
+/* UI/UX rule: this button lives INSIDE the map area (a floating overlay,
+   like the zoom controls), not in a reserved strip below it — the map
+   itself gets to fill almost the entire screen (see .screen-game's
+   SCREEN_EDGE_MARGIN_PX-synced padding) instead of ceding a chunk of
+   height to a separate finish-bar row. Not a full-screen modal either — a
+   backdrop covering the whole map blocked exactly the thing the player
+   just finished (the assembled puzzle, the answered round) right when
+   they'd want to look at it; nothing outside the button itself is
+   clickable-blocked since there's no full-viewport backdrop element at
+   all. Just positioning here — the button (.btn-primary) already has its
+   own solid gradient fill, so an outer bordered/backgrounded box around it
+   read as a frame around a frame.
+   `top`/`left` are set inline by _positionWinBar() in js/game.js, anchored
+   to the map's OWN rendered rect rather than the viewport — a viewport-
+   relative bottom offset could straddle the map's actual edge (half on,
+   half off) whenever the map doesn't fill the full available height
+   (aspect-ratio letterboxing — see .quiz-prompt's comment). */
 .win-bar {
   position: fixed;
   left: 50%;
