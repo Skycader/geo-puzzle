@@ -225,7 +225,6 @@ export class Game {
       quizPromptLabel: document.getElementById('quiz-prompt-label'),
       quizPromptName: document.getElementById('quiz-prompt-name'),
       winBar: document.getElementById('win-bar'),
-      winStats: document.getElementById('win-stats'),
       btnBackMenu: document.getElementById('btn-back-menu'),
       toggleHintsWrap: document.getElementById('toggle-hints-wrap'),
       toggleLabelsWrap: document.getElementById('toggle-labels-wrap'),
@@ -424,11 +423,6 @@ export class Game {
     return (this.levelId === 'countries' && MODE_CARD_TEXT_COUNTRIES[modeId]?.title) || fallback;
   }
 
-  // "Ошибок: N из M штатов" — genitive plural of the piece noun, level-aware.
-  _pieceWordGenitive() {
-    return this.levelId === 'countries' ? 'стран' : 'штатов';
-  }
-
   // NEIGHBOR_DIFFICULTIES/IDENTIFY_DIFFICULTIES's rotated-shape tier says
   // "Штат повёрнут…" (masculine, agreeing with штат) — on the countries
   // level this isn't just oddly worded, it's grammatically wrong (страна
@@ -562,6 +556,13 @@ export class Game {
       this.placesVisible = ev.target.checked;
       if (this.board?.setPlacesVisible) this.board.setPlacesVisible(this.placesVisible);
     });
+    // Keeps the finish button centered in the gap below the map (see
+    // _positionWinBar) if the window resizes while it's showing — a no-op
+    // whenever the bar is hidden, so this doesn't need its own
+    // add/remove lifecycle around each round.
+    window.addEventListener('resize', () => {
+      if (!this.el.winBar.hidden) this._positionWinBar();
+    });
   }
 
   _availableHeight(extraReserve = 0) {
@@ -598,9 +599,9 @@ export class Game {
     else if (this.modeId === 'overview') this._startOverview(level);
     else this._startPuzzle(level);
 
-    // Overview is free browsing, not a timed challenge — nothing it shows
-    // (win bar, round stats, "Время: …" in _onFinish) ever reads this, so
-    // a running stopwatch there is just noise.
+    // Overview is free browsing, not a timed challenge — the win bar it
+    // could theoretically show never reads this, so a running stopwatch
+    // there is just noise.
     clearInterval(this.timerHandle);
     this.el.hudTimer.hidden = this.modeId === 'overview';
     if (this.modeId !== 'overview') {
@@ -650,7 +651,7 @@ export class Game {
       hintsVisible: this.hintsVisible,
       labelsVisible: this.labelsVisible,
       onProgress: (p) => this._onPuzzleProgress(p),
-      onWin: () => this._onFinish('КАРТА СОБРАНА', `Время: ${formatTime(this.seconds)}`),
+      onWin: () => this._onFinish(),
     });
   }
 
@@ -674,11 +675,7 @@ export class Game {
       adaptive: this.adaptiveMode,
       scale,
       onProgress: (p) => this._onQuizProgress(p),
-      onFinish: (stats) =>
-        this._onFinish(
-          'РАУНД ЗАВЕРШЁН',
-          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} ${this._pieceWordGenitive()}`
-        ),
+      onFinish: () => this._onFinish(),
     });
   }
 
@@ -706,11 +703,7 @@ export class Game {
       adaptive: this.adaptiveMode,
       scale,
       onProgress: (p) => this._onNameStateProgress(p),
-      onFinish: (stats) =>
-        this._onFinish(
-          'РАУНД ЗАВЕРШЁН',
-          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} ${this._pieceWordGenitive()}`
-        ),
+      onFinish: () => this._onFinish(),
     });
   }
 
@@ -742,11 +735,7 @@ export class Game {
       availW: window.innerWidth - 48,
       availH: this._availableHeight(answerBarH),
       onProgress: (p) => this._onNameStateProgress(p),
-      onFinish: (stats) =>
-        this._onFinish(
-          'РАУНД ЗАВЕРШЁН',
-          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} ${this._pieceWordGenitive()}`
-        ),
+      onFinish: () => this._onFinish(),
     });
   }
 
@@ -774,11 +763,7 @@ export class Game {
       availW: window.innerWidth - 48,
       availH: this._availableHeight(answerBarH),
       onProgress: (p) => this._onNameStateProgress(p),
-      onFinish: (stats) =>
-        this._onFinish(
-          'РАУНД ЗАВЕРШЁН',
-          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} ${this._pieceWordGenitive()}`
-        ),
+      onFinish: () => this._onFinish(),
     });
   }
 
@@ -806,11 +791,7 @@ export class Game {
       difficulty: this.seaIdentifyDifficulty,
       scale,
       onProgress: (p) => this._onNameStateProgress(p),
-      onFinish: (stats) =>
-        this._onFinish(
-          'РАУНД ЗАВЕРШЁН',
-          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total}`
-        ),
+      onFinish: () => this._onFinish(),
     });
   }
 
@@ -832,11 +813,7 @@ export class Game {
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       scale,
       onProgress: (p) => this._onQuizProgress(p),
-      onFinish: (stats) =>
-        this._onFinish(
-          'РАУНД ЗАВЕРШЁН',
-          `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total}`
-        ),
+      onFinish: () => this._onFinish(),
     });
   }
 
@@ -847,7 +824,6 @@ export class Game {
   _startCityPlace(level) {
     const isPin = this.cityPlaceMode === 'pin';
     const items = this.cityPlaceEntity === 'places' ? level.places : level.cities;
-    const entityWord = this.cityPlaceEntity === 'places' ? 'мест' : 'городов';
 
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
@@ -868,8 +844,7 @@ export class Game {
         items,
         scale,
         onProgress: (p) => this._onPinProgress(p),
-        onFinish: (stats) =>
-          this._onFinish('РАУНД ЗАВЕРШЁН', `${entityWord[0].toUpperCase()}${entityWord.slice(1)}: ${stats.rounds} · Средняя ошибка: ${stats.avgDistanceKm} км`),
+        onFinish: () => this._onFinish(),
       });
     } else {
       this.el.hudGroups.textContent = 'Ошибки: 0';
@@ -881,11 +856,7 @@ export class Game {
         eligibleIds: this.eligibilityList?.getSelectedIds(),
         scale,
         onProgress: (p) => this._onQuizProgress(p),
-        onFinish: (stats) =>
-          this._onFinish(
-            'РАУНД ЗАВЕРШЁН',
-            `Время: ${formatTime(this.seconds)} · Ошибок: ${stats.mistakes} из ${stats.total} ${entityWord}`
-          ),
+        onFinish: () => this._onFinish(),
       });
     }
   }
@@ -964,13 +935,33 @@ export class Game {
     this.el.quizPromptName.textContent = promptName ? `${promptRu} (${promptName})` : promptRu;
   }
 
-  _onFinish(title, statsText) {
+  _onFinish() {
     clearInterval(this.timerHandle);
     // A small bottom bar rather than a modal — a full-screen overlay blocked
     // the finished map right when the player most wants to look at it (e.g.
-    // the assembled puzzle).
-    this.el.winStats.textContent = `${title} — ${statsText}`;
+    // the assembled puzzle). No stats text — nobody reads it once the round
+    // is over, and it used to sit next to leftover in-round UI (the 4-option
+    // buttons or text input various boards build below the map), which
+    // stayed live and clickable after the round had already ended. Both are
+    // just noise now: hide whatever answer UI the board built, and leave
+    // only the way back to the menu.
+    this.el.quizPrompt.hidden = true;
+    this.el.boardContainer.querySelectorAll('.name-answer-bar, .city-actions').forEach((el) => { el.hidden = true; });
     this.el.winBar.hidden = false;
+    this._positionWinBar();
+  }
+
+  // Centered in the gap between the map's own bottom edge and the
+  // viewport's bottom edge — not a fixed offset from the screen edge,
+  // which either sat flush against the map (tall maps/small screens) or
+  // floated in the middle of a lot of empty space (short maps/tall
+  // screens). `.zoom-wrap` is every board's own pan/zoom container, sized
+  // to the actual rendered map regardless of mode, so its rect is the
+  // right "bottom of the map" reference across puzzle/quiz/name-state/etc.
+  _positionWinBar() {
+    const mapEl = this.el.boardContainer.querySelector('.zoom-wrap') || this.el.boardContainer;
+    const mapBottom = mapEl.getBoundingClientRect().bottom;
+    this.el.winBar.style.top = `${(mapBottom + window.innerHeight) / 2}px`;
   }
 
   _goMenu() {

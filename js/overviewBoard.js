@@ -175,6 +175,29 @@ export class OverviewBoard {
       </linearGradient>`;
     this.svg.appendChild(defs);
 
+    // Two persistent layers so paint order (and therefore click hit-testing,
+    // which follows the same topmost-wins rule) is decided by KIND, not by
+    // whichever element happened to get (re-)appended most recently.
+    // Without this, anything sized true-to-real-world-scale — a state, a
+    // city's real boundary shape (New York City, ~778 km²), or even a plain
+    // dot-city's radius circle (Boston's, big enough at deep zoom to cover
+    // Harvard's marker a couple km away) — could end up painted over a
+    // smaller, precise marker nearby, since virtualization re-appends
+    // whatever just scrolled into view to the END of the SVG's children
+    // (see _showDotEntry/_showShapeEntry below); which one ended up on top
+    // was essentially random. "Zones" (state/country pieces, shape-cities,
+    // and dot-cities' real-scale circle — everything that can grow as big
+    // as the map itself at deep zoom) always paint below "points" (places,
+    // and every city's own constant-screen-px point-mark/leader-line/label)
+    // now, regardless of reveal order — see _showDotEntry/_showShapeEntry,
+    // which append into these two groups instead of `this.svg` directly.
+    this.zonesLayer = document.createElementNS(SVG_NS, 'g');
+    this.zonesLayer.setAttribute('class', 'zones-layer');
+    this.svg.appendChild(this.zonesLayer);
+    this.pointsLayer = document.createElementNS(SVG_NS, 'g');
+    this.pointsLayer.setAttribute('class', 'points-layer');
+    this.svg.appendChild(this.pointsLayer);
+
     // World level's `pieces` are seas/oceans — unlike states, they don't
     // tile the whole map, so without land context Overview mode showed
     // them floating in blank space (same issue seaQuizBoard.js/
@@ -182,7 +205,7 @@ export class OverviewBoard {
     // layer). The USA level has no `land` field at all (its `pieces`
     // already cover the whole map), so this is a no-op there.
     if (this.level.land) {
-      this.svg.appendChild(buildStateBackground(this.level.land, { pathClass: 'world-bg-path' }));
+      this.zonesLayer.appendChild(buildStateBackground(this.level.land, { pathClass: 'world-bg-path' }));
     }
 
     for (const p of this.level.pieces) {
@@ -193,7 +216,7 @@ export class OverviewBoard {
       const title = document.createElementNS(SVG_NS, 'title');
       title.textContent = `${p.ru} (${p.name})`;
       path.appendChild(title);
-      this.svg.appendChild(path);
+      this.zonesLayer.appendChild(path);
 
       // Usually one label at [cx, cy] — world/countries pieces carry a
       // `labelPoints` array instead (see scripts/build_world_seas.js's/
@@ -224,7 +247,7 @@ export class OverviewBoard {
         const baseName = this.level.id === 'usa' ? p.id : p.ru;
         const suffix = p.labelSuffixes?.[i];
         label.textContent = suffix ? `${baseName} - ${suffix}` : baseName;
-        this.svg.appendChild(label);
+        this.zonesLayer.appendChild(label);
         this.allLabelEls.push(label);
         this.stateLabels.push({ el: label });
       });
@@ -333,10 +356,10 @@ export class OverviewBoard {
       this.placeEntries.push(entry);
       this.placesById.set(p.id, { data: p, dotEl: dot });
 
-      this.svg.appendChild(dot);
-      this.svg.appendChild(pointMark);
-      this.svg.appendChild(leaderPath);
-      this.svg.appendChild(leaderLabel);
+      this.pointsLayer.appendChild(dot);
+      this.pointsLayer.appendChild(pointMark);
+      this.pointsLayer.appendChild(leaderPath);
+      this.pointsLayer.appendChild(leaderLabel);
     }
 
     // Ruler layer — kept as its own <g> so _renderRuler can cheaply
@@ -449,10 +472,19 @@ export class OverviewBoard {
   }
 
   _showDotEntry(entry, effScale) {
-    this.svg.appendChild(entry.dot);
-    this.svg.appendChild(entry.pointMark);
-    this.svg.appendChild(entry.leaderPath);
-    this.svg.appendChild(entry.leaderLabel);
+    // The dot itself is sized true-to-scale (real land-area radius, grows
+    // with zoom — see its creation above) and can end up just as huge as a
+    // shape-city's real boundary at deep zoom (Boston's radius circle
+    // swallowing Harvard's marker was this exact bug), so it belongs with
+    // the other "zones" for paint-order purposes. Its point-mark/leader-
+    // line/label are separate elements sized in constant screen px — those
+    // stay in `pointsLayer` so a city's own label (and every OTHER city's
+    // or place's marker) still reliably renders above any dot, including
+    // this one's.
+    this.zonesLayer.appendChild(entry.dot);
+    this.pointsLayer.appendChild(entry.pointMark);
+    this.pointsLayer.appendChild(entry.leaderPath);
+    this.pointsLayer.appendChild(entry.leaderLabel);
     entry.appended = true;
     // Re-lay-out immediately at the current zoom — while detached, its
     // stored geometry could be stale (from whenever it was last visible),
@@ -463,8 +495,8 @@ export class OverviewBoard {
     entry.leaderPath.style.opacity = this.labelsVisible ? '' : '0';
   }
   _showShapeEntry(entry) {
-    this.svg.appendChild(entry.path);
-    this.svg.appendChild(entry.label);
+    this.zonesLayer.appendChild(entry.path);
+    this.zonesLayer.appendChild(entry.label);
     entry.appended = true;
     entry.label.style.opacity = this.labelsVisible ? '' : '0';
   }

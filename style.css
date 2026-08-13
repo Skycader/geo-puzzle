@@ -1781,34 +1781,24 @@ body {
 
 /* ---------------- finish bar ---------------- */
 
-/* A small floating bar, not a full-screen modal — a backdrop covering the
-   whole map blocked exactly the thing the player just finished (the
-   assembled puzzle, the answered round) right when they'd want to look at
-   it. Pinned to the bottom center, it leaves the map fully visible; nothing
-   outside the bar's own box is clickable-blocked since there's no
-   full-viewport backdrop element at all. */
+/* Not a full-screen modal — a backdrop covering the whole map blocked
+   exactly the thing the player just finished (the assembled puzzle, the
+   answered round) right when they'd want to look at it. Nothing outside
+   the button itself is clickable-blocked since there's no full-viewport
+   backdrop element at all. Just positioning here — the button (.btn-primary)
+   already has its own solid gradient fill, so an outer bordered/backgrounded
+   box around it read as a frame around a frame.
+   `top` is set inline by _positionWinBar() in js/game.js — centered in the
+   gap between the map's own bottom edge and the viewport's, not a fixed
+   distance from the screen edge, so it doesn't sit flush against the map
+   at large map sizes or float oddly far away at small ones. */
 .win-bar {
   position: fixed;
   left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 14px 24px;
-  border: 1px solid var(--neon-cyan);
-  border-radius: 12px;
-  background: rgba(var(--ink-rgb), 0.9);
-  box-shadow: 0 0 24px rgba(var(--neon-cyan-rgb), 0.3);
-  backdrop-filter: blur(6px);
 }
-.win-bar-stats {
-  font-size: 15px;
-  color: var(--base2);
-  white-space: nowrap;
-}
-
 /* ---------------- scrollbars ---------------- */
 
 .tray,
