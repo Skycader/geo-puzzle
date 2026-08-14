@@ -263,6 +263,8 @@ export class Game {
       toggleLabelsText: document.getElementById('toggle-labels-text'),
       togglePlacesWrap: document.getElementById('toggle-places-wrap'),
       togglePlaces: document.getElementById('toggle-places'),
+      toggleHighwaysWrap: document.getElementById('toggle-highways-wrap'),
+      toggleHighways: document.getElementById('toggle-highways'),
       toggleLandScheme: document.getElementById('toggle-land-scheme'),
       faviconLink: document.getElementById('favicon-link'),
       coinBalance: document.getElementById('coin-balance'),
@@ -587,6 +589,10 @@ export class Game {
       this.placesVisible = ev.target.checked;
       if (this.board?.setPlacesVisible) this.board.setPlacesVisible(this.placesVisible);
     });
+    this.el.toggleHighways.addEventListener('change', (ev) => {
+      this.highwaysVisible = ev.target.checked;
+      if (this.board?.setHighwaysVisible) this.board.setHighwaysVisible(this.highwaysVisible);
+    });
     // Keeps the finish button anchored to the map's actual edge (see
     // _positionWinBar) if the window resizes while it's showing — a no-op
     // whenever the bar is hidden, so this doesn't need its own
@@ -666,6 +672,7 @@ export class Game {
     this.el.toggleLabels.checked = this.labelsVisible;
     this.el.toggleHintsWrap.hidden = !preset.showToggles;
     this.el.toggleLabelsWrap.hidden = !preset.showToggles;
+    this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleHintsText.textContent = 'Подсказки';
     this.el.toggleLabelsText.textContent = 'Буквы';
     this.el.quizPrompt.hidden = true;
@@ -701,6 +708,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
     this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('quiz', 'Найди штат')} (${this.quizRounds})`;
@@ -724,6 +732,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
     // No text prompt here — the "question" is the pulsing highlight on the
     // map itself (see nameStateBoard.js), showing the name would give away
     // the answer.
@@ -751,6 +760,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
     // No text prompt — the "question" is entirely on the map (highlighted
     // state + glowing border), same reasoning as _startNameState.
     this.el.quizPrompt.hidden = true;
@@ -782,6 +792,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('identify', 'Определи штат')} (${this.quizRounds})`;
@@ -809,6 +820,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Определи море или океан (${this.quizRounds})`;
@@ -836,6 +848,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
     this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · Найди море или океан (${this.quizRounds})`;
@@ -864,6 +877,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
     this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · Города и места (${this.quizRounds})`;
@@ -906,10 +920,12 @@ export class Game {
     this.labelsVisible = overviewMode.id === 'full';
     this.citiesVisible = true;
     this.placesVisible = true;
+    this.highwaysVisible = true;
 
     // World level has no cities/places at all (levels/world.js: cities: [],
     // places: []) — showing "Города"/"Места" toggles for a level with
-    // nothing for them to show/hide is just confusing clutter.
+    // nothing for them to show/hide is just confusing clutter. Highways
+    // are USA-only for now (levels/usaHighways.js) — same reasoning.
     this.el.toggleHintsWrap.hidden = level.cities.length === 0;
     this.el.toggleHintsWrap.title = 'Показать/скрыть города на карте';
     this.el.toggleHintsText.textContent = 'Города';
@@ -919,6 +935,8 @@ export class Game {
     this.el.toggleLabels.checked = this.labelsVisible;
     this.el.togglePlacesWrap.hidden = level.places.length === 0;
     this.el.togglePlaces.checked = this.placesVisible;
+    this.el.toggleHighwaysWrap.hidden = !level.highways?.length;
+    this.el.toggleHighways.checked = this.highwaysVisible;
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Обзор`;
@@ -943,6 +961,7 @@ export class Game {
       labelsVisible: this.labelsVisible,
       citiesVisible: this.citiesVisible,
       placesVisible: this.placesVisible,
+      highwaysVisible: this.highwaysVisible,
     });
   }
 

@@ -192,6 +192,12 @@
      "wrong" color and the darker neutral tones) without introducing a hue
      the rest of this scheme deliberately avoids. */
   --green: #e8e8e8;
+  /* --magenta (.highway-path — USA highways overlay) has the same
+     "stray hue against a gray+red palette" problem --green did. A dimmer
+     neutral gray than --green's (highways are a background context layer,
+     not a feedback signal that needs to pop) still reads clearly against
+     both the gray state fills and the red accent. */
+  --magenta: #9e9e9e;
   /* The accent itself is red, not gray — everything above this point is
      the neutral base (backgrounds, piece fills, panel/board tones);
      these three (+ -rgb twins, + the panel-border glow) are the only
@@ -1591,6 +1597,38 @@ body {
   transition: all 0.15s ease;
 }
 .ruler-readout-clear:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ---------------- highways overlay (USA level, Overview mode only — see
+   scripts/build_usa_highways.js / js/overviewBoard.js) ---------------- */
+
+/* --magenta, not --orange — the ruler tool (also live in Overview mode)
+   already owns orange, and reusing it here would make ruler readouts and
+   permanent highway lines visually blend into the same "thing" on screen.
+   Plain --magenta (not --neon-pink) was completely unused before this. */
+.highway-path {
+  fill: none;
+  stroke: var(--magenta);
+  stroke-width: 1.3px;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.8;
+}
+/* The shield's whole <g> (bg path + number text) is scaled by
+   js/overviewBoard.js's _positionHighwayShield via an SVG transform, not
+   CSS — sizes below are in the same LOCAL coordinate space as
+   _buildHighwayShield's own path (~20x22 units), not real px, so they
+   stay proportional to the shield outline at any zoom rather than needing
+   their own 1/effScale math. */
+.highway-shield-bg {
+  fill: rgb(var(--ink-rgb));
+  stroke: var(--magenta);
+  stroke-width: 1.6;
+}
+.highway-shield-text {
+  fill: var(--magenta);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+}
 
 /* ---------------- right-click map context menu (js/overviewBoard.js's _openContextMenu) ---------------- */
 

@@ -98,6 +98,15 @@ export class OverviewBoard {
     // states) — always rendered, no `appended` bookkeeping needed.
     this.placeEntries = []; // { id, cx, cy, dot, pointMark, leaderPath, leaderLabel }
     this.placesVisible = opts.placesVisible !== false;
+    // USA-only, only ~59 of them (see levels/usaHighways.js) — same
+    // "few enough to just always be in the DOM" reasoning as places.
+    // { id, number, pathEl, shieldEl, points, lastPos } — pathEl is the
+    // permanent line; shieldEl is the shield-shaped number badge, shown at
+    // whichever of `points` is currently closest to the view's center (see
+    // _updateHighwayShields) so there's always one somewhere on screen
+    // regardless of pan/zoom, never zero and never a cluttered pile of them.
+    this.highwayEntries = [];
+    this.highwaysVisible = opts.highwaysVisible !== false;
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
     this.placesById = new Map(); // id -> { data, dotEl }
@@ -252,6 +261,37 @@ export class OverviewBoard {
       this.statesById.set(p.id, { data: p, pathEl: path });
     }
 
+    // Highways (USA only, see levels/usaHighways.js). The line itself is
+    // painted after the state fills so it reads on top of them, in
+    // zonesLayer (not clickable, not virtualized as a whole: only ~59 of
+    // them, always in the DOM). The shield badge is a SEPARATE element in
+    // pointsLayer — it needs to render above everything, including the
+    // line itself and state fills, to stay legible — and unlike the line,
+    // its position is NOT fixed: _updateHighwayShields repositions it
+    // (and shows/hides it) on every pan/zoom settle, picking whichever of
+    // the highway's own sampled points is currently closest to the middle
+    // of the visible area. Not part of the states loop above since it's a
+    // wholly separate data source with its own id/number scheme, not a
+    // per-state piece.
+    if (this.level.highways) {
+      for (const hw of this.level.highways) {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', hw.d);
+        path.setAttribute('class', 'highway-path');
+        path.dataset.id = hw.id;
+        const title = document.createElementNS(SVG_NS, 'title');
+        title.textContent = `I-${hw.number}`;
+        path.appendChild(title);
+        this.zonesLayer.appendChild(path);
+
+        const shield = this._buildHighwayShield(hw.number);
+        shield.style.display = 'none';
+        this.pointsLayer.appendChild(shield);
+
+        this.highwayEntries.push({ id: hw.id, number: hw.number, pathEl: path, shieldEl: shield, points: hw.points, lastPos: null });
+      }
+    }
+
     // City elements are built here but NOT appended yet — _updateVisibleCities
     // (driven by zoomPan's virtualization callback) decides what's actually
     // in the DOM, based on what's currently in view.
@@ -387,7 +427,10 @@ export class OverviewBoard {
       panFromAnywhere: true,
       onTap: (ev) => this._onMapTap(ev),
       onZoomChange: (zoom) => this._rescaleForZoom(zoom),
-      onVisibleRectChange: (rect) => this._updateVisibleCities(rect),
+      onVisibleRectChange: (rect) => {
+        this._updateVisibleCities(rect);
+        this._updateHighwayShields(rect);
+      },
     });
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
     this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
@@ -402,6 +445,7 @@ export class OverviewBoard {
     this._rescaleForZoom(1);
     this.setLabelsVisible(this.labelsVisible);
     this.setPlacesVisible(this.placesVisible);
+    this.setHighwaysVisible(this.highwaysVisible);
   }
 
   // Adds/removes each city's elements from the SVG based on whether it's
@@ -1211,6 +1255,14 @@ export class OverviewBoard {
       entry.dot.setAttribute('r', (PLACE_DOT_R_PX / effScale).toFixed(2));
       entry.dot.style.strokeWidth = `${(PLACE_DOT_STROKE_PX / effScale).toFixed(2)}px`;
     }
+    // Keeps whichever shields are already showing at a constant screen
+    // size DURING a zoom gesture — _updateHighwayShields itself only runs
+    // after pan/zoom settles (debounced), so without this they'd stay the
+    // old size until the gesture finished instead of scaling smoothly
+    // alongside everything else on the map.
+    for (const entry of this.highwayEntries) {
+      if (entry.lastPos) this._positionHighwayShield(entry, effScale);
+    }
     // _renderRuler already recomputes its own effScale internally and is a
     // full (cheap, small-N) rebuild each time, so just re-running it here
     // keeps ruler point/label sizes constant-screen-px too, same as
@@ -1280,6 +1332,92 @@ export class OverviewBoard {
   setCitiesVisible(visible) {
     this.citiesVisible = visible;
     if (this._lastVisibleRect) this._updateVisibleCities(this._lastVisibleRect);
+  }
+
+  // The line itself is a direct display toggle (same reasoning as
+  // setPlacesVisible — only ~59 of them, always in the DOM). The shield
+  // badges need more than that: turning highways back on should show
+  // whichever shields belong in the CURRENT view immediately, not wait
+  // for the next pan/zoom to trigger _updateHighwayShields — replaying
+  // the last known visible rect (same trick setCitiesVisible uses) does
+  // that instead of everyone popping in only after the player next moves
+  // the map.
+  setHighwaysVisible(visible) {
+    this.highwaysVisible = visible;
+    for (const entry of this.highwayEntries) {
+      entry.pathEl.style.display = visible ? '' : 'none';
+      if (!visible) entry.shieldEl.style.display = 'none';
+    }
+    if (visible && this._lastVisibleRect) this._updateHighwayShields(this._lastVisibleRect);
+  }
+
+  // Picks, for each highway, whichever of its sampled points (see
+  // levels/usaHighways.js) is currently on screen AND closest to the
+  // middle of the view, and puts the shield badge there — so there's
+  // always exactly one shield per highway visible somewhere in the
+  // viewport (never zero, never a cluttered pile of them), the same way a
+  // real interactive map re-labels a road as you pan across it rather
+  // than fixing labels to specific points on the ground.
+  _updateHighwayShields(rect) {
+    if (!this.highwaysVisible) return;
+    const cx = (rect.x0 + rect.x1) / 2;
+    const cy = (rect.y0 + rect.y1) / 2;
+    const effScale = this.scale * (this.zoomCtl?.getZoom() ?? 1);
+    for (const entry of this.highwayEntries) {
+      let best = null;
+      let bestDist = Infinity;
+      for (const p of entry.points) {
+        const [x, y] = p;
+        if (x < rect.x0 || x > rect.x1 || y < rect.y0 || y > rect.y1) continue;
+        const d = Math.hypot(x - cx, y - cy);
+        if (d < bestDist) {
+          bestDist = d;
+          best = p;
+        }
+      }
+      if (!best) {
+        entry.shieldEl.style.display = 'none';
+        entry.lastPos = null;
+        continue;
+      }
+      entry.lastPos = best;
+      entry.shieldEl.style.display = '';
+      this._positionHighwayShield(entry, effScale);
+    }
+  }
+
+  // Constant-screen-px size regardless of zoom — same `1/effScale` idea as
+  // every other overlay marker here (state label font-size, city dot
+  // radius, etc.), just done via an SVG transform instead since a shield
+  // is a whole little shape (path + text), not a single scalar property.
+  _positionHighwayShield(entry, effScale) {
+    if (!entry.lastPos) return;
+    const [x, y] = entry.lastPos;
+    const k = 1 / effScale;
+    entry.shieldEl.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${k.toFixed(4)})`);
+  }
+
+  // Local coordinate box, centered on (0,0), roughly 20x22 native units —
+  // scaled down to a constant on-screen size by _positionHighwayShield's
+  // transform, not by these numbers themselves.
+  _buildHighwayShield(number) {
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', 'highway-shield');
+    const bg = document.createElementNS(SVG_NS, 'path');
+    bg.setAttribute('class', 'highway-shield-bg');
+    bg.setAttribute('d', 'M -10,-11 L 10,-11 L 10,3 Q 10,9 0,11 Q -10,9 -10,3 Z');
+    const text = document.createElementNS(SVG_NS, 'text');
+    text.setAttribute('class', 'highway-shield-text');
+    text.setAttribute('x', '0');
+    text.setAttribute('y', '2');
+    text.setAttribute('text-anchor', 'middle');
+    text.textContent = number;
+    const title = document.createElementNS(SVG_NS, 'title');
+    title.textContent = `I-${number}`;
+    g.appendChild(bg);
+    g.appendChild(text);
+    g.appendChild(title);
+    return g;
   }
 
   // Places aren't virtualized (always in the DOM — see the constructor
