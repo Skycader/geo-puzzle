@@ -1241,16 +1241,23 @@ body {
   width: 22px;
   height: 56px;
   padding: 0;
-  border: 1px solid rgba(var(--neon-cyan-rgb), 0.35);
+  border: 1px solid var(--neon-cyan);
   border-right: none;
   border-radius: 6px 0 0 6px;
-  background: rgba(var(--ink-rgb), 0.85);
+  background: rgb(var(--ink-rgb));
+  /* A glow, not a fade — the button needs to read as a solid, findable
+     control sitting on top of the map, not something faint blending into
+     it. box-shadow glow on the outside + a faint inset one give it the
+     same "lit up" look as .brand-icon/.hud-chip elsewhere in the app. */
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.6), 0 0 4px rgba(var(--neon-cyan-rgb), 0.4) inset;
   color: var(--neon-cyan);
   font-size: 12px;
   cursor: pointer;
-  transition: right 0.2s ease;
+  transition: right 0.2s ease, box-shadow 0.15s ease;
 }
-.overview-panel-toggle:hover { background: rgba(var(--neon-cyan-rgb), 0.15); }
+.overview-panel-toggle:hover {
+  box-shadow: 0 0 16px rgba(var(--neon-cyan-rgb), 0.9), 0 0 6px rgba(var(--neon-cyan-rgb), 0.6) inset;
+}
 #board-container.panel-collapsed .overview-panel-toggle { right: 0; }
 .overview-tabs {
   display: flex;
