@@ -2,7 +2,8 @@ import { shuffle, clamp, levenshtein, weightedSampleWithoutReplacement } from '.
 import { playSnap, playError, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { loadSuccessStats, recordOutcome } from './successStats.js';
-import { addCoins } from './coins.js';
+import { flyCoinToBalance } from './coins.js';
+import { REWARDS } from './constants.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 // Distinct scope — identifying a state from its bare, isolated shape is a
@@ -208,10 +209,17 @@ export class IdentifyStateBoard {
     playSnap();
     this.correct++;
     if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.roundNeededHelp);
-    // First-pass rewards system — "Определи штат" only, for now (see
-    // js/coins.js). One coin per correct answer, hint or no hint; no
-    // per-source bookkeeping beyond the shared balance itself.
-    addCoins(1);
+    // Rewards system (see js/constants.js's REWARDS / js/coins.js) — only
+    // for a clean answer (no hint, no wrong guess this round); the balance
+    // itself is credited by flyCoinToBalance once the coin actually lands,
+    // not up front. Flies from the shown shape's own on-screen box
+    // (this.svg is cropped/zoomed to just that shape, so its center IS
+    // the shape's center) up into the topbar balance chip.
+    const reward = REWARDS[this.levelId]?.identify ?? 0;
+    if (reward > 0 && !this.roundNeededHelp) {
+      const r = this.svg.getBoundingClientRect();
+      flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
+    }
     this.feedbackEl.textContent = 'Верно!';
     this.feedbackEl.classList.remove('name-feedback-wrong');
     this.feedbackEl.classList.add('name-feedback-correct');

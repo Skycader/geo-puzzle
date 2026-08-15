@@ -2,6 +2,8 @@ import { shuffle, clamp, levenshtein, weightedSampleWithoutReplacement } from '.
 import { playSnap, playError, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { loadSuccessStats, recordOutcome } from './successStats.js';
+import { flyCoinToBalance } from './coins.js';
+import { REWARDS } from './constants.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 // Separate scope from quiz-states/name-state-states — knowing a state's
@@ -368,6 +370,11 @@ export class NeighborBoard {
     playSnap();
     this.correct++;
     if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.roundNeededHelp);
+    const reward = REWARDS[this.levelId]?.neighbor ?? 0;
+    if (reward > 0 && !this.roundNeededHelp) {
+      const r = this.svg.getBoundingClientRect();
+      flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
+    }
     this.feedbackEl.textContent = `Верно! Сосед: ${this.currentNeighbor.ru} (${this.currentNeighbor.name})`;
     this.feedbackEl.classList.remove('name-feedback-wrong');
     this.feedbackEl.classList.add('name-feedback-correct');

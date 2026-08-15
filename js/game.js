@@ -890,6 +890,7 @@ export class Game {
       this.board = new CityPinBoard(this.el.boardContainer, level, {
         rounds: this.quizRounds,
         items,
+        levelId: this.levelId,
         scale,
         onProgress: (p) => this._onPinProgress(p),
         onFinish: () => this._onFinish(),
@@ -901,6 +902,7 @@ export class Game {
         rounds: this.quizRounds,
         items,
         eligibleIds: this.eligibilityList?.getSelectedIds(),
+        levelId: this.levelId,
         scale,
         onProgress: (p) => this._onQuizProgress(p),
         onFinish: () => this._onFinish(),

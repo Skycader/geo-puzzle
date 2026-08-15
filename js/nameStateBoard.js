@@ -12,6 +12,8 @@ import {
   createScaleBar,
 } from "./zoomPan.js";
 import { loadSuccessStats, recordOutcome } from "./successStats.js";
+import { flyCoinToBalance } from "./coins.js";
+import { REWARDS } from "./constants.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 // Separate from quizBoard.js's 'quiz-states' scope — clicking a state on
@@ -242,6 +244,11 @@ export class NameStateBoard {
           this.current.id,
           this.roundNeededHelp,
         );
+      const reward = REWARDS[this.levelId]?.name_state ?? 0;
+      if (reward > 0 && !this.roundNeededHelp) {
+        const r = btn.getBoundingClientRect();
+        flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
+      }
       this.feedbackEl.textContent = "Верно!";
       this.feedbackEl.classList.remove("name-feedback-wrong");
       this.feedbackEl.classList.add("name-feedback-correct");
@@ -343,6 +350,11 @@ export class NameStateBoard {
           this.current.id,
           this.roundNeededHelp,
         );
+      const reward = REWARDS[this.levelId]?.name_state ?? 0;
+      if (reward > 0 && !this.roundNeededHelp) {
+        const r = this.confirmBtn.getBoundingClientRect();
+        flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
+      }
       this.feedbackEl.textContent = "Верно!";
       this.feedbackEl.classList.remove("name-feedback-wrong");
       this.feedbackEl.classList.add("name-feedback-correct");

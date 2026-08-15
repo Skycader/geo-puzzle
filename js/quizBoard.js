@@ -2,6 +2,8 @@ import { shuffle, clamp, weightedSampleWithoutReplacement } from './utils.js';
 import { playSnap, playError, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { loadSuccessStats, recordOutcome } from './successStats.js';
+import { flyCoinToBalance } from './coins.js';
+import { REWARDS } from './constants.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SUCCESS_SCOPE = 'quiz-states';
@@ -151,6 +153,11 @@ export class QuizBoard {
       // streak should keep building from ordinary play too, so turning
       // adaptive mode on later isn't starting from a blank slate.
       if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.hinted);
+      const reward = REWARDS[this.levelId]?.quiz ?? 0;
+      if (reward > 0 && !this.hinted) {
+        const r = path.getBoundingClientRect();
+        flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
+      }
       setTimeout(() => {
         path.classList.remove('quiz-correct');
         path.classList.add('quiz-used');

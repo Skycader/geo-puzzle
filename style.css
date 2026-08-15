@@ -379,6 +379,30 @@ body {
 .coin-balance:disabled { opacity: 0.4; cursor: default; }
 .coin-icon { width: 16px; height: 16px; flex: none; }
 
+/* Reward animation (js/coins.js's flyCoinToBalance) — a coin icon spawned
+   at wherever the correct answer happened, flown up into the topbar
+   balance chip along an arced offset-path, then removed. position:fixed
+   + a very high z-index since it has to fly OVER everything (map, HUD,
+   win-bar) regardless of which screen/mode it started on. */
+.flying-coin {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px; /* centers the icon on its own (left, top) spawn point */
+  color: var(--neon-yellow);
+  filter: drop-shadow(0 0 6px rgba(var(--neon-yellow-rgb), 0.8));
+  pointer-events: none;
+  z-index: 200;
+}
+.flying-coin svg { width: 100%; height: 100%; }
+
+.coin-balance-pulse { animation: coin-balance-pulse 0.25s ease; }
+@keyframes coin-balance-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
 .land-scheme-toggle { margin: 0; }
 
 .hud {

@@ -2,6 +2,8 @@ import { shuffle, clamp } from './utils.js';
 import { playSnap, playError, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { buildStateBackground } from './mapBackground.js';
+import { flyCoinToBalance } from './coins.js';
+import { REWARDS } from './constants.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const DOT_R = 3.2;
@@ -17,6 +19,7 @@ export class CityQuizBoard {
   constructor(container, level, opts = {}) {
     this.container = container;
     this.level = level;
+    this.levelId = opts.levelId;
     this.scale = opts.scale || 1;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
@@ -139,6 +142,11 @@ export class CityQuizBoard {
       dot.classList.add('city-correct');
       playSnap();
       this.correct++;
+      const reward = REWARDS[this.levelId]?.city_place ?? 0;
+      if (reward > 0 && !this.hinted) {
+        const r = dot.getBoundingClientRect();
+        flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
+      }
       setTimeout(() => {
         dot.classList.remove('city-correct');
         dot.classList.add('city-used');

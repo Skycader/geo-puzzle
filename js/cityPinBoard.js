@@ -2,6 +2,8 @@ import { shuffle, clamp } from './utils.js';
 import { playSnap, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { buildStateBackground } from './mapBackground.js';
+import { flyCoinToBalance } from './coins.js';
+import { REWARDS } from './constants.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -29,6 +31,7 @@ export class CityPinBoard {
   constructor(container, level, opts = {}) {
     this.container = container;
     this.level = level;
+    this.levelId = opts.levelId;
     this.scale = opts.scale || 1;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
@@ -234,7 +237,17 @@ export class CityPinBoard {
     this.trueMarkGroup = trueMarkGroup;
     this.trueMarkCenter = { x: cx, y: cy };
 
-    if (distKm < 15) playSnap();
+    // Pin mode has no discrete right/wrong the way the other quiz modes
+    // do — reusing the same "close enough" threshold that already governs
+    // the confirm snap sound as the reward-eligibility check too.
+    if (distKm < 15) {
+      playSnap();
+      const reward = REWARDS[this.levelId]?.city_place ?? 0;
+      if (reward > 0) {
+        const r = this.pinGroup.getBoundingClientRect();
+        flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
+      }
+    }
     this.feedbackEl.textContent = `${this.current.ru}: ${distKm} км от цели`;
     this.confirmBtn.hidden = true;
     this.nextBtn.hidden = false;
