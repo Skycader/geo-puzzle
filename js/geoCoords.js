@@ -57,8 +57,12 @@ function albersInverse(projection, x, y) {
 // Alaska/Hawaii's insets sit in their own corner of the USA canvas with no
 // overlap with the main Albers map or each other — checking against each
 // inset piece's own bbox (already stored per-piece) is enough to route a
-// click to the right inverse.
-function findInset(level, x, y) {
+// click to the right inverse. Exported too — overviewBoard.js's OSM-layer
+// toggle uses it to check that a whole rectangle (not just one point)
+// stays within a single region before trusting a bbox built from its
+// corners; mixing points from the mainland and an inset would produce a
+// bbox spanning real-world distance the rectangle never actually covered.
+export function findInset(level, x, y) {
   return level.pieces.find((p) => p.inset && p.projection && x >= p.bbox[0] && x <= p.bbox[2] && y >= p.bbox[1] && y <= p.bbox[3]);
 }
 

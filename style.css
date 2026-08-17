@@ -815,6 +815,7 @@ body {
    surface flush with the header/toolbar and every screen edge, not a
    bordered "card" floating in the middle of the page. */
 .zoom-viewport {
+  position: relative; /* anchors .osm-frame's absolute positioning below */
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -823,6 +824,27 @@ body {
 .zoom-viewport.panning { cursor: grabbing; }
 .zoom-viewport.panning .board-svg,
 .zoom-viewport.panning .quiz-svg { cursor: grabbing; }
+
+/* Overview mode's OSM layer (see overviewBoard.js's setOsmVisible) — a
+   sibling of .board-svg inside the same .zoom-viewport. position:absolute
+   + inset:0 is required, not optional: neither element has any position
+   of its own otherwise, so as plain in-flow siblings they'd stack one
+   above the other (this one pushed below the SVG and clipped away by
+   .zoom-viewport's overflow:hidden) instead of overlapping — the iframe
+   would never actually be visible no matter what `hidden` was set to.
+   No explicit `display` here on purpose: absolute positioning already
+   forces block-level layout on its own (CSS "blockification"), so this
+   doesn't need to declare display:block itself — doing that anyway would
+   OUTRANK the `hidden` attribute's own display:none (equal-specificity
+   author-vs-UA-stylesheet rules resolve to the author's), permanently
+   defeating `hidden` regardless of source order. */
+.osm-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
 
 .zoom-controls {
   position: absolute;

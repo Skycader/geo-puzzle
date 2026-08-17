@@ -1,8 +1,8 @@
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { mark } from './perfDebug.js';
-import { polygonArea } from './utils.js';
+import { polygonArea, clamp } from './utils.js';
 import { buildStateBackground } from './mapBackground.js';
-import { nativeToLonLat, formatLonLat } from './geoCoords.js';
+import { nativeToLonLat, formatLonLat, findInset } from './geoCoords.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const STATE_LABEL_PX = 12;
@@ -35,6 +35,76 @@ const VIRTUALIZE_MARGIN = 0.4; // extra fraction of the visible rect's size kept
 const PLACE_DOT_R_PX = 4;
 const PLACE_DOT_STROKE_PX = 1;
 const PLACE_FOCUS_RADIUS_KM = 30;
+
+// OSM layer toggle: converts the currently-visible native rect into a
+// lon/lat bounding box for OpenStreetMap's own embeddable viewer
+// (openstreetmap.org/export/embed.html?bbox=...) — an officially
+// supported widget, not a workaround, so it takes a bbox directly rather
+// than needing zoom-level math the way some other embeddable maps do.
+//
+// Deliberately does NOT try to sync position the other way (OSM -> SVG)
+// — switching back to SVG just un-hides it exactly as it was left, since
+// its own pan/zoom state was never touched while OSM was showing. That
+// asymmetry is what actually satisfies "a focused city must not fly
+// away on repeated toggles": every SVG->OSM conversion starts from the
+// same untouched SVG state, so it's idempotent by construction rather
+// than needing to stay in sync across N round trips.
+//
+// Returns null (caller should refuse to switch) rather than ever handing
+// back a bogus bbox: a null/NaN corner (should be unreachable for
+// usa/world/countries, but nativeToLonLat fails closed for anything
+// else), or — usa only — a rect whose four corners don't all belong to
+// the SAME region (mainland vs one specific Alaska/Hawaii inset). Mixing
+// corners from disconnected regions would average together two places
+// that were never actually adjacent in the real world, producing a bbox
+// that doesn't correspond to what's really on screen — exactly the kind
+// of "camera flies somewhere nonsensical" the whole feature has to avoid.
+// This only matters at zoomed-OUT views showing multiple regions at
+// once, which is outside the "focused on a city" scenario the
+// requirement actually cares about — so refusing there (rather than
+// guessing) is the right tradeoff, not a compromise.
+function computeVisibleLonLatBBox(level, rect) {
+  const corners = [
+    [rect.x0, rect.y0],
+    [rect.x1, rect.y0],
+    [rect.x0, rect.y1],
+    [rect.x1, rect.y1],
+  ];
+  if (level.id === 'usa') {
+    const regions = corners.map(([x, y]) => findInset(level, x, y) ?? null);
+    if (regions.some((r) => r !== regions[0])) return null;
+  }
+  const pts = corners.map(([x, y]) => nativeToLonLat(level, x, y));
+  if (pts.some((p) => !p || !Number.isFinite(p.lon) || !Number.isFinite(p.lat))) return null;
+  // Clamped, not rejected: panning is allowed to drift slightly past the
+  // map's own edge (see zoomPan.js's clampOrigin/minMapOverlap), which
+  // can push a corner's native coordinate just outside the canvas the
+  // projection was built from — the resulting lon/lat is still directly
+  // usable once folded back into a valid range, no need to refuse over it.
+  const lons = pts.map((p) => clamp(p.lon, -180, 180));
+  const lats = pts.map((p) => clamp(p.lat, -85, 85));
+  const minLon = Math.min(...lons);
+  const maxLon = Math.max(...lons);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  if (!(maxLon > minLon) || !(maxLat > minLat)) return null;
+  return { minLon, minLat, maxLon, maxLat };
+}
+
+// this.svg is an SVGElement, not an HTMLElement — the `.hidden` IDL
+// property (element.hidden = true/false) only exists on HTMLElement, so
+// setting it on an <svg> silently creates a meaningless plain JS
+// property with zero effect on rendering (reads back whatever you just
+// set, but getComputedStyle's `display` never changes). The underlying
+// `hidden` CONTENT ATTRIBUTE + its `[hidden] { display: none }` UA-
+// stylesheet rule work on any element type regardless — going through
+// setAttribute/removeAttribute directly sidesteps the IDL-property gap
+// entirely, so this works uniformly for the SVG, the OSM iframe, and the
+// plain <div> zoom-controls/scale-bar alike.
+function setElementHidden(el, hide) {
+  if (hide) el.setAttribute('hidden', '');
+  else el.removeAttribute('hidden');
+}
 
 // Info-popup: hand-editable Wikipedia-sourced blurbs (see
 // levels/usa/cities-info.json / places-info.json — plain JSON, not baked
@@ -439,8 +509,15 @@ export class OverviewBoard {
     // .overview-panel/.overview-panel-toggle below were already fixed
     // for (see their own comment); zoom-controls/scale-bar had the same
     // issue.
-    this.container.appendChild(createZoomControls(this.zoomCtl));
-    this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
+    // Saved (not just appended-and-forgotten) so setOsmVisible can hide
+    // them while the OSM iframe is showing — they only control this.svg's
+    // own zoomCtl, which isn't what's on screen at that point.
+    this.zoomControlsEl = createZoomControls(this.zoomCtl);
+    this.scaleBarEl = createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit });
+    this.container.appendChild(this.zoomControlsEl);
+    this.container.appendChild(this.scaleBarEl);
+    this.osmVisible = false;
+    this.osmIframe = null;
 
     // Right-click only — never conflicts with left-click's existing
     // pan/tap-to-info behavior (contextmenu and pointerdown are entirely
@@ -1438,6 +1515,50 @@ export class OverviewBoard {
       entry.leaderPath.style.display = visible ? '' : 'none';
       entry.leaderLabel.style.display = visible ? '' : 'none';
     }
+  }
+
+  // Switches between the offline SVG map and a live OpenStreetMap iframe
+  // framing (as closely as computeVisibleLonLatBBox can manage) the same
+  // area the SVG was just showing. Returns false (and leaves everything
+  // as it was) when that's not currently possible — see
+  // computeVisibleLonLatBBox's own comment for exactly when/why.
+  //
+  // Switching back to SVG never touches this.zoomCtl's pan/zoom state at
+  // all — it was frozen the moment OSM appeared (the iframe, not the
+  // hidden SVG, is what actually receives pointer/wheel input while
+  // visible), so un-hiding it always shows exactly the same view it had
+  // right before switching. That's deliberate, not a shortcut: it's what
+  // makes toggling back and forth any number of times land on the same
+  // framing every time instead of drifting further off with each round
+  // trip.
+  setOsmVisible(visible) {
+    if (!visible) {
+      this.osmVisible = false;
+      if (this.osmIframe) setElementHidden(this.osmIframe, true);
+      setElementHidden(this.svg, false);
+      setElementHidden(this.zoomControlsEl, false);
+      setElementHidden(this.scaleBarEl, false);
+      return true;
+    }
+    if (!this._lastVisibleRect) return false;
+    const bbox = computeVisibleLonLatBBox(this.level, this._lastVisibleRect);
+    if (!bbox) return false;
+    if (!this.osmIframe) {
+      const iframe = document.createElement('iframe');
+      iframe.className = 'osm-frame';
+      iframe.title = 'OpenStreetMap';
+      iframe.loading = 'lazy';
+      this.zoomViewport.appendChild(iframe);
+      this.osmIframe = iframe;
+    }
+    const { minLon, minLat, maxLon, maxLat } = bbox;
+    this.osmIframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${minLon.toFixed(5)}%2C${minLat.toFixed(5)}%2C${maxLon.toFixed(5)}%2C${maxLat.toFixed(5)}&layer=mapnik`;
+    setElementHidden(this.osmIframe, false);
+    setElementHidden(this.svg, true);
+    setElementHidden(this.zoomControlsEl, true);
+    setElementHidden(this.scaleBarEl, true);
+    this.osmVisible = true;
+    return true;
   }
 
   destroy() {
