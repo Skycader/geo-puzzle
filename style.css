@@ -2019,13 +2019,67 @@ body {
    to the map's OWN rendered rect rather than the viewport — a viewport-
    relative bottom offset could straddle the map's actual edge (half on,
    half off) whenever the map doesn't fill the full available height
-   (aspect-ratio letterboxing — see .quiz-prompt's comment). */
+   (aspect-ratio letterboxing — see .quiz-prompt's comment).
+   translate(-50%, -100%) — NOT -50% -50% — anchors the box's own BOTTOM
+   edge to that `top` point rather than its center, so the whole box
+   grows upward from it. Centering it instead let roughly half the box's
+   height sit BELOW the anchor point; that used to be fine when the only
+   content was one button, but once the .replay-hint badge stacked a
+   second row on top of it, that lower half — now the button itself —
+   could extend past the real bottom edge and off-screen.
+   Stacks .replay-hint above the button (see below) — still no
+   border/background on THIS wrapper itself, just a flex column so the
+   two children center over each other. */
 .win-bar {
   position: fixed;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -100%);
   z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* "Press R to play again" — a keycap + reload glyph instead of any actual
+   words, so it reads the same no matter what language the player's
+   browser/OS is set to. Purely informational (not a duplicate button —
+   the win-bar's own document-level keydown listener in game.js is what
+   actually reacts to R), so no button affordance/cursor here. */
+.replay-hint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 10px;
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.4);
+  border-radius: 999px;
+  background: rgba(var(--ink-rgb), 0.85);
+  color: var(--neon-cyan);
+  animation: replay-hint-pulse 2.2s ease-in-out infinite;
+}
+.replay-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--neon-cyan);
+  border-radius: 5px;
+  box-shadow: 0 2px 0 rgba(var(--neon-cyan-rgb), 0.4);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+.replay-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+@keyframes replay-hint-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 /* ---------------- scrollbars ---------------- */
 

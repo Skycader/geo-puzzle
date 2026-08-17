@@ -159,6 +159,17 @@
   </div>
 
   <div id="win-bar" class="win-bar" hidden>
+    <!-- Language-independent "press R to replay" — a keycap + reload glyph
+         reads the same regardless of what language the player speaks, so
+         no translated string is needed here at all. Above the button
+         (not below) so it isn't the part most likely to get clipped when
+         the map's rendered height is short. -->
+    <div class="replay-hint" title="R">
+      <span class="replay-key">R</span>
+      <svg class="replay-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08a5.997 5.997 0 0 1-5.65 4c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+      </svg>
+    </div>
     <button id="btn-back-menu" class="btn btn-primary">Вернуться в меню</button>
   </div>
 

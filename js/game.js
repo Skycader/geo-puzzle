@@ -545,6 +545,20 @@ export class Game {
       playClick();
       this.startGame();
     });
+    // "Press R to replay" (see .replay-hint's keycap+reload badge in
+    // win-bar) — only live while the win-bar is actually showing, so R
+    // doesn't do anything unexpected mid-round or on the menu.
+    // startGame() re-reads this.levelId/this.modeId/etc, which are all
+    // still exactly what they were for the round that just finished, so
+    // this is a genuine "same settings, go again" rather than a trip
+    // back through the setup screen.
+    document.addEventListener('keydown', (ev) => {
+      if (this.el.winBar.hidden) return;
+      if (ev.key.toLowerCase() !== 'r') return;
+      ev.preventDefault();
+      playClick();
+      this.startGame();
+    });
     this.el.btnBrand.addEventListener('click', () => this._goMenu());
     this.el.btnMenu.addEventListener('click', () => this._goMenu());
     this.el.btnBackMenu.addEventListener('click', () => {
@@ -633,6 +647,11 @@ export class Game {
     const level = this.levels[this.levelId];
     this.el.screenMenu.hidden = true;
     this.el.screenGame.hidden = false;
+    // Otherwise replaying via the "press R" shortcut (see _bindEvents)
+    // would leave the just-finished round's win-bar floating on top of
+    // the freshly-started one — the setup screen's own "Играть" path
+    // never needed this since the win-bar is already hidden by then.
+    this.el.winBar.hidden = true;
     this.el.hud.hidden = false;
 
     if (this.board) this.board.destroy();
