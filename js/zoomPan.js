@@ -332,7 +332,15 @@ export function attachZoomPan(viewport, content, opts = {}) {
 // control buttons get appended as its sibling (not the viewport's child)
 // so they stay pinned to the corner instead of moving with the map content
 // when the player pans/zooms.
-export function createZoomWrap(baseWidth, baseHeight) {
+//
+// fpsMountEl: where to mount the FPS readout (see fpsMeter.js) — defaults
+// to `wrap` itself, but every caller should pass its own #board-container
+// instead. `wrap` is deliberately oversized by "cover" fit (every mode but
+// puzzle) and gets cropped, so a position:absolute readout anchored to
+// ITS top-left corner (see #fps-meter's CSS) can land off-screen at wide
+// aspect ratios — the same trap .zoom-controls/.scale-bar/.name-answer-bar
+// etc. had, fixed the same way (see nameStateBoard.js's matching comment).
+export function createZoomWrap(baseWidth, baseHeight, fpsMountEl) {
   const wrap = document.createElement('div');
   wrap.className = 'zoom-wrap';
   wrap.style.width = baseWidth + 'px';
@@ -342,10 +350,10 @@ export function createZoomWrap(baseWidth, baseHeight) {
   viewport.className = 'zoom-viewport';
   wrap.appendChild(viewport);
 
-  // Moves the single persistent FPS readout into this map frame — it
-  // migrates from board to board this way instead of floating over the
+  // Moves the single persistent FPS readout into the real visible area —
+  // it migrates from board to board this way instead of floating over the
   // whole page (see fpsMeter.js).
-  mountFpsMeter(wrap);
+  mountFpsMeter(fpsMountEl || wrap);
 
   return { wrap, viewport };
 }

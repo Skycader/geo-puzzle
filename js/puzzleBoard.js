@@ -62,7 +62,7 @@ export class PuzzleBoard {
     const baseW = Math.round((width + padX * 2) * this.scale);
     const baseH = Math.round((height + padY * 2) * this.scale);
 
-    const { wrap: zoomWrap, viewport: zoomViewport } = createZoomWrap(baseW, baseH);
+    const { wrap: zoomWrap, viewport: zoomViewport } = createZoomWrap(baseW, baseH, this.container);
     this.zoomWrap = zoomWrap;
     this.zoomViewport = zoomViewport;
 

@@ -98,6 +98,7 @@ export class NameStateBoard {
     const { wrap: zoomWrap, viewport: zoomViewport } = createZoomWrap(
       baseW,
       baseH,
+      this.container,
     );
     this.zoomWrap = zoomWrap;
     this.zoomViewport = zoomViewport;

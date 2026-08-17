@@ -243,7 +243,7 @@ export class NeighborBoard {
     const baseW = Math.round(vbW * fitScale);
     const baseH = Math.round(vbH * fitScale);
 
-    const { wrap, viewport } = createZoomWrap(baseW, baseH);
+    const { wrap, viewport } = createZoomWrap(baseW, baseH, this.container);
     this.zoomWrap = wrap;
     this.zoomViewport = viewport;
 

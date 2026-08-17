@@ -108,7 +108,7 @@ export class SeaIdentifyBoard {
     const baseW = Math.round(width * this.scale);
     const baseH = Math.round(height * this.scale);
 
-    const { wrap, viewport } = createZoomWrap(baseW, baseH);
+    const { wrap, viewport } = createZoomWrap(baseW, baseH, this.container);
     this.zoomWrap = wrap;
     this.zoomViewport = viewport;
 

@@ -164,7 +164,7 @@ export class OverviewBoard {
     // instead of the whole row growing to fit every list item.
     this.wrapEl.style.height = baseH + 'px';
 
-    const { wrap: zoomWrap, viewport: zoomViewport } = createZoomWrap(baseW, baseH);
+    const { wrap: zoomWrap, viewport: zoomViewport } = createZoomWrap(baseW, baseH, this.container);
     this.zoomWrap = zoomWrap;
     this.zoomViewport = zoomViewport;
 

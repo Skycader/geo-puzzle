@@ -263,9 +263,12 @@ body {
   opacity: 0.5;
 }
 
-/* Lives inside a .zoom-wrap (see fpsMeter.js/zoomPan.js), not the page —
-   .zoom-wrap is already position:relative, so this anchors to the map
-   frame's own top-left corner rather than the whole window. */
+/* Lives inside #board-container (see fpsMeter.js/zoomPan.js's
+   createZoomWrap), not the page — #board-container is already
+   position:relative and correctly sized to the real visible area, so
+   this anchors to the map frame's own top-left corner rather than the
+   whole window (or, if it were still inside the oversized .zoom-wrap,
+   potentially off-screen at wide aspect ratios). */
 #fps-meter {
   position: absolute;
   top: 8px;
