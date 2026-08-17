@@ -477,22 +477,19 @@ body {
 .toggle-text { color: var(--base0); }
 .toggle input:checked ~ .toggle-text { color: var(--neon-cyan); }
 
-/* Color-scheme toggle's icon (replaces a plain text label) — two circles,
-   literally red and blue, so it stays a clear "this switches red<->blue"
-   signal regardless of which scheme is currently live. Deliberately NOT
-   using var(--neon-cyan)/var(--red) here except where noted: the gray
-   scheme reassigns --neon-cyan itself to a red tone (see :root[data-
-   land-scheme='gray']), so a var()-based "blue" dot would stop being
-   blue exactly when you need it to contrast against the red one. */
+/* Color-scheme toggle's icon (replaces a plain text label) — a single dot
+   that smoothly recolors itself red<->blue on toggle, matching the
+   scheme it represents. Deliberately NOT using var(--neon-cyan)/
+   var(--red) here: the gray scheme reassigns --neon-cyan itself to a red
+   tone (see :root[data-land-scheme='gray']), so a var()-based "blue"
+   dot would stop being blue exactly when you need it to read as the
+   OTHER option. */
 .land-scheme-icon { flex: none; overflow: visible; }
-.scheme-spin {
-  transform-origin: 12px 12px;
-  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+.scheme-dot {
+  fill: #dc322f;
+  transition: fill 0.4s ease;
 }
-.toggle input:checked ~ .land-scheme-icon .scheme-spin { transform: rotate(180deg); }
-.scheme-dot { mix-blend-mode: screen; }
-.scheme-dot-red { fill: #dc322f; }
-.scheme-dot-blue { fill: #21f6ff; }
+.toggle input:checked ~ .land-scheme-icon .scheme-dot { fill: #21f6ff; }
 
 .adaptive-mode-row {
   margin-top: 12px;
