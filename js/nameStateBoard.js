@@ -133,8 +133,17 @@ export class NameStateBoard {
       baseHeight: baseH,
       panFromAnywhere: true,
     });
-    this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
-    this.zoomWrap.appendChild(
+    // Appended to this.container (#board-container), NOT this.zoomWrap —
+    // .zoom-wrap is deliberately sized larger than the visible area by
+    // "cover" fit (see js/game.js's _computeScale) so it can overflow and
+    // get cropped; a position:absolute child anchored to ITS edges
+    // (bottom/right) ends up off-screen whenever that overflow is large
+    // (e.g. an ultra-wide window), since the wrap's true edges sit well
+    // outside the visible, clipped region. #board-container is the real,
+    // correctly-sized ancestor — same fix already applied to
+    // .overview-panel, see its own CSS comment.
+    this.container.appendChild(createZoomControls(this.zoomCtl));
+    this.container.appendChild(
       createScaleBar(this.zoomCtl, {
         baseScale: this.scale,
         kmPerUnit: this.level.kmPerUnit,
@@ -175,15 +184,32 @@ export class NameStateBoard {
       this.hintBtn.addEventListener("click", () => this._revealHint());
     }
     this.feedbackEl = bar.querySelector(".name-feedback");
-    // Lives INSIDE the map (a child of .zoom-wrap, itself position:relative
-    // and sized to the map's own rendered pixels) rather than a sibling row
-    // that reserves its own flow height — same "don't push the map around"
-    // rule as game.js's win-bar/quiz-prompt overlays. Reserving that height
-    // (see the old answerBarH in game.js, now removed) skewed the fit
-    // calculation toward being height-constrained on wide maps, producing
-    // more left/right letterboxing than necessary.
-    this.zoomWrap.appendChild(bar);
+    // Lives INSIDE the map area (a child of #board-container, which is
+    // position:relative and correctly sized to the real visible area)
+    // rather than a sibling row that reserves its own flow height — same
+    // "don't push the map around" rule as game.js's win-bar/quiz-prompt
+    // overlays. Reserving that height (see the old answerBarH in game.js,
+    // now removed) skewed the fit calculation toward being
+    // height-constrained on wide maps, producing more left/right
+    // letterboxing than necessary. Appended to this.container rather than
+    // this.zoomWrap for the same reason as the zoom-controls/scale-bar
+    // above — see that comment.
+    this.container.appendChild(bar);
     this.answerBar = bar;
+  }
+
+  // Centralizes setting .name-feedback's text/color so it can also stay
+  // `hidden` whenever there's nothing to say (kind/text falsy) — an empty
+  // span still reserved space via min-height/the answer bar's flex gap
+  // even with no text in it, sitting there as dead weight between rounds
+  // and after every easy-mode correct answer (which no longer sets any
+  // text at all — see _answerEasy). Hiding it collapses that space
+  // entirely instead of just leaving it blank.
+  _setFeedback(text, kind) {
+    this.feedbackEl.textContent = text || "";
+    this.feedbackEl.hidden = !text;
+    this.feedbackEl.classList.toggle("name-feedback-correct", kind === "correct");
+    this.feedbackEl.classList.toggle("name-feedback-wrong", kind === "wrong");
   }
 
   _nextQuestion() {
@@ -201,12 +227,26 @@ export class NameStateBoard {
     this.current = this.queue[this.index];
     this.currentPath = this.paths.get(this.current.id);
     this.currentPath.classList.add("quiz-hint");
-    this.feedbackEl.textContent = "";
+    this._setFeedback("");
     this.wrongOptionIds.clear();
     this.roundNeededHelp = false;
 
+    // Populated BEFORE the focus call below reads this.answerBar's height
+    // — measuring it any earlier would catch the bar still empty (options
+    // not rendered / input row not reset yet), under-reporting how much
+    // of the bottom it actually covers.
     if (this.difficulty === "easy") this._renderOptions();
     else this._resetHardInput();
+
+    // Camera focus: smoothly carries the view from wherever it was toward
+    // the newly-highlighted piece instead of leaving the player to hunt
+    // for it across the whole map — see zoomPan.js's focusOnBBox.
+    // avoidBottomPx keeps it centered in the space actually free to look
+    // at, not counting the bottom-anchored answer bar sitting over part
+    // of the map.
+    this.zoomCtl.focusOnBBox(this.current.bbox, {
+      avoidBottomPx: this.answerBar.offsetHeight,
+    });
 
     this._reportProgress();
   }
@@ -249,9 +289,11 @@ export class NameStateBoard {
         const r = btn.getBoundingClientRect();
         flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
       }
-      this.feedbackEl.textContent = "Верно!";
-      this.feedbackEl.classList.remove("name-feedback-wrong");
-      this.feedbackEl.classList.add("name-feedback-correct");
+      // No "Верно!" feedback text here (unlike the wrong branch below) —
+      // the correct button turning green and every other option disabling
+      // already says it; a redundant text line just sat there as dead
+      // weight, reserving .name-feedback's min-height for a message that
+      // added nothing.
       setTimeout(() => {
         this.index++;
         this._nextQuestion();
@@ -263,9 +305,7 @@ export class NameStateBoard {
       btn.disabled = true;
       playError();
       this.mistakes++;
-      this.feedbackEl.textContent = "Не тот штат — попробуй ещё";
-      this.feedbackEl.classList.remove("name-feedback-correct");
-      this.feedbackEl.classList.add("name-feedback-wrong");
+      this._setFeedback("Не тот штат — попробуй ещё", "wrong");
       this._reportProgress();
     }
   }
@@ -318,11 +358,7 @@ export class NameStateBoard {
   _revealHint() {
     if (this.locked || !this.current) return;
     this.roundNeededHelp = true;
-    this.feedbackEl.textContent = `Ответ: ${this.current.ru} (${this.current.name})`;
-    this.feedbackEl.classList.remove(
-      "name-feedback-correct",
-      "name-feedback-wrong",
-    );
+    this._setFeedback(`Ответ: ${this.current.ru} (${this.current.name})`);
   }
 
   _resetHardInput() {
@@ -355,9 +391,7 @@ export class NameStateBoard {
         const r = this.confirmBtn.getBoundingClientRect();
         flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
       }
-      this.feedbackEl.textContent = "Верно!";
-      this.feedbackEl.classList.remove("name-feedback-wrong");
-      this.feedbackEl.classList.add("name-feedback-correct");
+      this._setFeedback("Верно!", "correct");
       setTimeout(() => {
         this.inputEl.disabled = false;
         this.index++;
@@ -367,9 +401,7 @@ export class NameStateBoard {
       this.roundNeededHelp = true;
       playError();
       this.mistakes++;
-      this.feedbackEl.textContent = `«${this.matchedPiece.ru}» — не тот штат, попробуй ещё`;
-      this.feedbackEl.classList.remove("name-feedback-correct");
-      this.feedbackEl.classList.add("name-feedback-wrong");
+      this._setFeedback(`«${this.matchedPiece.ru}» — не тот штат, попробуй ещё`, "wrong");
       this.answerBar.classList.add("name-shake");
       setTimeout(
         () => this.answerBar.classList.remove("name-shake"),

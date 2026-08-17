@@ -96,8 +96,13 @@ export class CityPinBoard {
       onTap: (ev) => this._placePinAtClient(ev.clientX, ev.clientY),
       onZoomChange: () => this._onZoomChange(),
     });
-    this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
-    this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
+    // Appended to this.container (#board-container), not this.zoomWrap —
+    // .zoom-wrap is deliberately oversized by "cover" fit and gets
+    // clipped, so a position:absolute child anchored to ITS edges can
+    // land off-screen at extreme aspect ratios. See nameStateBoard.js's
+    // matching comment (same fix as .overview-panel's).
+    this.container.appendChild(createZoomControls(this.zoomCtl));
+    this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
     this._buildActionBar();
     this._nextQuestion();
@@ -117,10 +122,11 @@ export class CityPinBoard {
     this.confirmBtn.disabled = true;
     this.confirmBtn.addEventListener('click', () => this._confirm());
     this.nextBtn.addEventListener('click', () => this._next());
-    // Lives INSIDE the map (a child of .zoom-wrap) rather than a sibling
-    // row that reserves its own flow height — same rule as
-    // nameStateBoard.js's answer bar; see its comment for why.
-    this.zoomWrap.appendChild(bar);
+    // Lives INSIDE the map area (a child of #board-container) rather than
+    // a sibling row that reserves its own flow height — same rule as
+    // nameStateBoard.js's answer bar; see its comment for why it's
+    // appended to this.container rather than this.zoomWrap specifically.
+    this.container.appendChild(bar);
     this.actionBar = bar;
   }
 

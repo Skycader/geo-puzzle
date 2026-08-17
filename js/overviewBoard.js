@@ -432,8 +432,15 @@ export class OverviewBoard {
         this._updateHighwayShields(rect);
       },
     });
-    this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
-    this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
+    // Appended to this.container (#board-container), not this.zoomWrap —
+    // .zoom-wrap is deliberately oversized by "cover" fit and gets
+    // clipped, so a position:absolute child anchored to ITS edges can
+    // land off-screen at extreme aspect ratios — the exact bug
+    // .overview-panel/.overview-panel-toggle below were already fixed
+    // for (see their own comment); zoom-controls/scale-bar had the same
+    // issue.
+    this.container.appendChild(createZoomControls(this.zoomCtl));
+    this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
     // Right-click only — never conflicts with left-click's existing
     // pan/tap-to-info behavior (contextmenu and pointerdown are entirely

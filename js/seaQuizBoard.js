@@ -75,8 +75,13 @@ export class SeaQuizBoard {
         if (id) this._onClick(id);
       },
     });
-    this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
-    this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
+    // Appended to this.container (#board-container), not this.zoomWrap —
+    // .zoom-wrap is deliberately oversized by "cover" fit and gets
+    // clipped, so a position:absolute child anchored to ITS edges can
+    // land off-screen at extreme aspect ratios. See nameStateBoard.js's
+    // matching comment (same fix as .overview-panel's).
+    this.container.appendChild(createZoomControls(this.zoomCtl));
+    this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
     this._nextQuestion();
   }

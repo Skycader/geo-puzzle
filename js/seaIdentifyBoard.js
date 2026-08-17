@@ -97,6 +97,12 @@ export class SeaIdentifyBoard {
   _renderRoundBoard() {
     this.zoomCtl?.destroy();
     this.zoomWrap?.remove();
+    // zoom-controls/scale-bar now live in this.container (see below), not
+    // this.zoomWrap — removing the wrap above no longer cleans these up,
+    // so each round's stale copies need removing explicitly before the
+    // fresh ones are appended.
+    this.zoomControlsEl?.remove();
+    this.scaleBarEl?.remove();
 
     const { width, height } = this.level.canvas;
     const baseW = Math.round(width * this.scale);
@@ -120,11 +126,20 @@ export class SeaIdentifyBoard {
 
     this.zoomViewport.appendChild(this.svg);
     this.container.appendChild(this.zoomWrap);
-    this.zoomWrap.appendChild(this.answerBar); // re-parents the persistent bar into this round's fresh wrap
+    // Appended to this.container (#board-container), NOT this.zoomWrap —
+    // .zoom-wrap is deliberately oversized by "cover" fit and gets
+    // clipped, so a position:absolute child anchored to ITS edges can
+    // land off-screen at extreme aspect ratios. See nameStateBoard.js's
+    // matching comment (same fix as .overview-panel's). Re-appending on
+    // every round still re-parents the persistent bar correctly, just to
+    // the stable container instead of each round's fresh wrap.
+    this.container.appendChild(this.answerBar);
 
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, { panFromAnywhere: true });
-    this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
-    this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
+    this.zoomControlsEl = createZoomControls(this.zoomCtl);
+    this.scaleBarEl = createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit });
+    this.container.appendChild(this.zoomControlsEl);
+    this.container.appendChild(this.scaleBarEl);
   }
 
   _nextQuestion() {

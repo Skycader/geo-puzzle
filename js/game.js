@@ -1013,12 +1013,27 @@ export class Game {
   // it — whenever the map doesn't fill the full available height (see
   // .quiz-prompt's comment on aspect-ratio letterboxing). WIN_BAR_INSET_PX
   // keeps the button clearly inside that edge instead of flush against it.
+  //
+  // Clamped against #board-container's own rect too, not just the map's:
+  // .zoom-wrap is deliberately oversized by "cover" fit (every mode but
+  // puzzle) and gets cropped, so its OWN rect can extend well past the
+  // real visible area at wide aspect ratios — anchoring straight to its
+  // bottom/left/right pushed the button off-screen entirely. Taking the
+  // intersection of the two rects keeps the letterboxing-aware behavior
+  // above for puzzle mode (map smaller than the container) while clamping
+  // to the real visible bounds for every cover-fit mode (map bigger than
+  // the container) — see js/nameStateBoard.js's matching comment on the
+  // same underlying trap for the answer bar/zoom controls/scale bar.
   _positionWinBar() {
     const mapEl = this.board?.zoomWrap;
     if (!mapEl) return;
-    const rect = mapEl.getBoundingClientRect();
-    this.el.winBar.style.left = `${rect.left + rect.width / 2}px`;
-    this.el.winBar.style.top = `${rect.bottom - WIN_BAR_INSET_PX}px`;
+    const mapRect = mapEl.getBoundingClientRect();
+    const containerRect = this.el.boardContainer.getBoundingClientRect();
+    const left = Math.max(mapRect.left, containerRect.left);
+    const right = Math.min(mapRect.right, containerRect.right);
+    const bottom = Math.min(mapRect.bottom, containerRect.bottom);
+    this.el.winBar.style.left = `${(left + right) / 2}px`;
+    this.el.winBar.style.top = `${bottom - WIN_BAR_INSET_PX}px`;
   }
 
   _goMenu() {

@@ -114,6 +114,7 @@ export function attachZoomPan(viewport, content, opts = {}) {
   function apply(nextZoom, anchorClientX, anchorClientY) {
     nextZoom = Math.min(maxZoom, Math.max(minZoom, nextZoom));
     if (nextZoom === zoom) return;
+    focusToken++; // supersede any in-flight animateFocus loop
 
     const rect = viewport.getBoundingClientRect();
     const ax = anchorClientX != null ? anchorClientX - rect.left : viewport.clientWidth / 2;
@@ -139,6 +140,7 @@ export function attachZoomPan(viewport, content, opts = {}) {
   // side-panel list to "fly to" a clicked state/city, as opposed to
   // apply()'s anchor-preserving zoom used for wheel/button zooming.
   function focusOn(nativeX, nativeY, targetZoom) {
+    focusToken++; // supersede any in-flight animateFocus loop
     zoom = Math.min(maxZoom, Math.max(minZoom, targetZoom ?? zoom));
     const { vw, vh } = currentSize();
     vx = nativeX - vw / 2;
@@ -147,6 +149,93 @@ export function attachZoomPan(viewport, content, opts = {}) {
     render();
     scheduleSettle();
     for (const cb of listeners) cb(zoom);
+  }
+
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+  }
+
+  // Smoothly pans/zooms the camera from wherever it currently is to center
+  // on (nativeX, nativeY) at targetZoom, over durationMs — the animated
+  // counterpart to focusOn()'s instant jump. Used by nameStateBoard.js's
+  // "Назови штат"/"Назови страну" to carry the camera toward each round's
+  // newly-highlighted piece rather than snapping there, so the player can
+  // visually track which direction/how far it moved.
+  //
+  // The center point is interpolated linearly, but zoom is interpolated
+  // multiplicatively (start * (target/start)^e) rather than linearly —
+  // zoom is a "how many times bigger" quantity, so a linear blend would
+  // move disproportionately fast at the low-zoom end and crawl at the
+  // high-zoom end of any big zoom change (e.g. a tiny country after a
+  // huge one). The multiplicative blend keeps the zoom change feeling
+  // like a constant rate throughout.
+  let focusToken = 0;
+  function animateFocus(nativeX, nativeY, targetZoom, durationMs) {
+    const token = ++focusToken;
+    targetZoom = Math.min(maxZoom, Math.max(minZoom, targetZoom));
+    const { vw: vw0, vh: vh0 } = currentSize();
+    const startCx = vx + vw0 / 2;
+    const startCy = vy + vh0 / 2;
+    const startZoom = zoom;
+    const t0 = performance.now();
+    const step = (now) => {
+      if (token !== focusToken) return; // superseded by a newer focus or manual interaction
+      const t = Math.min(1, (now - t0) / durationMs);
+      const e = easeInOutCubic(t);
+      const curCx = startCx + (nativeX - startCx) * e;
+      const curCy = startCy + (nativeY - startCy) * e;
+      zoom = startZoom * (targetZoom / startZoom) ** e;
+      const { vw, vh } = currentSize();
+      vx = curCx - vw / 2;
+      vy = curCy - vh / 2;
+      clampOrigin(vw, vh);
+      render();
+      notifyListeners();
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        scheduleSettle();
+      }
+    };
+    requestAnimationFrame(step);
+  }
+
+  // Convenience wrapper around animateFocus()/focusOn() that frames a
+  // native-space bounding box (e.g. a piece's own `bbox`) instead of a
+  // bare point + zoom — computes the box's center and the zoom that fits
+  // it (plus padding, so surrounding context stays visible) itself.
+  function focusOnBBox(bbox, opts = {}) {
+    const [minX, minY, maxX, maxY] = bbox;
+    const w = Math.max(maxX - minX, 1e-6);
+    const h = Math.max(maxY - minY, 1e-6);
+    const cx = (minX + maxX) / 2;
+    let cy = (minY + maxY) / 2;
+    // pad=3 means the padded frame is 4x the piece's own size, i.e. the
+    // piece occupies at most 1/(1+pad) = 25% of the viewport along its
+    // own constraining dimension — comfortably under a 50% ceiling even
+    // once the answer-bar offset below and real-world rendering slop
+    // (stroke width, the hint glow's filter bleed) are accounted for.
+    const pad = opts.pad ?? 3;
+    const paddedW = w * (1 + pad);
+    const paddedH = h * (1 + pad);
+    let targetZoom = Math.min(nativeW / paddedW, nativeH / paddedH);
+    // Clamped independently of the board's own min/maxZoom — without a
+    // cap, a tiny piece (e.g. a small country next to a continent-sized
+    // one) would zoom in far enough to feel jarring/disorienting for an
+    // automatic camera move, even though a player deliberately zooming
+    // that far by hand is fine.
+    targetZoom = Math.min(opts.maxFocusZoom ?? 6, Math.max(opts.minFocusZoom ?? 0.75, targetZoom));
+    // Shifts the focus point DOWN by half of opts.avoidBottomPx (screen
+    // pixels, converted to native units at the target zoom) so the piece
+    // lands centered in the part of the viewport that's actually free to
+    // look at, not the full viewport including whatever a bottom-anchored
+    // overlay (e.g. nameStateBoard.js's answer bar) is covering.
+    if (opts.avoidBottomPx) {
+      const vh = nativeH / targetZoom;
+      cy += (opts.avoidBottomPx / 2) * (vh / viewport.clientHeight);
+    }
+    if (opts.animate === false) focusOn(cx, cy, targetZoom);
+    else animateFocus(cx, cy, targetZoom, opts.durationMs ?? 700);
   }
 
   function onWheel(ev) {
@@ -166,6 +255,7 @@ export function attachZoomPan(viewport, content, opts = {}) {
   function onPointerDown(ev) {
     if (ev.button !== 0) return;
     if (!panFromAnywhere && ev.target !== content) return;
+    focusToken++; // supersede any in-flight animateFocus loop before capturing the pan baseline below
     const { vw, vh } = currentSize();
     pan = {
       startX: ev.clientX,
@@ -221,11 +311,13 @@ export function attachZoomPan(viewport, content, opts = {}) {
     reset: () => apply(1),
     getZoom: () => zoom,
     focusOn,
+    focusOnBBox,
     subscribe: (cb) => {
       listeners.add(cb);
       return () => listeners.delete(cb);
     },
     destroy: () => {
+      focusToken++; // stop any in-flight animateFocus loop
       clearTimeout(settleTimer);
       viewport.removeEventListener('wheel', onWheel);
       content.removeEventListener('pointerdown', onPointerDown);
