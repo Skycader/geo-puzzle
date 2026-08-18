@@ -758,16 +758,6 @@ body {
   width: 100%;
 }
 
-.puzzle-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  min-height: 0;
-  width: 100%;
-}
-
 /* Same "lives inside the map, doesn't push it around" rule as .win-bar —
    used to sit in normal flow above #board-container, reserving its own
    full-width row (see js/game.js's now-removed promptH reservation) purely
@@ -2074,11 +2064,54 @@ body {
   100% { opacity: 0; }
 }
 
+/* The unplaced-pieces tray — a pull-out drawer overlaying the bottom edge
+   of the map (js/puzzleBoard.js's _bindTrayDrawer), not a permanent row
+   sharing the screen with it. At rest it's just tall enough to peek a
+   sliver of the pieces underneath (a visible "there's more here" hint);
+   dragging .tray-handle or scrolling anywhere over .tray pulls it open,
+   up to a generous max height, and it stays wherever it's left (like a
+   real drawer) rather than springing shut. This is what lets the map
+   itself use the WHOLE screen (cover fit, same as every other mode) —
+   previously the map and tray permanently split the available height,
+   which squeezed the map into a small letterboxed square whenever a
+   near-square canvas (like the USA map) met a short, tray-shrunk band.
+   Appended directly to #board-container (not the oversized .zoom-wrap) —
+   same "anchor to the real visible area" rule as .zoom-controls/.win-bar
+   etc., since the map now uses cover fit and .zoom-wrap is oversized. */
 .tray {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* clips .tray-pieces' own scroll to however tall the drawer currently is */
+  border-top: 1px solid rgba(var(--violet-glow-rgb), 0.4);
+  background: rgba(var(--base02-rgb), 0.88);
+  backdrop-filter: blur(6px);
+}
+.tray-handle {
   flex: none;
-  width: 100%;
-  max-width: 100%;
-  max-height: 32vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  cursor: ns-resize;
+  touch-action: none;
+}
+.tray-handle::before {
+  content: '';
+  width: 48px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(var(--neon-cyan-rgb), 0.4);
+  transition: background 0.15s ease;
+}
+.tray-handle:hover::before { background: rgba(var(--neon-cyan-rgb), 0.75); }
+.tray-pieces {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-wrap: wrap;
@@ -2086,10 +2119,7 @@ body {
   align-content: flex-start;
   justify-content: center;
   gap: 4px;
-  padding: 10px;
-  border: 1px solid rgba(var(--violet-glow-rgb), 0.3);
-  border-radius: 8px;
-  background: rgba(var(--base02-rgb), 0.35);
+  padding: 0 10px 10px;
 }
 
 .piece {
@@ -2169,9 +2199,9 @@ body {
 
 /* "Press R to play again" — a keycap + reload glyph instead of any actual
    words, so it reads the same no matter what language the player's
-   browser/OS is set to. Purely informational (not a duplicate button —
-   the win-bar's own document-level keydown listener in game.js is what
-   actually reacts to R), so no button affordance/cursor here. */
+   browser/OS is set to. Also directly clickable (see game.js's shared
+   replay() wired to both the document-level keydown listener and this
+   element's click/Enter/Space) — cursor/hover/focus below reflect that. */
 .replay-hint {
   display: flex;
   align-items: center;
@@ -2211,26 +2241,26 @@ body {
 }
 /* ---------------- scrollbars ---------------- */
 
-.tray,
+.tray-pieces,
 .screen-menu {
   scrollbar-width: thin; /* Firefox */
   scrollbar-color: rgba(var(--neon-cyan-rgb), 0.35) transparent;
 }
-.tray::-webkit-scrollbar,
+.tray-pieces::-webkit-scrollbar,
 .screen-menu::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-.tray::-webkit-scrollbar-thumb,
+.tray-pieces::-webkit-scrollbar-thumb,
 .screen-menu::-webkit-scrollbar-thumb {
   background: rgba(var(--neon-cyan-rgb), 0.3);
   border-radius: 4px;
 }
-.tray::-webkit-scrollbar-thumb:hover,
+.tray-pieces::-webkit-scrollbar-thumb:hover,
 .screen-menu::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--neon-cyan-rgb), 0.5);
 }
-.tray::-webkit-scrollbar-track,
+.tray-pieces::-webkit-scrollbar-track,
 .screen-menu::-webkit-scrollbar-track {
   background: transparent;
 }

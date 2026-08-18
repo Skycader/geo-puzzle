@@ -223,7 +223,6 @@ export class Game {
       hudGroups: document.getElementById('hud-groups'),
       hudTimer: document.getElementById('hud-timer'),
       btnBrand: document.getElementById('btn-brand'),
-      btnMenu: document.getElementById('btn-menu'),
       levelList: document.getElementById('level-list'),
       modeList: document.getElementById('mode-list'),
       presetList: document.getElementById('preset-list'),
@@ -574,7 +573,6 @@ export class Game {
       replay();
     });
     this.el.btnBrand.addEventListener('click', () => this._goMenu());
-    this.el.btnMenu.addEventListener('click', () => this._goMenu());
     this.el.btnBackMenu.addEventListener('click', () => {
       playClick();
       this._goMenu();
@@ -714,16 +712,21 @@ export class Game {
     this.el.hudGroups.hidden = false;
     this.el.hudGroups.textContent = 'Частей: 0';
 
-    // split the available vertical space between the board and the tray,
-    // then size tray pieces so all of them fit the tray band without it
-    // needing to scroll (small piece counts get full-size icons, large
-    // ones shrink to fit).
-    const availH = this._availableHeight();
-    const availW = window.innerWidth - SCREEN_EDGE_MARGIN_PX * 2;
-    const trayBandH = clamp(availH * 0.28, 110, 280);
-    const boardBandH = availH - trayBandH - 14;
-    const scale = this._computeScale(level.canvas, boardBandH);
-    const traySize = clamp(Math.sqrt((availW * trayBandH) / toPlaceCount) * 0.78, 38, 110);
+    // Still "contain" fit (see _computeScale's comment — puzzle mode can
+    // never crop the hint outline, unlike every other mode's cover fit),
+    // but now against the FULL available height instead of a boardBandH
+    // shrunk to leave room for a permanent tray band below it — the tray
+    // is a pull-out drawer overlaying the map's bottom edge now (see
+    // puzzleBoard.js's _bindTrayDrawer), so the board no longer has to
+    // share the screen with it at all. That's what was squeezing the
+    // board into a small letterboxed square: the USA canvas is close to
+    // square itself, so contain-fitting it into a short, tray-shrunk band
+    // produced a small square with big empty margins on either side.
+    // Piece icons get one comfortable constant size rather than shrinking
+    // to force-fit a budget — the drawer's own internal scroll handles
+    // overflow instead.
+    const scale = this._computeScale(level.canvas, this._availableHeight());
+    const traySize = 78;
 
     this.board = new PuzzleBoard(this.el.boardContainer, level, {
       toPlaceCount,

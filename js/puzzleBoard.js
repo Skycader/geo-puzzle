@@ -56,8 +56,6 @@ export class PuzzleBoard {
     const padY = Math.round(height * 0.12);
 
     this.container.innerHTML = '';
-    this.wrapEl = document.createElement('div');
-    this.wrapEl.className = 'puzzle-wrap';
 
     const baseW = Math.round((width + padX * 2) * this.scale);
     const baseH = Math.round((height + padY * 2) * this.scale);
@@ -91,24 +89,43 @@ export class PuzzleBoard {
     }
     this.boardSvg.appendChild(this.hintLayer);
 
+    // The tray is a pull-out drawer overlaying the map's bottom edge (see
+    // _bindTrayDrawer), not a permanent row sharing the screen with it —
+    // .tray-handle is what you drag/scroll on to open it; the actual
+    // pieces live in .tray-pieces, which gets its own internal scroll for
+    // whenever there are more pieces than fit even fully open.
     this.trayEl = document.createElement('div');
     this.trayEl.className = 'tray';
+    this.trayHandle = document.createElement('div');
+    this.trayHandle.className = 'tray-handle';
+    this.trayHandle.title = 'Потяните вверх или прокрутите, чтобы открыть лоток';
+    this.trayEl.appendChild(this.trayHandle);
+    this.trayPieces = document.createElement('div');
+    this.trayPieces.className = 'tray-pieces';
+    this.trayEl.appendChild(this.trayPieces);
 
     this.zoomViewport.appendChild(this.boardSvg);
     // The wrap must be attached to the live document BEFORE attachZoomPan()
     // runs — it measures viewport.clientWidth/Height immediately (for pan
     // clamping), which reads 0 on a detached element.
-    this.wrapEl.appendChild(this.zoomWrap);
-    this.wrapEl.appendChild(this.trayEl);
-    this.container.appendChild(this.wrapEl);
+    this.container.appendChild(this.zoomWrap);
+    this.container.appendChild(this.trayEl);
 
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.boardSvg, {
       baseWidth: baseW,
       baseHeight: baseH,
       onZoomChange: (zoom) => this._rescaleLabelsForZoom(zoom),
     });
+    // Appended to this.zoomWrap, not this.container — puzzle mode still
+    // uses "contain" fit (see game.js's _computeScale's comment: the whole
+    // hint outline has to stay visible, unlike every other mode's cover
+    // fit), so .zoom-wrap is never oversized here. Anchoring to it instead
+    // of the container keeps the controls flush against the actually-
+    // rendered map's own corner rather than the full screen's, in case
+    // contain-fit letterboxes the map away from that corner.
     this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
     this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
+    this._bindTrayDrawer();
 
     const count = clamp(this.toPlaceCount, 1, this.level.pieces.length);
     const toPlaceIds = new Set(shuffle(this.level.pieces.map((p) => p.id)).slice(0, count));
@@ -134,12 +151,52 @@ export class PuzzleBoard {
     for (const id of trayOrder) {
       const piece = this._createTrayPiece(this.byId.get(id));
       this.trayWraps.set(id, piece.wrap);
-      this.trayEl.appendChild(piece.wrap);
+      this.trayPieces.appendChild(piece.wrap);
       this._attachTrayDrag(id, piece.wrap);
     }
 
     this.setLabelsVisible(this.labelsVisible);
     this._afterChange();
+  }
+
+  // ---------------- tray drawer (drag/scroll to open, like a pull-out
+  // drawer — see the top-of-_build comment) ----------------
+
+  _bindTrayDrawer() {
+    // Just tall enough to peek a sliver of the piece row underneath as a
+    // "there's more here" hint, without eating map space at rest.
+    const REST_H = 84;
+    const maxH = () => Math.min(420, this.container.clientHeight * 0.55);
+    this._trayHeight = REST_H;
+    const applyHeight = (h) => {
+      this._trayHeight = Math.min(maxH(), Math.max(REST_H, h));
+      this.trayEl.style.height = `${this._trayHeight}px`;
+    };
+    applyHeight(REST_H);
+
+    // Scrolling UP (negative deltaY) opens the drawer, matching the
+    // "drag the handle up to open" direction below.
+    this.trayEl.addEventListener(
+      'wheel',
+      (ev) => {
+        ev.preventDefault();
+        applyHeight(this._trayHeight - ev.deltaY);
+      },
+      { passive: false }
+    );
+
+    this.trayHandle.addEventListener('pointerdown', (ev) => {
+      ev.preventDefault();
+      const startY = ev.clientY;
+      const startHeight = this._trayHeight;
+      const move = (mv) => applyHeight(startHeight - (mv.clientY - startY));
+      const up = () => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+      };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    });
   }
 
   // ---------------- tray pieces ----------------
@@ -289,7 +346,7 @@ export class PuzzleBoard {
     wrap.style.left = '';
     wrap.style.top = '';
     wrap.style.zIndex = '';
-    this.trayEl.appendChild(wrap);
+    this.trayPieces.appendChild(wrap);
   }
 
   // ---------------- workspace pieces ----------------
@@ -411,7 +468,7 @@ export class PuzzleBoard {
     wrap.style.left = '';
     wrap.style.top = '';
     wrap.style.zIndex = '';
-    this.trayEl.appendChild(wrap);
+    this.trayPieces.appendChild(wrap);
   }
 
   // ---------------- snapping / merging ----------------
@@ -504,7 +561,7 @@ export class PuzzleBoard {
       groups: this.groups.size,
     });
 
-    const trayEmpty = this.trayEl.children.length === 0;
+    const trayEmpty = this.trayPieces.children.length === 0;
     if (trayEmpty && this.groups.size === 1 && this.placedCount === this.level.pieces.length) {
       this.won = true;
       setTimeout(() => playWin(), 150);
