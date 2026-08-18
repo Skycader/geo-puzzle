@@ -260,13 +260,13 @@ export class PuzzleBoard {
     const clientY = rect.top + rect.height / 2;
     this.activeTrayDrag = null;
 
-    const boardRect = this.boardSvg.getBoundingClientRect();
+    const boardRect = this.zoomViewport.getBoundingClientRect();
     if (!this._pointInRect(clientX, clientY, boardRect)) {
       this._returnPieceToTray(id);
       return;
     }
 
-    const native = this._clientToNative(clientX, clientY, boardRect);
+    const native = this._clientToNative(clientX, clientY);
     const data = this.byId.get(id);
     const offsetX = native.x - data.cx;
     const offsetY = native.y - data.cy;
@@ -337,8 +337,7 @@ export class PuzzleBoard {
     if (!group) return;
     ev.preventDefault();
 
-    const boardRect = this.boardSvg.getBoundingClientRect();
-    const startNative = this._clientToNative(ev.clientX, ev.clientY, boardRect);
+    const startNative = this._clientToNative(ev.clientX, ev.clientY);
     this.activeWsDrag = {
       groupId,
       startOffsetX: group.offsetX,
@@ -355,8 +354,7 @@ export class PuzzleBoard {
   _onWorkspacePointerMove(ev) {
     if (!this.activeWsDrag) return;
     const { groupId, startOffsetX, startOffsetY, startNativeX, startNativeY } = this.activeWsDrag;
-    const boardRect = this.boardSvg.getBoundingClientRect();
-    const native = this._clientToNative(ev.clientX, ev.clientY, boardRect);
+    const native = this._clientToNative(ev.clientX, ev.clientY);
     const ox = startOffsetX + (native.x - startNativeX);
     const oy = startOffsetY + (native.y - startNativeY);
     const group = this.groups.get(groupId);
@@ -379,7 +377,7 @@ export class PuzzleBoard {
     // solo pieces dropped back over the tray get un-placed
     if (group.members.size === 1) {
       const [onlyId] = group.members;
-      const boardRect = this.boardSvg.getBoundingClientRect();
+      const boardRect = this.zoomViewport.getBoundingClientRect();
       const trayRect = this.trayEl.getBoundingClientRect();
       const g = this.pieceEls.get(onlyId).g;
       const gRect = g.getBoundingClientRect();
@@ -482,18 +480,13 @@ export class PuzzleBoard {
     return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
   }
 
-  _clientToNative(clientX, clientY, boardRect) {
-    // Reads the SVG's OWN live viewBox rather than assuming it always spans
-    // the full padded canvas — zoomPan.js now zooms by shrinking/moving the
-    // viewBox itself (cropping into the vector data) rather than by
-    // stretching a fixed-viewBox element via CSS transform, so the mapping
-    // from screen px to native units has to follow whatever the viewBox
-    // currently is, not the zoom=1 extent.
-    const vb = this.boardSvg.viewBox.baseVal;
-    return {
-      x: ((clientX - boardRect.left) / boardRect.width) * vb.width + vb.x,
-      y: ((clientY - boardRect.top) / boardRect.height) * vb.height + vb.y,
-    };
+  _clientToNative(clientX, clientY) {
+    // Delegates to zoomCtl rather than reading the SVG's own viewBox/rect —
+    // those only describe the visible crop while zoomPan.js is in its
+    // viewport-filling 'crop' mode; while panning (native-scroll 'scroll'
+    // mode) the SVG itself can be far bigger than the viewport, so its own
+    // getBoundingClientRect() no longer means "the visible area" at all.
+    return this.zoomCtl.clientToNative(clientX, clientY);
   }
 
   _afterChange() {

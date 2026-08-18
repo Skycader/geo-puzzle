@@ -151,14 +151,10 @@ export class CityPinBoard {
   }
 
   _clientToNative(clientX, clientY) {
-    // Reads the SVG's OWN live viewBox rather than the zoom=1 canvas size —
-    // see the matching comment in puzzleBoard.js's _clientToNative.
-    const rect = this.svg.getBoundingClientRect();
-    const vb = this.svg.viewBox.baseVal;
-    return {
-      x: ((clientX - rect.left) / rect.width) * vb.width + vb.x,
-      y: ((clientY - rect.top) / rect.height) * vb.height + vb.y,
-    };
+    // Delegates to zoomCtl — see the matching comment in puzzleBoard.js's
+    // _clientToNative for why reading the SVG's own rect/viewBox directly
+    // no longer works once zoomPan.js's native-scroll pan mode is active.
+    return this.zoomCtl.clientToNative(clientX, clientY);
   }
 
   _placePinAtClient(clientX, clientY) {

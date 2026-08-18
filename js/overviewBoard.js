@@ -235,10 +235,15 @@ export class OverviewBoard {
     this.wrapEl = document.createElement('div');
     this.wrapEl.className = 'overview-wrap';
     // The side panel has no natural height of its own (its list wants to
-    // grow with content) — pin the row to the map's fixed height so the
-    // panel's flex:1 list-scroll area actually has something to be 1/N of,
-    // instead of the whole row growing to fit every list item.
-    this.wrapEl.style.height = baseH + 'px';
+    // grow with content) — pin the row to the map's real rendered height
+    // so the panel's flex:1 list-scroll area actually has something to be
+    // 1/N of, instead of the whole row growing to fit every list item.
+    // Capped the same way createZoomWrap() below caps .zoom-wrap itself —
+    // baseH is "cover"-fit's oversized size, taller than the map's real
+    // on-screen height whenever the level's aspect ratio doesn't match the
+    // viewport's; using it directly here would leave a gap between this
+    // row and the (correctly capped) map underneath it.
+    this.wrapEl.style.height = Math.min(baseH, this.container.clientHeight) + 'px';
 
     const { wrap: zoomWrap, viewport: zoomViewport } = createZoomWrap(baseW, baseH, this.container);
     this.zoomWrap = zoomWrap;
@@ -783,16 +788,11 @@ export class OverviewBoard {
     this.rulerReadoutEl = el;
   }
 
-  // Same math as cityPinBoard.js's _clientToNative — reads the SVG's own
-  // live viewBox (rather than assuming zoom=1), so it stays correct at
-  // any current pan/zoom.
+  // Delegates to zoomCtl — see the matching comment in puzzleBoard.js's
+  // _clientToNative for why reading the SVG's own rect/viewBox directly no
+  // longer works once zoomPan.js's native-scroll pan mode is active.
   _clientToNative(clientX, clientY) {
-    const rect = this.svg.getBoundingClientRect();
-    const vb = this.svg.viewBox.baseVal;
-    return {
-      x: ((clientX - rect.left) / rect.width) * vb.width + vb.x,
-      y: ((clientY - rect.top) / rect.height) * vb.height + vb.y,
-    };
+    return this.zoomCtl.clientToNative(clientX, clientY);
   }
 
   // Right-click doesn't need any onTap-style tap-vs-drag distinction —

@@ -802,11 +802,10 @@ body {
 }
 
 /* .zoom-wrap never scrolls — it's just the fixed-size frame that anchors
-   the floating zoom buttons. .zoom-viewport (its only other child) clips
-   the map (overflow:hidden — there's no native scrolling; zoomPan.js pans
-   the content itself via a CSS transform); keeping the buttons as its
-   SIBLING, rather than its child, is what stops them moving with the map
-   when the player pans or zooms. */
+   the floating zoom buttons AND (see below) the custom pan-scrollbar
+   thumbs. .zoom-viewport (its only other child) is the real scroll
+   container; keeping these as its SIBLINGS, rather than its children, is
+   what stops them scrolling away with the map when the player pans. */
 .zoom-wrap {
   position: relative;
 }
@@ -818,12 +817,49 @@ body {
   position: relative; /* anchors .osm-frame's absolute positioning below */
   width: 100%;
   height: 100%;
+  /* `hidden`, not `scroll` — real Chrome/Windows setups turned out to
+     still render an auto-hiding "overlay" scrollbar here regardless of
+     `overflow: scroll` + a ::-webkit-scrollbar override, which defeated
+     the whole point (these need to stay visible and grabbable at rest,
+     not just flash on interaction). zoomPan.js drives scrollLeft/scrollTop
+     programmatically either way — `overflow: hidden` still allows that,
+     it just also means no BROWSER scrollbar UI competes for the same job;
+     the custom pan-scrollbar-* thumbs below are the only affordance now. */
   overflow: hidden;
   cursor: grab;
 }
 .zoom-viewport.panning { cursor: grabbing; }
 .zoom-viewport.panning .board-svg,
 .zoom-viewport.panning .quiz-svg { cursor: grabbing; }
+
+/* Custom pan scrollbars (see zoomPan.js's updateScrollbars/
+   makeThumbDraggable) — plain divs instead of the browser's own scrollbar
+   UI, guaranteed to render and stay visible the same way on every browser/
+   OS/GPU combination, unlike the native one this replaced. Positioned and
+   sized in JS (left/width or top/height), driving viewport.scrollLeft/
+   scrollTop directly on drag. */
+.pan-scrollbar-thumb {
+  position: absolute;
+  z-index: 12;
+  background: rgba(var(--neon-cyan-rgb), 0.5);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.pan-scrollbar-thumb:hover,
+.pan-scrollbar-thumb.dragging {
+  background: rgba(var(--neon-cyan-rgb), 0.8);
+}
+.pan-scrollbar-h {
+  left: 0;
+  bottom: 3px;
+  height: 8px;
+}
+.pan-scrollbar-v {
+  top: 0;
+  right: 3px;
+  width: 8px;
+}
 
 /* Overview mode's OSM layer (see overviewBoard.js's setOsmVisible) — a
    sibling of .board-svg inside the same .zoom-viewport. position:absolute
