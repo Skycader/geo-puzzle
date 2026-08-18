@@ -265,8 +265,6 @@ export class Game {
       togglePlaces: document.getElementById('toggle-places'),
       toggleHighwaysWrap: document.getElementById('toggle-highways-wrap'),
       toggleHighways: document.getElementById('toggle-highways'),
-      toggleOsmWrap: document.getElementById('toggle-osm-wrap'),
-      toggleOsm: document.getElementById('toggle-osm'),
       toggleLandScheme: document.getElementById('toggle-land-scheme'),
       faviconLink: document.getElementById('favicon-link'),
       coinBalance: document.getElementById('coin-balance'),
@@ -609,15 +607,6 @@ export class Game {
       this.highwaysVisible = ev.target.checked;
       if (this.board?.setHighwaysVisible) this.board.setHighwaysVisible(this.highwaysVisible);
     });
-    // setOsmVisible(true) can fail (no sane lon/lat bbox for the current
-    // view — see overviewBoard.js's own comment) — when it does, the
-    // checkbox itself needs to snap back to unchecked rather than sitting
-    // there showing "on" for a switch that silently did nothing.
-    this.el.toggleOsm.addEventListener('change', (ev) => {
-      if (!this.board?.setOsmVisible) return;
-      const ok = this.board.setOsmVisible(ev.target.checked);
-      if (ev.target.checked && !ok) this.el.toggleOsm.checked = false;
-    });
     // Keeps the finish button anchored to the map's actual edge (see
     // _positionWinBar) if the window resizes while it's showing — a no-op
     // whenever the bar is hidden, so this doesn't need its own
@@ -702,9 +691,7 @@ export class Game {
     this.el.toggleLabels.checked = this.labelsVisible;
     this.el.toggleHintsWrap.hidden = !preset.showToggles;
     this.el.toggleLabelsWrap.hidden = !preset.showToggles;
-    this.el.toggleHighwaysWrap.hidden = true;
-    this.el.toggleOsmWrap.hidden = true;
-    this.el.toggleHintsText.textContent = 'Подсказки';
+    this.el.toggleHighwaysWrap.hidden = true;    this.el.toggleHintsText.textContent = 'Подсказки';
     this.el.toggleLabelsText.textContent = 'Буквы';
     this.el.quizPrompt.hidden = true;
 
@@ -739,9 +726,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;
-    this.el.toggleOsmWrap.hidden = true;
-    this.el.quizPrompt.hidden = false;
+    this.el.toggleHighwaysWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('quiz', 'Найди штат')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
@@ -764,9 +749,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;
-    this.el.toggleOsmWrap.hidden = true;
-    // No text prompt here — the "question" is the pulsing highlight on the
+    this.el.toggleHighwaysWrap.hidden = true;    // No text prompt here — the "question" is the pulsing highlight on the
     // map itself (see nameStateBoard.js), showing the name would give away
     // the answer.
     this.el.quizPrompt.hidden = true;
@@ -793,9 +776,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;
-    this.el.toggleOsmWrap.hidden = true;
-    // No text prompt — the "question" is entirely on the map (highlighted
+    this.el.toggleHighwaysWrap.hidden = true;    // No text prompt — the "question" is entirely on the map (highlighted
     // state + glowing border), same reasoning as _startNameState.
     this.el.quizPrompt.hidden = true;
 
@@ -826,9 +807,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;
-    this.el.toggleOsmWrap.hidden = true;
-    this.el.quizPrompt.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;    this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('identify', 'Определи штат')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
@@ -855,9 +834,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;
-    this.el.toggleOsmWrap.hidden = true;
-    this.el.quizPrompt.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;    this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Определи море или океан (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
@@ -884,9 +861,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;
-    this.el.toggleOsmWrap.hidden = true;
-    this.el.quizPrompt.hidden = false;
+    this.el.toggleHighwaysWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · Найди море или океан (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
@@ -914,9 +889,7 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;
-    this.el.toggleOsmWrap.hidden = true;
-    this.el.quizPrompt.hidden = false;
+    this.el.toggleHighwaysWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · Города и места (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
@@ -977,15 +950,6 @@ export class Game {
     this.el.togglePlaces.checked = this.placesVisible;
     this.el.toggleHighwaysWrap.hidden = !level.highways?.length;
     this.el.toggleHighways.checked = this.highwaysVisible;
-    // Shown for every Overview level (unlike highways, OSM works from
-    // plain lon/lat — see geoCoords.js's nativeToLonLat — regardless of
-    // whether this particular level has highway data). Always starts
-    // unchecked/SVG on a fresh session rather than persisting like the
-    // other toggles — "SVG by default" per the spec, not a remembered
-    // preference, so there's never a stale "already on OSM" state to
-    // reconcile with a freshly-built board.
-    this.el.toggleOsmWrap.hidden = false;
-    this.el.toggleOsm.checked = false;
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Обзор`;

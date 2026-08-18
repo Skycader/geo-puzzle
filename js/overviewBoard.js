@@ -222,6 +222,12 @@ export class OverviewBoard {
     // without this, a panel left collapsed from a previous Overview
     // session would silently carry over into a fresh one.
     this.container.classList.remove('panel-collapsed');
+    // Lets .zoom-controls/.layer-switcher's CSS reposition themselves next
+    // to the panel with a plain class check instead of :has(.overview-
+    // panel) — see that CSS comment for why :has() specifically was a
+    // real, measured FPS regression here (this subtree mutates on
+    // essentially every pan/zoom frame via city virtualization).
+    this.container.classList.add('has-overview-panel');
 
     const baseW = Math.round(width * this.scale);
     const baseH = Math.round(height * this.scale);
@@ -518,6 +524,7 @@ export class OverviewBoard {
     this.container.appendChild(this.scaleBarEl);
     this.osmVisible = false;
     this.osmIframe = null;
+    this._buildLayerSwitcher();
 
     // Right-click only — never conflicts with left-click's existing
     // pan/tap-to-info behavior (contextmenu and pointerdown are entirely
@@ -1517,6 +1524,89 @@ export class OverviewBoard {
     }
   }
 
+  // Small floating "layers" button in the map's bottom-right corner
+  // (stacked above .zoom-controls, same corner-cluster language) that
+  // opens an upward dropdown with the two available layers. Lives here
+  // rather than as a topbar checkbox (an earlier version of this
+  // feature) since it's Overview-only and purely about THIS map, not a
+  // global setting game.js needs to know about.
+  _buildLayerSwitcher() {
+    const wrap = document.createElement('div');
+    wrap.className = 'layer-switcher';
+    wrap.innerHTML = `
+      <button type="button" class="layer-switcher-btn" title="Слой карты" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3 L21 8 L12 13 L3 8 Z" />
+          <path d="M3 12 L12 17 L21 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M3 16 L12 21 L21 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <div class="layer-switcher-menu" hidden>
+        <button type="button" class="layer-switcher-option" data-layer="svg">SVG <span class="layer-switcher-hint">оффлайн</span></button>
+        <button type="button" class="layer-switcher-option" data-layer="osm">OpenStreetMap</button>
+      </div>
+    `;
+    this.container.appendChild(wrap);
+    this.layerSwitcherEl = wrap;
+    this.layerSwitcherBtn = wrap.querySelector('.layer-switcher-btn');
+    this.layerSwitcherMenu = wrap.querySelector('.layer-switcher-menu');
+
+    this.layerSwitcherBtn.addEventListener('click', () => {
+      if (this.layerSwitcherMenu.hidden) this._openLayerSwitcher();
+      else this._closeLayerSwitcher();
+    });
+    this.layerSwitcherMenu.querySelector('[data-layer="svg"]').addEventListener('click', () => {
+      if (!this.osmVisible) return this._closeLayerSwitcher(); // already active
+      this.setOsmVisible(false);
+      this._closeLayerSwitcher();
+    });
+    this.layerSwitcherMenu.querySelector('[data-layer="osm"]').addEventListener('click', () => {
+      if (this.osmVisible) return this._closeLayerSwitcher(); // already active
+      // Left open on failure (see setOsmVisible's own comment on when
+      // that happens) rather than closing as if it had worked — the
+      // player can zoom/pan to a single-region view and try again
+      // without having to reopen the menu.
+      if (this.setOsmVisible(true)) this._closeLayerSwitcher();
+    });
+    this._updateLayerSwitcherActive();
+  }
+
+  _openLayerSwitcher() {
+    this.layerSwitcherMenu.hidden = false;
+    this.layerSwitcherBtn.setAttribute('aria-expanded', 'true');
+    // Capture phase + a fresh task (not this same click) — same reasoning
+    // as _openContextMenu's outside-click handler: attaching synchronously
+    // within the very click that opened it would let that click's own
+    // bubble-up close it again immediately.
+    setTimeout(() => {
+      this._layerSwitcherOutsideHandler = (e) => {
+        if (!this.layerSwitcherEl.contains(e.target)) this._closeLayerSwitcher();
+      };
+      this._layerSwitcherKeyHandler = (e) => {
+        if (e.key === 'Escape') this._closeLayerSwitcher();
+      };
+      window.addEventListener('pointerdown', this._layerSwitcherOutsideHandler, true);
+      window.addEventListener('keydown', this._layerSwitcherKeyHandler);
+    }, 0);
+  }
+
+  _closeLayerSwitcher() {
+    if (this.layerSwitcherMenu.hidden) return;
+    this.layerSwitcherMenu.hidden = true;
+    this.layerSwitcherBtn.setAttribute('aria-expanded', 'false');
+    window.removeEventListener('pointerdown', this._layerSwitcherOutsideHandler, true);
+    window.removeEventListener('keydown', this._layerSwitcherKeyHandler);
+    this._layerSwitcherOutsideHandler = null;
+    this._layerSwitcherKeyHandler = null;
+  }
+
+  _updateLayerSwitcherActive() {
+    const svgBtn = this.layerSwitcherMenu.querySelector('[data-layer="svg"]');
+    const osmBtn = this.layerSwitcherMenu.querySelector('[data-layer="osm"]');
+    svgBtn.classList.toggle('active', !this.osmVisible);
+    osmBtn.classList.toggle('active', this.osmVisible);
+  }
+
   // Switches between the offline SVG map and a live OpenStreetMap iframe
   // framing (as closely as computeVisibleLonLatBBox can manage) the same
   // area the SVG was just showing. Returns false (and leaves everything
@@ -1538,6 +1628,7 @@ export class OverviewBoard {
       setElementHidden(this.svg, false);
       setElementHidden(this.zoomControlsEl, false);
       setElementHidden(this.scaleBarEl, false);
+      this._updateLayerSwitcherActive();
       return true;
     }
     if (!this._lastVisibleRect) return false;
@@ -1558,6 +1649,7 @@ export class OverviewBoard {
     setElementHidden(this.zoomControlsEl, true);
     setElementHidden(this.scaleBarEl, true);
     this.osmVisible = true;
+    this._updateLayerSwitcherActive();
     return true;
   }
 
@@ -1566,7 +1658,13 @@ export class OverviewBoard {
     this._revealQueue = [];
     clearTimeout(this.focusTimeoutHandle);
     this._closeContextMenu(); // removes its window-level listeners too, not just the DOM node
+    this._closeLayerSwitcher(); // same reasoning — its outside-click/Escape listeners are window-level too
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
+    // Otherwise leaving Overview for any other mode would leave
+    // #board-container's .zoom-controls permanently shifted to the
+    // panel-open 320px offset there too — the class survives innerHTML
+    // clearing just like panel-collapsed does (see _build's comment).
+    this.container.classList.remove('has-overview-panel');
   }
 }

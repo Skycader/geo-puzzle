@@ -850,10 +850,37 @@ body {
   position: absolute;
   right: 20px;
   bottom: 20px;
-  z-index: 5;
+  /* Above .overview-panel's z-index:15 — the panel (right-anchored,
+     full height) fully covers this same bottom-right corner whenever
+     it's open, which would otherwise swallow every click here in
+     Overview mode. */
+  z-index: 20;
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+/* Overview mode only — #board-container gets a plain JS-toggled class
+   (see overviewBoard.js's _build/destroy) rather than a :has(.overview-
+   panel) selector: :has() forces the browser to re-check this rule on
+   every mutation anywhere inside #board-container, and Overview's city
+   virtualization mutates that subtree on essentially every pan/zoom
+   frame — measured as a severe FPS regression in practice, reverted
+   immediately once reported. A plain ancestor class costs nothing extra
+   per frame, only re-evaluating when the class itself actually changes
+   (built once, and on each panel collapse/expand toggle).
+   Sits to the LEFT of the 300px-wide panel instead of underneath it,
+   then slides back out to the plain viewport edge when the panel is
+   collapsed (#board-container.panel-collapsed) — same 300px/0
+   right-offset swap .overview-panel-toggle itself already does, just
+   applied to this corner cluster too instead of only the panel edge. */
+#board-container.has-overview-panel .zoom-controls,
+#board-container.has-overview-panel .layer-switcher {
+  right: 320px;
+  transition: right 0.2s ease;
+}
+#board-container.has-overview-panel.panel-collapsed .zoom-controls,
+#board-container.has-overview-panel.panel-collapsed .layer-switcher {
+  right: 20px;
 }
 .zoom-btn {
   width: 38px;
@@ -883,6 +910,82 @@ body {
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
   user-select: none;
 }
+
+/* Overview mode's SVG/OSM layer switcher (see overviewBoard.js's
+   _buildLayerSwitcher) — stacked directly above .zoom-controls in the
+   same bottom-right corner, same corner-cluster visual language. The
+   177px bottom offset is empirical: .zoom-controls is 3 .zoom-btn's
+   (38px) + .zoom-level's text + 2 gaps, ~147px tall, sitting on its own
+   20px bottom offset — this leaves a clean 10px gap above it.
+   Its `right` value tracks .zoom-controls' own (20px, or 320px next to
+   the open panel) via the shared .has-overview-panel-scoped rules above
+   — no separate copy of that logic needed here. */
+.layer-switcher {
+  position: absolute;
+  right: 20px;
+  bottom: 177px;
+  z-index: 20; /* above .overview-panel's 15 — see .zoom-controls' matching comment */
+}
+.layer-switcher-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(var(--ink-rgb), 0.8);
+  color: var(--neon-cyan);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.layer-switcher-btn:hover,
+.layer-switcher-btn[aria-expanded='true'] {
+  background: rgba(var(--neon-cyan-rgb), 0.15);
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.4);
+}
+.layer-switcher-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+/* Opens UPWARD (bottom:100%, not top) — the button sits near the bottom
+   edge of the map, a downward menu would frequently run off it. right:0
+   (not left:0) — the button is in the bottom-right corner, a
+   left-anchored menu would open toward the (possibly open) side panel. */
+.layer-switcher-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  display: flex;
+  flex-direction: column;
+  min-width: 168px;
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.4);
+  border-radius: 8px;
+  background: rgba(var(--ink-rgb), 0.92);
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+.layer-switcher-option {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  color: var(--base0);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.layer-switcher-option:hover { background: rgba(var(--neon-cyan-rgb), 0.12); }
+.layer-switcher-option.active {
+  color: var(--neon-cyan);
+  background: rgba(var(--neon-cyan-rgb), 0.1);
+}
+.layer-switcher-option.active::before { content: '✓'; }
+.layer-switcher-hint { font-size: 11px; color: var(--base01); }
 
 /* Passive Google-Maps-style scale readout, opposite corner from the zoom
    controls. Always exactly 100 screen px wide — only its label changes. */
