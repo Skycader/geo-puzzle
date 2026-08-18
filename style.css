@@ -2182,7 +2182,10 @@ body {
   background: rgba(var(--ink-rgb), 0.85);
   color: var(--neon-cyan);
   animation: replay-hint-pulse 2.2s ease-in-out infinite;
+  cursor: pointer; /* clickable, not just a passive "press R" reminder — see game.js */
 }
+.replay-hint:hover { border-color: rgba(var(--neon-cyan-rgb), 0.7); }
+.replay-hint:focus-visible { outline: 2px solid var(--neon-cyan); outline-offset: 2px; }
 .replay-key {
   display: flex;
   align-items: center;

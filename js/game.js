@@ -254,6 +254,7 @@ export class Game {
       quizPromptLabel: document.getElementById('quiz-prompt-label'),
       quizPromptName: document.getElementById('quiz-prompt-name'),
       winBar: document.getElementById('win-bar'),
+      replayHint: document.getElementById('replay-hint'),
       btnBackMenu: document.getElementById('btn-back-menu'),
       toggleHintsWrap: document.getElementById('toggle-hints-wrap'),
       toggleLabelsWrap: document.getElementById('toggle-labels-wrap'),
@@ -552,12 +553,25 @@ export class Game {
     // still exactly what they were for the round that just finished, so
     // this is a genuine "same settings, go again" rather than a trip
     // back through the setup screen.
-    document.addEventListener('keydown', (ev) => {
+    const replay = () => {
       if (this.el.winBar.hidden) return;
-      if (ev.key.toLowerCase() !== 'r') return;
-      ev.preventDefault();
       playClick();
       this.startGame();
+    };
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key.toLowerCase() !== 'r') return;
+      ev.preventDefault();
+      replay();
+    });
+    // The hint is clickable too, not just a passive "press R" reminder —
+    // role="button"/tabindex in index.html make it keyboard-reachable, so
+    // Enter/Space (the native activation keys a "button" role implies)
+    // need handling alongside plain click.
+    this.el.replayHint.addEventListener('click', replay);
+    this.el.replayHint.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      ev.preventDefault();
+      replay();
     });
     this.el.btnBrand.addEventListener('click', () => this._goMenu());
     this.el.btnMenu.addEventListener('click', () => this._goMenu());

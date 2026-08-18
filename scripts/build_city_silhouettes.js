@@ -60,7 +60,13 @@ for (const f of states.features) {
 }
 const TARGET_W = 960;
 const scale = TARGET_W / (maxX - minX);
-const MARGIN = 18;
+// Must match build_usa_level.js's own MARGIN exactly (same reasoning as
+// build_usa_cities.js's copy of this constant) — this one had drifted out
+// of sync at 18 (build_usa_level.js's old value, before it dropped to 3),
+// silently offsetting every silhouette's d/bbox by 15 canvas units from
+// its own city's correct cx/cy, enough to push coastal cities (New York,
+// Jacksonville, ...) into the ocean.
+const MARGIN = 3;
 function toCanvasMain([lon, lat]) {
   const [x, y] = albers([lon, lat]);
   return [(x - minX) * scale + MARGIN, (y - minY) * scale + MARGIN];
