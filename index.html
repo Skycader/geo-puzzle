@@ -182,6 +182,15 @@
             <span class="toggle-track"><span class="toggle-thumb"></span></span>
             <span class="toggle-text">Адаптивный режим — чаще спрашивать штаты, которые даются сложнее</span>
           </label>
+          <!-- "Найди X" modes only (quiz/sea-quiz) — right-click submits a
+               piece directly instead of the normal click-to-select,
+               click-again-to-confirm sequence. See js/quizBoard.js's
+               _build/_confirmAnswer. -->
+          <label class="toggle" id="quick-select-row" hidden>
+            <input type="checkbox" id="quick-select-checkbox" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text">Быстрый выбор (ПКМ) — правый клик сразу подтверждает ответ</span>
+          </label>
           <div id="quiz-eligible-wrap" class="elig-wrap" hidden></div>
         </section>
 

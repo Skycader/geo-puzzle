@@ -52,6 +52,11 @@ export class QuizBoard {
     this.hinted = false;
     this.selectedId = null;
     this.paths = new Map();
+    // "Быстрый выбор (ПКМ)" — right-click submits a piece directly,
+    // skipping the normal select-then-confirm two-click sequence (see
+    // _onClick's own comment). Off by default — changes what a right-click
+    // does, so it shouldn't surprise anyone who hasn't turned it on.
+    this.quickSelect = opts.quickSelect === true;
 
     this._build();
   }
@@ -100,6 +105,20 @@ export class QuizBoard {
         const id = ev.target?.dataset?.id;
         if (id) this._onClick(id);
       },
+    });
+    // "Быстрый выбор" — right-click straight to _confirmAnswer(), bypassing
+    // _onClick's select-then-confirm gate entirely (not routed through
+    // it — a right-click on a DIFFERENT piece than whatever's currently
+    // selected should submit THAT piece immediately, not just move the
+    // highlight). Only intercepts (and suppresses the native context menu)
+    // when the setting is on — left completely alone otherwise, same as
+    // before this feature existed.
+    this.svg.addEventListener('contextmenu', (ev) => {
+      if (!this.quickSelect) return;
+      ev.preventDefault();
+      if (this.locked || !this.current) return;
+      const id = ev.target?.dataset?.id;
+      if (id) this._confirmAnswer(id);
     });
     // Appended to this.container (#board-container), not this.zoomWrap —
     // .zoom-wrap is deliberately oversized by "cover" fit and gets

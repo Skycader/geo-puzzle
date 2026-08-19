@@ -32,6 +32,9 @@ export class SeaQuizBoard {
     this.hinted = false;
     this.selectedId = null;
     this.paths = new Map();
+    // "Быстрый выбор (ПКМ)" — see the matching comment in quizBoard.js's
+    // constructor/_build (this file is a fork of it).
+    this.quickSelect = opts.quickSelect === true;
 
     this._build();
   }
@@ -74,6 +77,14 @@ export class SeaQuizBoard {
         const id = ev.target?.dataset?.id;
         if (id) this._onClick(id);
       },
+    });
+    // "Быстрый выбор" — see the matching comment in quizBoard.js's _build.
+    this.svg.addEventListener('contextmenu', (ev) => {
+      if (!this.quickSelect) return;
+      ev.preventDefault();
+      if (this.locked || !this.current) return;
+      const id = ev.target?.dataset?.id;
+      if (id) this._confirmAnswer(id);
     });
     // Appended to this.container (#board-container), not this.zoomWrap —
     // .zoom-wrap is deliberately oversized by "cover" fit and gets

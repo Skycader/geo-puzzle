@@ -114,6 +114,9 @@ export class Game {
     this.cityPlaceEntity = 'cities';
     this.cityPlaceMode = 'find';
     this.adaptiveMode = false;
+    // "Быстрый выбор (ПКМ)" — quiz/sea-quiz only, see quizBoard.js's
+    // _build/_confirmAnswer.
+    this.quickSelect = false;
     this.hintsVisible = true;
     this.labelsVisible = true;
     this.citiesVisible = true;
@@ -266,6 +269,8 @@ export class Game {
       cityPlaceModeText: document.getElementById('city-place-mode-text'),
       adaptiveModeRow: document.getElementById('adaptive-mode-row'),
       adaptiveModeCheckbox: document.getElementById('adaptive-mode-checkbox'),
+      quickSelectRow: document.getElementById('quick-select-row'),
+      quickSelectCheckbox: document.getElementById('quick-select-checkbox'),
       btnStart: document.getElementById('btn-start'),
       progressIoWrap: document.getElementById('progress-io-wrap'),
       progressIoBtn: document.getElementById('progress-io-btn'),
@@ -338,6 +343,7 @@ export class Game {
     if (saved.cityPlaceEntity === 'cities' || saved.cityPlaceEntity === 'places') this.cityPlaceEntity = saved.cityPlaceEntity;
     if (saved.cityPlaceMode === 'find' || saved.cityPlaceMode === 'pin') this.cityPlaceMode = saved.cityPlaceMode;
     if (typeof saved.adaptiveMode === 'boolean') this.adaptiveMode = saved.adaptiveMode;
+    if (typeof saved.quickSelect === 'boolean') this.quickSelect = saved.quickSelect;
   }
 
   // Snapshots the current settings so _loadLastSettings() can restore this
@@ -361,6 +367,7 @@ export class Game {
       cityPlaceEntity: this.cityPlaceEntity,
       cityPlaceMode: this.cityPlaceMode,
       adaptiveMode: this.adaptiveMode,
+      quickSelect: this.quickSelect,
     };
     try {
       localStorage.setItem(LAST_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
@@ -589,6 +596,12 @@ export class Game {
     // city-place's pin mode already has.
     this.el.adaptiveModeRow.hidden = !(isQuiz || isNameState || isNeighbor || isIdentify);
     this.el.adaptiveModeCheckbox.checked = this.adaptiveMode;
+    // Only the "find X on the map by clicking" modes have a select-then-
+    // confirm two-click sequence for right-click to shortcut in the first
+    // place — name-state/neighbor/identify answer by picking from options
+    // or typing, not by clicking the map.
+    this.el.quickSelectRow.hidden = !(isQuiz || isSeaQuiz);
+    this.el.quickSelectCheckbox.checked = this.quickSelect;
     this.el.cityPlaceEntityRow.hidden = !isCityPlace;
     this.el.cityPlaceModeRow.hidden = !isCityPlace;
     this.el.cityPlaceEntityCheckbox.checked = this.cityPlaceEntity === 'places';
@@ -824,6 +837,10 @@ export class Game {
       this.adaptiveMode = ev.target.checked;
       this._saveLastSettings();
     });
+    this.el.quickSelectCheckbox.addEventListener('change', (ev) => {
+      this.quickSelect = ev.target.checked;
+      this._saveLastSettings();
+    });
     this.el.cityPlaceEntityCheckbox.addEventListener('change', (ev) => {
       this.cityPlaceEntity = ev.target.checked ? 'places' : 'cities';
       this._applyModeVisibility(); // rebuilds the eligibility list for the newly-chosen entity
@@ -1010,6 +1027,7 @@ export class Game {
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       levelId: this.levelId,
       adaptive: this.adaptiveMode,
+      quickSelect: this.quickSelect,
       scale,
       onProgress: (p) => this._onQuizProgress(p),
       onFinish: () => this._onFinish(),
@@ -1153,6 +1171,7 @@ export class Game {
     this.board = new SeaQuizBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
       eligibleIds: this.eligibilityList?.getSelectedIds(),
+      quickSelect: this.quickSelect,
       scale,
       onProgress: (p) => this._onQuizProgress(p),
       onFinish: () => this._onFinish(),
