@@ -71,6 +71,32 @@
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
           <span class="toggle-text">Шоссе</span>
         </label>
+        <!-- "Любование прогрессом" — colors every state from black (0) to
+             the current color scheme's accent (10+) by adaptive-mode
+             success streak (js/successStats.js). States only for now — see
+             js/overviewBoard.js's setProgressVisible. -->
+        <label class="toggle" id="toggle-progress-wrap" title="Раскрасить штаты по прогрессу (адаптивная статистика)" hidden>
+          <input type="checkbox" id="toggle-progress" />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">Прогресс</span>
+        </label>
+        <!-- Custom dropdown, not a native <select> — a native option list
+             ignores almost all CSS (renders with the OS's own light-theme
+             popup, black-on-white, completely unstyleable), so it looked
+             broken sitting in this dark neon UI. Same button+menu pattern
+             as overviewBoard.js's .layer-switcher. -->
+        <div class="progress-scope" id="progress-scope-wrap" hidden>
+          <button type="button" class="progress-scope-btn" id="progress-scope-btn" aria-haspopup="true" aria-expanded="false" title="По какому режиму показывать прогресс">
+            <span id="progress-scope-label">Назови штат</span>
+            <svg class="progress-scope-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5z" /></svg>
+          </button>
+          <div class="progress-scope-menu" id="progress-scope-menu" hidden>
+            <button type="button" class="progress-scope-option" data-scope="quiz-states">Найди штат</button>
+            <button type="button" class="progress-scope-option active" data-scope="name-state-states">Назови штат</button>
+            <button type="button" class="progress-scope-option" data-scope="neighbor-states">Назови соседа</button>
+            <button type="button" class="progress-scope-option" data-scope="identify-states">Определи штат</button>
+          </div>
+        </div>
       </div>
       <div class="topbar-right">
         <button type="button" class="coin-balance" id="coin-balance" title="Монеты за верные ответы — нажми, чтобы списать баланс">

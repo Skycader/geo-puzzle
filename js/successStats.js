@@ -29,3 +29,18 @@ export function recordOutcome(levelId, scope, id, hinted) {
   }
   return stats;
 }
+
+// Directly sets a streak to an exact value, rather than incrementing/
+// resetting it by playing a round — used by Overview's "progress heatmap"
+// toggle (js/overviewBoard.js) to let the player manually correct a
+// state's count from the map itself.
+export function setSuccessCount(levelId, scope, id, value) {
+  const stats = loadSuccessStats(levelId, scope);
+  stats[id] = value;
+  try {
+    localStorage.setItem(`${PREFIX}:${levelId}:${scope}`, JSON.stringify(stats));
+  } catch {
+    // Storage can fail — the change still applies for the current session.
+  }
+  return stats;
+}

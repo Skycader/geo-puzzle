@@ -477,6 +477,22 @@ body {
 .toggle-text { color: var(--base0); }
 .toggle input:checked ~ .toggle-text { color: var(--neon-cyan); }
 
+/* Which adaptive-mode scope #toggle-progress-wrap's heatmap visualizes —
+   sits right next to it, shown/hidden together (see game.js). Plain
+   <select>, not a custom dropdown — this is a small, infrequent settings
+   tweak, not worth a bespoke open/close-menu component. */
+.progress-scope-select {
+  background: rgba(var(--base02-rgb), 0.6);
+  border: 1px solid var(--base01);
+  border-radius: 5px;
+  color: var(--base0);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 3px 6px;
+  cursor: pointer;
+}
+.progress-scope-select:focus { border-color: var(--neon-cyan); outline: none; }
+
 /* Color-scheme toggle's icon (replaces a plain text label) — a single dot
    that smoothly recolors itself red<->blue on toggle, matching the
    scheme it represents. Deliberately NOT using var(--neon-cyan)/
@@ -1421,6 +1437,51 @@ body {
   stroke-width: 1.5;
   stroke-dasharray: 4 3;
 }
+
+/* Progress-heatmap edit popup (js/overviewBoard.js's
+   _openProgressEditPopup) — a small standalone card, NOT .info-popup
+   (that one's hardcoded 480px width/image slot is built for city/place
+   Wikipedia summaries, way oversized for "one number and a button"). Reuses
+   .info-popup-close as-is since that's just a generic circular ×, sized
+   independent of the card it sits in. */
+.progress-edit-popup {
+  position: absolute;
+  width: 220px;
+  padding: 14px 16px;
+  background: rgba(var(--ink-rgb), 0.97);
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.4);
+  border-radius: 9px;
+  box-shadow: 0 0 32px rgba(var(--neon-cyan-rgb), 0.3), 0 12px 36px rgba(0, 0, 0, 0.55);
+  z-index: 8;
+  animation: info-popup-in 0.15s ease;
+}
+.progress-edit-title {
+  margin: 0 24px 10px 0; /* right margin clears the ×-close button */
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: var(--neon-cyan);
+}
+.progress-edit-label {
+  display: block;
+  margin-bottom: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--base1);
+}
+.progress-edit-input {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 6px 8px;
+  background: rgba(var(--base02-rgb), 0.6);
+  border: 1px solid var(--base01);
+  border-radius: 5px;
+  color: var(--base2);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.progress-edit-input:focus { border-color: var(--neon-cyan); outline: none; }
+.progress-edit-save { width: 100%; }
 
 /* side list panel: search + tabbed state/city list, click-to-focus. Floats
    OVER the map (position:absolute, right edge) rather than sharing the

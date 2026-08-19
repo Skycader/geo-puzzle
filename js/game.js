@@ -118,6 +118,13 @@ export class Game {
     this.labelsVisible = true;
     this.citiesVisible = true;
     this.placesVisible = true;
+    // Overview's "progress heatmap" — off by default (opt-in, unlike the
+    // *Visible flags above), scoped to whichever adaptive-mode success
+    // stat (see ADAPTIVE_SUCCESS_SCOPE_BY_MODE) the player wants to see
+    // colored onto the map. See _startOverview/OverviewBoard's
+    // setProgressVisible/setProgressScope.
+    this.progressVisible = false;
+    this.progressScope = 'name-state-states';
     this.eligibilityList = null; // current EligibilityList instance for quiz/city-place — see _applyModeVisibility
     this.board = null;
     this.seconds = 0;
@@ -284,6 +291,12 @@ export class Game {
       togglePlaces: document.getElementById('toggle-places'),
       toggleHighwaysWrap: document.getElementById('toggle-highways-wrap'),
       toggleHighways: document.getElementById('toggle-highways'),
+      toggleProgressWrap: document.getElementById('toggle-progress-wrap'),
+      toggleProgress: document.getElementById('toggle-progress'),
+      progressScopeWrap: document.getElementById('progress-scope-wrap'),
+      progressScopeBtn: document.getElementById('progress-scope-btn'),
+      progressScopeLabel: document.getElementById('progress-scope-label'),
+      progressScopeMenu: document.getElementById('progress-scope-menu'),
       toggleLandScheme: document.getElementById('toggle-land-scheme'),
       faviconLink: document.getElementById('favicon-link'),
       coinBalance: document.getElementById('coin-balance'),
@@ -716,11 +729,16 @@ export class Game {
     // this is a genuine "same settings, go again" rather than a trip
     // back through the setup screen.
     const replay = () => {
-      if (this.el.winBar.hidden) return;
       playClick();
       this.startGame();
     };
     document.addEventListener('keydown', (ev) => {
+      // The winBar.hidden check must come BEFORE preventDefault(), not
+      // after — calling it unconditionally on every "r" keypress blocked
+      // typing the letter "r" into any text input on the page (e.g. "hard"
+      // mode's name-state text answer field), even while the win-bar
+      // wasn't showing at all and this shortcut had nothing to catch.
+      if (this.el.winBar.hidden) return;
       if (ev.key.toLowerCase() !== 'r') return;
       ev.preventDefault();
       replay();
@@ -786,6 +804,15 @@ export class Game {
     this.el.toggleHighways.addEventListener('change', (ev) => {
       this.highwaysVisible = ev.target.checked;
       if (this.board?.setHighwaysVisible) this.board.setHighwaysVisible(this.highwaysVisible);
+    });
+    this.el.toggleProgress.addEventListener('change', (ev) => {
+      this.progressVisible = ev.target.checked;
+      this.el.progressScopeSelect.hidden = !this.progressVisible;
+      if (this.board?.setProgressVisible) this.board.setProgressVisible(this.progressVisible);
+    });
+    this.el.progressScopeSelect.addEventListener('change', (ev) => {
+      this.progressScope = ev.target.value;
+      if (this.board?.setProgressScope) this.board.setProgressScope(this.progressScope);
     });
     // Keeps the finish button anchored to the map's actual edge (see
     // _positionWinBar) if the window resizes while it's showing — a no-op
@@ -872,7 +899,9 @@ export class Game {
     this.el.toggleLabels.checked = this.labelsVisible;
     this.el.toggleHintsWrap.hidden = !preset.showToggles;
     this.el.toggleLabelsWrap.hidden = !preset.showToggles;
-    this.el.toggleHighwaysWrap.hidden = true;    this.el.toggleHintsText.textContent = 'Подсказки';
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;    this.el.toggleHintsText.textContent = 'Подсказки';
     this.el.toggleLabelsText.textContent = 'Буквы';
     this.el.quizPrompt.hidden = true;
 
@@ -912,7 +941,9 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;    this.el.quizPrompt.hidden = false;
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('quiz', 'Найди штат')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
@@ -935,7 +966,9 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;    // No text prompt here — the "question" is the pulsing highlight on the
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;    // No text prompt here — the "question" is the pulsing highlight on the
     // map itself (see nameStateBoard.js), showing the name would give away
     // the answer.
     this.el.quizPrompt.hidden = true;
@@ -962,7 +995,9 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;    // No text prompt — the "question" is entirely on the map (highlighted
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;    // No text prompt — the "question" is entirely on the map (highlighted
     // state + glowing border), same reasoning as _startNameState.
     this.el.quizPrompt.hidden = true;
 
@@ -993,7 +1028,9 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;    this.el.quizPrompt.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('identify', 'Определи штат')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
@@ -1020,7 +1057,9 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;    this.el.quizPrompt.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Определи море или океан (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
@@ -1047,7 +1086,9 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;    this.el.quizPrompt.hidden = false;
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · Найди море или океан (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
@@ -1075,7 +1116,9 @@ export class Game {
     this.el.toggleHintsWrap.hidden = true;
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleLabelsWrap.hidden = true;
-    this.el.toggleHighwaysWrap.hidden = true;    this.el.quizPrompt.hidden = false;
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · Города и места (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
@@ -1136,6 +1179,13 @@ export class Game {
     this.el.togglePlaces.checked = this.placesVisible;
     this.el.toggleHighwaysWrap.hidden = !level.highways?.length;
     this.el.toggleHighways.checked = this.highwaysVisible;
+    // States only for now (per the feature's own scope) — every adaptive-
+    // mode success scope this drives (ADAPTIVE_SUCCESS_SCOPE_BY_MODE) is
+    // state-keyed, so there's nothing meaningful to show on world/countries.
+    this.el.toggleProgressWrap.hidden = level.id !== 'usa';
+    this.el.toggleProgress.checked = this.progressVisible;
+    this.el.progressScopeSelect.hidden = level.id !== 'usa' || !this.progressVisible;
+    this.el.progressScopeSelect.value = this.progressScope;
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Обзор`;
@@ -1161,6 +1211,8 @@ export class Game {
       citiesVisible: this.citiesVisible,
       placesVisible: this.placesVisible,
       highwaysVisible: this.highwaysVisible,
+      progressVisible: level.id === 'usa' && this.progressVisible,
+      progressScope: this.progressScope,
     });
   }
 

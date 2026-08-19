@@ -3,6 +3,7 @@ import { mark } from './perfDebug.js';
 import { polygonArea, clamp } from './utils.js';
 import { buildStateBackground } from './mapBackground.js';
 import { nativeToLonLat, formatLonLat, findInset } from './geoCoords.js';
+import { loadSuccessStats, setSuccessCount } from './successStats.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const STATE_LABEL_PX = 12;
@@ -133,6 +134,12 @@ const POPUP_W_PX = 480;
 const POPUP_MARGIN_PX = 20;
 const POPUP_EDGE_PAD_PX = 12;
 
+// "Progress heatmap" — see setProgressVisible. A streak of PROGRESS_MAX or
+// more reads as "fully mastered" (the scheme's accent color at 100%); the
+// small edit popup this opens is its own, much narrower, card.
+const PROGRESS_MAX = 10;
+const PROGRESS_EDIT_POPUP_W_PX = 220;
+
 // Ruler tool: right-click places/removes a point, drag moves one, live
 // distance/perimeter/area readout. Always live in Overview mode — no
 // separate "mode" toggle, since it only ever responds to right-click and
@@ -177,6 +184,13 @@ export class OverviewBoard {
     // regardless of pan/zoom, never zero and never a cluttered pile of them.
     this.highwayEntries = [];
     this.highwaysVisible = opts.highwaysVisible !== false;
+    // "Progress heatmap" — opt-IN (default off), unlike the *Visible flags
+    // above, since this replaces the map's normal coloring rather than
+    // adding to it. progressScope picks which adaptive-mode success stat
+    // (js/successStats.js, keyed by ADAPTIVE_SUCCESS_SCOPE_BY_MODE in
+    // game.js) to visualize — see setProgressVisible/setProgressScope.
+    this.progressVisible = opts.progressVisible === true;
+    this.progressScope = opts.progressScope || 'name-state-states';
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
     this.placesById = new Map(); // id -> { data, dotEl }
@@ -296,6 +310,12 @@ export class OverviewBoard {
       path.setAttribute('d', p.d);
       path.setAttribute('class', 'piece-shape placed' + (this.level.id === 'world' ? ' sea-piece' : ''));
       path.setAttribute('fill', 'url(#piece-grad)');
+      // Lets _onMapTap route a click here to the progress-edit popup when
+      // that mode is on — states otherwise have no dataset.kind/id at all
+      // (only cities/places do), since nothing else currently reacts to
+      // clicking one.
+      path.dataset.kind = 'state';
+      path.dataset.id = p.id;
       const title = document.createElementNS(SVG_NS, 'title');
       title.textContent = `${p.ru} (${p.name})`;
       path.appendChild(title);
@@ -537,6 +557,7 @@ export class OverviewBoard {
     this.setLabelsVisible(this.labelsVisible);
     this.setPlacesVisible(this.placesVisible);
     this.setHighwaysVisible(this.highwaysVisible);
+    this.setProgressVisible(this.progressVisible);
   }
 
   // Adds/removes each city's elements from the SVG based on whether it's
@@ -560,8 +581,11 @@ export class OverviewBoard {
     // An open info popup is anchored to a specific screen position via its
     // connector line — any further pan/zoom moves the dot out from under
     // it, so simplest correct behavior is to just close it rather than
-    // continuously re-tracking the line during every frame of a drag.
+    // continuously re-tracking the line during every frame of a drag. The
+    // progress-edit popup is screen-anchored the same way, for the same
+    // reason.
     this._closeInfoPopup();
+    this._closeProgressEditPopup();
     this._lastVisibleRect = rect; // replayed by setCitiesVisible(true) — see below
     const mx = (rect.x1 - rect.x0) * VIRTUALIZE_MARGIN;
     const my = (rect.y1 - rect.y0) * VIRTUALIZE_MARGIN;
@@ -687,6 +711,13 @@ export class OverviewBoard {
   _onMapTap(ev) {
     const kind = ev.target?.dataset?.kind;
     const id = ev.target?.dataset?.id;
+    // While the progress heatmap is on, a state tap corrects its count
+    // instead of the normal city/place info popup (states never have one
+    // anyway — see the else branch's own comment).
+    if (this.progressVisible && kind === 'state') {
+      this._openProgressEditPopup(id, ev.clientX, ev.clientY);
+      return;
+    }
     const entry = kind === 'city' ? this.info.cities[id] : kind === 'place' ? this.info.places[id] : null;
     if (entry) {
       if (this._openPopupId === id) {
@@ -696,6 +727,7 @@ export class OverviewBoard {
       }
     } else {
       this._closeInfoPopup(); // tapping anything else (state, empty map, a city/place with no info) dismisses it
+      this._closeProgressEditPopup();
     }
   }
 
@@ -765,6 +797,63 @@ export class OverviewBoard {
     this._infoPopupEl = null;
     this._infoConnectorEl?.remove();
     this._infoConnectorEl = null;
+  }
+
+  // ---------------- progress-heatmap edit popup (click a state while it's on) ----------------
+
+  // Small card anchored at the click itself (not a connector line to a
+  // fixed dot, like _openInfoPopup — a state is a whole shape, not a
+  // point, so "where you clicked" is the only sensible anchor) letting the
+  // player type in an exact success count for that state, bypassing
+  // actually playing rounds to get there.
+  _openProgressEditPopup(id, clientX, clientY) {
+    this._closeInfoPopup();
+    this._closeProgressEditPopup();
+    const entry = this.statesById.get(id);
+    if (!entry) return;
+    const stats = loadSuccessStats(this.level.id, this.progressScope);
+    const current = stats[id] || 0;
+
+    const wrapRect = this.zoomWrap.getBoundingClientRect();
+    const x = clamp(clientX - wrapRect.left, POPUP_EDGE_PAD_PX, wrapRect.width - PROGRESS_EDIT_POPUP_W_PX - POPUP_EDGE_PAD_PX);
+
+    const popup = document.createElement('div');
+    popup.className = 'progress-edit-popup';
+    popup.innerHTML = `
+      <button type="button" class="info-popup-close" title="Закрыть">×</button>
+      <h3 class="progress-edit-title">${entry.data.ru}</h3>
+      <label class="progress-edit-label">
+        Успехов подряд
+        <input type="number" class="progress-edit-input" min="0" max="99" value="${current}" />
+      </label>
+      <button type="button" class="btn btn-primary progress-edit-save">Сохранить</button>
+    `;
+    popup.style.left = `${x}px`;
+    this.zoomWrap.appendChild(popup);
+    const y = clamp(clientY - wrapRect.top, POPUP_EDGE_PAD_PX, wrapRect.height - popup.offsetHeight - POPUP_EDGE_PAD_PX);
+    popup.style.top = `${y}px`;
+
+    popup.querySelector('.info-popup-close').addEventListener('click', () => this._closeProgressEditPopup());
+    const input = popup.querySelector('.progress-edit-input');
+    const save = () => {
+      const value = Math.max(0, Math.round(Number(input.value) || 0));
+      setSuccessCount(this.level.id, this.progressScope, id, value);
+      this.setProgressVisible(true); // re-colors every state — cheap, only ~50 of them
+      this._closeProgressEditPopup();
+    };
+    popup.querySelector('.progress-edit-save').addEventListener('click', save);
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') save();
+    });
+    input.focus();
+    input.select();
+
+    this._progressEditPopupEl = popup;
+  }
+
+  _closeProgressEditPopup() {
+    this._progressEditPopupEl?.remove();
+    this._progressEditPopupEl = null;
   }
 
   // ---------------- ruler tool (right-click to place/remove a point, drag to move) ----------------
@@ -1440,6 +1529,34 @@ export class OverviewBoard {
       if (!visible) entry.shieldEl.style.display = 'none';
     }
     if (visible && this._lastVisibleRect) this._updateHighwayShields(this._lastVisibleRect);
+  }
+
+  // "Progress heatmap": colors every state from black (0 successes) to the
+  // CURRENT color scheme's accent at PROGRESS_MAX+ — using CSS color-mix()
+  // directly in the fill value (var(--neon-cyan) resolves live against
+  // whatever :root[data-land-scheme] is active) rather than computing a
+  // static rgb blend in JS, so toggling the color scheme while this is on
+  // updates every state's fill for free, with no re-render needed here.
+  setProgressVisible(visible) {
+    this.progressVisible = visible;
+    if (!visible) {
+      this._closeProgressEditPopup();
+      for (const { pathEl } of this.statesById.values()) pathEl.style.fill = '';
+      return;
+    }
+    const stats = loadSuccessStats(this.level.id, this.progressScope);
+    for (const { data, pathEl } of this.statesById.values()) {
+      const t = clamp((stats[data.id] || 0) / PROGRESS_MAX, 0, 1);
+      pathEl.style.fill = `color-mix(in srgb, black ${(100 - t * 100).toFixed(1)}%, var(--neon-cyan) ${(t * 100).toFixed(1)}%)`;
+    }
+  }
+
+  // Switches which adaptive-mode success stat is being visualized —
+  // re-applies immediately if the heatmap is currently showing, otherwise
+  // just remembered for whenever it's next turned on.
+  setProgressScope(scope) {
+    this.progressScope = scope;
+    if (this.progressVisible) this.setProgressVisible(true);
   }
 
   // Picks, for each highway, whichever of its sampled points (see
