@@ -87,6 +87,26 @@
             <circle class="scheme-dot" cx="12" cy="12" r="8" />
           </svg>
         </label>
+        <!-- Backup/restore for everything the game persists to localStorage
+             (coins, adaptive-mode progress, saved settings) — see
+             js/dataPortability.js. No account/server, so this file IS the
+             only way to move progress between browsers or survive clearing
+             site data. -->
+        <div class="progress-io" id="progress-io-wrap">
+          <button type="button" class="progress-io-btn" id="progress-io-btn" title="Прогресс: экспорт/импорт" aria-haspopup="true" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 4a1 1 0 0 1 1-1h10.17a1 1 0 0 1 .7.29l2.84 2.84a1 1 0 0 1 .29.7V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              <path d="M8 3.3V8h7.5V3.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              <rect x="7.3" y="12.3" width="9.4" height="6.7" fill="none" stroke="currentColor" stroke-width="1.6" />
+            </svg>
+          </button>
+          <div class="progress-io-menu" id="progress-io-menu" hidden>
+            <button type="button" class="progress-io-option" id="btn-export-progress">Экспорт прогресса</button>
+            <button type="button" class="progress-io-option" id="btn-import-progress">Импорт прогресса</button>
+            <input type="file" id="import-progress-input" accept="application/json,.json" hidden />
+            <span id="progress-io-status" class="progress-io-status" role="status"></span>
+          </div>
+        </div>
       </div>
     </header>
 

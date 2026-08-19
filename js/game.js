@@ -23,6 +23,7 @@ import {
 } from './modes.js';
 import { playClick } from './audio.js';
 import { loadSuccessStats } from './successStats.js';
+import { downloadProgressExport, importProgressFile } from './dataPortability.js';
 
 // Distinct scopes per mode — clicking a state on the map (quiz), recalling
 // its name from a highlight (name-state), naming its neighbor (neighbor),
@@ -74,6 +75,11 @@ const MODE_CARD_TEXT_COUNTRIES = {
 // of level/mode) — one persisted choice for every level's land layer, see
 // style.css's --land-fill/--land-stroke variables and _initLandScheme.
 const LAND_SCHEME_STORAGE_KEY = 'geoPuzzleLandScheme';
+// Whatever level/mode/difficulty/rounds/adaptive-toggle combo was in
+// effect the last time a round was actually started — see
+// _saveLastSettings (called from startGame()) and _loadLastSettings
+// (called from the constructor, before the menu is first rendered).
+const LAST_SETTINGS_STORAGE_KEY = 'geoPuzzleLastSettings';
 // How far above the map's own rendered bottom edge the finish button sits
 // (see _positionWinBar) — comfortably more than half the button's own
 // height so it never straddles that edge.
@@ -116,6 +122,12 @@ export class Game {
     this.board = null;
     this.seconds = 0;
     this.timerHandle = null;
+    // Overrides whichever of the defaults above have a validated,
+    // previously-saved counterpart — must run after all of them are set
+    // (it only patches fields, doesn't establish them) and before the
+    // render calls below (so the menu reflects the restored choice on
+    // first paint, not just after the player touches something).
+    this._loadLastSettings();
 
     this._cacheDom();
     this._initLandScheme();
@@ -248,6 +260,13 @@ export class Game {
       adaptiveModeRow: document.getElementById('adaptive-mode-row'),
       adaptiveModeCheckbox: document.getElementById('adaptive-mode-checkbox'),
       btnStart: document.getElementById('btn-start'),
+      progressIoWrap: document.getElementById('progress-io-wrap'),
+      progressIoBtn: document.getElementById('progress-io-btn'),
+      progressIoMenu: document.getElementById('progress-io-menu'),
+      btnExportProgress: document.getElementById('btn-export-progress'),
+      btnImportProgress: document.getElementById('btn-import-progress'),
+      importProgressInput: document.getElementById('import-progress-input'),
+      progressIoStatus: document.getElementById('progress-io-status'),
       boardContainer: document.getElementById('board-container'),
       quizPrompt: document.getElementById('quiz-prompt'),
       quizPromptLabel: document.getElementById('quiz-prompt-label'),
@@ -270,6 +289,141 @@ export class Game {
       coinBalance: document.getElementById('coin-balance'),
       coinBalanceValue: document.getElementById('coin-balance-value'),
     };
+  }
+
+  // Overrides the hardcoded defaults set earlier in the constructor with
+  // whatever was saved from the last actually-started round (see
+  // _saveLastSettings) — each field is validated against its own current
+  // valid-options list before being trusted, since level data or the
+  // mode/difficulty/preset lists can change between versions and a stale
+  // id would otherwise silently break whatever UI it drives (selecting a
+  // preset/difficulty card that no longer exists, an out-of-range slider
+  // value, etc). Doesn't touch the DOM — this runs before _cacheDom(), the
+  // patched fields just get picked up naturally by the render calls that
+  // already run at the end of the constructor.
+  _loadLastSettings() {
+    let saved;
+    try {
+      const raw = localStorage.getItem(LAST_SETTINGS_STORAGE_KEY);
+      saved = raw ? JSON.parse(raw) : null;
+    } catch {
+      saved = null;
+    }
+    if (!saved || typeof saved !== 'object') return;
+
+    if (saved.levelId in this.levels) this.levelId = saved.levelId;
+    // Must come after levelId above — _modesForCurrentLevel() reads it.
+    if (this._modesForCurrentLevel().some((m) => m.id === saved.modeId)) this.modeId = saved.modeId;
+    if (PRESETS.some((p) => p.id === saved.presetId)) this.presetId = saved.presetId;
+    if (OVERVIEW_MODES.some((m) => m.id === saved.overviewModeId)) this.overviewModeId = saved.overviewModeId;
+    if (Number.isFinite(saved.customCount)) this.customCount = clamp(saved.customCount, 1, 50);
+    if (Number.isFinite(saved.quizRounds)) this.quizRounds = clamp(saved.quizRounds, 1, 50);
+    if (NAME_STATE_DIFFICULTIES.some((d) => d.id === saved.nameStateDifficulty)) this.nameStateDifficulty = saved.nameStateDifficulty;
+    if (NEIGHBOR_DIFFICULTIES.some((d) => d.id === saved.neighborDifficulty)) this.neighborDifficulty = saved.neighborDifficulty;
+    if (IDENTIFY_DIFFICULTIES.some((d) => d.id === saved.identifyDifficulty)) this.identifyDifficulty = saved.identifyDifficulty;
+    if (SEA_IDENTIFY_DIFFICULTIES.some((d) => d.id === saved.seaIdentifyDifficulty)) this.seaIdentifyDifficulty = saved.seaIdentifyDifficulty;
+    if (saved.cityPlaceEntity === 'cities' || saved.cityPlaceEntity === 'places') this.cityPlaceEntity = saved.cityPlaceEntity;
+    if (saved.cityPlaceMode === 'find' || saved.cityPlaceMode === 'pin') this.cityPlaceMode = saved.cityPlaceMode;
+    if (typeof saved.adaptiveMode === 'boolean') this.adaptiveMode = saved.adaptiveMode;
+  }
+
+  // Called from startGame() — snapshots exactly the settings that round is
+  // about to run with, so _loadLastSettings() can restore this same
+  // combination next time the app opens.
+  _saveLastSettings() {
+    const settings = {
+      levelId: this.levelId,
+      modeId: this.modeId,
+      presetId: this.presetId,
+      overviewModeId: this.overviewModeId,
+      customCount: this.customCount,
+      quizRounds: this.quizRounds,
+      nameStateDifficulty: this.nameStateDifficulty,
+      neighborDifficulty: this.neighborDifficulty,
+      identifyDifficulty: this.identifyDifficulty,
+      seaIdentifyDifficulty: this.seaIdentifyDifficulty,
+      cityPlaceEntity: this.cityPlaceEntity,
+      cityPlaceMode: this.cityPlaceMode,
+      adaptiveMode: this.adaptiveMode,
+    };
+    try {
+      localStorage.setItem(LAST_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    } catch {
+      // Storage can fail (private browsing, quota, disabled) — the round
+      // still plays fine, the settings just won't persist for next time.
+    }
+  }
+
+  // Export/import of everything the game persists to localStorage — see
+  // js/dataPortability.js. A topbar icon + dropdown, same open/close
+  // pattern (outside-click + Escape) as overviewBoard.js's layer switcher.
+  // Import overwrites the current browser's progress, so it's gated behind
+  // a confirm() (native, not custom UI — this is exactly the kind of
+  // one-off "are you sure" a blocking dialog suits, and reloading right
+  // after makes a custom in-page confirmation no more reversible anyway).
+  _bindProgressIo() {
+    this.el.progressIoBtn.addEventListener('click', () => {
+      if (this.el.progressIoMenu.hidden) this._openProgressIoMenu();
+      else this._closeProgressIoMenu();
+    });
+    this.el.btnExportProgress.addEventListener('click', () => {
+      playClick();
+      downloadProgressExport();
+      this._setProgressIoStatus('Файл сохранён.', 'success');
+    });
+    this.el.btnImportProgress.addEventListener('click', () => {
+      playClick();
+      this.el.importProgressInput.click();
+    });
+    this.el.importProgressInput.addEventListener('change', async () => {
+      const file = this.el.importProgressInput.files?.[0];
+      this.el.importProgressInput.value = ''; // lets the same file be re-selected later
+      if (!file) return;
+      if (!confirm('Импорт заменит текущий прогресс (монеты, адаптивную статистику, сохранённые настройки) данными из файла. Продолжить?')) return;
+      try {
+        const count = await importProgressFile(file);
+        this._setProgressIoStatus(`Восстановлено записей: ${count}. Перезагружаю…`, 'success');
+        setTimeout(() => location.reload(), 900);
+      } catch (err) {
+        this._setProgressIoStatus(err.message || 'Не удалось импортировать файл.', 'error');
+      }
+    });
+  }
+
+  _openProgressIoMenu() {
+    this.el.progressIoMenu.hidden = false;
+    this.el.progressIoBtn.setAttribute('aria-expanded', 'true');
+    // Capture phase + a fresh task (not this same click) — same reasoning
+    // as overviewBoard.js's _openLayerSwitcher: attaching synchronously
+    // within the very click that opened it would let that click's own
+    // bubble-up close it again immediately.
+    setTimeout(() => {
+      this._progressIoOutsideHandler = (e) => {
+        if (!this.el.progressIoWrap.contains(e.target)) this._closeProgressIoMenu();
+      };
+      this._progressIoKeyHandler = (e) => {
+        if (e.key === 'Escape') this._closeProgressIoMenu();
+      };
+      window.addEventListener('pointerdown', this._progressIoOutsideHandler, true);
+      window.addEventListener('keydown', this._progressIoKeyHandler);
+    }, 0);
+  }
+
+  _closeProgressIoMenu() {
+    if (this.el.progressIoMenu.hidden) return;
+    this.el.progressIoMenu.hidden = true;
+    this.el.progressIoBtn.setAttribute('aria-expanded', 'false');
+    window.removeEventListener('pointerdown', this._progressIoOutsideHandler, true);
+    window.removeEventListener('keydown', this._progressIoKeyHandler);
+    this._progressIoOutsideHandler = null;
+    this._progressIoKeyHandler = null;
+  }
+
+  _setProgressIoStatus(text, kind) {
+    const el = this.el.progressIoStatus;
+    el.textContent = text;
+    el.classList.toggle('error', kind === 'error');
+    el.classList.toggle('success', kind === 'success');
   }
 
   _renderLevelList() {
@@ -545,6 +699,7 @@ export class Game {
       playClick();
       this.startGame();
     });
+    this._bindProgressIo();
     // "Press R to replay" (see .replay-hint's keycap+reload badge in
     // win-bar) — only live while the win-bar is actually showing, so R
     // doesn't do anything unexpected mid-round or on the menu.
@@ -656,6 +811,7 @@ export class Game {
   }
 
   startGame() {
+    this._saveLastSettings();
     const level = this.levels[this.levelId];
     this.el.screenMenu.hidden = true;
     this.el.screenGame.hidden = false;
