@@ -327,9 +327,12 @@ export class Game {
     if (typeof saved.adaptiveMode === 'boolean') this.adaptiveMode = saved.adaptiveMode;
   }
 
-  // Called from startGame() — snapshots exactly the settings that round is
-  // about to run with, so _loadLastSettings() can restore this same
-  // combination next time the app opens.
+  // Snapshots the current settings so _loadLastSettings() can restore this
+  // same combination next time the app opens — called after every single
+  // change to any of the fields below (level/mode/preset/difficulty/round-
+  // count/adaptive/city-place toggles — see each one's own event handler),
+  // not just when a round is actually started. The player should see
+  // whatever they last had selected even if they never pressed "Играть".
   _saveLastSettings() {
     const settings = {
       levelId: this.levelId,
@@ -450,6 +453,7 @@ export class Game {
         // per-level data — this keeps switching levels from leaving a
         // stale states/cities list behind.
         this._applyModeVisibility();
+        this._saveLastSettings();
       });
       this.el.levelList.appendChild(card);
     }
@@ -474,6 +478,7 @@ export class Game {
         this.el.modeList.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
         this._applyModeVisibility();
+        this._saveLastSettings();
       });
       this.el.modeList.appendChild(card);
     }
@@ -631,6 +636,7 @@ export class Game {
         onSelect(diff.id);
         this.el.nameStateDifficultyEl.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
+        this._saveLastSettings();
       });
       this.el.nameStateDifficultyEl.appendChild(card);
     }
@@ -671,6 +677,7 @@ export class Game {
         this.overviewModeId = mode.id;
         this.el.overviewList.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
+        this._saveLastSettings();
       });
       this.el.overviewList.appendChild(card);
     }
@@ -688,6 +695,7 @@ export class Game {
         this.el.presetList.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
         this.el.customCountRow.hidden = preset.id !== 'custom';
+        this._saveLastSettings();
       });
       this.el.presetList.appendChild(card);
     }
@@ -735,21 +743,26 @@ export class Game {
     this.el.customCountInput.addEventListener('input', (ev) => {
       this.customCount = Number(ev.target.value);
       this.el.customCountValue.textContent = this.customCount;
+      this._saveLastSettings();
     });
     this.el.adaptiveModeCheckbox.addEventListener('change', (ev) => {
       this.adaptiveMode = ev.target.checked;
+      this._saveLastSettings();
     });
     this.el.cityPlaceEntityCheckbox.addEventListener('change', (ev) => {
       this.cityPlaceEntity = ev.target.checked ? 'places' : 'cities';
       this._applyModeVisibility(); // rebuilds the eligibility list for the newly-chosen entity
+      this._saveLastSettings();
     });
     this.el.cityPlaceModeCheckbox.addEventListener('change', (ev) => {
       this.cityPlaceMode = ev.target.checked ? 'pin' : 'find';
       this._applyModeVisibility(); // eligibility only applies to "найти", not "расставь"
+      this._saveLastSettings();
     });
     this.el.quizCountInput.addEventListener('input', (ev) => {
       this.quizRounds = Number(ev.target.value);
       this.el.quizCountValue.textContent = this.quizRounds;
+      this._saveLastSettings();
     });
     this.el.toggleHints.addEventListener('change', (ev) => {
       // Reused for Overview mode's "hide cities" switch — see _startOverview
