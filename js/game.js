@@ -435,6 +435,63 @@ export class Game {
     this._progressIoKeyHandler = null;
   }
 
+  // Which adaptive-mode scope the Overview progress heatmap visualizes —
+  // a custom dropdown, not a native <select> (see index.html's comment:
+  // native option lists ignore this app's dark theme entirely). Same
+  // open/close pattern as _bindProgressIo/overviewBoard.js's layer switcher.
+  _bindProgressScopeMenu() {
+    this.el.progressScopeBtn.addEventListener('click', () => {
+      if (this.el.progressScopeMenu.hidden) this._openProgressScopeMenu();
+      else this._closeProgressScopeMenu();
+    });
+    this.el.progressScopeMenu.querySelectorAll('.progress-scope-option').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.progressScope = btn.dataset.scope;
+        this._setProgressScopeUI();
+        if (this.board?.setProgressScope) this.board.setProgressScope(this.progressScope);
+        this._closeProgressScopeMenu();
+      });
+    });
+  }
+
+  // Syncs the button's label and the menu's ✓ mark to this.progressScope —
+  // called both after picking an option and whenever the panel is
+  // (re)shown (e.g. _startOverview), so a restored/programmatic scope
+  // change is reflected even if the player never opened the menu.
+  _setProgressScopeUI() {
+    const active = this.el.progressScopeMenu.querySelector(`[data-scope="${this.progressScope}"]`);
+    this.el.progressScopeLabel.textContent = active ? active.textContent : '';
+    this.el.progressScopeMenu.querySelectorAll('.progress-scope-option').forEach((b) => b.classList.toggle('active', b === active));
+  }
+
+  _openProgressScopeMenu() {
+    this.el.progressScopeMenu.hidden = false;
+    this.el.progressScopeBtn.setAttribute('aria-expanded', 'true');
+    // Capture phase + a fresh task — same reasoning as _openProgressIoMenu:
+    // attaching synchronously within the very click that opened it would
+    // let that click's own bubble-up close it again immediately.
+    setTimeout(() => {
+      this._progressScopeOutsideHandler = (e) => {
+        if (!this.el.progressScopeWrap.contains(e.target)) this._closeProgressScopeMenu();
+      };
+      this._progressScopeKeyHandler = (e) => {
+        if (e.key === 'Escape') this._closeProgressScopeMenu();
+      };
+      window.addEventListener('pointerdown', this._progressScopeOutsideHandler, true);
+      window.addEventListener('keydown', this._progressScopeKeyHandler);
+    }, 0);
+  }
+
+  _closeProgressScopeMenu() {
+    if (this.el.progressScopeMenu.hidden) return;
+    this.el.progressScopeMenu.hidden = true;
+    this.el.progressScopeBtn.setAttribute('aria-expanded', 'false');
+    window.removeEventListener('pointerdown', this._progressScopeOutsideHandler, true);
+    window.removeEventListener('keydown', this._progressScopeKeyHandler);
+    this._progressScopeOutsideHandler = null;
+    this._progressScopeKeyHandler = null;
+  }
+
   _setProgressIoStatus(text, kind) {
     const el = this.el.progressIoStatus;
     el.textContent = text;
@@ -807,13 +864,10 @@ export class Game {
     });
     this.el.toggleProgress.addEventListener('change', (ev) => {
       this.progressVisible = ev.target.checked;
-      this.el.progressScopeSelect.hidden = !this.progressVisible;
+      this.el.progressScopeWrap.hidden = !this.progressVisible;
       if (this.board?.setProgressVisible) this.board.setProgressVisible(this.progressVisible);
     });
-    this.el.progressScopeSelect.addEventListener('change', (ev) => {
-      this.progressScope = ev.target.value;
-      if (this.board?.setProgressScope) this.board.setProgressScope(this.progressScope);
-    });
+    this._bindProgressScopeMenu();
     // Keeps the finish button anchored to the map's actual edge (see
     // _positionWinBar) if the window resizes while it's showing — a no-op
     // whenever the bar is hidden, so this doesn't need its own
@@ -1184,8 +1238,8 @@ export class Game {
     // state-keyed, so there's nothing meaningful to show on world/countries.
     this.el.toggleProgressWrap.hidden = level.id !== 'usa';
     this.el.toggleProgress.checked = this.progressVisible;
-    this.el.progressScopeSelect.hidden = level.id !== 'usa' || !this.progressVisible;
-    this.el.progressScopeSelect.value = this.progressScope;
+    this.el.progressScopeWrap.hidden = level.id !== 'usa' || !this.progressVisible;
+    this._setProgressScopeUI();
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Обзор`;

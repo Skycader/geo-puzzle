@@ -299,6 +299,20 @@ body {
 /* ---------------- topbar ---------------- */
 
 .topbar {
+  /* position:relative is what actually makes z-index take effect here —
+     without it this was a static element and the z-index below was a
+     silent no-op, so board-level UI with its own z-index (.zoom-controls/
+     .layer-switcher at 20, .overview-panel at 15 — both DESCENDANTS of
+     #board-container, a LATER sibling of .topbar with no isolating
+     stacking context of its own) could render on top of the topbar's own
+     dropdowns (.progress-io-menu, .progress-scope-menu) wherever they
+     visually overlapped, even though those menus' OWN z-index (50) was
+     higher — a child's z-index only ever competes within its nearest
+     positioned ancestor's stacking context, and .topbar wasn't one. 30 is
+     comfortably above every non-fixed in-page z-index elsewhere (highest
+     is .zoom-controls/.layer-switcher's 20) so the whole topbar — and
+     anything anchored to it — reliably paints above all of it. */
+  position: relative;
   flex: none;
   display: flex;
   align-items: center;
@@ -309,7 +323,7 @@ body {
      combo, with the full-viewport scanlines overlay blending on top,
      produced visible vertical seam artifacts in some browsers */
   background: var(--topbar-bg);
-  z-index: 10;
+  z-index: 30;
 }
 
 .brand {
@@ -478,20 +492,67 @@ body {
 .toggle input:checked ~ .toggle-text { color: var(--neon-cyan); }
 
 /* Which adaptive-mode scope #toggle-progress-wrap's heatmap visualizes —
-   sits right next to it, shown/hidden together (see game.js). Plain
-   <select>, not a custom dropdown — this is a small, infrequent settings
-   tweak, not worth a bespoke open/close-menu component. */
-.progress-scope-select {
-  background: rgba(var(--base02-rgb), 0.6);
-  border: 1px solid var(--base01);
-  border-radius: 5px;
-  color: var(--base0);
+   sits right next to it, shown/hidden together (see game.js). Custom
+   button+menu, same pattern/look as overviewBoard.js's .layer-switcher —
+   NOT a native <select>: its option-list popup is OS-rendered and ignores
+   almost all CSS, so it always shows as a plain light-theme box, jarring
+   against this dark UI (confirmed — it did exactly that). */
+.progress-scope { position: relative; }
+.progress-scope-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(var(--ink-rgb), 0.8);
+  color: var(--neon-cyan);
   font-family: var(--font-mono);
   font-size: 13px;
-  padding: 3px 6px;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
-.progress-scope-select:focus { border-color: var(--neon-cyan); outline: none; }
+.progress-scope-btn:hover,
+.progress-scope-btn[aria-expanded='true'] {
+  background: rgba(var(--neon-cyan-rgb), 0.15);
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.4);
+}
+.progress-scope-caret { width: 16px; height: 16px; fill: currentColor; flex: none; }
+.progress-scope-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  min-width: 168px;
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.4);
+  border-radius: 8px;
+  background: rgba(var(--ink-rgb), 0.92);
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.progress-scope-option {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  color: var(--base0);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.progress-scope-option:hover { background: rgba(var(--neon-cyan-rgb), 0.12); }
+.progress-scope-option.active {
+  color: var(--neon-cyan);
+  background: rgba(var(--neon-cyan-rgb), 0.1);
+}
+.progress-scope-option.active::before { content: '✓'; }
 
 /* Color-scheme toggle's icon (replaces a plain text label) — a single dot
    that smoothly recolors itself red<->blue on toggle, matching the
