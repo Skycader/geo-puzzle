@@ -1422,6 +1422,27 @@ body {
   opacity: 0.5;
 }
 
+/* Live "Штат — Категория" readout that follows the cursor while hovering
+   the map with "Рельеф" on (js/overviewBoard.js's _onMapMouseMove) —
+   anchored to #board-container, not .zoom-wrap, same reasoning as every
+   other cursor-tracking overlay in this file. pointer-events:none so it
+   can never itself become ev.target and block the very hover it's
+   reporting on. */
+.terrain-hover-tip {
+  position: absolute;
+  z-index: 25;
+  pointer-events: none;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(var(--ink-rgb), 0.85);
+  backdrop-filter: blur(4px);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--base1);
+  white-space: nowrap;
+}
+
 /* World-map country context (js/seaQuizBoard.js, js/seaIdentifyBoard.js) —
    deliberately more solid than the .state-bg-path default above so
    continents read as land at a glance instead of blending into the plain-
@@ -2127,6 +2148,19 @@ body {
 @keyframes map-context-menu-in {
   from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
+}
+/* State (+ terrain category, when "Рельеф" is on — see _onMapContextMenu)
+   name, shown above the coordinates line rather than replacing it — both
+   are useful independently (one place-in-the-world lookup, one just-look-
+   at-the-map lookup) and right-clicking a state is the one action that
+   can answer both at once. */
+.map-context-menu-label {
+  padding: 6px 10px 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--base1);
+  white-space: nowrap;
 }
 .map-context-menu-coords {
   padding: 6px 10px 8px;

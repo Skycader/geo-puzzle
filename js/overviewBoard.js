@@ -246,7 +246,9 @@ export class OverviewBoard {
     this.terrainLayer = null; // built lazily on first setTerrainVisible(true)
     this.terrainLegendEl = null;
     this.terrainRegionsByCategory = null; // category -> <path>, set once terrainLayer is built
+    this.terrainLabelsByCategory = null; // category -> Russian label, set alongside terrainRegionsByCategory
     this.terrainHiddenCategories = new Set(); // categories the player filtered off via the legend
+    this.terrainHoverTipEl = null; // built lazily on first hover — see _onMapMouseMove
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
     this.placesById = new Map(); // id -> { data, dotEl }
@@ -611,6 +613,11 @@ export class OverviewBoard {
     // toggle at all.
     this.svg.addEventListener('contextmenu', (ev) => this._onMapContextMenu(ev));
     this._buildRulerReadout();
+    // "Рельеф" hover readout — see _onMapMouseMove. Always bound (not only
+    // while terrainVisible) since it's a no-op early return otherwise; that
+    // avoids adding/removing the listener every time the toggle flips.
+    this.svg.addEventListener('mousemove', (ev) => this._onMapMouseMove(ev));
+    this.svg.addEventListener('mouseleave', () => this._hideTerrainHoverTip());
 
     this._rescaleForZoom(1);
     this.setLabelsVisible(this.labelsVisible);
@@ -962,7 +969,14 @@ export class OverviewBoard {
       this._renderRuler();
       return;
     }
-    this._openContextMenu(ev.clientX, ev.clientY, pt);
+    // State/terrain label, same lookup _onMapMouseMove's hover tip uses —
+    // ev.target is the state <path> itself (or something else entirely,
+    // e.g. ocean/background), never the terrain layer (pointer-events:none).
+    const stateId = ev.target?.dataset?.kind === 'state' ? ev.target.dataset.id : null;
+    const state = stateId ? this.statesById.get(stateId) : null;
+    const category = this._terrainCategoryAt(pt);
+    const label = state ? state.data.ru + (category ? ` — ${this.terrainLabelsByCategory.get(category)}` : '') : null;
+    this._openContextMenu(ev.clientX, ev.clientY, pt, label);
   }
 
   // Coordinates come from js/geoCoords.js — a different inverse-projection
@@ -971,13 +985,14 @@ export class OverviewBoard {
   // asks for whatever nativeToLonLat can figure out; null (a future level
   // with no known projection) degrades to "Добавить точку" still working,
   // with the coordinate-dependent actions disabled rather than crashing.
-  _openContextMenu(clientX, clientY, nativePt) {
+  _openContextMenu(clientX, clientY, nativePt, label) {
     this._closeContextMenu();
     const coords = nativeToLonLat(this.level, nativePt.x, nativePt.y);
 
     const menu = document.createElement('div');
     menu.className = 'map-context-menu';
     menu.innerHTML = `
+      ${label ? `<div class="map-context-menu-label">${label}</div>` : ''}
       <div class="map-context-menu-coords">${coords ? formatLonLat(coords) : 'Координаты недоступны'}</div>
       <button type="button" class="map-context-menu-item" data-action="add-point">Добавить точку</button>
       <button type="button" class="map-context-menu-item" data-action="open-maps"${coords ? '' : ' disabled'}>Открыть в Google Maps</button>
@@ -1658,8 +1673,10 @@ export class OverviewBoard {
       g.appendChild(clipPath);
       g.setAttribute('clip-path', `url(#${clipId})`);
       // category -> its <path> — _toggleTerrainCategory below looks this up
-      // instead of re-querying the DOM on every click.
+      // instead of re-querying the DOM on every click. terrainLabelsByCategory
+      // is the same keys -> Russian label, for the hover tip/context menu.
       this.terrainRegionsByCategory = new Map();
+      this.terrainLabelsByCategory = new Map();
       for (const region of usaTerrain.regions) {
         const path = document.createElementNS(SVG_NS, 'path');
         path.setAttribute('d', region.d);
@@ -1670,6 +1687,7 @@ export class OverviewBoard {
         path.appendChild(title);
         g.appendChild(path);
         this.terrainRegionsByCategory.set(region.category, path);
+        this.terrainLabelsByCategory.set(region.category, region.label);
       }
       this.zonesLayer.insertBefore(g, this.zonesLayer.firstChild);
       this.terrainLayer = g;
@@ -1717,6 +1735,70 @@ export class OverviewBoard {
     else this.terrainHiddenCategories.delete(category);
     setElementHidden(path, nowHidden);
     item.classList.toggle('terrain-legend-item-off', nowHidden);
+  }
+
+  // Which terrain category (if any) contains a native-space point — a
+  // real point-in-polygon test against each category's actual <path>
+  // geometry via SVGGeometryElement.isPointInFill, since the terrain
+  // layer's own paths are pointer-events:none (see the class comment on
+  // setTerrainVisible) and so can never be ev.target themselves. Filtered-
+  // off categories (see _toggleTerrainCategory) are skipped, same as they
+  // are visually — hovering there should behave like the layer just isn't
+  // there, not silently report a hidden category. Null when terrain isn't
+  // built/visible yet, or the point isn't inside any category (Hawaii, or
+  // any other gap in the source dataset).
+  _terrainCategoryAt(nativePt) {
+    if (!this.terrainVisible || !this.terrainRegionsByCategory) return null;
+    const svgPt = this.svg.createSVGPoint();
+    svgPt.x = nativePt.x;
+    svgPt.y = nativePt.y;
+    for (const [category, path] of this.terrainRegionsByCategory) {
+      if (this.terrainHiddenCategories.has(category)) continue;
+      if (path.isPointInFill(svgPt)) return category;
+    }
+    return null;
+  }
+
+  // Live "Вайоминг — Пустыня" readout while the mouse moves over a state
+  // with "Рельеф" on — a plain state <title> can't do this since its text
+  // is fixed per-element, not per-cursor-position, and a state can straddle
+  // several terrain categories (see _terrainCategoryAt). Cheap early-outs
+  // (not terrainVisible, not hovering a state) keep this from doing any
+  // point-in-fill work on every ordinary mousemove.
+  _onMapMouseMove(ev) {
+    if (!this.terrainVisible) return this._hideTerrainHoverTip();
+    const kind = ev.target?.dataset?.kind;
+    const id = ev.target?.dataset?.id;
+    if (kind !== 'state' || !id) return this._hideTerrainHoverTip();
+    const state = this.statesById.get(id);
+    const nativePt = this._clientToNative(ev.clientX, ev.clientY);
+    const category = this._terrainCategoryAt(nativePt);
+    const stateName = state?.data.ru || id;
+    const text = category ? `${stateName} — ${this.terrainLabelsByCategory.get(category)}` : stateName;
+    this._showTerrainHoverTip(ev.clientX, ev.clientY, text);
+  }
+
+  _showTerrainHoverTip(clientX, clientY, text) {
+    if (!this.terrainHoverTipEl) {
+      const el = document.createElement('div');
+      el.className = 'terrain-hover-tip';
+      // Sibling of zoomWrap inside this.container, not a zoomWrap child —
+      // same "oversized zoom-wrap is a trap for absolutely-positioned
+      // overlays" reasoning as .zoom-controls/.terrain-legend, and this one
+      // in particular needs to track the raw client cursor position, which
+      // only lines up correctly against a container that isn't oversized.
+      this.container.appendChild(el);
+      this.terrainHoverTipEl = el;
+    }
+    const wrapRect = this.container.getBoundingClientRect();
+    this.terrainHoverTipEl.textContent = text;
+    this.terrainHoverTipEl.style.left = `${clientX - wrapRect.left + 14}px`;
+    this.terrainHoverTipEl.style.top = `${clientY - wrapRect.top + 18}px`;
+    setElementHidden(this.terrainHoverTipEl, false);
+  }
+
+  _hideTerrainHoverTip() {
+    if (this.terrainHoverTipEl) setElementHidden(this.terrainHoverTipEl, true);
   }
 
   // Picks, for each highway, whichever of its sampled points (see
