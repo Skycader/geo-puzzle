@@ -374,6 +374,11 @@ export class OverviewBoard {
       // clicking one.
       path.dataset.kind = 'state';
       path.dataset.id = p.id;
+      // Detached while "Рельеф" is showing (see
+      // _setStateNativeTooltipsEnabled) — the custom terrain-hover-tip
+      // already shows this same name (plus the terrain category), and
+      // having both the native browser tooltip AND the custom one active
+      // at once is confusing/redundant, not additive.
       const title = document.createElementNS(SVG_NS, 'title');
       title.textContent = `${p.ru} (${p.name})`;
       path.appendChild(title);
@@ -412,7 +417,7 @@ export class OverviewBoard {
         this.allLabelEls.push(label);
         this.stateLabels.push({ el: label });
       });
-      this.statesById.set(p.id, { data: p, pathEl: path });
+      this.statesById.set(p.id, { data: p, pathEl: path, titleEl: title });
     }
 
     // Highways (USA only, see levels/usaHighways.js). The line itself is
@@ -1634,6 +1639,19 @@ export class OverviewBoard {
     if (this.progressVisible) this.setProgressVisible(true);
   }
 
+  // Detaches (or re-attaches) every state piece's native <title> — see the
+  // comment where it's created in _build(). SVG <title> tooltips can only
+  // be suppressed by actually removing the node (no CSS controls native
+  // tooltip visibility), so this is real DOM surgery, not a class toggle;
+  // cheap enough at 50 states, and only runs once per terrain toggle flip.
+  _setStateNativeTooltipsEnabled(enabled) {
+    for (const { pathEl, titleEl } of this.statesById.values()) {
+      if (!titleEl) continue;
+      if (enabled && !titleEl.isConnected) pathEl.appendChild(titleEl);
+      else if (!enabled && titleEl.isConnected) titleEl.remove();
+    }
+  }
+
   // "Рельеф" — lazily builds levels/usaTerrain.js's 8 terrain-category
   // sub-regions into a <g class="terrain-layer">, inserted as the FIRST
   // child of zonesLayer (the same position buildStateBackground's land
@@ -1653,6 +1671,7 @@ export class OverviewBoard {
   async setTerrainVisible(visible) {
     if (this.level.id !== 'usa') return;
     this.terrainVisible = visible;
+    this._setStateNativeTooltipsEnabled(!visible);
     if (!visible) {
       if (this.terrainLayer) setElementHidden(this.terrainLayer, true);
       if (this.terrainLegendEl) setElementHidden(this.terrainLegendEl, true);
@@ -1682,9 +1701,10 @@ export class OverviewBoard {
         path.setAttribute('d', region.d);
         path.setAttribute('class', 'terrain-region');
         path.dataset.terrain = region.category;
-        const title = document.createElementNS(SVG_NS, 'title');
-        title.textContent = region.label;
-        path.appendChild(title);
+        // No <title> here on purpose — pointer-events:none (style.css)
+        // means this path can never actually receive the hover that would
+        // show it; _onMapMouseMove's custom terrain-hover-tip is what
+        // actually reports the category, via _terrainCategoryAt.
         g.appendChild(path);
         this.terrainRegionsByCategory.set(region.category, path);
         this.terrainLabelsByCategory.set(region.category, region.label);
