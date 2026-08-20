@@ -632,12 +632,18 @@ body {
 .progress-io-status.error { color: var(--neon-pink); }
 .progress-io-status.success { color: var(--neon-cyan); }
 
-.adaptive-mode-row {
+/* Shared by any .toggle whose label is a full descriptive sentence rather
+   than a single word ("Города"/"Шоссе" etc.) — smaller text + tighter
+   line-height so a 2-3 line wrap stays readable instead of looming over
+   the checkbox at the default 15px, and flex-start keeps the checkbox
+   itself aligned to the FIRST line instead of vertically centering
+   against the whole wrapped block. */
+.toggle-multiline {
   margin-top: 12px;
   align-items: flex-start;
 }
-.adaptive-mode-row .toggle-track { margin-top: 2px; }
-.adaptive-mode-row .toggle-text { font-size: 13px; line-height: 1.35; }
+.toggle-multiline .toggle-track { margin-top: 2px; }
+.toggle-multiline .toggle-text { font-size: 13px; line-height: 1.35; }
 
 /* ---------------- buttons ---------------- */
 
@@ -976,6 +982,36 @@ body {
   width: 100%;
   height: 100%;
   border: 0;
+}
+
+/* Overview mode's 3rd layer (see overviewBoard.js's setTopoVisible) — a
+   grid of plain <img> tiles absolutely positioned by JS inside the same
+   .osm-frame-sized div, so .topo-frame itself needs no size/position
+   rules beyond what .osm-frame already gives it. Grabbable cursor + no
+   native touch scrolling, since _bindTopoPan drives panning itself via
+   pointer events rather than relying on the browser's own touch scroll. */
+.topo-frame {
+  cursor: grab;
+  touch-action: none;
+}
+.topo-frame.panning {
+  cursor: grabbing;
+}
+/* Plain <img> elements are natively draggable by default — without this,
+   a press-and-drag on a tile is hijacked by the browser's own "pick up
+   this image" drag-and-drop gesture (the ghost-image cursor) instead of
+   ever reaching _bindTopoPan's pointer handlers, which is exactly the bug
+   this was written to fix. user-select/-webkit-user-drag belt-and-braces
+   the same thing for browsers that'd otherwise also let a drag start a
+   text/image selection. */
+.topo-tile {
+  position: absolute;
+  display: block;
+  background: rgba(var(--ink-rgb), 0.4);
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
 }
 
 .zoom-controls {

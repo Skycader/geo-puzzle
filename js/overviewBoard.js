@@ -92,6 +92,32 @@ function computeVisibleLonLatBBox(level, rect) {
   return { minLon, minLat, maxLon, maxLat };
 }
 
+// Overview mode's 3rd map layer (see setTopoVisible below) — TraceTrack's
+// topo__ XYZ tile set, standard Web Mercator/EPSG:3857 slippy-map tiles
+// (256px), unlike OSM's option above which is an embeddable bbox *page*
+// (openstreetmap.org/export/embed.html) needing no tile math at all. No
+// tile-serving proxy exists for this app (it's static files, no backend),
+// so the key is necessarily visible in this source — same tradeoff the
+// user accepted when supplying it.
+const TOPO_TILE_SIZE = 512; // TraceTrack's topo__ tiles are 512px, not the usual 256px
+const TOPO_API_KEY = '4fd767ace0ab10303dd0080c295c9c97';
+// Caps how far we zoom in past what the bbox math would otherwise pick,
+// so a degenerate bbox (near-zero span) can't ask the browser to lay out
+// hundreds of <img> tags at once.
+const MAX_TOPO_TILES_PER_AXIS = 10;
+
+// Continuous (non-floored) world-pixel coordinates at zoom z — same
+// formulas any slippy-map tile scheme uses, kept as plain functions
+// rather than folded into setTopoVisible so the tile-index math and the
+// sub-tile pixel-offset math below can both call them.
+function topoWorldX(lon, z) {
+  return ((lon + 180) / 360) * TOPO_TILE_SIZE * 2 ** z;
+}
+function topoWorldY(lat, z) {
+  const latRad = (lat * Math.PI) / 180;
+  return ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * TOPO_TILE_SIZE * 2 ** z;
+}
+
 // this.svg is an SVGElement, not an HTMLElement — the `.hidden` IDL
 // property (element.hidden = true/false) only exists on HTMLElement, so
 // setting it on an <svg> silently creates a meaningless plain JS
@@ -544,6 +570,9 @@ export class OverviewBoard {
     this.container.appendChild(this.scaleBarEl);
     this.osmVisible = false;
     this.osmIframe = null;
+    this.topoVisible = false;
+    this.topoFrame = null;
+    this._topoBBox = null; // current lon/lat bbox the topo grid is rendered from — see setTopoVisible
     this._buildLayerSwitcher();
 
     // Right-click only — never conflicts with left-click's existing
@@ -1661,6 +1690,7 @@ export class OverviewBoard {
       <div class="layer-switcher-menu" hidden>
         <button type="button" class="layer-switcher-option" data-layer="svg">SVG <span class="layer-switcher-hint">оффлайн</span></button>
         <button type="button" class="layer-switcher-option" data-layer="osm">OpenStreetMap</button>
+        <button type="button" class="layer-switcher-option" data-layer="topo">Топографическая</button>
       </div>
     `;
     this.container.appendChild(wrap);
@@ -1673,17 +1703,25 @@ export class OverviewBoard {
       else this._closeLayerSwitcher();
     });
     this.layerSwitcherMenu.querySelector('[data-layer="svg"]').addEventListener('click', () => {
-      if (!this.osmVisible) return this._closeLayerSwitcher(); // already active
-      this.setOsmVisible(false);
+      if (!this.osmVisible && !this.topoVisible) return this._closeLayerSwitcher(); // already active
+      if (this.osmVisible) this.setOsmVisible(false);
+      if (this.topoVisible) this.setTopoVisible(false);
       this._closeLayerSwitcher();
     });
     this.layerSwitcherMenu.querySelector('[data-layer="osm"]').addEventListener('click', () => {
       if (this.osmVisible) return this._closeLayerSwitcher(); // already active
+      if (this.topoVisible) this.setTopoVisible(false);
       // Left open on failure (see setOsmVisible's own comment on when
       // that happens) rather than closing as if it had worked — the
       // player can zoom/pan to a single-region view and try again
       // without having to reopen the menu.
       if (this.setOsmVisible(true)) this._closeLayerSwitcher();
+    });
+    this.layerSwitcherMenu.querySelector('[data-layer="topo"]').addEventListener('click', () => {
+      if (this.topoVisible) return this._closeLayerSwitcher(); // already active
+      if (this.osmVisible) this.setOsmVisible(false);
+      // Same "left open on failure" reasoning as the OSM option above.
+      if (this.setTopoVisible(true)) this._closeLayerSwitcher();
     });
     this._updateLayerSwitcherActive();
   }
@@ -1720,8 +1758,10 @@ export class OverviewBoard {
   _updateLayerSwitcherActive() {
     const svgBtn = this.layerSwitcherMenu.querySelector('[data-layer="svg"]');
     const osmBtn = this.layerSwitcherMenu.querySelector('[data-layer="osm"]');
-    svgBtn.classList.toggle('active', !this.osmVisible);
+    const topoBtn = this.layerSwitcherMenu.querySelector('[data-layer="topo"]');
+    svgBtn.classList.toggle('active', !this.osmVisible && !this.topoVisible);
     osmBtn.classList.toggle('active', this.osmVisible);
+    topoBtn.classList.toggle('active', this.topoVisible);
   }
 
   // Switches between the offline SVG map and a live OpenStreetMap iframe
@@ -1768,6 +1808,202 @@ export class OverviewBoard {
     this.osmVisible = true;
     this._updateLayerSwitcherActive();
     return true;
+  }
+
+  // Switches to a grid of TraceTrack topo tiles framing the same area
+  // setOsmVisible would, using the same computeVisibleLonLatBBox call (and
+  // the same failure/"left open" contract — see setOsmVisible's own
+  // comment) since there's no bbox-embed page for this tile set, only raw
+  // {z}/{x}/{y} images.
+  //
+  // Unlike the OSM iframe (an actual openstreetmap.org page with its own
+  // built-in pan/zoom), there's no ready-made interactivity here — drag and
+  // wheel handling are hand-rolled in _bindTopoPan below, driving
+  // this._topoBBox directly rather than going through this.zoomCtl (which
+  // only ever transforms the now-hidden SVG's viewBox — see the class
+  // comment on _renderTopoTiles). Every time this layer is (re)opened,
+  // this._topoBBox is recomputed fresh from the SVG's current camera,
+  // discarding wherever the topo view had been panned to last time it was
+  // shown — the same "resync from the frozen SVG snapshot" behavior
+  // setOsmVisible already has, just made explicit here since there's no
+  // iframe hiding it.
+  setTopoVisible(visible) {
+    if (!visible) {
+      this.topoVisible = false;
+      if (this.topoFrame) setElementHidden(this.topoFrame, true);
+      setElementHidden(this.svg, false);
+      setElementHidden(this.zoomControlsEl, false);
+      setElementHidden(this.scaleBarEl, false);
+      this._updateLayerSwitcherActive();
+      return true;
+    }
+    if (!this._lastVisibleRect) return false;
+    const bbox = computeVisibleLonLatBBox(this.level, this._lastVisibleRect);
+    if (!bbox) return false;
+    if (!this.topoFrame) {
+      const frame = document.createElement('div');
+      frame.className = 'osm-frame topo-frame';
+      this.zoomViewport.appendChild(frame);
+      this.topoFrame = frame;
+      this._bindTopoPan(frame);
+    }
+    this._topoBBox = bbox;
+    this._renderTopoTiles(this._topoBBox);
+    setElementHidden(this.topoFrame, false);
+    setElementHidden(this.svg, true);
+    setElementHidden(this.zoomControlsEl, true);
+    setElementHidden(this.scaleBarEl, true);
+    this.topoVisible = true;
+    this._updateLayerSwitcherActive();
+    return true;
+  }
+
+  // Drag-to-pan + wheel-to-zoom for the topo grid, bound once when
+  // this.topoFrame is first created (not re-bound on every show/hide).
+  // Dragging moves the whole already-rendered grid via a cheap CSS
+  // transform for instant feedback, then re-renders the real tile grid
+  // (fetching whatever's newly needed) only once the drag/wheel settles —
+  // the same "cheap transform while interacting, rebake once it settles"
+  // shape zoomPan.js's own history comment describes, just applied to a
+  // raster tile grid instead of an SVG viewBox.
+  _bindTopoPan(frame) {
+    let drag = null;
+    frame.addEventListener('pointerdown', (ev) => {
+      if (ev.button !== 0 || !this._topoBBox) return;
+      drag = { startX: ev.clientX, startY: ev.clientY, bbox: this._topoBBox };
+      frame.setPointerCapture(ev.pointerId);
+      frame.classList.add('panning');
+    });
+    frame.addEventListener('pointermove', (ev) => {
+      if (!drag) return;
+      frame.style.transform = `translate(${ev.clientX - drag.startX}px, ${ev.clientY - drag.startY}px)`;
+    });
+    const endDrag = (ev) => {
+      if (!drag) return;
+      const dx = ev.clientX - drag.startX;
+      const dy = ev.clientY - drag.startY;
+      frame.style.transform = '';
+      frame.classList.remove('panning');
+      this._panTopoBBoxBy(drag.bbox, dx, dy);
+      drag = null;
+    };
+    frame.addEventListener('pointerup', endDrag);
+    frame.addEventListener('pointercancel', endDrag);
+    frame.addEventListener(
+      'wheel',
+      (ev) => {
+        ev.preventDefault();
+        this._zoomTopoBBox(ev.deltaY < 0 ? 1 / 1.35 : 1.35, ev.clientX, ev.clientY);
+      },
+      { passive: false }
+    );
+  }
+
+  // Shifts bbox by a drag of (dxPx, dyPx) screen pixels and re-renders.
+  // Uses a flat degrees-per-pixel approximation (bbox span / container
+  // size) rather than inverting the Mercator projection properly — over
+  // one viewport-sized drag that's indistinguishable from exact, and it's
+  // the same order of approximation computeVisibleLonLatBBox's own comment
+  // already accepts elsewhere in this file.
+  _panTopoBBoxBy(bbox, dxPx, dyPx) {
+    const containerW = this.zoomViewport.clientWidth || 1;
+    const containerH = this.zoomViewport.clientHeight || 1;
+    const lonPerPx = (bbox.maxLon - bbox.minLon) / containerW;
+    const latPerPx = (bbox.maxLat - bbox.minLat) / containerH;
+    // Content follows the cursor (standard "grab the map" panning): dragging
+    // right/down should reveal what was off-screen left/below, i.e. the
+    // camera itself moves left/up — west (lower lon) and, since north is
+    // the HIGH-latitude direction (unlike native canvas Y), up means higher
+    // lat, so dLat carries the same sign as dyPx while dLon carries the
+    // opposite sign of dxPx.
+    const dLon = -dxPx * lonPerPx;
+    const dLat = dyPx * latPerPx;
+    const minLon = clamp(bbox.minLon + dLon, -180, 180);
+    const maxLon = clamp(bbox.maxLon + dLon, -180, 180);
+    const minLat = clamp(bbox.minLat + dLat, -85, 85);
+    const maxLat = clamp(bbox.maxLat + dLat, -85, 85);
+    if (!(maxLon > minLon) || !(maxLat > minLat)) return; // clamped into degeneracy at a pole/antimeridian
+    this._topoBBox = { minLon, minLat, maxLon, maxLat };
+    this._renderTopoTiles(this._topoBBox);
+  }
+
+  // Scales bbox by `factor` (<1 zooms in, >1 zooms out) anchored on
+  // (clientX, clientY) so the map point under the cursor stays put, same
+  // anchor-preserving intent as zoomPan.js's own wheel handler.
+  _zoomTopoBBox(factor, clientX, clientY) {
+    const bbox = this._topoBBox;
+    if (!bbox) return;
+    const rect = this.zoomViewport.getBoundingClientRect();
+    const fx = clamp((clientX - rect.left) / rect.width, 0, 1);
+    const fy = clamp((clientY - rect.top) / rect.height, 0, 1);
+    const anchorLon = bbox.minLon + fx * (bbox.maxLon - bbox.minLon);
+    const anchorLat = bbox.maxLat - fy * (bbox.maxLat - bbox.minLat); // fy=0 at the top = maxLat
+    const minSpan = 0.005; // degrees — keeps wheel-zoom from collapsing to a degenerate bbox
+    const lonSpan = clamp((bbox.maxLon - bbox.minLon) * factor, minSpan, 360);
+    const latSpan = clamp((bbox.maxLat - bbox.minLat) * factor, minSpan, 170);
+    const minLon = clamp(anchorLon - fx * lonSpan, -180, 180);
+    const maxLon = clamp(minLon + lonSpan, -180, 180);
+    const maxLat = clamp(anchorLat + fy * latSpan, -85, 85);
+    const minLat = clamp(maxLat - latSpan, -85, 85);
+    if (!(maxLon > minLon) || !(maxLat > minLat)) return;
+    this._topoBBox = { minLon, minLat, maxLon, maxLat };
+    this._renderTopoTiles(this._topoBBox);
+  }
+
+  // Lays out one absolutely-positioned <img> per tile inside this.topoFrame,
+  // sized/positioned so the grid exactly fills the viewport regardless of
+  // how the chosen zoom level's tile boundaries happen to align with the
+  // bbox — see the scaleX/scaleY comment below for why that's needed.
+  // Called both from setTopoVisible (first show) and from _bindTopoPan's
+  // drag/wheel handlers (every time the topo view itself pans/zooms).
+  _renderTopoTiles(bbox) {
+    const { minLon, minLat, maxLon, maxLat } = bbox;
+    const containerW = this.zoomViewport.clientWidth || 1;
+    const containerH = this.zoomViewport.clientHeight || 1;
+
+    // Pick the zoom level whose world-pixel width, spread across the
+    // bbox's longitude span, roughly matches the viewport's actual pixel
+    // width — i.e. "1 world pixel ≈ 1 screen pixel" at this zoom.
+    let z = Math.floor(Math.log2((containerW * 360) / ((maxLon - minLon) * TOPO_TILE_SIZE)));
+    z = clamp(z, 0, 18);
+    // Degenerate bboxes (near-zero span) can otherwise demand a huge tile
+    // grid — back off the zoom level until it fits the cap.
+    while (z > 0 && (topoWorldX(maxLon, z) - topoWorldX(minLon, z)) / TOPO_TILE_SIZE > MAX_TOPO_TILES_PER_AXIS) {
+      z--;
+    }
+
+    const left = topoWorldX(minLon, z);
+    const right = topoWorldX(maxLon, z);
+    const top = topoWorldY(maxLat, z);
+    const bottom = topoWorldY(minLat, z);
+    // Rarely exactly containerW/containerH (the bbox's aspect ratio at
+    // this discrete zoom level won't perfectly match the viewport's), so
+    // each axis gets its own scale rather than assuming a single uniform
+    // one — same mild stretch tradeoff the OSM bbox embed already accepts
+    // implicitly by not preserving aspect ratio either.
+    const scaleX = containerW / (right - left);
+    const scaleY = containerH / (bottom - top);
+
+    const maxTileIndex = 2 ** z - 1;
+    const xMin = Math.max(0, Math.floor(left / TOPO_TILE_SIZE));
+    const xMax = Math.min(maxTileIndex, Math.floor((right - 1) / TOPO_TILE_SIZE));
+    const yMin = Math.max(0, Math.floor(top / TOPO_TILE_SIZE));
+    const yMax = Math.min(maxTileIndex, Math.floor((bottom - 1) / TOPO_TILE_SIZE));
+
+    this.topoFrame.innerHTML = '';
+    for (let ty = yMin; ty <= yMax; ty++) {
+      for (let tx = xMin; tx <= xMax; tx++) {
+        const img = document.createElement('img');
+        img.className = 'topo-tile';
+        img.alt = '';
+        img.src = `https://tile.tracestrack.com/topo__/${z}/${tx}/${ty}.webp?key=${TOPO_API_KEY}`;
+        img.style.left = `${(tx * TOPO_TILE_SIZE - left) * scaleX}px`;
+        img.style.top = `${(ty * TOPO_TILE_SIZE - top) * scaleY}px`;
+        img.style.width = `${TOPO_TILE_SIZE * scaleX}px`;
+        img.style.height = `${TOPO_TILE_SIZE * scaleY}px`;
+        this.topoFrame.appendChild(img);
+      }
+    }
   }
 
   destroy() {
