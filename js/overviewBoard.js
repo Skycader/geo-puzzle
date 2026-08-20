@@ -217,6 +217,16 @@ export class OverviewBoard {
     // game.js) to visualize — see setProgressVisible/setProgressScope.
     this.progressVisible = opts.progressVisible === true;
     this.progressScope = opts.progressScope || 'name-state-states';
+    // "Рельеф" — real terrain-classification sub-regions (mountains,
+    // forests, plains, desert...) painted underneath the state pieces —
+    // opt-in like progress, USA-only (levels/usaTerrain.js has no data for
+    // world/countries). The ~480KB terrain module is dynamic-imported on
+    // first use rather than statically imported at the top of this file,
+    // so loading World/Countries Overview never pays for it — see
+    // setTerrainVisible.
+    this.terrainVisible = opts.terrainVisible === true;
+    this.terrainLayer = null; // built lazily on first setTerrainVisible(true)
+    this.terrainLegendEl = null;
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
     this.placesById = new Map(); // id -> { data, dotEl }
@@ -587,6 +597,7 @@ export class OverviewBoard {
     this.setPlacesVisible(this.placesVisible);
     this.setHighwaysVisible(this.highwaysVisible);
     this.setProgressVisible(this.progressVisible);
+    if (this.terrainVisible) this.setTerrainVisible(true);
   }
 
   // Adds/removes each city's elements from the SVG based on whether it's
@@ -1586,6 +1597,78 @@ export class OverviewBoard {
   setProgressScope(scope) {
     this.progressScope = scope;
     if (this.progressVisible) this.setProgressVisible(true);
+  }
+
+  // "Рельеф" — lazily builds levels/usaTerrain.js's 8 terrain-category
+  // sub-regions into a <g class="terrain-layer">, inserted as the FIRST
+  // child of zonesLayer (the same position buildStateBackground's land
+  // layer occupies for world/countries — see _build), so it paints
+  // underneath every state piece automatically via existing paint order,
+  // no z-index bookkeeping needed. pointer-events:none (style.css) keeps
+  // it out of hit-testing entirely — no click-handling code anywhere needs
+  // to know it exists. Clipped to the union of every state's own `d` so
+  // terrain color never bleeds into the ocean/gaps beyond the US outline —
+  // cheaper than intersecting each terrain polygon against state borders
+  // individually, which this project has no library for anyway (see the
+  // plan this shipped from).
+  //
+  // The ~480KB terrain module is dynamic-imported here on first use
+  // instead of statically imported at the top of this file, so loading
+  // World/Countries Overview never pays for it.
+  async setTerrainVisible(visible) {
+    if (this.level.id !== 'usa') return;
+    this.terrainVisible = visible;
+    if (!visible) {
+      if (this.terrainLayer) setElementHidden(this.terrainLayer, true);
+      if (this.terrainLegendEl) setElementHidden(this.terrainLegendEl, true);
+      this.zonesLayer.classList.remove('terrain-active');
+      return;
+    }
+    if (!this.terrainLayer) {
+      const { default: usaTerrain } = await import('../levels/usaTerrain.js');
+      if (this._destroyed) return; // board torn down while the import was in flight
+      const g = document.createElementNS(SVG_NS, 'g');
+      g.setAttribute('class', 'terrain-layer');
+      const clipId = 'terrain-clip-' + Math.random().toString(36).slice(2);
+      const clipPath = document.createElementNS(SVG_NS, 'clipPath');
+      clipPath.id = clipId;
+      const clipShape = document.createElementNS(SVG_NS, 'path');
+      clipShape.setAttribute('d', this.level.pieces.map((p) => p.d).join(' '));
+      clipPath.appendChild(clipShape);
+      g.appendChild(clipPath);
+      g.setAttribute('clip-path', `url(#${clipId})`);
+      for (const region of usaTerrain.regions) {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', region.d);
+        path.setAttribute('class', 'terrain-region');
+        path.dataset.terrain = region.category;
+        const title = document.createElementNS(SVG_NS, 'title');
+        title.textContent = region.label;
+        path.appendChild(title);
+        g.appendChild(path);
+      }
+      this.zonesLayer.insertBefore(g, this.zonesLayer.firstChild);
+      this.terrainLayer = g;
+
+      // Anchored to this.container (#board-container), not zoomWrap — see
+      // the CSS comment on .terrain-legend for why.
+      const legend = document.createElement('div');
+      legend.className = 'terrain-legend';
+      for (const region of usaTerrain.regions) {
+        const item = document.createElement('div');
+        item.className = 'terrain-legend-item';
+        item.innerHTML = `<span class="terrain-legend-swatch" style="background: var(--terrain-${region.category})"></span><span>${region.label}</span>`;
+        legend.appendChild(item);
+      }
+      this.container.appendChild(legend);
+      this.terrainLegendEl = legend;
+    }
+    // Re-check — the toggle could have been switched off again while the
+    // dynamic import above was still in flight.
+    if (!this.terrainVisible) return;
+    setElementHidden(this.terrainLayer, false);
+    setElementHidden(this.terrainLegendEl, false);
+    this.zonesLayer.classList.add('terrain-active');
   }
 
   // Picks, for each highway, whichever of its sampled points (see

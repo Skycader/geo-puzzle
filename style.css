@@ -153,6 +153,23 @@
      everything above, just missed on the first sweep. */
   --quiz-fill-rgb: 38, 139, 210;
 
+  /* Overview mode's "Рельеф" toggle (js/overviewBoard.js's
+     setTerrainVisible) — 8 real terrain-classification categories
+     (scripts/build_usa_terrain.js), each its own naturalistic map color
+     here in the default scheme. Unlike --piece-a/--land-fill above, the
+     gray scheme below does NOT try to keep these "the same color, minus
+     hue" — 8 categories collapsed to one hue at different lightness only
+     is exactly the gray scheme's own stated design (see its block's
+     opening comment), so each gets its own gray tier instead. */
+  --terrain-mountain: #8b7355;
+  --terrain-forest-boreal: #2d5a3d;
+  --terrain-forest-broadleaf: #4a8f5c;
+  --terrain-forest-coastal: #1f6b5c;
+  --terrain-plains: #c9b458;
+  --terrain-desert: #d4a24c;
+  --terrain-mediterranean: #9caf58;
+  --terrain-tundra: #a8b8c0;
+
   --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', 'SFMono-Regular', ui-monospace, 'Courier New', monospace;
 
   color-scheme: dark;
@@ -198,6 +215,16 @@
      not a feedback signal that needs to pop) still reads clearly against
      both the gray state fills and the red accent. */
   --magenta: #9e9e9e;
+  /* Terrain categories, same true-achromatic-gray treatment as the base
+     scale above — distinguished by lightness tier only, no hue at all. */
+  --terrain-mountain: #6e6e6e;
+  --terrain-forest-boreal: #3d3d3d;
+  --terrain-forest-broadleaf: #5c5c5c;
+  --terrain-forest-coastal: #4a4a4a;
+  --terrain-plains: #8a8a8a;
+  --terrain-desert: #7a7a7a;
+  --terrain-mediterranean: #9e9e9e;
+  --terrain-tundra: #b5b5b5;
   /* The accent itself is red, not gray — everything above this point is
      the neutral base (backgrounds, piece fills, panel/board tones);
      these three (+ -rgb twins, + the panel-border glow) are the only
@@ -1320,6 +1347,58 @@ body {
 }
 .state-bg-path.state-bg-inset { stroke: rgba(var(--neon-pink-rgb), 0.25); }
 
+/* ---------------- "Рельеф" terrain layer (Overview mode, USA) ---------------- */
+
+/* pointer-events:none is the whole reason this layer never needs any
+   click-handling code to know it exists (see setTerrainVisible's own
+   comment) — clicks fall straight through to the state piece painted on
+   top of it. */
+.terrain-layer { pointer-events: none; }
+.terrain-region {
+  stroke: none;
+  fill-opacity: 0.85;
+}
+.terrain-region[data-terrain='mountain'] { fill: var(--terrain-mountain); }
+.terrain-region[data-terrain='forest-boreal'] { fill: var(--terrain-forest-boreal); }
+.terrain-region[data-terrain='forest-broadleaf'] { fill: var(--terrain-forest-broadleaf); }
+.terrain-region[data-terrain='forest-coastal'] { fill: var(--terrain-forest-coastal); }
+.terrain-region[data-terrain='plains'] { fill: var(--terrain-plains); }
+.terrain-region[data-terrain='desert'] { fill: var(--terrain-desert); }
+.terrain-region[data-terrain='mediterranean'] { fill: var(--terrain-mediterranean); }
+.terrain-region[data-terrain='tundra'] { fill: var(--terrain-tundra); }
+
+/* Anchored to #board-container (see js/game.js), not .zoom-wrap — the
+   same "oversized zoom-wrap is a trap for absolutely-positioned overlays"
+   reasoning as .zoom-controls/.scale-bar/.layer-switcher. Stacked above
+   .scale-bar's bottom-left corner rather than sharing it. */
+.terrain-legend {
+  position: absolute;
+  left: 20px;
+  bottom: 52px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(var(--ink-rgb), 0.8);
+  backdrop-filter: blur(4px);
+  font-size: 11px;
+  color: var(--base1);
+}
+.terrain-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.terrain-legend-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  flex: none;
+}
+
 /* World-map country context (js/seaQuizBoard.js, js/seaIdentifyBoard.js) —
    deliberately more solid than the .state-bg-path default above so
    continents read as land at a glance instead of blending into the plain-
@@ -2364,7 +2443,15 @@ body {
 .piece-shape {
   stroke: var(--piece-stroke);
   stroke-width: 1.4;
-  transition: filter 0.15s ease, stroke 0.15s ease;
+  transition: filter 0.15s ease, stroke 0.15s ease, fill-opacity 0.2s ease;
+}
+/* "Рельеф" terrain layer (js/overviewBoard.js's setTerrainVisible) paints
+   underneath every state piece — thins the piece's own opaque gradient
+   fill so that color actually reads through instead of being fully
+   covered, while the stroke above stays fully opaque (state borders and
+   click affordance stay just as readable either way). */
+.zones-layer.terrain-active .piece-shape {
+  fill-opacity: 0.35;
 }
 /* Overview mode's world-level sea/ocean pieces (js/overviewBoard.js adds
    this class only when level.id === 'world') — same dashed-water language

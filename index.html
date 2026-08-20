@@ -80,6 +80,15 @@
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
           <span class="toggle-text">Прогресс</span>
         </label>
+        <!-- Real terrain classification (mountains/forests/plains/desert/
+             etc., scripts/build_usa_terrain.js) painted under the state
+             pieces. States only, same as "Прогресс" above — see
+             js/overviewBoard.js's setTerrainVisible. -->
+        <label class="toggle" id="toggle-terrain-wrap" title="Показать рельеф (горы, леса, равнины, пустыни)" hidden>
+          <input type="checkbox" id="toggle-terrain" />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">Рельеф</span>
+        </label>
         <!-- Custom dropdown, not a native <select> — a native option list
              ignores almost all CSS (renders with the OS's own light-theme
              popup, black-on-white, completely unstyleable), so it looked

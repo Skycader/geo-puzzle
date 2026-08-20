@@ -128,6 +128,10 @@ export class Game {
     // setProgressVisible/setProgressScope.
     this.progressVisible = false;
     this.progressScope = 'name-state-states';
+    // "Рельеф" — real terrain sub-regions painted under the state pieces,
+    // same opt-in/USA-only shape as progressVisible above. See
+    // OverviewBoard's setTerrainVisible.
+    this.terrainVisible = false;
     this.eligibilityList = null; // current EligibilityList instance for quiz/city-place — see _applyModeVisibility
     this.board = null;
     this.seconds = 0;
@@ -298,6 +302,8 @@ export class Game {
       toggleHighways: document.getElementById('toggle-highways'),
       toggleProgressWrap: document.getElementById('toggle-progress-wrap'),
       toggleProgress: document.getElementById('toggle-progress'),
+      toggleTerrainWrap: document.getElementById('toggle-terrain-wrap'),
+      toggleTerrain: document.getElementById('toggle-terrain'),
       progressScopeWrap: document.getElementById('progress-scope-wrap'),
       progressScopeBtn: document.getElementById('progress-scope-btn'),
       progressScopeLabel: document.getElementById('progress-scope-label'),
@@ -884,6 +890,10 @@ export class Game {
       this.el.progressScopeWrap.hidden = !this.progressVisible;
       if (this.board?.setProgressVisible) this.board.setProgressVisible(this.progressVisible);
     });
+    this.el.toggleTerrain.addEventListener('change', (ev) => {
+      this.terrainVisible = ev.target.checked;
+      if (this.board?.setTerrainVisible) this.board.setTerrainVisible(this.terrainVisible);
+    });
     this._bindProgressScopeMenu();
     // Keeps the finish button anchored to the map's actual edge (see
     // _positionWinBar) if the window resizes while it's showing — a no-op
@@ -972,6 +982,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = !preset.showToggles;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.toggleHintsText.textContent = 'Подсказки';
     this.el.toggleLabelsText.textContent = 'Буквы';
     this.el.quizPrompt.hidden = true;
@@ -1014,6 +1025,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('quiz', 'Найди штат')} (${this.quizRounds})`;
@@ -1040,6 +1052,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    // No text prompt here — the "question" is the pulsing highlight on the
     // map itself (see nameStateBoard.js), showing the name would give away
     // the answer.
@@ -1069,6 +1082,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    // No text prompt — the "question" is entirely on the map (highlighted
     // state + glowing border), same reasoning as _startNameState.
     this.el.quizPrompt.hidden = true;
@@ -1102,6 +1116,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('identify', 'Определи штат')} (${this.quizRounds})`;
@@ -1131,6 +1146,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Определи море или океан (${this.quizRounds})`;
@@ -1160,6 +1176,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · Найди море или океан (${this.quizRounds})`;
@@ -1191,6 +1208,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
     this.el.hudLevel.textContent = `${level.title} · Города и места (${this.quizRounds})`;
@@ -1259,6 +1277,8 @@ export class Game {
     this.el.toggleProgress.checked = this.progressVisible;
     this.el.progressScopeWrap.hidden = level.id !== 'usa' || !this.progressVisible;
     this._setProgressScopeUI();
+    this.el.toggleTerrainWrap.hidden = level.id !== 'usa';
+    this.el.toggleTerrain.checked = this.terrainVisible;
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Обзор`;
@@ -1286,6 +1306,7 @@ export class Game {
       highwaysVisible: this.highwaysVisible,
       progressVisible: level.id === 'usa' && this.progressVisible,
       progressScope: this.progressScope,
+      terrainVisible: level.id === 'usa' && this.terrainVisible,
     });
   }
 
