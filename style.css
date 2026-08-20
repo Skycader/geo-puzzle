@@ -1387,16 +1387,39 @@ body {
   font-size: 11px;
   color: var(--base1);
 }
+/* A real <button> per category (js/overviewBoard.js's setTerrainVisible),
+   not a plain label — clicking one filters just that terrain category via
+   _toggleTerrainCategory, independent of the "Рельеф" toggle itself. */
 .terrain-legend-item {
   display: flex;
   align-items: center;
   gap: 6px;
+  border: none;
+  background: none;
+  padding: 2px 2px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--base1);
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease;
 }
+.terrain-legend-item:hover { background: rgba(var(--neon-cyan-rgb), 0.12); }
 .terrain-legend-swatch {
   width: 11px;
   height: 11px;
   border-radius: 2px;
   flex: none;
+  transition: opacity 0.15s ease;
+}
+/* Filtered-off category — dims the swatch/label instead of removing the
+   row entirely, so the legend stays a stable click target (same reasoning
+   as .quiz-path.quiz-used staying visible-but-muted rather than vanishing). */
+.terrain-legend-item-off {
+  opacity: 0.4;
+}
+.terrain-legend-item-off .terrain-legend-swatch {
+  opacity: 0.5;
 }
 
 /* World-map country context (js/seaQuizBoard.js, js/seaIdentifyBoard.js) —

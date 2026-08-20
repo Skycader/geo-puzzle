@@ -92,6 +92,24 @@ function computeVisibleLonLatBBox(level, rect) {
   return { minLon, minLat, maxLon, maxLat };
 }
 
+// "Рельеф" terrain layer's 8 categories (see setTerrainVisible below) —
+// short explanations of what each one actually IS, not just its name.
+// levels/usaTerrain.js's own `label` field is just the category name (it's
+// generated data, editorial text doesn't belong there) — this is the
+// human-written companion, shown as a hover tooltip on both the legend
+// button and the terrain shape itself on the map. Keyed by the same
+// `category` string scripts/build_usa_terrain.js's CATEGORY_MAP produces.
+const TERRAIN_DESCRIPTIONS = {
+  mountain: 'Горные хребты и плато — Скалистые горы, Сьерра-Невада, Каскадные горы. Резкий перепад высот; склоны часто покрыты хвойным лесом до определённой высоты, выше — голый камень и снег.',
+  'forest-boreal': 'Северный хвойный лес (тайга) — ель, сосна, лиственница. Холодный климат, короткое лето. В отличие от гор — это равнинная или холмистая местность, просто сплошь заросшая лесом.',
+  'forest-broadleaf': 'Листопадный лес востока США — дуб, клён, каштан. Умеренный влажный климат с ярко выраженной сменой сезонов (та самая "золотая осень").',
+  'forest-coastal': 'Влажный хвойный лес тихоокеанского побережья — ели, секвойи. Мягкий, очень дождливый климат из-за близости океана.',
+  plains: '"Великие" — по масштабу: огромная почти плоская степь в центре страны, тянется на тысячи километров без единого холма. Историческая родина бизонов и прерий, сегодня — главная житница страны (пшеница, кукуруза).',
+  desert: 'Засушливые области юго-запада — Мохаве, Сонора, Большой Бассейн. Мало осадков, жаркий день/холодная ночь, кактусы и редкая растительность вместо леса.',
+  mediterranean: 'Климат побережья и долин Калифорнии, редкий для США — тёплое сухое лето и мягкая дождливая зима, как в Средиземноморье. Виноградники, оливки, жестколистный кустарник (чапараль).',
+  tundra: 'Крайний север Аляски — вечная мерзлота, деревьев почти нет: слишком холодно и лето слишком короткое. Только мхи, лишайники и низкий кустарник — этим и отличается от тайги, где деревья есть.',
+};
+
 // Overview mode's 3rd map layer (see setTopoVisible below) — TraceTrack's
 // topo__ XYZ tile set, standard Web Mercator/EPSG:3857 slippy-map tiles
 // (256px), unlike OSM's option above which is an embeddable bbox *page*
@@ -227,6 +245,8 @@ export class OverviewBoard {
     this.terrainVisible = opts.terrainVisible === true;
     this.terrainLayer = null; // built lazily on first setTerrainVisible(true)
     this.terrainLegendEl = null;
+    this.terrainRegionsByCategory = null; // category -> <path>, set once terrainLayer is built
+    this.terrainHiddenCategories = new Set(); // categories the player filtered off via the legend
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
     this.placesById = new Map(); // id -> { data, dotEl }
@@ -1637,6 +1657,9 @@ export class OverviewBoard {
       clipPath.appendChild(clipShape);
       g.appendChild(clipPath);
       g.setAttribute('clip-path', `url(#${clipId})`);
+      // category -> its <path> — _toggleTerrainCategory below looks this up
+      // instead of re-querying the DOM on every click.
+      this.terrainRegionsByCategory = new Map();
       for (const region of usaTerrain.regions) {
         const path = document.createElementNS(SVG_NS, 'path');
         path.setAttribute('d', region.d);
@@ -1646,18 +1669,26 @@ export class OverviewBoard {
         title.textContent = region.label;
         path.appendChild(title);
         g.appendChild(path);
+        this.terrainRegionsByCategory.set(region.category, path);
       }
       this.zonesLayer.insertBefore(g, this.zonesLayer.firstChild);
       this.terrainLayer = g;
 
       // Anchored to this.container (#board-container), not zoomWrap — see
-      // the CSS comment on .terrain-legend for why.
+      // the CSS comment on .terrain-legend for why. Every swatch doubles as
+      // a per-category filter button — not persisted across reloads, same
+      // as terrainVisible itself (see game.js's terrainVisible comment).
       const legend = document.createElement('div');
       legend.className = 'terrain-legend';
       for (const region of usaTerrain.regions) {
-        const item = document.createElement('div');
+        const item = document.createElement('button');
+        item.type = 'button';
         item.className = 'terrain-legend-item';
+        item.dataset.terrain = region.category;
+        const description = TERRAIN_DESCRIPTIONS[region.category];
+        item.title = description ? `${region.label}\n\n${description}` : region.label;
         item.innerHTML = `<span class="terrain-legend-swatch" style="background: var(--terrain-${region.category})"></span><span>${region.label}</span>`;
+        item.addEventListener('click', () => this._toggleTerrainCategory(region.category));
         legend.appendChild(item);
       }
       this.container.appendChild(legend);
@@ -1669,6 +1700,23 @@ export class OverviewBoard {
     setElementHidden(this.terrainLayer, false);
     setElementHidden(this.terrainLegendEl, false);
     this.zonesLayer.classList.add('terrain-active');
+  }
+
+  // Per-category filter — clicking a legend swatch hides/shows just that
+  // one terrain category's <path> without touching the other 7 or the
+  // "Рельеф" toggle itself. Not persisted across reloads, same as
+  // terrainVisible (see game.js's terrainVisible comment) — this is a
+  // view filter for the current look at the map, not a settings-panel
+  // choice like level/mode/difficulty.
+  _toggleTerrainCategory(category) {
+    const path = this.terrainRegionsByCategory?.get(category);
+    const item = this.terrainLegendEl?.querySelector(`.terrain-legend-item[data-terrain="${category}"]`);
+    if (!path || !item) return;
+    const nowHidden = !this.terrainHiddenCategories.has(category);
+    if (nowHidden) this.terrainHiddenCategories.add(category);
+    else this.terrainHiddenCategories.delete(category);
+    setElementHidden(path, nowHidden);
+    item.classList.toggle('terrain-legend-item-off', nowHidden);
   }
 
   // Picks, for each highway, whichever of its sampled points (see
