@@ -45,6 +45,12 @@ export const MODES = [
     levels: ['usa'],
   },
   {
+    id: 'colorfill',
+    title: 'Раскраска',
+    desc: 'Закрась штат по типу рельефа',
+    levels: ['usa'],
+  },
+  {
     id: 'sea-identify',
     title: 'Определи море или океан',
     desc: 'Угадай море по форме',

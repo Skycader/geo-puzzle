@@ -26,5 +26,6 @@ export const REWARDS = {
     neighbor: 1,
     identify: 1,
     city_place: 1,
+    colorfill: 1,
   },
 };

@@ -2361,6 +2361,103 @@ body {
   40%, 80% { transform: translateX(6px); }
 }
 
+/* ---------------- "Раскраска" (js/colorFillBoard.js) ---------------- */
+
+/* Every OTHER state — plain, non-interactive backdrop so the country
+   doesn't look empty while one state is focused. Overrides .quiz-path's
+   own cursor/fill (this class always rides alongside it, but nothing here
+   is actually clickable — the round's real targets are .colorfill-piece,
+   a separate layer painted on top). */
+.colorfill-context {
+  fill: rgba(var(--base02-rgb), 0.5);
+  stroke: rgba(147, 161, 161, 0.3);
+  cursor: default;
+}
+.colorfill-context-active {
+  stroke: var(--neon-cyan);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 8px rgba(var(--neon-cyan-rgb), 0.6));
+}
+/* Blank/uncolored piece — dashed "outline waiting to be filled" look,
+   deliberately colorless so it never hints at the right answer. Filled
+   pieces (.colorfill-piece-filled) get their real terrain color set
+   directly via inline style (js/colorFillBoard.js), not a CSS class. */
+.colorfill-piece {
+  cursor: pointer;
+  stroke-width: 1.2;
+  transition: fill 0.15s ease;
+}
+.colorfill-piece-blank {
+  fill: rgba(88, 110, 117,0.25);
+  stroke: var(--base1);
+  stroke-dasharray: 5 4;
+}
+.colorfill-piece-blank:hover {
+  fill: rgba(88, 110, 117,0.4);
+}
+.colorfill-piece-filled {
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-dasharray: none;
+  cursor: default;
+}
+.colorfill-piece-wrong {
+  animation: wrong-pulse 0.4s ease;
+  fill: rgba(220, 50, 47, 0.55) !important;
+  stroke: var(--red);
+}
+/* "No color picked yet" — a much quieter nudge than being wrong, since it
+   isn't; a lighter, faster pulse keeps that distinction clear. */
+.colorfill-piece-nudge {
+  animation: colorfill-nudge 0.4s ease;
+}
+@keyframes colorfill-nudge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.colorfill-palette {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: min(90%, 640px);
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(var(--ink-rgb), 0.85);
+  backdrop-filter: blur(4px);
+}
+.colorfill-swatch-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(147, 161, 161, 0.4);
+  background: rgba(var(--base03-rgb), 0.6);
+  color: var(--base1);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.colorfill-swatch-btn:hover { border-color: var(--neon-cyan); }
+.colorfill-swatch-btn.selected {
+  border-color: var(--neon-cyan);
+  background: rgba(var(--neon-cyan-rgb), 0.18);
+}
+.colorfill-swatch {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  flex: none;
+}
+
 .board-svg {
   display: block;
   cursor: grab;

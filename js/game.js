@@ -5,6 +5,7 @@ import { NeighborBoard } from './neighborBoard.js';
 import { IdentifyStateBoard } from './identifyStateBoard.js';
 import { CityQuizBoard } from './cityQuizBoard.js';
 import { CityPinBoard } from './cityPinBoard.js';
+import { ColorFillBoard } from './colorFillBoard.js';
 import { SeaIdentifyBoard } from './seaIdentifyBoard.js';
 import { SeaQuizBoard } from './seaQuizBoard.js';
 import { OverviewBoard } from './overviewBoard.js';
@@ -36,6 +37,7 @@ const ADAPTIVE_SUCCESS_SCOPE_BY_MODE = {
   'name-state': 'name-state-states',
   neighbor: 'neighbor-states',
   identify: 'identify-states',
+  colorfill: 'colorfill-states',
 };
 
 // 'city-place' isn't here — its heading/label/prompt depend on its own two
@@ -50,6 +52,7 @@ const ROUNDS_PANEL_TEXT = {
   'name-state': { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
   neighbor: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
   identify: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
+  colorfill: { heading: 'Раунд', label: 'Сколько штатов закрасить', prompt: '' },
   'sea-identify': { heading: 'Раунд', label: 'Сколько морей/океанов спросить', prompt: '' },
   'sea-quiz': { heading: 'Раунд', label: 'Сколько морей/океанов спросить', prompt: 'Найди на карте:' },
 };
@@ -576,13 +579,14 @@ export class Game {
     const isIdentify = this.modeId === 'identify';
     const isQuiz = this.modeId === 'quiz';
     const isCityPlace = this.modeId === 'city-place';
+    const isColorFill = this.modeId === 'colorfill';
     const isSeaIdentify = this.modeId === 'sea-identify';
     const isSeaQuiz = this.modeId === 'sea-quiz';
     // "Города и места" only gets an eligibility checklist in "найти" mode —
     // "расставь метку" always draws from the full pool, same as the old
     // separate city-pins mode used to.
     const hasEligibility =
-      isQuiz || isNameState || isNeighbor || isIdentify || isSeaIdentify || isSeaQuiz || (isCityPlace && this.cityPlaceMode === 'find');
+      isQuiz || isNameState || isNeighbor || isIdentify || isColorFill || isSeaIdentify || isSeaQuiz || (isCityPlace && this.cityPlaceMode === 'find');
     this.el.panelPuzzleSettings.hidden = !isPuzzle;
     this.el.panelQuizSettings.hidden = !isRounds;
     this.el.panelOverviewSettings.hidden = !isOverview;
@@ -600,7 +604,7 @@ export class Game {
     // No adaptive mode for the two new sea modes (not asked for, keeps
     // this new level's scope tight) — same "no adaptive" default
     // city-place's pin mode already has.
-    this.el.adaptiveModeRow.hidden = !(isQuiz || isNameState || isNeighbor || isIdentify);
+    this.el.adaptiveModeRow.hidden = !(isQuiz || isNameState || isNeighbor || isIdentify || isColorFill);
     this.el.adaptiveModeCheckbox.checked = this.adaptiveMode;
     // Only the "find X on the map by clicking" modes have a select-then-
     // confirm two-click sequence for right-click to shortcut in the first
@@ -636,7 +640,7 @@ export class Game {
     this.eligibilityList = null;
 
     if (hasEligibility) {
-      const isSharedStateMode = isQuiz || isNameState || isNeighbor || isIdentify;
+      const isSharedStateMode = isQuiz || isNameState || isNeighbor || isIdentify || isColorFill;
       const kind = isSeaIdentify || isSeaQuiz ? 'seas' : isSharedStateMode ? (this.levelId === 'countries' ? 'countries' : 'states') : this.cityPlaceEntity;
       const items = kind === 'states' || kind === 'seas' || kind === 'countries' ? level.pieces : kind === 'places' ? level.places : level.cities;
       // Adaptive mode's success streak — shown here so the player can see,
@@ -653,8 +657,15 @@ export class Game {
       // land neighbor (e.g. not Hawaii) — the round cap must reflect that
       // narrower pool, not the raw checklist selection, or the slider
       // could ask for more rounds than the mode can actually deliver.
+      // "Раскраска" can't ask about Hawaii — no CEC terrain coverage for it
+      // (see levels/usaTerrain.js's stateCategories) — same narrowing
+      // reasoning as "Назови соседа" excluding neighborless states below.
       const countEligible = (selected) =>
-        isNeighbor ? items.filter((it) => selected.has(it.id) && it.neighbors && it.neighbors.length > 0).length : selected.size;
+        isNeighbor
+          ? items.filter((it) => selected.has(it.id) && it.neighbors && it.neighbors.length > 0).length
+          : isColorFill
+            ? items.filter((it) => selected.has(it.id) && it.id !== 'HI').length
+            : selected.size;
       this.eligibilityList = new EligibilityList(this.el.quizEligibleWrap, items, {
         kind,
         storageKey: `geo-puzzle:eligible:${this.levelId}:${kind}`,
@@ -950,6 +961,7 @@ export class Game {
     else if (this.modeId === 'neighbor') this._startNeighbor(level);
     else if (this.modeId === 'identify') this._startIdentify(level);
     else if (this.modeId === 'city-place') this._startCityPlace(level);
+    else if (this.modeId === 'colorfill') this._startColorFill(level);
     else if (this.modeId === 'sea-identify') this._startSeaIdentify(level);
     else if (this.modeId === 'sea-quiz') this._startSeaQuiz(level);
     else if (this.modeId === 'overview') this._startOverview(level);
@@ -1241,6 +1253,50 @@ export class Game {
     }
   }
 
+  // "Раскраска" — the only board that needs levels/usaTerrain.js (the
+  // ~480KB terrain dataset), so the dynamic import happens HERE rather
+  // than as a static import in colorFillBoard.js itself: every board class
+  // is imported up front by this file regardless of which mode the player
+  // picks, so a static import inside colorFillBoard.js would mean every
+  // single page load pays for this file, not just sessions that actually
+  // play this mode.
+  async _startColorFill(level) {
+    this.el.toggleHintsWrap.hidden = true;
+    this.el.togglePlacesWrap.hidden = true;
+    this.el.toggleLabelsWrap.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;
+    // No text prompt — same reasoning as name-state/neighbor/identify: the
+    // camera-focused state IS the question, a redundant label would just
+    // repeat what's already on screen.
+    this.el.quizPrompt.hidden = true;
+
+    this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('colorfill', 'Раскраска')} (${this.quizRounds})`;
+    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudGroups.hidden = false;
+    this.el.hudGroups.textContent = 'Ошибки: 0';
+
+    const { default: terrainData } = await import('../levels/usaTerrain.js');
+    // The player could have switched levels/modes while that import was in
+    // flight — bail rather than mounting a stale board over whatever's
+    // now actually selected.
+    if (this.modeId !== 'colorfill' || this.levelId !== 'usa') return;
+
+    const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
+    this.board = new ColorFillBoard(this.el.boardContainer, level, {
+      rounds: this.quizRounds,
+      eligibleIds: this.eligibilityList?.getSelectedIds(),
+      levelId: this.levelId,
+      adaptive: this.adaptiveMode,
+      terrainData,
+      scale,
+      onProgress: (p) => this._onColorFillProgress(p),
+      onFinish: () => this._onFinish(),
+    });
+  }
+
   _startOverview(level) {
     const overviewMode = OVERVIEW_MODES.find((m) => m.id === this.overviewModeId) || OVERVIEW_MODES[0];
     // Explicitly choosing "Полная информация" means labels ON, full stop —
@@ -1322,6 +1378,11 @@ export class Game {
   }
 
   _onNameStateProgress({ index, total, mistakes }) {
+    this.el.hudProgress.textContent = `${index}/${total}`;
+    this.el.hudGroups.textContent = `Ошибки: ${mistakes}`;
+  }
+
+  _onColorFillProgress({ index, total, mistakes }) {
     this.el.hudProgress.textContent = `${index}/${total}`;
     this.el.hudGroups.textContent = `Ошибки: ${mistakes}`;
   }

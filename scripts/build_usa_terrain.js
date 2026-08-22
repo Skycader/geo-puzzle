@@ -68,15 +68,38 @@ function albers([lon, lat]) {
   return [x, -y];
 }
 
+// Same id<->name table build_usa_level.js has (just the pairs needed to key
+// stateCategories below by the 2-letter id the game already uses everywhere
+// — js/game.js/js/colorFillBoard.js key states by `id`, not the geojson's
+// full `name`). Duplicated rather than imported — see the file header on
+// why this script can't require() anything from levels/.
+const NAME_TO_ID = {
+  Alabama: 'AL', Arizona: 'AZ', Arkansas: 'AR', California: 'CA', Colorado: 'CO',
+  Connecticut: 'CT', Delaware: 'DE', Florida: 'FL', Georgia: 'GA', Idaho: 'ID',
+  Illinois: 'IL', Indiana: 'IN', Iowa: 'IA', Kansas: 'KS', Kentucky: 'KY',
+  Louisiana: 'LA', Maine: 'ME', Maryland: 'MD', Massachusetts: 'MA', Michigan: 'MI',
+  Minnesota: 'MN', Mississippi: 'MS', Missouri: 'MO', Montana: 'MT', Nebraska: 'NE',
+  Nevada: 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY',
+  'North Carolina': 'NC', 'North Dakota': 'ND', Ohio: 'OH', Oklahoma: 'OK', Oregon: 'OR',
+  Pennsylvania: 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC', 'South Dakota': 'SD', Tennessee: 'TN',
+  Texas: 'TX', Utah: 'UT', Vermont: 'VT', Virginia: 'VA', Washington: 'WA',
+  'West Virginia': 'WV', Wisconsin: 'WI', Wyoming: 'WY', Alaska: 'AK', Hawaii: 'HI',
+};
+
 const statesGeo = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'us-states.geojson'), 'utf8'));
 let alaskaFeature = null;
 let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+// id -> array of raw (un-projected) rings — projected into canvas space in
+// a second pass below, once minX/minY/scale are known from this loop.
+const stateRawRingsById = {};
 for (const f of statesGeo.features) {
   const name = f.properties.name;
   if (name === 'Puerto Rico' || name === 'District of Columbia') continue;
   if (name === 'Alaska') { alaskaFeature = f; continue; }
   if (name === 'Hawaii') continue; // no terrain coverage for HI in this dataset anyway
+  const rings = [];
   forEachRing(f.geometry, (ring) => {
+    rings.push(ring);
     for (const pt of ring) {
       const [x, y] = albers(pt);
       if (x < minX) minX = x;
@@ -85,6 +108,7 @@ for (const f of statesGeo.features) {
       if (y > maxY) maxY = y;
     }
   });
+  stateRawRingsById[NAME_TO_ID[name]] = rings;
 }
 const TARGET_W = 960;
 const scale = TARGET_W / (maxX - minX);
@@ -131,6 +155,76 @@ function projectAlaska(ring) {
   });
 }
 
+// Every state's own rings, in the SAME canvas space as the terrain
+// category rings below — needed for _computeStateCategories's overlap
+// test (js/colorFillBoard.js's per-round "which categories does this
+// state actually contain" question — see stateCategories in the emitted
+// output). AK gets its own inset projection, same routing as everywhere
+// else in this file.
+const stateCanvasRingsById = {};
+for (const [id, rawRings] of Object.entries(stateRawRingsById)) {
+  stateCanvasRingsById[id] = rawRings.map(projectMainland);
+}
+if (alaskaFeature) {
+  const akRawRings = [];
+  forEachRing(alaskaFeature.geometry, (r) => akRawRings.push(r));
+  stateCanvasRingsById.AK = akRawRings.map(projectAlaska);
+}
+
+function ringBBox(ring) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [x, y] of ring) {
+    if (x < x0) x0 = x;
+    if (x > x1) x1 = x;
+    if (y < y0) y0 = y;
+    if (y > y1) y1 = y;
+  }
+  return [x0, y0, x1, y1];
+}
+function bboxesOverlap(a, b) {
+  return a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3];
+}
+
+// Standard ray-casting point-in-polygon, against ONE ring (states/terrain
+// categories are treated as a flat union of rings, not exterior+hole pairs
+// — this project has no real holes at this simplification level, so that
+// distinction isn't worth the extra complexity).
+function pointInRing(pt, ring) {
+  const [px, py] = pt;
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    const crosses = yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi;
+    if (crosses) inside = !inside;
+  }
+  return inside;
+}
+function segmentsIntersect(p1, p2, p3, p4) {
+  const d = (p2[0] - p1[0]) * (p4[1] - p3[1]) - (p2[1] - p1[1]) * (p4[0] - p3[0]);
+  if (d === 0) return false; // parallel/collinear — treated as non-crossing, same approximation tolerance as everywhere else in this file
+  const t = ((p3[0] - p1[0]) * (p4[1] - p3[1]) - (p3[1] - p1[1]) * (p4[0] - p3[0])) / d;
+  const u = ((p3[0] - p1[0]) * (p2[1] - p1[1]) - (p3[1] - p1[1]) * (p2[0] - p1[0])) / d;
+  return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+}
+// Does ringA overlap ringB at all? Vertex-containment first (cheap, catches
+// the vast majority of real cases — one ring's corner sitting inside the
+// other), edge-intersection as the fallback for the rarer case where two
+// rings cross without either one's own vertices landing inside the other.
+function ringsOverlap(ringA, ringB) {
+  if (!bboxesOverlap(ringBBox(ringA), ringBBox(ringB))) return false;
+  for (const pt of ringA) if (pointInRing(pt, ringB)) return true;
+  for (const pt of ringB) if (pointInRing(pt, ringA)) return true;
+  for (let i = 0; i < ringA.length; i++) {
+    const a1 = ringA[i], a2 = ringA[(i + 1) % ringA.length];
+    for (let j = 0; j < ringB.length; j++) {
+      const b1 = ringB[j], b2 = ringB[(j + 1) % ringB.length];
+      if (segmentsIntersect(a1, a2, b1, b2)) return true;
+    }
+  }
+  return false;
+}
+
 // ---- Bucket CEC's 15 Level-I categories into 8 player-facing ones ----
 const CATEGORY_MAP = {
   'NORTHWESTERN FORESTED MOUNTAINS': 'mountain',
@@ -158,7 +252,10 @@ const CATEGORY_LABELS = {
   tundra: 'Тундра',
 };
 
-// category -> array of ring strings ("x,y L x,y ... ")
+// category -> array of raw projected rings (point arrays) — kept alongside
+// the stringified version below since js/colorFillBoard.js's per-state
+// category list (computed right after) needs real geometry to test
+// against, not an SVG path string.
 const ringsByCategory = {};
 function addRings(geojsonPath, projectRing) {
   const geo = JSON.parse(fs.readFileSync(geojsonPath, 'utf8'));
@@ -167,9 +264,7 @@ function addRings(geojsonPath, projectRing) {
     const category = CATEGORY_MAP[f.properties.NA_L1NAME];
     if (!category) { skipped++; continue; }
     forEachRing(f.geometry, (ring) => {
-      const projected = projectRing(ring);
-      const str = projected.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' L ');
-      (ringsByCategory[category] ??= []).push(str);
+      (ringsByCategory[category] ??= []).push(projectRing(ring));
     });
   }
   console.error(path.basename(geojsonPath), '-> skipped (unmapped category)', skipped, 'of', geo.features.length);
@@ -182,10 +277,42 @@ const regions = Object.keys(CATEGORY_LABELS)
   .map((cat) => ({
     category: cat,
     label: CATEGORY_LABELS[cat],
-    d: ringsByCategory[cat].map((r) => `M ${r} Z`).join(' '),
+    d: ringsByCategory[cat].map((ring) => 'M ' + ring.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' L ') + ' Z').join(' '),
   }));
 
 console.error('regions', regions.map((r) => [r.category, ringsByCategory[r.category].length + ' rings', r.d.length + ' chars']));
+
+// ---- Per-state category list (js/colorFillBoard.js's "Раскраска" mode:
+// which of the 8 categories does THIS state actually need painted —
+// South Dakota has 2, California can have 5) — computed once here via
+// real ring-overlap geometry (ringsOverlap above) rather than approximated
+// at runtime, so a thin sliver (e.g. Mediterranean California's coastal
+// strip) can't silently go undetected the way point-sampling might. ----
+const stateCategories = {};
+for (const [stateId, stateRings] of Object.entries(stateCanvasRingsById)) {
+  const stateBBox = stateRings.reduce(
+    (acc, r) => {
+      const b = ringBBox(r);
+      return [Math.min(acc[0], b[0]), Math.min(acc[1], b[1]), Math.max(acc[2], b[2]), Math.max(acc[3], b[3])];
+    },
+    [Infinity, Infinity, -Infinity, -Infinity]
+  );
+  const found = [];
+  for (const cat of Object.keys(CATEGORY_LABELS)) {
+    const catRings = ringsByCategory[cat];
+    if (!catRings) continue;
+    const overlaps = catRings.some((catRing) => {
+      if (!bboxesOverlap(stateBBox, ringBBox(catRing))) return false;
+      return stateRings.some((stateRing) => ringsOverlap(stateRing, catRing));
+    });
+    if (overlaps) found.push(cat);
+  }
+  stateCategories[stateId] = found;
+}
+console.error(
+  'stateCategories sample',
+  ['SD', 'CA', 'KS', 'AK'].map((id) => [id, stateCategories[id]])
+);
 
 let out = `// Auto-generated by scripts/build_usa_terrain.js from the free EPA/CEC\n`;
 out += `// "Level I Ecoregions of North America" dataset, bucketed into 8\n`;
@@ -198,6 +325,14 @@ for (const r of regions) {
   out += `    { category: '${r.category}', label: '${r.label}', d: '${r.d}' },\n`;
 }
 out += `  ],\n`;
+// Which categories exist inside EACH state — see the comment above this
+// loop. js/colorFillBoard.js uses this directly instead of doing its own
+// runtime point-sampling.
+out += `  stateCategories: {\n`;
+for (const [id, cats] of Object.entries(stateCategories)) {
+  out += `    ${id}: [${cats.map((c) => `'${c}'`).join(', ')}],\n`;
+}
+out += `  },\n`;
 out += `};\n`;
 
 const outPath = path.join(__dirname, '..', 'levels', 'usaTerrain.js');
