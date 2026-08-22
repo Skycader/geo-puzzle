@@ -215,16 +215,16 @@
      not a feedback signal that needs to pop) still reads clearly against
      both the gray state fills and the red accent. */
   --magenta: #9e9e9e;
-  /* Terrain categories, same true-achromatic-gray treatment as the base
-     scale above — distinguished by lightness tier only, no hue at all. */
-  --terrain-mountain: #6e6e6e;
-  --terrain-forest-boreal: #3d3d3d;
-  --terrain-forest-broadleaf: #5c5c5c;
-  --terrain-forest-coastal: #4a4a4a;
-  --terrain-plains: #8a8a8a;
-  --terrain-desert: #7a7a7a;
-  --terrain-mediterranean: #9e9e9e;
-  --terrain-tundra: #b5b5b5;
+  /* --terrain-* (Overview's "Рельеф" layer) is deliberately NOT
+     overridden here — same reasoning as --neon-yellow up in :root's own
+     comment: it carries real information (which category is which), not
+     decoration, so it should mean the same thing regardless of scheme.
+     An earlier version of this block DID give it the "true achromatic
+     gray, distinguished by lightness tier only" treatment the rest of
+     this scheme uses — which turned out to defeat the whole point of a
+     color-coded legend: at legend-swatch size, 8 gray tiers read as one
+     indistinguishable dark blob, not 8 categories. Left at its :root
+     saturated-color defaults instead, same as hint highlights. */
   /* The accent itself is red, not gray — everything above this point is
      the neutral base (backgrounds, piece fills, panel/board tones);
      these three (+ -rgb twins, + the panel-border glow) are the only
