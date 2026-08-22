@@ -2414,6 +2414,16 @@ body {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.55; }
 }
+/* Auto-revealed after a wrong guess (js/colorFillBoard.js's _onPieceClick —
+   one guess per piece, no retry loop) — colored correctly like a solved
+   piece, but keeps a dashed border instead of .colorfill-piece-filled's
+   solid one, so it stays visually distinguishable as "shown to you", not
+   "you got it", even once the wrong-flash itself has faded. */
+.colorfill-piece-revealed {
+  stroke: rgba(220, 50, 47, 0.7);
+  stroke-dasharray: 3 3;
+  cursor: default;
+}
 
 .colorfill-palette {
   position: absolute;

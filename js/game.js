@@ -1405,7 +1405,7 @@ export class Game {
     // now: hide whatever answer UI the board built, and leave only the way
     // back to the menu.
     this.el.quizPrompt.hidden = true;
-    this.el.boardContainer.querySelectorAll('.name-answer-bar, .city-actions').forEach((el) => { el.hidden = true; });
+    this.el.boardContainer.querySelectorAll('.name-answer-bar, .city-actions, .colorfill-palette').forEach((el) => { el.hidden = true; });
     this.el.winBar.hidden = false;
     this._positionWinBar();
   }

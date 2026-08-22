@@ -214,32 +214,45 @@ export class ColorFillBoard {
       setTimeout(() => path.classList.remove('colorfill-piece-nudge'), WRONG_FLASH_MS);
       return;
     }
-    if (this.selectedCategory === category) {
-      path.classList.remove('colorfill-piece-blank');
+    // Wrong guesses are settled immediately, not re-prompted — one guess
+    // per piece, then either it's colored because the player got it right,
+    // or it's revealed because they didn't. There's no real benefit to
+    // making the player cycle through the remaining 7 colors by trial and
+    // error once a piece is already known to be wrong; a mistake already
+    // counted for it. roundNeededHelp (set below) is what actually gates
+    // the coin reward at round-completion time.
+    const isCorrect = this.selectedCategory === category;
+    path.classList.remove('colorfill-piece-blank');
+    path.style.fill = `var(--terrain-${category})`;
+    if (isCorrect) {
       path.classList.add('colorfill-piece-filled');
-      path.style.fill = `var(--terrain-${category})`;
       playSnap();
-      this.remainingCategories.delete(category);
-      if (this.remainingCategories.size === 0) {
-        this.locked = true;
-        this.correct++;
-        if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.roundNeededHelp);
-        const reward = REWARDS[this.levelId]?.colorfill ?? 0;
-        if (reward > 0 && !this.roundNeededHelp) {
-          const r = path.getBoundingClientRect();
-          flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
-        }
-        setTimeout(() => {
-          this.index++;
-          this._nextQuestion();
-        }, ADVANCE_DELAY_MS);
-      }
     } else {
       this.roundNeededHelp = true;
-      path.classList.add('colorfill-piece-wrong');
-      playError();
       this.mistakes++;
+      playError();
+      // Stays visibly distinct from a self-solved piece (colorfill-piece-
+      // revealed keeps a dashed border, see style.css) even after the red
+      // flash fades — a quick glance at the finished state should show
+      // which pieces the player actually got right.
+      path.classList.add('colorfill-piece-revealed', 'colorfill-piece-wrong');
       setTimeout(() => path.classList.remove('colorfill-piece-wrong'), WRONG_FLASH_MS);
+    }
+    this.remainingCategories.delete(category);
+    if (this.remainingCategories.size === 0) {
+      this.locked = true;
+      this.correct++;
+      if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, this.current.id, this.roundNeededHelp);
+      const reward = REWARDS[this.levelId]?.colorfill ?? 0;
+      if (reward > 0 && !this.roundNeededHelp) {
+        const r = path.getBoundingClientRect();
+        flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
+      }
+      setTimeout(() => {
+        this.index++;
+        this._nextQuestion();
+      }, ADVANCE_DELAY_MS);
+    } else {
       this._reportProgress();
     }
   }
