@@ -9,6 +9,7 @@ export default [
   { id: 'mount_rushmore', name: 'Mount Rushmore', ru: 'Гора Рашмор', cx: 369.3, cy: 174.3, radiusKm: 2 },
   { id: 'white_house', name: 'The White House', ru: 'Белый дом', cx: 830.4, cy: 261.9, radiusKm: 2 },
   { id: 'area_51', name: 'Area 51', ru: 'Зона 51', cx: 133.9, cy: 296.8, radiusKm: 2 },
+  { id: 'norad_cheyenne_mountain', name: 'NORAD Cheyenne Mountain Complex', ru: 'НОРАД (комплекс в горе Шайенн)', cx: 335.1, cy: 291.9, radiusKm: 2 },
   { id: 'hollywood_sign', name: 'Hollywood Sign', ru: 'Знак Голливуд', cx: 71.9, cy: 357.4, radiusKm: 2 },
   { id: 'kennedy_space_center', name: 'Kennedy Space Center', ru: 'Космический центр Кеннеди', cx: 805.6, cy: 511.4, radiusKm: 2 },
   { id: 'harvard_university', name: 'Harvard University', ru: 'Гарвардский университет', cx: 912.4, cy: 159, radiusKm: 2 },

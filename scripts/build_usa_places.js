@@ -114,6 +114,9 @@ const PLACES = [
   ['mount_rushmore', 'Mount Rushmore', 'Гора Рашмор', 43.8791, -103.4591],
   ['white_house', 'The White House', 'Белый дом', 38.8977, -77.0365],
   ['area_51', 'Area 51', 'Зона 51', 37.2431, -115.7930],
+  // Wikipedia: 38°44'33"N 104°50'54"W — hardened command center built
+  // INSIDE Cheyenne Mountain, not just near it.
+  ['norad_cheyenne_mountain', 'NORAD Cheyenne Mountain Complex', 'НОРАД (комплекс в горе Шайенн)', 38.7425, -104.8483],
   ['hollywood_sign', 'Hollywood Sign', 'Знак Голливуд', 34.1341, -118.3215],
   ['kennedy_space_center', 'Kennedy Space Center', 'Космический центр Кеннеди', 28.5729, -80.6490],
   ['harvard_university', 'Harvard University', 'Гарвардский университет', 42.3770, -71.1167],
