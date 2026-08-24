@@ -169,6 +169,7 @@
   --terrain-desert: #d4a24c;
   --terrain-mediterranean: #9caf58;
   --terrain-tundra: #a8b8c0;
+  --terrain-swamp: #1f3d2e;
 
   --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', 'SFMono-Regular', ui-monospace, 'Courier New', monospace;
 
@@ -1356,16 +1357,21 @@ body {
 .terrain-layer { pointer-events: none; }
 .terrain-region {
   stroke: none;
-  fill-opacity: 0.85;
+  /* No fill-opacity here (unlike the first, flat-color version of this
+     layer) — each <pattern> tile (js/overviewBoard.js's TERRAIN_PATTERNS)
+     already carries its own carefully-tuned opacities for its background
+     wash vs. its icon; an opacity here on top would just dim both
+     unevenly relative to how they were tuned. */
 }
-.terrain-region[data-terrain='mountain'] { fill: var(--terrain-mountain); }
-.terrain-region[data-terrain='forest-boreal'] { fill: var(--terrain-forest-boreal); }
-.terrain-region[data-terrain='forest-broadleaf'] { fill: var(--terrain-forest-broadleaf); }
-.terrain-region[data-terrain='forest-coastal'] { fill: var(--terrain-forest-coastal); }
-.terrain-region[data-terrain='plains'] { fill: var(--terrain-plains); }
-.terrain-region[data-terrain='desert'] { fill: var(--terrain-desert); }
-.terrain-region[data-terrain='mediterranean'] { fill: var(--terrain-mediterranean); }
-.terrain-region[data-terrain='tundra'] { fill: var(--terrain-tundra); }
+.terrain-region[data-terrain='mountain'] { fill: url(#terrain-pattern-mountain); }
+.terrain-region[data-terrain='forest-boreal'] { fill: url(#terrain-pattern-forest-boreal); }
+.terrain-region[data-terrain='forest-broadleaf'] { fill: url(#terrain-pattern-forest-broadleaf); }
+.terrain-region[data-terrain='forest-coastal'] { fill: url(#terrain-pattern-forest-coastal); }
+.terrain-region[data-terrain='plains'] { fill: url(#terrain-pattern-plains); }
+.terrain-region[data-terrain='desert'] { fill: url(#terrain-pattern-desert); }
+.terrain-region[data-terrain='mediterranean'] { fill: url(#terrain-pattern-mediterranean); }
+.terrain-region[data-terrain='tundra'] { fill: url(#terrain-pattern-tundra); }
+.terrain-region[data-terrain='swamp'] { fill: url(#terrain-pattern-swamp); }
 
 /* Anchored to #board-container (see js/game.js), not .zoom-wrap — the
    same "oversized zoom-wrap is a trap for absolutely-positioned overlays"

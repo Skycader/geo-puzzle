@@ -108,6 +108,88 @@ const TERRAIN_DESCRIPTIONS = {
   desert: 'Засушливые области юго-запада — Мохаве, Сонора, Большой Бассейн. Мало осадков, жаркий день/холодная ночь, кактусы и редкая растительность вместо леса.',
   mediterranean: 'Климат побережья и долин Калифорнии, редкий для США — тёплое сухое лето и мягкая дождливая зима, как в Средиземноморье. Виноградники, оливки, жестколистный кустарник (чапараль).',
   tundra: 'Крайний север Аляски — вечная мерзлота, деревьев почти нет: слишком холодно и лето слишком короткое. Только мхи, лишайники и низкий кустарник — этим и отличается от тайги, где деревья есть.',
+  // Unlike the other 8 (a continuous real ecoregion), this one shows just
+  // 8 specific, individually-famous named swamps as approximate blobs
+  // (real location + real area, hand-drawn shape) — see
+  // scripts/build_usa_terrain.js's own comment on why no comprehensive
+  // wetlands dataset was usable here.
+  swamp: 'Заболоченные низменности — Эверглейдс, Окефеноки, бассейн Атчафалайя и другие крупные болота юго-востока США. Постоянно стоит вода, кипарисы и мангры вместо обычного леса; на карте показаны только несколько самых известных, а не все болота страны.',
+};
+
+// "Рельеф" fill, per category — a small hand-drawn icon (pine tree,
+// broadleaf tree, dune, tuft of grass...) tiled via a native SVG <pattern>
+// rather than a flat color, so a glance at the map actually shows WHAT
+// kind of terrain it is, not just "some color = some category" (a flat
+// fill alone was the original version of this feature — see the plan/
+// commits this shipped from). <pattern> tiles automatically fill however
+// much of the shape is on screen with no per-frame JS, unlike the highway
+// shields' dynamic repositioning (which exists only because a highway
+// LINE is too thin/long for a single fixed icon to ever reliably stay on
+// screen — a 2D area has no such problem, a repeating pattern already
+// covers all of it). Each tile is a faint full-tile wash of the category's
+// own color (so gaps between icons still read as "this category", not as
+// a hole) plus the icon itself on top, both referencing var(--terrain-*)
+// so they stay scheme-reactive as an inline <pattern> is still part of the
+// same document's CSS cascade.
+const TERRAIN_PATTERN_TILE_PX = 10; // native canvas units per repeat — ~47km at this map's scale
+const TERRAIN_PATTERNS = {
+  mountain: `
+    <rect width="10" height="10" fill="var(--terrain-mountain)" fill-opacity="0.16"/>
+    <path d="M0,9 L2.4,3.4 L4,6.2 L6,2 L9.2,9 Z" fill="var(--terrain-mountain)" fill-opacity="0.85"/>
+  `,
+  'forest-boreal': `
+    <rect width="10" height="10" fill="var(--terrain-forest-boreal)" fill-opacity="0.16"/>
+    <path d="M5,1 L7.4,5 L6.2,5 L8.4,8.2 L1.6,8.2 L3.8,5 L2.6,5 Z" fill="var(--terrain-forest-boreal)" fill-opacity="0.9"/>
+    <rect x="4.4" y="8.2" width="1.2" height="1.3" fill="var(--terrain-forest-boreal)" fill-opacity="0.9"/>
+  `,
+  'forest-broadleaf': `
+    <rect width="10" height="10" fill="var(--terrain-forest-broadleaf)" fill-opacity="0.16"/>
+    <circle cx="5" cy="4.2" r="2.7" fill="var(--terrain-forest-broadleaf)" fill-opacity="0.9"/>
+    <rect x="4.4" y="6.7" width="1.2" height="2.2" fill="var(--terrain-forest-broadleaf)" fill-opacity="0.9"/>
+  `,
+  // Same "tree" language as the other two forest categories, kept taller
+  // and narrower — the tall coastal conifers (redwoods etc) this category
+  // is actually named for.
+  'forest-coastal': `
+    <rect width="10" height="10" fill="var(--terrain-forest-coastal)" fill-opacity="0.16"/>
+    <path d="M5,0.4 L6.4,3.2 L5.7,3.2 L7.1,5.8 L6.2,5.8 L7.9,9 L2.1,9 L3.8,5.8 L2.9,5.8 L4.3,3.2 L3.6,3.2 Z" fill="var(--terrain-forest-coastal)" fill-opacity="0.9"/>
+  `,
+  plains: `
+    <rect width="10" height="10" fill="var(--terrain-plains)" fill-opacity="0.18"/>
+    <path d="M2,9 L2.3,5.2 M4.6,9 L5.1,4.4 M7.2,9 L7.4,5.7" stroke="var(--terrain-plains)" stroke-width="0.7" fill="none" stroke-linecap="round" opacity="0.9"/>
+  `,
+  desert: `
+    <rect width="10" height="10" fill="var(--terrain-desert)" fill-opacity="0.18"/>
+    <path d="M0,7.2 Q2.5,4.7 5,7.2 T10,7.2" stroke="var(--terrain-desert)" stroke-width="0.9" fill="none" opacity="0.9"/>
+    <path d="M0,3.4 Q2.5,1.4 5,3.4 T10,3.4" stroke="var(--terrain-desert)" stroke-width="0.6" fill="none" opacity="0.55"/>
+  `,
+  // Small rounded shrub/olive-bush cluster — chaparral, not a full tree.
+  mediterranean: `
+    <rect width="10" height="10" fill="var(--terrain-mediterranean)" fill-opacity="0.16"/>
+    <circle cx="4" cy="5.6" r="1.8" fill="var(--terrain-mediterranean)" fill-opacity="0.9"/>
+    <circle cx="6.3" cy="5.1" r="1.4" fill="var(--terrain-mediterranean)" fill-opacity="0.9"/>
+    <rect x="4.6" y="7.1" width="0.9" height="1.3" fill="var(--terrain-mediterranean)" fill-opacity="0.9"/>
+  `,
+  // Sparse lichen/tussock flecks, deliberately the thinnest icon of the 8 —
+  // tundra's whole identity (see TERRAIN_DESCRIPTIONS) is "barely anything
+  // grows here", so a dense icon would misrepresent it.
+  tundra: `
+    <rect width="10" height="10" fill="var(--terrain-tundra)" fill-opacity="0.2"/>
+    <circle cx="2.4" cy="7" r="0.55" fill="var(--terrain-tundra)" fill-opacity="0.9"/>
+    <circle cx="7" cy="4.4" r="0.5" fill="var(--terrain-tundra)" fill-opacity="0.9"/>
+    <circle cx="5" cy="8.4" r="0.42" fill="var(--terrain-tundra)" fill-opacity="0.9"/>
+    <circle cx="8.3" cy="7.9" r="0.4" fill="var(--terrain-tundra)" fill-opacity="0.9"/>
+  `,
+  // Dark, still puddles/pools between (implied, unshown) reeds — irregular
+  // ellipses rather than perfect circles, so they read as standing water,
+  // not as balls/dots the way tundra's lichen flecks do.
+  swamp: `
+    <rect width="10" height="10" fill="var(--terrain-swamp)" fill-opacity="0.3"/>
+    <ellipse cx="3" cy="3.2" rx="1.7" ry="1.05" fill="var(--terrain-swamp)" fill-opacity="0.95" transform="rotate(-12 3 3.2)"/>
+    <ellipse cx="7.4" cy="2.6" rx="1.2" ry="0.75" fill="var(--terrain-swamp)" fill-opacity="0.95" transform="rotate(18 7.4 2.6)"/>
+    <ellipse cx="5.6" cy="6.4" rx="2" ry="1.2" fill="var(--terrain-swamp)" fill-opacity="0.95" transform="rotate(-6 5.6 6.4)"/>
+    <ellipse cx="1.6" cy="8.2" rx="1.1" ry="0.7" fill="var(--terrain-swamp)" fill-opacity="0.95" transform="rotate(10 1.6 8.2)"/>
+  `,
 };
 
 // Overview mode's 3rd map layer (see setTopoVisible below) — TraceTrack's
@@ -1639,6 +1721,29 @@ export class OverviewBoard {
     if (this.progressVisible) this.setProgressVisible(true);
   }
 
+  // Builds the 8 <pattern> elements TERRAIN_PATTERNS describes — called
+  // once, the first time the terrain layer is built (see setTerrainVisible).
+  // style.css's `.terrain-region[data-terrain='X'] { fill: url(#terrain-
+  // pattern-X); }` rules are what actually point each region at its
+  // pattern; this method only needs to make sure those ids exist in the
+  // document. Fixed (non-randomized) ids are safe here — unlike
+  // setTerrainVisible's own clip-path id, exactly one OverviewBoard is
+  // ever mounted at a time (game.js destroys the previous one before
+  // building a new one), so there's no risk of two boards' defs colliding.
+  _buildTerrainPatternDefs() {
+    const defs = document.createElementNS(SVG_NS, 'defs');
+    for (const [category, iconSvg] of Object.entries(TERRAIN_PATTERNS)) {
+      const pattern = document.createElementNS(SVG_NS, 'pattern');
+      pattern.id = `terrain-pattern-${category}`;
+      pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+      pattern.setAttribute('width', TERRAIN_PATTERN_TILE_PX);
+      pattern.setAttribute('height', TERRAIN_PATTERN_TILE_PX);
+      pattern.innerHTML = iconSvg;
+      defs.appendChild(pattern);
+    }
+    return defs;
+  }
+
   // Detaches (or re-attaches) every state piece's native <title> — see the
   // comment where it's created in _build(). SVG <title> tooltips can only
   // be suppressed by actually removing the node (no CSS controls native
@@ -1691,6 +1796,7 @@ export class OverviewBoard {
       clipPath.appendChild(clipShape);
       g.appendChild(clipPath);
       g.setAttribute('clip-path', `url(#${clipId})`);
+      g.appendChild(this._buildTerrainPatternDefs());
       // category -> its <path> — _toggleTerrainCategory below looks this up
       // instead of re-querying the DOM on every click. terrainLabelsByCategory
       // is the same keys -> Russian label, for the hover tip/context menu.

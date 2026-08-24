@@ -250,6 +250,7 @@ const CATEGORY_LABELS = {
   desert: 'Пустыня',
   mediterranean: 'Средиземноморье',
   tundra: 'Тундра',
+  swamp: 'Болото',
 };
 
 // category -> array of raw projected rings (point arrays) — kept alongside
@@ -271,6 +272,67 @@ function addRings(geojsonPath, projectRing) {
 }
 addRings(path.join(__dirname, 'data', 'na-ecoregions-mainland.geojson'), projectMainland);
 addRings(path.join(__dirname, 'data', 'na-ecoregions-alaska.geojson'), projectAlaska);
+
+// ---- "Болото" — unlike the other 8 categories (real ecoregion polygons),
+// no free, easily-processed vector dataset of US wetlands exists at a
+// scale this project's tooling can handle: the USFWS National Wetlands
+// Inventory has real boundaries but is per-state, hundreds of MB even for
+// one state, and tens of millions of tiny polygons (every farm pond
+// included) — nowhere near "a build script mapshaper can chew through".
+// FWS/NPS boundary REST APIs that could have given real refuge/park
+// shapes for just the famous swamps were unreachable from this project's
+// environment (timeouts/500s on several different endpoints).
+//
+// So this is a deliberate, disclosed exception: real named places with
+// real center coordinates and real published areas (Wikipedia, cited
+// per-swamp below), each drawn as an approximate hand-generated blob
+// (a wobbled circle, not an invented precise outline) sized to match the
+// real area — same "real facts, approximate shape" honesty as
+// levels/usaPlaces.js's landmark dots, just area-sized instead of a fixed
+// small radius. Not exhaustive (there are thousands of named wetlands in
+// the US) — just the handful actually famous enough that a player would
+// recognize the name.
+const SWAMPS = [
+  // [id, ru name, lat, lon, areaKm2] — areaKm2 sourced from each place's
+  // current official protected-area size where one exists (national
+  // park/preserve/refuge), or its commonly-cited swamp extent otherwise.
+  ['everglades_swamp', 'Эверглейдс', 25.32, -80.93, 6107],
+  ['big_cypress', 'Биг-Сайпрес', 25.90, -81.10, 2916],
+  ['atchafalaya_basin', 'Бассейн Атчафалайя', 30.30, -91.60, 5666],
+  ['okefenokee_swamp', 'Окефеноки', 30.70, -82.30, 1770],
+  ['great_dismal_swamp', 'Грейт-Дизмал-Суомп', 36.60, -76.40, 450],
+  ['congaree_swamp', 'Конгари', 33.80, -80.80, 108],
+  ['green_swamp_fl', 'Грин-Суомп', 28.30, -81.90, 230],
+  ['great_swamp_nj', 'Грейт-Суомп (Нью-Джерси)', 40.70, -74.45, 30],
+];
+// Wobbled circle, not a perfect ellipse — an exactly-round/oval blob would
+// look conspicuously artificial next to the other 8 categories' organic
+// ecoregion outlines. Seeded per-swamp (its own lon/lat) so re-running
+// this script produces the identical shape every time, not a new random
+// one — determinism matters here the same way it does for every other
+// generated file in this project.
+function wobbledCircleLonLat(lon, lat, areaKm2, seed) {
+  const KM_PER_DEG_LAT = 111.32;
+  const kmPerDegLon = KM_PER_DEG_LAT * Math.cos(deg2rad(lat));
+  const radiusKm = Math.sqrt(areaKm2 / Math.PI);
+  const POINTS = 16;
+  const ring = [];
+  for (let i = 0; i < POINTS; i++) {
+    const angle = (i / POINTS) * 2 * Math.PI;
+    const wobble = 1 + 0.22 * Math.sin(angle * 2.4 + seed) + 0.12 * Math.sin(angle * 5.1 + seed * 2);
+    const r = radiusKm * wobble;
+    const dLat = (r * Math.cos(angle)) / KM_PER_DEG_LAT;
+    const dLon = (r * Math.sin(angle)) / kmPerDegLon;
+    ring.push([lon + dLon, lat + dLat]);
+  }
+  return ring;
+}
+for (const [id, , lat, lon, areaKm2] of SWAMPS) {
+  // Simple numeric seed from the id's char codes — arbitrary but fixed.
+  const seed = [...id].reduce((s, c) => s + c.charCodeAt(0), 0);
+  const ring = wobbledCircleLonLat(lon, lat, areaKm2, seed);
+  (ringsByCategory.swamp ??= []).push(projectMainland(ring));
+}
 
 const regions = Object.keys(CATEGORY_LABELS)
   .filter((cat) => ringsByCategory[cat]?.length)
