@@ -27,5 +27,10 @@ export const REWARDS = {
     identify: 1,
     city_place: 1,
     colorfill: 1,
+    // "Путешествие" · "Назови штаты" only — the "Собери пазл" answer mode
+    // deliberately skips rewards too, same reasoning as plain puzzle mode
+    // above (it's the same drag-assembly interaction, not discrete
+    // per-answer rounds).
+    journey: 1,
   },
 };

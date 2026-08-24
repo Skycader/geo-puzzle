@@ -66,6 +66,20 @@ export function weightedSampleWithoutReplacement(items, getWeight, k) {
   return picked;
 }
 
+// Smallest bbox [minX,minY,maxX,maxY] containing every input bbox — used by
+// journeyNameBoard.js/game.js's Journey mode to frame the camera around
+// several states' pieces at once (see zoomPan.js's focusOnBBox).
+export function unionBBox(bboxes) {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [x0, y0, x1, y1] of bboxes) {
+    if (x0 < minX) minX = x0;
+    if (y0 < minY) minY = y0;
+    if (x1 > maxX) maxX = x1;
+    if (y1 > maxY) maxY = y1;
+  }
+  return [minX, minY, maxX, maxY];
+}
+
 // Standard edit distance (insert/delete/substitute, each cost 1) — used by
 // nameStateBoard.js's hard-difficulty text input to tell "close enough,
 // just a typo" apart from "not a real state name" without requiring exact

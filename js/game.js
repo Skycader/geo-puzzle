@@ -9,10 +9,12 @@ import { ColorFillBoard } from './colorFillBoard.js';
 import { SeaIdentifyBoard } from './seaIdentifyBoard.js';
 import { SeaQuizBoard } from './seaQuizBoard.js';
 import { OverviewBoard } from './overviewBoard.js';
+import { JourneyNameBoard } from './journeyNameBoard.js';
+import { pickJourneyPair } from './journeyRoute.js';
 import { EligibilityList } from './eligibilityList.js';
 import { getCoins, spendAllCoins, onCoinsChanged } from './coins.js';
 import { SCREEN_EDGE_MARGIN_PX } from './constants.js';
-import { clamp } from './utils.js';
+import { clamp, unionBBox } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
 import {
   MODES,
@@ -21,6 +23,8 @@ import {
   NEIGHBOR_DIFFICULTIES,
   IDENTIFY_DIFFICULTIES,
   SEA_IDENTIFY_DIFFICULTIES,
+  JOURNEY_ANSWER_MODES,
+  JOURNEY_DIFFICULTIES,
 } from './modes.js';
 import { playClick } from './audio.js';
 import { loadSuccessStats } from './successStats.js';
@@ -38,6 +42,7 @@ const ADAPTIVE_SUCCESS_SCOPE_BY_MODE = {
   neighbor: 'neighbor-states',
   identify: 'identify-states',
   colorfill: 'colorfill-states',
+  journey: 'journey-states',
 };
 
 // 'city-place' isn't here — its heading/label/prompt depend on its own two
@@ -113,6 +118,8 @@ export class Game {
     this.neighborDifficulty = NEIGHBOR_DIFFICULTIES[0].id;
     this.identifyDifficulty = IDENTIFY_DIFFICULTIES[0].id;
     this.seaIdentifyDifficulty = SEA_IDENTIFY_DIFFICULTIES[0].id;
+    this.journeyAnswerMode = JOURNEY_ANSWER_MODES[0].id;
+    this.journeyDifficulty = JOURNEY_DIFFICULTIES[0].id;
     // "Города и места" — two independent toggles instead of separate mode
     // cards: WHAT to ask about (cities vs places) and HOW to answer
     // (click-to-find vs place-a-pin). See _startCityPlace.
@@ -262,6 +269,9 @@ export class Game {
       panelQuizSettings: document.getElementById('panel-quiz-settings'),
       panelOverviewSettings: document.getElementById('panel-overview-settings'),
       overviewList: document.getElementById('overview-list'),
+      panelJourneySettings: document.getElementById('panel-journey-settings'),
+      journeyAnswerModeEl: document.getElementById('journey-answer-mode'),
+      journeyDifficultyEl: document.getElementById('journey-difficulty'),
       quizPanelHeading: document.getElementById('quiz-panel-heading'),
       quizCountLabel: document.getElementById('quiz-count-label'),
       customCountRow: document.getElementById('custom-count-row'),
@@ -352,6 +362,8 @@ export class Game {
     if (NEIGHBOR_DIFFICULTIES.some((d) => d.id === saved.neighborDifficulty)) this.neighborDifficulty = saved.neighborDifficulty;
     if (IDENTIFY_DIFFICULTIES.some((d) => d.id === saved.identifyDifficulty)) this.identifyDifficulty = saved.identifyDifficulty;
     if (SEA_IDENTIFY_DIFFICULTIES.some((d) => d.id === saved.seaIdentifyDifficulty)) this.seaIdentifyDifficulty = saved.seaIdentifyDifficulty;
+    if (JOURNEY_ANSWER_MODES.some((m) => m.id === saved.journeyAnswerMode)) this.journeyAnswerMode = saved.journeyAnswerMode;
+    if (JOURNEY_DIFFICULTIES.some((d) => d.id === saved.journeyDifficulty)) this.journeyDifficulty = saved.journeyDifficulty;
     if (saved.cityPlaceEntity === 'cities' || saved.cityPlaceEntity === 'places') this.cityPlaceEntity = saved.cityPlaceEntity;
     if (saved.cityPlaceMode === 'find' || saved.cityPlaceMode === 'pin') this.cityPlaceMode = saved.cityPlaceMode;
     if (typeof saved.adaptiveMode === 'boolean') this.adaptiveMode = saved.adaptiveMode;
@@ -376,6 +388,8 @@ export class Game {
       neighborDifficulty: this.neighborDifficulty,
       identifyDifficulty: this.identifyDifficulty,
       seaIdentifyDifficulty: this.seaIdentifyDifficulty,
+      journeyAnswerMode: this.journeyAnswerMode,
+      journeyDifficulty: this.journeyDifficulty,
       cityPlaceEntity: this.cityPlaceEntity,
       cityPlaceMode: this.cityPlaceMode,
       adaptiveMode: this.adaptiveMode,
@@ -590,7 +604,11 @@ export class Game {
   _applyModeVisibility() {
     const isPuzzle = this.modeId === 'puzzle';
     const isOverview = this.modeId === 'overview';
-    const isRounds = !isPuzzle && !isOverview;
+    const isJourney = this.modeId === 'journey';
+    // Journey has no round-count/eligibility-checklist/adaptive-mode row —
+    // it's a third structural category alongside puzzle/overview (one
+    // fixed round: a randomly-picked state pair), not a "rounds" mode.
+    const isRounds = !isPuzzle && !isOverview && !isJourney;
     const isNameState = this.modeId === 'name-state';
     const isNeighbor = this.modeId === 'neighbor';
     const isIdentify = this.modeId === 'identify';
@@ -607,6 +625,11 @@ export class Game {
     this.el.panelPuzzleSettings.hidden = !isPuzzle;
     this.el.panelQuizSettings.hidden = !isRounds;
     this.el.panelOverviewSettings.hidden = !isOverview;
+    this.el.panelJourneySettings.hidden = !isJourney;
+    if (isJourney) {
+      this._renderJourneyAnswerMode();
+      this._renderJourneyDifficulty();
+    }
     this.el.quizEligibleWrap.hidden = !hasEligibility;
     this.el.nameStateDifficultyEl.hidden = !(isNameState || isNeighbor || isIdentify || isSeaIdentify);
     // Each of these has its own differently-sized difficulty list sharing
@@ -742,8 +765,14 @@ export class Game {
     return this.levelId === 'countries' ? desc.replace('Штат повёрнут', 'Страна повёрнута') : desc;
   }
 
-  _renderDifficultyList(diffs, currentId, onSelect) {
-    this.el.nameStateDifficultyEl.innerHTML = '';
+  // containerEl defaults to the single shared element name-state/neighbor/
+  // identify/sea-identify all reuse (only one of those panels is ever
+  // visible at once). Journey needs 2 simultaneously-visible pickers
+  // (answer mode + difficulty), which doesn't fit that assumption — its 2
+  // call sites (_renderJourneyAnswerMode/_renderJourneyDifficulty) pass
+  // their own containers instead.
+  _renderDifficultyList(diffs, currentId, onSelect, containerEl = this.el.nameStateDifficultyEl) {
+    containerEl.innerHTML = '';
     for (const diff of diffs) {
       const card = document.createElement('button');
       card.type = 'button';
@@ -751,11 +780,11 @@ export class Game {
       card.innerHTML = `<strong>${diff.title}</strong><p>${this._countryAwareDesc(diff.desc)}</p>`;
       card.addEventListener('click', () => {
         onSelect(diff.id);
-        this.el.nameStateDifficultyEl.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
+        containerEl.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
         this._saveLastSettings();
       });
-      this.el.nameStateDifficultyEl.appendChild(card);
+      containerEl.appendChild(card);
     }
   }
 
@@ -781,6 +810,28 @@ export class Game {
     this._renderDifficultyList(SEA_IDENTIFY_DIFFICULTIES, this.seaIdentifyDifficulty, (id) => {
       this.seaIdentifyDifficulty = id;
     });
+  }
+
+  _renderJourneyAnswerMode() {
+    this._renderDifficultyList(
+      JOURNEY_ANSWER_MODES,
+      this.journeyAnswerMode,
+      (id) => {
+        this.journeyAnswerMode = id;
+      },
+      this.el.journeyAnswerModeEl,
+    );
+  }
+
+  _renderJourneyDifficulty() {
+    this._renderDifficultyList(
+      JOURNEY_DIFFICULTIES,
+      this.journeyDifficulty,
+      (id) => {
+        this.journeyDifficulty = id;
+      },
+      this.el.journeyDifficultyEl,
+    );
   }
 
   _renderOverviewList() {
@@ -985,6 +1036,7 @@ export class Game {
     else if (this.modeId === 'sea-identify') this._startSeaIdentify(level);
     else if (this.modeId === 'sea-quiz') this._startSeaQuiz(level);
     else if (this.modeId === 'overview') this._startOverview(level);
+    else if (this.modeId === 'journey') this._startJourney(level);
     else this._startPuzzle(level);
 
     // Overview is free browsing, not a timed challenge — the win bar it
@@ -1392,6 +1444,93 @@ export class Game {
       progressScope: this.progressScope,
       terrainMode: level.id === 'usa' ? this.terrainMode : 'off',
     });
+  }
+
+  // "Путешествие" — picks 2 random states connected by the real highway
+  // graph (js/journeyRoute.js, built from scripts/build_usa_route_graph.js's
+  // levels/usaRouteGraph.js) and shows only them + the connecting route(s).
+  // Two answer sub-modes: type the in-between states in order
+  // (JourneyNameBoard), or drag their unlabeled shapes onto the real map
+  // (PuzzleBoard, reusing its toPlaceIds/highways additions).
+  _startJourney(level) {
+    this.el.toggleHintsWrap.hidden = true;
+    this.el.toggleLabelsWrap.hidden = true;
+    this.el.togglePlacesWrap.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;
+    this.el.quizPrompt.hidden = true;
+
+    // Excludes Alaska/Hawaii (no highway data reaches them — separate inset
+    // projections, see levels/usa.js's `inset` flag) and any state that
+    // ends up with zero route-graph edges, so pickJourneyPair's retry
+    // budget is never wasted sampling an unreachable candidate.
+    const candidateIds = level.pieces.filter((p) => !p.inset && level.routeGraph.adjacency[p.id]).map((p) => p.id);
+    const tier = JOURNEY_DIFFICULTIES.find((d) => d.id === this.journeyDifficulty) || JOURNEY_DIFFICULTIES[0];
+    let pick = pickJourneyPair(candidateIds, level.routeGraph, { minBetween: tier.min, maxBetween: tier.max });
+    // Retry once with a widened range rather than silently failing — the
+    // real states-between histogram (see build_usa_route_graph.js's own
+    // diagnostic output) makes every tier's range reachable in practice,
+    // but a widened fallback is cheap insurance against an unlucky
+    // maxAttempts exhaustion.
+    if (!pick) pick = pickJourneyPair(candidateIds, level.routeGraph, { minBetween: 1, maxBetween: 20, maxAttempts: 1000 });
+    if (!pick) {
+      this.el.hudLevel.textContent = `${level.title} · Путешествие: не удалось подобрать маршрут, попробуй ещё раз`;
+      this.el.hudProgress.textContent = '';
+      this.el.hudGroups.hidden = true;
+      this.board = null;
+      return;
+    }
+
+    const startPiece = level.pieces.find((p) => p.id === pick.startId);
+    const endPiece = level.pieces.find((p) => p.id === pick.endId);
+    this.el.hudLevel.textContent = `${level.title} · Путешествие: ${startPiece.ru} → ${endPiece.ru}`;
+    this.el.hudGroups.hidden = false;
+
+    if (this.journeyAnswerMode === 'puzzle') {
+      const betweenIds = pick.chain.slice(1, -1);
+      const subsetIds = new Set([pick.startId, pick.endId, ...betweenIds]);
+      const syntheticLevel = { ...level, pieces: level.pieces.filter((p) => subsetIds.has(p.id)) };
+      const highways = pick.hops.map((h) => level.highways.find((hw) => hw.id === h.baseRouteId)).filter(Boolean);
+
+      this.el.hudProgress.textContent = `0/${betweenIds.length}`;
+      this.el.hudGroups.textContent = 'Частей: 0';
+
+      const scale = this._computeScale(level.canvas, this._availableHeight());
+      this.board = new PuzzleBoard(this.el.boardContainer, syntheticLevel, {
+        scale,
+        toPlaceIds: new Set(betweenIds),
+        labelsVisible: false,
+        highways,
+        onProgress: (p) => this._onPuzzleProgress(p),
+        onWin: () => this._onFinish(),
+      });
+      // PuzzleBoard has no automatic camera-focus (unlike JourneyNameBoard)
+      // — without this the small subset would render tiny inside an
+      // otherwise-blank full-US canvas.
+      this.board.zoomCtl.focusOnBBox(unionBBox(syntheticLevel.pieces.map((p) => p.bbox)), { animate: false, pad: 1 });
+    } else {
+      this.el.hudProgress.textContent = `0/${pick.chain.length - 2}`;
+      this.el.hudGroups.textContent = 'Ошибки: 0';
+
+      const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
+      this.board = new JourneyNameBoard(this.el.boardContainer, level, {
+        scale,
+        startId: pick.startId,
+        endId: pick.endId,
+        chain: pick.chain,
+        hops: pick.hops,
+        levelId: this.levelId,
+        onProgress: (p) => this._onJourneyNameProgress(p),
+        onFinish: () => this._onFinish(),
+      });
+    }
+  }
+
+  _onJourneyNameProgress({ chainIndex, total, mistakes }) {
+    this.el.hudProgress.textContent = `${chainIndex}/${total}`;
+    this.el.hudGroups.textContent = `Ошибки: ${mistakes}`;
   }
 
   _onPuzzleProgress({ placed, total, groups }) {

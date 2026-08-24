@@ -67,6 +67,30 @@ export const MODES = [
     title: 'Обзор',
     desc: 'Разглядывай карту без заданий',
   },
+  {
+    id: 'journey',
+    title: 'Путешествие',
+    desc: 'Проследи автостраду между двумя штатами',
+    levels: ['usa'],
+  },
+];
+
+// "Путешествие" — how the player answers: type the in-between states in
+// order, or drag their (unlabeled) shapes onto the real map. Shown only
+// for that mode, alongside JOURNEY_DIFFICULTIES below.
+export const JOURNEY_ANSWER_MODES = [
+  { id: 'name', title: 'Назови штаты', desc: 'Впиши штаты между по порядку' },
+  { id: 'puzzle', title: 'Собери пазл', desc: 'Перетащи штаты на карту' },
+];
+
+// Chain length (states strictly between the 2 endpoints) — min/max are a
+// real-data-calibrated split of scripts/build_usa_route_graph.js's own
+// printed "states between" histogram over every reachable state pair, not
+// guessed numbers.
+export const JOURNEY_DIFFICULTIES = [
+  { id: 'easy', title: 'Лёгкий', desc: '1–2 штата между', min: 1, max: 2 },
+  { id: 'medium', title: 'Средний', desc: '3–5 штатов между', min: 3, max: 5 },
+  { id: 'hard', title: 'Сложный', desc: '6+ штатов между', min: 6, max: 12 },
 ];
 
 // "Отображение" choice shown only for the Обзор (overview) mode.

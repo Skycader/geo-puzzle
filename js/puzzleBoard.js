@@ -22,6 +22,16 @@ export class PuzzleBoard {
     this.container = container;
     this.level = level;
     this.toPlaceCount = opts.toPlaceCount ?? level.pieces.length;
+    // Explicit deterministic override for which pieces start in the tray —
+    // used by "Путешествие" mode (js/game.js's _startJourney), where the
+    // tray must be exactly the in-between chain states (not a random
+    // subset) and the 2 endpoints must always be the ones pre-placed. See
+    // _build()'s tray-selection below.
+    this.toPlaceIds = opts.toPlaceIds || null;
+    // Static, non-interactive highway line(s) drawn under the pieces —
+    // "Путешествие" mode only, showing the real route the player is
+    // reconstructing. Array of levels/usaHighways.js route objects.
+    this.highways = opts.highways || null;
     this.scale = opts.scale || 1;
     this.traySize = opts.traySize || 78;
     this.hintsVisible = opts.hintsVisible !== false;
@@ -89,6 +99,24 @@ export class PuzzleBoard {
     }
     this.boardSvg.appendChild(this.hintLayer);
 
+    // "Путешествие" mode's real highway line(s) — static, non-interactive,
+    // painted between the hint outlines and the pieces themselves so it
+    // reads as ground truth underneath what's being assembled, not on top
+    // of it. Reuses .highway-path as-is (vector-effect: non-scaling-stroke
+    // makes it viewBox-agnostic, no OverviewBoard-specific assumption to
+    // break).
+    if (this.highways?.length) {
+      const highwayLayer = document.createElementNS(SVG_NS, 'g');
+      highwayLayer.setAttribute('class', 'highway-overlay');
+      for (const hw of this.highways) {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', hw.d);
+        path.setAttribute('class', 'highway-path');
+        highwayLayer.appendChild(path);
+      }
+      this.boardSvg.appendChild(highwayLayer);
+    }
+
     // The tray is a pull-out drawer overlaying the map's bottom edge (see
     // _bindTrayDrawer), not a permanent row sharing the screen with it —
     // .tray-handle is what you drag/scroll on to open it; the actual
@@ -127,8 +155,11 @@ export class PuzzleBoard {
     this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
     this._bindTrayDrawer();
 
-    const count = clamp(this.toPlaceCount, 1, this.level.pieces.length);
-    const toPlaceIds = new Set(shuffle(this.level.pieces.map((p) => p.id)).slice(0, count));
+    // Explicit override (Journey mode) takes precedence over the normal
+    // random-count selection — see this.toPlaceIds's own comment above.
+    const toPlaceIds = this.toPlaceIds
+      ? new Set(this.toPlaceIds)
+      : new Set(shuffle(this.level.pieces.map((p) => p.id)).slice(0, clamp(this.toPlaceCount, 1, this.level.pieces.length)));
     this.totalToPlace = toPlaceIds.size;
 
     // pieces NOT chosen for the tray start pre-assembled as one group

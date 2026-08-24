@@ -2190,6 +2190,21 @@ body {
   font-size: 12px;
 }
 
+/* "Путешествие" (js/journeyNameBoard.js's .journey-highway-layer,
+   js/puzzleBoard.js's .highway-overlay) — here the road IS the subject,
+   not background context, so it overrides .highway-path's normal muted
+   --magenta (deliberately dim in the gray scheme, see that variable's own
+   comment) with a constant, always-visible red, independent of land
+   scheme — same "always red, not scheme-dependent" reasoning as the
+   Рельеф 3-way toggle's thumb. */
+.journey-highway-layer .highway-path,
+.highway-overlay .highway-path {
+  stroke: var(--red);
+  stroke-width: 2.6px;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 4px var(--red));
+}
+
 /* ---------------- right-click map context menu (js/overviewBoard.js's _openContextMenu) ---------------- */
 
 .map-context-menu {
@@ -2335,6 +2350,16 @@ body {
   display: flex;
   align-items: center;
   gap: 10px; /* the "small gap" between the search box and the confirm button */
+}
+
+/* "Путешествие" · "Назови штаты" (js/journeyNameBoard.js) — the only
+   .name-answer-bar user with more than one expected answer per round, so
+   it needs its own "N из M" readout above the input row; empty for every
+   other .name-answer-bar user (nameStateBoard.js never fills it in). */
+.name-journey-progress {
+  font-size: 13px;
+  color: var(--base0);
+  text-align: center;
 }
 .name-hint-btn {
   flex: none;
