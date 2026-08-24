@@ -453,5 +453,15 @@
     "extract": "Шайе́нн — город на северо-западе США, административный центр и крупнейший город штата Вайоминг. Население — 63,9 тыс. человек (2018).",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/CheyenneWY_downtown.jpg/330px-CheyenneWY_downtown.jpg",
     "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A8%D0%B0%D0%B9%D0%B5%D0%BD%D0%BD_(%D0%92%D0%B0%D0%B9%D0%BE%D0%BC%D0%B8%D0%BD%D0%B3)"
+  },
+  "amarillo": {
+    "extract": "Амарилло — город на юге США, расположенный в северной части штата Техас (Техасская Панхандл), на высоте около 1100 метров над уровнем моря. Административный центр округа Поттер и 14-й по величине город Техаса; крупный железнодорожный и сельскохозяйственный узел региона.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Amarillo_Texas_Downtown.jpg/330px-Amarillo_Texas_Downtown.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Амарилло"
+  },
+  "lubbock": {
+    "extract": "Лаббок — город на северо-западе штата Техас, в регионе Льяно-Эстакадо. Административный центр округа Лаббок и 11-й по величине город Техаса; здесь расположен Техасский технический университет, а также родился пионер рок-н-ролла Бадди Холли.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Lubbock_Skyline.jpg/330px-Lubbock_Skyline.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Лаббок_(Техас)"
   }
 }
