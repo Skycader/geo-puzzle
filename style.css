@@ -2210,9 +2210,6 @@ body {
 }
 .journey-route-dot {
   fill: var(--red);
-  stroke: rgba(var(--ink-rgb), 0.85);
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
   r: 4.5;
   filter: drop-shadow(0 0 3px var(--red));
 }
