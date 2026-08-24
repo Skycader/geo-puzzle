@@ -1,33 +1,47 @@
-// Builds the "Шоссе" overlay layer for the USA level — the 71 primary
-// Interstates (1-2 digit route numbers; the hundreds of 3-digit auxiliary
-// loops/spurs are deliberately excluded, same "just the backbone, not
-// every last bypass" scope the user asked for). Overview mode only, for
-// now — see js/overviewBoard.js.
+// Builds the "Шоссе" overlay layer for the USA level — the primary (1-2
+// digit route number) Interstates. Overview mode only, for now — see
+// js/overviewBoard.js.
 //
-// Source: Natural Earth's public-domain ne_10m_roads, pre-filtered down to
-// scripts/data/usa-interstates.geojson (sov_a3==='USA', type==='Major
-// Highway', level==='Interstate', name matching /^\d{1,2}$/ — that last
-// filter is what actually separates "I-90" from a 3-digit auxiliary route
-// AND from a same-numbered non-interstate "Major Highway" like US Route 50
-// (level: 'Federal', not 'Interstate' — confirmed no "50"/"60" survive
-// this filter, matching the real Interstate System's well-known numbering
-// gap). Regenerate the source extract itself only if ne_10m_roads.geojson
-// is re-downloaded; this script just projects what's already there.
+// Source: US Census Bureau TIGER/Line 2023 "Primary Roads, National"
+// shapefile (public domain, official government data) — NOT Natural
+// Earth's ne_10m_roads, which this project used at first but turned out to
+// have real, large (tens to hundreds of km) missing stretches in the
+// middle of otherwise-continuous Interstates (confirmed for I-35 between
+// Fort Worth and Waco, TX, among others — a road doesn't just end in the
+// desert, that was a genuine hole in the source data, not a real-world
+// gap). TIGER is the Census Bureau's own topologically-built national road
+// network, so same-numbered segments actually meet at shared endpoints
+// (small — sub-km — offsets remain here and there, from parallel divided-
+// carriageway centerlines and business-loop spurs sharing a route number,
+// but nothing on the old scale).
 //
-// Coverage caveat: Natural Earth's 10m roads layer doesn't have complete,
-// current Interstate coverage — this extract has 59 of the real 71 (some
-// newer/shorter routes like I-2, I-22, I-41, I-73 aren't present in the
-// source data at all). Good enough for a first pass; filling the rest
-// would need a different, heavier data source (e.g. US Census TIGER/Line).
+// Pipeline (already run once, see scripts/data/ for the result — redo only
+// if the raw TIGER file is re-downloaded):
+//   1. Download https://www2.census.gov/geo/tiger/TIGER2023/PRIMARYROADS/tl_2023_us_primaryroads.zip
+//      and unzip into scripts/data/tl_2023_us_primaryroads/
+//   2. npx mapshaper -i scripts/data/tl_2023_us_primaryroads/tl_2023_us_primaryroads.shp -proj wgs84 -o format=geojson precision=0.0001 scripts/data/tl_primaryroads_full.geojson
+//      (the shapefile's own .prj is NAD83 geographic, not quite WGS84, but
+//      the difference is centimeter-scale — irrelevant at this map's
+//      resolution — so `-proj wgs84` is a safe, close-enough reprojection)
+//   3. npx mapshaper -i scripts/data/tl_primaryroads_full.geojson -filter 'RTTYP == "I"' -simplify 1% -o format=geojson precision=0.0001 scripts/data/tl_interstates_filtered.geojson force
+//      (1% was chosen by hand, same reasoning as scripts/build_usa_terrain.js's
+//      2% — TIGER's raw intersection-level vertex density is far beyond
+//      what this map's ~960-unit-wide canvas can show; this keeps the
+//      final output around 1MB instead of several, with no visible loss)
+//
+// Only scripts/data/tl_interstates_filtered.geojson (the filtered, ~4.5MB
+// result) is checked into the repo — the 38MB raw zip, the unzipped
+// shapefile, and the 69MB whole-country intermediate from step 2 are NOT,
+// same "keep only the pre-filtered result" convention as every other big
+// source dataset this project uses (e.g. scripts/build_usa_terrain.js's
+// na-ecoregions-*.geojson).
 //
 // Regenerate: node scripts/build_usa_highways.js
 const fs = require('fs');
 const path = require('path');
 
-const STATES_SRC = path.join(__dirname, 'data', 'us-states.geojson');
-const HIGHWAYS_SRC = path.join(__dirname, 'data', 'usa-interstates.geojson');
-const geo = JSON.parse(fs.readFileSync(STATES_SRC, 'utf8'));
-const highways = JSON.parse(fs.readFileSync(HIGHWAYS_SRC, 'utf8'));
+const SRC = path.join(__dirname, 'data', 'tl_interstates_filtered.geojson');
+const geo = JSON.parse(fs.readFileSync(SRC, 'utf8'));
 
 // ---- re-derive the exact same contiguous-US bbox/scale/margin as
 // build_usa_level.js (and build_usa_cities.js/build_usa_places.js) — must
@@ -53,9 +67,11 @@ function forEachRing(geometry, fn) {
   if (geometry.type === 'Polygon') geometry.coordinates.forEach((ring) => fn(ring));
   else if (geometry.type === 'MultiPolygon') geometry.coordinates.forEach((poly) => poly.forEach((ring) => fn(ring)));
 }
+const STATES_SRC = path.join(__dirname, 'data', 'us-states.geojson');
+const statesGeo = JSON.parse(fs.readFileSync(STATES_SRC, 'utf8'));
 const SKIP = new Set(['Puerto Rico', 'District of Columbia', 'Alaska', 'Hawaii']);
 let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-for (const f of geo.features) {
+for (const f of statesGeo.features) {
   if (SKIP.has(f.properties.name)) continue;
   forEachRing(f.geometry, (ring) => {
     for (const pt of ring.map(albers)) {
@@ -75,19 +91,57 @@ function toCanvas([lon, lat]) {
   return [(x - minX) * scale + MARGIN, (y - minY) * scale + MARGIN];
 }
 
+// Great-circle distance (km) between two [lon,lat] points — TIGER's dbf
+// has no pre-computed length field (unlike Natural Earth's `length_km`),
+// so this is summed over each segment's own vertices instead.
+//
+// Known quirk: divided highways are often TWO separate near-parallel
+// LineStrings in TIGER (one per direction of travel), both carrying the
+// same route number — this sums both, so the resulting lengthKm typically
+// comes out close to 2x the real one-way mileage. Left as-is: nothing in
+// js/ actually reads lengthKm today (grep confirms), and de-duplicating
+// near-coincident parallel lines well enough to trust the number again
+// isn't worth the complexity for a value nothing displays.
+const EARTH_RADIUS_KM = 6371;
+function haversineKm([lon1, lat1], [lon2, lat2]) {
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function lineLengthKm(coords) {
+  let km = 0;
+  for (let i = 1; i < coords.length; i++) km += haversineKm(coords[i - 1], coords[i]);
+  return km;
+}
+
+// TIGER's FULLNAME is free text, not a clean route-number field — variants
+// seen in this file include "I- 20", "W I- 20" (directional/business-loop
+// prefix), "I- 35E"/"I- 35W" (parallel one-way-ish carriageways through
+// Dallas-Fort Worth, merged under plain "35" here same as everything else
+// with a matching digit run — same simplification the original Natural
+// Earth-based version already made). Only 1-2 digit results are kept —
+// 3-digit auxiliary loops/spurs are deliberately out of scope, same as
+// before.
+function routeNumber(fullname) {
+  const m = fullname.match(/I-?\s*(\d+)/);
+  return m ? m[1] : null;
+}
+
 // ---- project + group by route number ----
 // One <path> per highway (all its segments as separate M..L subpaths, no
 // Z — these are open lines, not closed shapes) rather than one per
-// segment: 59 DOM elements instead of 1001.
-const byNumber = new Map(); // name -> { subpaths: string[], lengthKm, bbox, rawPoints }
-function addLine(coords, name, lengthKm) {
+// segment — TIGER splits each Interstate into far more pieces than Natural
+// Earth did (intersection-by-intersection), so this matters even more now.
+const byNumber = new Map(); // number -> { subpaths: string[], lengthKm, bbox, rawPoints }
+function addLine(coords, number) {
   const pts = coords.map(toCanvas);
   if (pts.length < 2) return;
   const d = 'M ' + pts.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' L ');
-  if (!byNumber.has(name)) byNumber.set(name, { subpaths: [], lengthKm: 0, bbox: [Infinity, Infinity, -Infinity, -Infinity], rawPoints: [] });
-  const entry = byNumber.get(name);
+  if (!byNumber.has(number)) byNumber.set(number, { subpaths: [], lengthKm: 0, bbox: [Infinity, Infinity, -Infinity, -Infinity], rawPoints: [] });
+  const entry = byNumber.get(number);
   entry.subpaths.push(d);
-  entry.lengthKm += lengthKm || 0;
+  entry.lengthKm += lineLengthKm(coords);
   entry.rawPoints.push(...pts);
   for (const [x, y] of pts) {
     entry.bbox[0] = Math.min(entry.bbox[0], x);
@@ -97,13 +151,9 @@ function addLine(coords, name, lengthKm) {
   }
 }
 // Candidate points for placing the shield icon at runtime (see
-// overviewBoard.js's _updateHighwayShields — it tests each of these
-// against the current visible rect and picks whichever qualifying one is
-// closest to the view's center, so a shield is always somewhere near the
-// middle of whatever stretch of the highway is on screen). Decimated —
-// I-90 alone has ~600 raw vertices, and shield placement doesn't need
-// anywhere near that density, just enough candidates that some point is
-// always reasonably close to wherever the camera happens to be.
+// overviewBoard.js's _updateHighwayShields). Decimated — some routes have
+// thousands of raw vertices now (TIGER's intersection-level granularity),
+// shield placement doesn't need anywhere near that density.
 const MAX_SHIELD_CANDIDATES = 40;
 function decimate(pts, maxPoints) {
   if (pts.length <= maxPoints) return pts;
@@ -112,11 +162,17 @@ function decimate(pts, maxPoints) {
   for (let i = 0; i < maxPoints; i++) out.push(pts[Math.floor(i * stride)]);
   return out;
 }
-for (const f of highways.features) {
-  const { name, length_km } = f.properties;
-  if (f.geometry.type === 'LineString') addLine(f.geometry.coordinates, name, length_km);
-  else if (f.geometry.type === 'MultiLineString') for (const line of f.geometry.coordinates) addLine(line, name, length_km);
+
+let skippedNoMatch = 0, skippedLong = 0;
+for (const f of geo.features) {
+  if (!f.geometry) continue;
+  const number = routeNumber(f.properties.FULLNAME || '');
+  if (!number) { skippedNoMatch++; continue; }
+  if (!/^\d{1,2}$/.test(number)) { skippedLong++; continue; }
+  const lines = f.geometry.type === 'LineString' ? [f.geometry.coordinates] : f.geometry.type === 'MultiLineString' ? f.geometry.coordinates : [];
+  for (const line of lines) addLine(line, number);
 }
+console.error('skipped (no route number match):', skippedNoMatch, '| skipped (3+ digit auxiliary):', skippedLong);
 
 // Sorted numerically ("2" before "10") rather than the default
 // alphabetical string sort — purely cosmetic (output order), doesn't
@@ -127,8 +183,8 @@ const routes = [...byNumber.entries()]
   .map(([number, e]) => ({
     id: `i${number}`,
     number, // "90" — rendered as "I-90" in the UI, kept bare here since
-    // that's how the source data has it and how a future label would need
-    // to build "I-" + number for the ru vs number-only for the tooltip
+    // that's how a future label would need to build "I-" + number for the
+    // ru vs number-only for the tooltip
     d: e.subpaths.join(' '),
     lengthKm: Math.round(e.lengthKm),
     bbox: e.bbox.map((v) => +v.toFixed(1)),
@@ -138,10 +194,11 @@ const routes = [...byNumber.entries()]
 console.error('interstates:', routes.length);
 console.error(routes.map((r) => `I-${r.number} (${r.lengthKm} km)`).join(', '));
 
-let out = `// Auto-generated by scripts/build_usa_highways.js from Natural Earth's\n`;
-out += `// public-domain 10m roads layer, filtered to the primary (1-2 digit)\n`;
-out += `// Interstate System routes. See the build script's own comments for\n`;
-out += `// the filtering rules and known coverage gaps.\n`;
+let out = `// Auto-generated by scripts/build_usa_highways.js from the US Census\n`;
+out += `// Bureau's public-domain TIGER/Line Primary Roads national shapefile,\n`;
+out += `// filtered to Interstate routes with a 1-2 digit number. See the build\n`;
+out += `// script's own comments for the filtering rules and why this replaced\n`;
+out += `// an earlier Natural Earth-based version.\n`;
 out += `// Regenerate: node scripts/build_usa_highways.js\n`;
 out += `export default ${JSON.stringify(routes, null, 2)};\n`;
 

@@ -1299,17 +1299,24 @@ export class Game {
 
   _startOverview(level) {
     const overviewMode = OVERVIEW_MODES.find((m) => m.id === this.overviewModeId) || OVERVIEW_MODES[0];
-    // Explicitly choosing "Полная информация" means labels ON, full stop —
-    // even for the world level, where seas cluster tightly enough
-    // (Mediterranean/Black/Red/Persian Gulf, Caribbean/Gulf of Mexico…)
-    // that it used to look messy, so this silently forced labels off
-    // regardless of what the player picked. Silently overriding an
-    // explicit choice is worse than a cluttered map — "Подписи" already
-    // lets anyone turn labels back off with one click.
-    this.labelsVisible = overviewMode.id === 'full';
-    this.citiesVisible = true;
-    this.placesVisible = true;
-    this.highwaysVisible = true;
+    // "Полная информация" turns every layer ON; "Скрытая информация" turns
+    // all of them OFF (bare unlabeled map, hover-to-reveal) — even on the
+    // world level, where seas cluster tightly enough (Mediterranean/Black/
+    // Red/Persian Gulf, Caribbean/Gulf of Mexico…) that "full" used to look
+    // messy, this no longer silently overrides labels off regardless of
+    // what was picked. Silently overriding an explicit choice is worse
+    // than a cluttered map — every layer here already has its own one-
+    // click HUD toggle to fix right there. "Прогресс" is deliberately NOT
+    // included — it stays off regardless of this choice (an opt-in
+    // heatmap, not a base layer).
+    const isFull = overviewMode.id === 'full';
+    this.labelsVisible = isFull;
+    this.citiesVisible = isFull;
+    this.placesVisible = isFull;
+    this.highwaysVisible = isFull;
+    // USA-only, same as the toggle itself being hidden for world/countries
+    // below.
+    this.terrainVisible = isFull && level.id === 'usa';
 
     // World level has no cities/places at all (levels/world.js: cities: [],
     // places: []) — showing "Города"/"Места" toggles for a level with
