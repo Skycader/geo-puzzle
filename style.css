@@ -520,29 +520,40 @@ body {
 .toggle input:checked ~ .toggle-text { color: var(--neon-cyan); }
 
 /* ---------------- 3-way toggle ("Рельеф": выкл/цвет/иконки) ----------------
-   A <button> with data-mode, not a checkbox — there's no single "checked"
-   bit for 3 states. Reuses .toggle/.toggle-track/.toggle-thumb's box model
-   and resets the button's own UA chrome; data-mode drives the thumb's
-   travel/color the same way input:checked does for the 2-way version
-   above. */
-.toggle-3way {
+   A segmented control, not a checkbox or a cycling button — there's no
+   single "checked" bit for 3 states, and a single click target forces
+   clicking through the middle state to reach the far one. Each third of
+   the track is its own real <button> (.toggle-3way-zone), so any mode is
+   one click away from any other; the thumb is purely a visual position
+   indicator (pointer-events:none — clicks pass through it to whichever
+   zone button is underneath) and stays a constant red regardless of mode,
+   just sliding to mark which zone is active — not gray/cyan like the 2-way
+   switch above, per explicit feedback that a gray middle dot read as
+   "disabled". */
+.toggle-track-3way {
+  width: 60px;
+  display: flex;
+}
+.toggle-3way-zone {
+  flex: 1;
+  height: 100%;
   background: none;
   border: none;
   padding: 0;
-  font: inherit;
-  color: inherit;
+  cursor: pointer;
 }
-.toggle-track-3way { width: 58px; }
+.toggle-thumb { pointer-events: none; }
+.toggle-3way .toggle-thumb { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.toggle-3way[data-mode='off'] .toggle-thumb { transform: translateX(0); }
+.toggle-3way[data-mode='color'] .toggle-thumb { transform: translateX(18px); }
+.toggle-3way[data-mode='pattern'] .toggle-thumb { transform: translateX(36px); }
 .toggle-3way[data-mode='color'] .toggle-track-3way,
 .toggle-3way[data-mode='pattern'] .toggle-track-3way {
-  border-color: var(--neon-cyan);
-  background: rgba(var(--neon-cyan-rgb), 0.1);
+  border-color: var(--red);
+  background: color-mix(in srgb, var(--red) 10%, transparent);
 }
-.toggle-3way[data-mode='off'] .toggle-thumb { transform: translateX(0); background: var(--base01); box-shadow: none; }
-.toggle-3way[data-mode='color'] .toggle-thumb { transform: translateX(18px); background: var(--base0); box-shadow: none; }
-.toggle-3way[data-mode='pattern'] .toggle-thumb { transform: translateX(36px); background: var(--neon-cyan); box-shadow: 0 0 8px var(--neon-cyan); }
 .toggle-3way[data-mode='color'] .toggle-text,
-.toggle-3way[data-mode='pattern'] .toggle-text { color: var(--neon-cyan); }
+.toggle-3way[data-mode='pattern'] .toggle-text { color: var(--red); }
 
 /* Which adaptive-mode scope #toggle-progress-wrap's heatmap visualizes —
    sits right next to it, shown/hidden together (see game.js). Custom

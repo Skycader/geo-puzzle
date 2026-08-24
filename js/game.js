@@ -136,7 +136,7 @@ export class Game {
     // "Рельеф" — real terrain sub-regions painted under the state pieces,
     // same opt-in/USA-only shape as progressVisible above, but 3-step
     // ('off' | 'color' | 'pattern') instead of a plain boolean — see
-    // _cycleTerrainMode and OverviewBoard's setTerrainMode.
+    // _setTerrainMode and OverviewBoard's setTerrainMode.
     this.terrainMode = 'off';
     this.eligibilityList = null; // current EligibilityList instance for quiz/city-place — see _applyModeVisibility
     this.board = null;
@@ -918,10 +918,12 @@ export class Game {
       this.el.progressScopeWrap.hidden = !this.progressVisible;
       if (this.board?.setProgressVisible) this.board.setProgressVisible(this.progressVisible);
     });
-    this.el.toggleTerrainWrap.addEventListener('click', () => {
-      const order = ['off', 'color', 'pattern'];
-      const next = order[(order.indexOf(this.terrainMode) + 1) % order.length];
-      this._setTerrainMode(next);
+    // Segmented control (index.html's 3 .toggle-3way-zone buttons) rather
+    // than a single toggle target — delegated so any of the 3 zones jumps
+    // straight to its own mode, no forced cycling through the middle one.
+    this.el.toggleTerrainWrap.addEventListener('click', (ev) => {
+      const zone = ev.target.closest('.toggle-3way-zone');
+      if (zone) this._setTerrainMode(zone.dataset.mode);
     });
     this._bindProgressScopeMenu();
     // Keeps the finish button anchored to the map's actual edge (see
