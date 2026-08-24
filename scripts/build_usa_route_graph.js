@@ -248,11 +248,14 @@ async function main() {
 
   const routeStates = {};
   const adjacency = {};
-  // baseRouteId is what runtime code (js/journeyNameBoard.js,
-  // js/puzzleBoard.js's highway overlay) actually looks up in
-  // level.highways to draw the line — routeId may carry a `-a`/`-b` split
-  // suffix (see clusterSubpaths above) that only matters for graph
-  // correctness, not for finding the right `d` string to draw.
+  // baseRouteId is what runtime code looks up in level.highways when it
+  // needs the route's own real d/number (routeId may carry a `-a`/`-b`
+  // split suffix — see clusterSubpaths above — that only matters for
+  // graph correctness). js/journeyNameBoard.js/puzzleBoard.js don't draw
+  // this geometry directly (see their own comments — a dot-to-dot dashed
+  // line replaced it, real highway geometry proved unreliable to clip
+  // cleanly for a long, many-hop chain) but routeNumber is still shown
+  // where useful (e.g. a future "via I-90" label).
   function addEdge(a, b, routeId, routeNumber, baseRouteId) {
     if (!adjacency[a]) adjacency[a] = [];
     if (!adjacency[b]) adjacency[b] = [];

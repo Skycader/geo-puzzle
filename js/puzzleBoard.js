@@ -28,10 +28,13 @@ export class PuzzleBoard {
     // subset) and the 2 endpoints must always be the ones pre-placed. See
     // _build()'s tray-selection below.
     this.toPlaceIds = opts.toPlaceIds || null;
-    // Static, non-interactive highway line(s) drawn under the pieces —
-    // "Путешествие" mode only, showing the real route the player is
-    // reconstructing. Array of levels/usaHighways.js route objects.
-    this.highways = opts.highways || null;
+    // Static, non-interactive route skeleton drawn under the pieces —
+    // "Путешествие" mode only: dots at each chain state's real centroid,
+    // connected by a dashed line, in chain order — see
+    // journeyNameBoard.js's own comment on why this replaced drawing real
+    // highway geometry (unreliable to clip cleanly for a long, many-hop
+    // chain). Array of {cx, cy} native points, full chain order.
+    this.routeDots = opts.routeDots || null;
     this.scale = opts.scale || 1;
     this.traySize = opts.traySize || 78;
     this.hintsVisible = opts.hintsVisible !== false;
@@ -99,22 +102,27 @@ export class PuzzleBoard {
     }
     this.boardSvg.appendChild(this.hintLayer);
 
-    // "Путешествие" mode's real highway line(s) — static, non-interactive,
-    // painted between the hint outlines and the pieces themselves so it
-    // reads as ground truth underneath what's being assembled, not on top
-    // of it. Reuses .highway-path as-is (vector-effect: non-scaling-stroke
-    // makes it viewBox-agnostic, no OverviewBoard-specific assumption to
-    // break).
-    if (this.highways?.length) {
-      const highwayLayer = document.createElementNS(SVG_NS, 'g');
-      highwayLayer.setAttribute('class', 'highway-overlay');
-      for (const hw of this.highways) {
-        const path = document.createElementNS(SVG_NS, 'path');
-        path.setAttribute('d', hw.d);
-        path.setAttribute('class', 'highway-path');
-        highwayLayer.appendChild(path);
+    // "Путешествие" mode's route skeleton — static, non-interactive dots
+    // at each chain state's true centroid connected by a dashed line (see
+    // journeyNameBoard.js's matching comment for why this is dots+dashes
+    // rather than real highway geometry), painted between the hint
+    // outlines and the pieces themselves so it reads as ground truth
+    // underneath what's being assembled, not on top of it.
+    if (this.routeDots?.length > 1) {
+      const routeLayer = document.createElementNS(SVG_NS, 'g');
+      routeLayer.setAttribute('class', 'journey-route-layer');
+      const line = document.createElementNS(SVG_NS, 'path');
+      line.setAttribute('d', 'M ' + this.routeDots.map((p) => `${p.cx},${p.cy}`).join(' L '));
+      line.setAttribute('class', 'journey-route-line');
+      routeLayer.appendChild(line);
+      for (const p of this.routeDots) {
+        const dot = document.createElementNS(SVG_NS, 'circle');
+        dot.setAttribute('cx', p.cx);
+        dot.setAttribute('cy', p.cy);
+        dot.setAttribute('class', 'journey-route-dot');
+        routeLayer.appendChild(dot);
       }
-      this.boardSvg.appendChild(highwayLayer);
+      this.boardSvg.appendChild(routeLayer);
     }
 
     // The tray is a pull-out drawer overlaying the map's bottom edge (see

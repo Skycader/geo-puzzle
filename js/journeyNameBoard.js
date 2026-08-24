@@ -35,10 +35,10 @@ export class JourneyNameBoard {
 
     this.startPiece = level.pieces.find((p) => p.id === opts.startId);
     this.endPiece = level.pieces.find((p) => p.id === opts.endId);
-    this.hops = opts.hops || [];
+    this.chain = opts.chain || [];
     // The states to actually guess, in order — excludes both endpoints
     // (they're given, shown on the map already).
-    this.toGuess = (opts.chain || []).slice(1, -1);
+    this.toGuess = this.chain.slice(1, -1);
     this.chainIndex = 0;
     this.correct = 0;
     this.mistakes = 0;
@@ -79,20 +79,44 @@ export class JourneyNameBoard {
       </linearGradient>`;
     this.svg.appendChild(defs);
 
-    // Real highway line(s) first, so the 2 given states' fills paint on
-    // top of it rather than the road cutting visibly across them.
-    const highwayLayer = document.createElementNS(SVG_NS, 'g');
-    highwayLayer.setAttribute('class', 'journey-highway-layer');
-    for (const hop of this.hops) {
-      const hw = this.level.highways?.find((h) => h.id === hop.baseRouteId);
-      if (!hw) continue;
-      const path = document.createElementNS(SVG_NS, 'path');
-      path.setAttribute('d', hw.d);
-      path.setAttribute('class', 'highway-path');
-      highwayLayer.appendChild(path);
+    // Route skeleton — always fully visible, bright red, right from the
+    // start: dots at every stop's true centroid, connected by a dashed
+    // line, in chain order. NOT real highway geometry: an earlier version
+    // drew the actual clipped road, but for a long, many-hop chain that
+    // routinely produced visible gaps and stray backtracking branches
+    // (the per-hop clip picking up unrelated loops of the same physical
+    // highway elsewhere within a big state's bounding box). A straight
+    // dot-to-dot dashed line can't have either problem — it only needs
+    // each state's own real centroid, always connects, never doubles
+    // back. Uses this.chain (every stop, not just this.hops's endpoints)
+    // since dot positions are shown for ALL stops from the start, even
+    // ones not yet named — it's the STATES (their real shape+label) that
+    // appear progressively as each is correctly guessed (see
+    // _revealState below), not the route itself.
+    const routeLayer = document.createElementNS(SVG_NS, 'g');
+    routeLayer.setAttribute('class', 'journey-route-layer');
+    const chainPieces = this.chain.map((id) => this.level.pieces.find((p) => p.id === id)).filter(Boolean);
+    if (chainPieces.length > 1) {
+      const line = document.createElementNS(SVG_NS, 'path');
+      line.setAttribute('d', 'M ' + chainPieces.map((p) => `${p.cx},${p.cy}`).join(' L '));
+      line.setAttribute('class', 'journey-route-line');
+      routeLayer.appendChild(line);
     }
-    this.svg.appendChild(highwayLayer);
+    for (const p of chainPieces) {
+      const dot = document.createElementNS(SVG_NS, 'circle');
+      dot.setAttribute('cx', p.cx);
+      dot.setAttribute('cy', p.cy);
+      dot.setAttribute('class', 'journey-route-dot');
+      routeLayer.appendChild(dot);
+    }
+    this.svg.appendChild(routeLayer);
 
+    // Given states, drawn immediately — the in-between ones (this.toGuess)
+    // are added one at a time by _revealState as they're correctly named,
+    // not built here.
+    this.stateLayer = document.createElementNS(SVG_NS, 'g');
+    this.stateLayer.setAttribute('class', 'journey-state-layer');
+    this.svg.appendChild(this.stateLayer);
     this._buildEndpointPiece(this.startPiece);
     this._buildEndpointPiece(this.endPiece);
 
@@ -112,8 +136,14 @@ export class JourneyNameBoard {
 
     this._buildAnswerBar();
 
-    this.zoomCtl.focusOnBBox(unionBBox([this.startPiece.bbox, this.endPiece.bbox]), {
-      pad: 2,
+    // Frames the WHOLE chain (both endpoints + every in-between state),
+    // not just the 2 endpoints — the road is fully visible from the start
+    // (see above), so the camera needs to already show where it leads;
+    // otherwise a correctly-named state revealed off-screen would pop in
+    // somewhere the player can't even see.
+    const chainBBoxes = [this.startPiece.bbox, this.endPiece.bbox, ...this.toGuess.map((id) => this.level.pieces.find((p) => p.id === id)?.bbox).filter(Boolean)];
+    this.zoomCtl.focusOnBBox(unionBBox(chainBBoxes), {
+      pad: 1,
       animate: false,
       avoidBottomPx: this.answerBar.offsetHeight,
     });
@@ -122,23 +152,40 @@ export class JourneyNameBoard {
     this._nextStep();
   }
 
-  _buildEndpointPiece(data) {
+  _buildStatePiece(data, { animate = false } = {}) {
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', data.d);
-    path.setAttribute('class', 'piece-shape');
+    path.setAttribute('class', animate ? 'piece-shape journey-state-reveal' : 'piece-shape');
     path.setAttribute('fill', 'url(#piece-grad)');
     const title = document.createElementNS(SVG_NS, 'title');
     title.textContent = `${data.ru} (${data.name})`;
     path.appendChild(title);
-    this.svg.appendChild(path);
+    this.stateLayer.appendChild(path);
 
     const label = document.createElementNS(SVG_NS, 'text');
     label.setAttribute('x', data.cx);
     label.setAttribute('y', data.cy);
-    label.setAttribute('class', 'piece-label');
+    label.setAttribute('class', animate ? 'piece-label journey-state-reveal' : 'piece-label');
     label.textContent = data.ru;
-    this.svg.appendChild(label);
+    this.stateLayer.appendChild(label);
     this.labelEls.push(label);
+  }
+
+  _buildEndpointPiece(data) {
+    this._buildStatePiece(data);
+  }
+
+  // Called from _confirm() the moment a state is correctly named — makes
+  // its real shape pop into existence at its true position on the already-
+  // fully-visible road, instead of the round only showing "Верно!" text
+  // with no visual change to the map itself.
+  _revealState(id) {
+    const data = this.level.pieces.find((p) => p.id === id);
+    if (!data) return;
+    this._buildStatePiece(data, { animate: true });
+    // A label added just now needs its font-size set immediately (it
+    // wasn't on the map yet for the last _rescaleLabels call to reach).
+    this._rescaleLabels(this.zoomCtl.getZoom());
   }
 
   // Keeps endpoint labels a constant on-screen size regardless of zoom —
@@ -259,6 +306,7 @@ export class JourneyNameBoard {
       this.inputEl.disabled = true;
       this.confirmBtn.disabled = true;
       playSnap();
+      this._revealState(targetId);
       this.correct++;
       if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, targetId, this.stepNeededHelp);
       const reward = REWARDS[this.levelId]?.journey ?? 0;

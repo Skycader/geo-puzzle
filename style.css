@@ -2190,19 +2190,51 @@ body {
   font-size: 12px;
 }
 
-/* "Путешествие" (js/journeyNameBoard.js's .journey-highway-layer,
-   js/puzzleBoard.js's .highway-overlay) — here the road IS the subject,
-   not background context, so it overrides .highway-path's normal muted
-   --magenta (deliberately dim in the gray scheme, see that variable's own
-   comment) with a constant, always-visible red, independent of land
-   scheme — same "always red, not scheme-dependent" reasoning as the
-   Рельеф 3-way toggle's thumb. */
-.journey-highway-layer .highway-path,
-.highway-overlay .highway-path {
+/* "Путешествие" (js/journeyNameBoard.js's .journey-route-layer,
+   js/puzzleBoard.js's matching one) — a dot at every stop's true centroid,
+   connected by a dashed line, in chain order. Deliberately NOT real
+   highway geometry (an earlier version drew the actual road, but a long,
+   many-hop chain routinely showed visible gaps and stray backtracking
+   branches from clipping a big state's worth of route geometry down to
+   just the relevant hop) — straight dot-to-dot dashes always connect and
+   never double back, by construction. Always red, independent of land
+   scheme — same "always red" reasoning as the Рельеф 3-way toggle's thumb. */
+.journey-route-line {
+  fill: none;
   stroke: var(--red);
-  stroke-width: 2.6px;
-  opacity: 0.95;
+  stroke-width: 2.4px;
+  stroke-dasharray: 9 6;
+  opacity: 0.9;
+  vector-effect: non-scaling-stroke;
   filter: drop-shadow(0 0 4px var(--red));
+}
+.journey-route-dot {
+  fill: var(--red);
+  stroke: rgba(var(--ink-rgb), 0.85);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  r: 4.5;
+  filter: drop-shadow(0 0 3px var(--red));
+}
+
+/* "Назови штаты" — a correctly-named state's real shape pops into
+   existence on the already-fully-visible road (js/journeyNameBoard.js's
+   _revealState), instead of the round only showing "Верно!" text with no
+   visual change to the map itself. Same glow-then-settle language as
+   .piece-shape.just-connected's snap-pop, just also fading the shape in
+   from nothing since — unlike a puzzle piece being dragged into place —
+   this element didn't exist on the map at all a moment ago. */
+.piece-shape.journey-state-reveal { animation: journey-state-appear 0.5s ease; }
+.piece-label.journey-state-reveal { animation: journey-label-appear 0.5s ease; }
+@keyframes journey-state-appear {
+  0% { opacity: 0; filter: drop-shadow(0 0 16px var(--neon-cyan)); }
+  60% { opacity: 1; }
+  100% { opacity: 1; filter: drop-shadow(0 0 5px transparent); }
+}
+@keyframes journey-label-appear {
+  0% { opacity: 0; }
+  40% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 /* ---------------- right-click map context menu (js/overviewBoard.js's _openContextMenu) ---------------- */

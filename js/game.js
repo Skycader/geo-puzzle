@@ -1492,7 +1492,9 @@ export class Game {
       const betweenIds = pick.chain.slice(1, -1);
       const subsetIds = new Set([pick.startId, pick.endId, ...betweenIds]);
       const syntheticLevel = { ...level, pieces: level.pieces.filter((p) => subsetIds.has(p.id)) };
-      const highways = pick.hops.map((h) => level.highways.find((hw) => hw.id === h.baseRouteId)).filter(Boolean);
+      // Dot-per-stop + dashed line, not real highway geometry — see
+      // puzzleBoard.js's routeDots comment.
+      const routeDots = pick.chain.map((id) => level.pieces.find((p) => p.id === id)).filter(Boolean).map((p) => ({ cx: p.cx, cy: p.cy }));
 
       this.el.hudProgress.textContent = `0/${betweenIds.length}`;
       this.el.hudGroups.textContent = 'Частей: 0';
@@ -1502,7 +1504,7 @@ export class Game {
         scale,
         toPlaceIds: new Set(betweenIds),
         labelsVisible: false,
-        highways,
+        routeDots,
         onProgress: (p) => this._onPuzzleProgress(p),
         onWin: () => this._onFinish(),
       });
