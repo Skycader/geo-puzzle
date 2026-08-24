@@ -158,10 +158,12 @@ const TERRAIN_PATTERNS = {
     <rect width="10" height="10" fill="var(--terrain-plains)" fill-opacity="0.18"/>
     <path d="M2,9 L2.3,5.2 M4.6,9 L5.1,4.4 M7.2,9 L7.4,5.7" stroke="var(--terrain-plains)" stroke-width="0.7" fill="none" stroke-linecap="round" opacity="0.9"/>
   `,
+  // Simple filled semicircles ("bumps" resting on the tile's bottom edge)
+  // — the classic dune symbol, not thin wavy strokes (those read as water
+  // ripples, not sand — see the earlier version's own note before this).
   desert: `
     <rect width="10" height="10" fill="var(--terrain-desert)" fill-opacity="0.18"/>
-    <path d="M0,7.2 Q2.5,4.7 5,7.2 T10,7.2" stroke="var(--terrain-desert)" stroke-width="0.9" fill="none" opacity="0.9"/>
-    <path d="M0,3.4 Q2.5,1.4 5,3.4 T10,3.4" stroke="var(--terrain-desert)" stroke-width="0.6" fill="none" opacity="0.55"/>
+    <path d="M1.5,9.5 A3.5,3.5 0 0 1 8.5,9.5 Z" fill="var(--terrain-desert)" fill-opacity="0.85"/>
   `,
   // Small rounded shrub/olive-bush cluster — chaparral, not a full tree.
   mediterranean: `
@@ -1732,6 +1734,10 @@ export class OverviewBoard {
   // building a new one), so there's no risk of two boards' defs colliding.
   _buildTerrainPatternDefs() {
     const defs = document.createElementNS(SVG_NS, 'defs');
+    // category -> its <pattern> — _updateTerrainPatternScale below reads
+    // this to know which patterns exist (only 'mountain' is EXCLUDED from
+    // the zoom-compensation loop there).
+    this.terrainPatternsByCategory = new Map();
     for (const [category, iconSvg] of Object.entries(TERRAIN_PATTERNS)) {
       const pattern = document.createElementNS(SVG_NS, 'pattern');
       pattern.id = `terrain-pattern-${category}`;
@@ -1740,8 +1746,34 @@ export class OverviewBoard {
       pattern.setAttribute('height', TERRAIN_PATTERN_TILE_PX);
       pattern.innerHTML = iconSvg;
       defs.appendChild(pattern);
+      this.terrainPatternsByCategory.set(category, pattern);
     }
     return defs;
+  }
+
+  // Real mountain RANGES are genuinely hundreds of km across, so letting
+  // that pattern grow with the map at deep zoom (its default, untouched
+  // behavior) still looks right — you're just seeing more detail of the
+  // same real feature, the way zooming into a real photo of a mountain
+  // range would. A single pine tree or dune is nowhere near that scale
+  // though: without this, zooming in made every OTHER icon blow up into
+  // an absurd, map-sized giant tree/dune/puddle. patternTransform's
+  // scale(f) shrinks a pattern's own tile (repeat spacing included, not
+  // just its content) around its origin — applying 1/zoom here cancels
+  // the map's own zoom back out for these categories, so their on-screen
+  // icon size stays roughly constant (more, smaller icons become visible
+  // as you zoom in, instead of the same few icons just getting huge) —
+  // clamped at 1 so zooming OUT past the default fit doesn't inflate them
+  // instead, and floored so an extreme zoom-in can't ask for a
+  // vanishingly, uselessly tiny tile.
+  _updateTerrainPatternScale(zoom) {
+    if (!this.terrainPatternsByCategory) return;
+    const MIN_FACTOR = 0.12;
+    const factor = zoom > 1 ? Math.max(MIN_FACTOR, 1 / zoom) : 1;
+    for (const [category, pattern] of this.terrainPatternsByCategory) {
+      if (category === 'mountain') continue;
+      pattern.setAttribute('patternTransform', `scale(${factor})`);
+    }
   }
 
   // Detaches (or re-attaches) every state piece's native <title> — see the
@@ -1817,6 +1849,12 @@ export class OverviewBoard {
       }
       this.zonesLayer.insertBefore(g, this.zonesLayer.firstChild);
       this.terrainLayer = g;
+      // Live-updates as the player zooms — see _updateTerrainPatternScale's
+      // own comment for why mountains are excluded. subscribe() only fires
+      // on FUTURE changes, so this also needs one immediate call for
+      // whatever zoom level is already active right now.
+      this.zoomCtl.subscribe((zoom) => this._updateTerrainPatternScale(zoom));
+      this._updateTerrainPatternScale(this.zoomCtl.getZoom());
 
       // Anchored to this.container (#board-container), not zoomWrap — see
       // the CSS comment on .terrain-legend for why. Every swatch doubles as
