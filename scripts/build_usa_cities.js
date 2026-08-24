@@ -184,6 +184,12 @@ const CITIES = [
   ['dallas', 'Dallas', 'Даллас', 'TX', 32.78, -96.80, false],
   ['fort_worth', 'Fort Worth', 'Форт-Уэрт', 'TX', 32.75, -97.33, false],
   ['el_paso', 'El Paso', 'Эль-Пасо', 'TX', 31.76, -106.49, false],
+  // Both real termini of I-27 (see scripts/build_usa_highways.js) — without
+  // these, that highway's line just stopped in empty space on the map with
+  // nothing marking where it actually ends, even though the underlying
+  // data was correct all along.
+  ['amarillo', 'Amarillo', 'Амарилло', 'TX', 35.22, -101.83, false],
+  ['lubbock', 'Lubbock', 'Лаббок', 'TX', 33.58, -101.86, false],
   ['salt_lake_city', 'Salt Lake City', 'Солт-Лейк-Сити', 'UT', 40.76, -111.89, true],
   ['montpelier', 'Montpelier', 'Монтпилиер', 'VT', 44.26, -72.58, true],
   ['richmond', 'Richmond', 'Ричмонд', 'VA', 37.54, -77.44, true],
@@ -230,6 +236,7 @@ const RADIUS_KM = {
   pittsburgh: 6.76, providence: 3.9, columbia: 10.69, pierre: 3.28,
   nashville: 19.8, memphis: 15.46, austin: 16.4, houston: 22.98,
   san_antonio: 20.28, dallas: 16.73, fort_worth: 17.03, el_paso: 14.61,
+  amarillo: 9.19, lubbock: 10.09,
   salt_lake_city: 9.56, montpelier: 2.88, richmond: 7.03, virginia_beach: 14.2,
   langley: 4.52, olympia: 3.88, seattle: 8.32, charleston_wv: 5.09,
   madison: 8.3, milwaukee: 8.9, cheyenne: 5.48,
