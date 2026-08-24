@@ -83,6 +83,8 @@ const LAND_SCHEME_STORAGE_KEY = 'geoPuzzleLandScheme';
 // _saveLastSettings (called from startGame()) and _loadLastSettings
 // (called from the constructor, before the menu is first rendered).
 const LAST_SETTINGS_STORAGE_KEY = 'geoPuzzleLastSettings';
+// "Рельеф" toggle's 3 steps — see _setTerrainMode.
+const TERRAIN_MODE_LABELS = { off: 'Рельеф', color: 'Рельеф: цвет', pattern: 'Рельеф: иконки' };
 // How far above the map's own rendered bottom edge the finish button sits
 // (see _positionWinBar) — comfortably more than half the button's own
 // height so it never straddles that edge.
@@ -132,9 +134,10 @@ export class Game {
     this.progressVisible = false;
     this.progressScope = 'name-state-states';
     // "Рельеф" — real terrain sub-regions painted under the state pieces,
-    // same opt-in/USA-only shape as progressVisible above. See
-    // OverviewBoard's setTerrainVisible.
-    this.terrainVisible = false;
+    // same opt-in/USA-only shape as progressVisible above, but 3-step
+    // ('off' | 'color' | 'pattern') instead of a plain boolean — see
+    // _cycleTerrainMode and OverviewBoard's setTerrainMode.
+    this.terrainMode = 'off';
     this.eligibilityList = null; // current EligibilityList instance for quiz/city-place — see _applyModeVisibility
     this.board = null;
     this.seconds = 0;
@@ -306,7 +309,7 @@ export class Game {
       toggleProgressWrap: document.getElementById('toggle-progress-wrap'),
       toggleProgress: document.getElementById('toggle-progress'),
       toggleTerrainWrap: document.getElementById('toggle-terrain-wrap'),
-      toggleTerrain: document.getElementById('toggle-terrain'),
+      toggleTerrainText: document.getElementById('toggle-terrain-text'),
       progressScopeWrap: document.getElementById('progress-scope-wrap'),
       progressScopeBtn: document.getElementById('progress-scope-btn'),
       progressScopeLabel: document.getElementById('progress-scope-label'),
@@ -478,6 +481,20 @@ export class Game {
     const active = this.el.progressScopeMenu.querySelector(`[data-scope="${this.progressScope}"]`);
     this.el.progressScopeLabel.textContent = active ? active.textContent : '';
     this.el.progressScopeMenu.querySelectorAll('.progress-scope-option').forEach((b) => b.classList.toggle('active', b === active));
+  }
+
+  // Syncs the "Рельеф" button's data-mode/label to this.terrainMode and
+  // (unless silent) pushes it to the live board — called both from the
+  // click handler above and from _startOverview's initial sync, same
+  // split as _setProgressScopeUI/setProgressScope. silent is used by
+  // _startOverview: the board doesn't exist yet at that point (it's built
+  // right after with terrainMode passed into its constructor options), so
+  // there's nothing to push to yet.
+  _setTerrainMode(mode, { silent = false } = {}) {
+    this.terrainMode = mode;
+    this.el.toggleTerrainWrap.dataset.mode = mode;
+    this.el.toggleTerrainText.textContent = TERRAIN_MODE_LABELS[mode];
+    if (!silent && this.board?.setTerrainMode) this.board.setTerrainMode(mode);
   }
 
   _openProgressScopeMenu() {
@@ -901,9 +918,10 @@ export class Game {
       this.el.progressScopeWrap.hidden = !this.progressVisible;
       if (this.board?.setProgressVisible) this.board.setProgressVisible(this.progressVisible);
     });
-    this.el.toggleTerrain.addEventListener('change', (ev) => {
-      this.terrainVisible = ev.target.checked;
-      if (this.board?.setTerrainVisible) this.board.setTerrainVisible(this.terrainVisible);
+    this.el.toggleTerrainWrap.addEventListener('click', () => {
+      const order = ['off', 'color', 'pattern'];
+      const next = order[(order.indexOf(this.terrainMode) + 1) % order.length];
+      this._setTerrainMode(next);
     });
     this._bindProgressScopeMenu();
     // Keeps the finish button anchored to the map's actual edge (see
@@ -1315,8 +1333,9 @@ export class Game {
     this.placesVisible = isFull;
     this.highwaysVisible = isFull;
     // USA-only, same as the toggle itself being hidden for world/countries
-    // below.
-    this.terrainVisible = isFull && level.id === 'usa';
+    // below. "Full" defaults to the richest look ('pattern'), same spirit
+    // as every other *Visible flag above defaulting fully on.
+    const terrainMode = isFull && level.id === 'usa' ? 'pattern' : 'off';
 
     // World level has no cities/places at all (levels/world.js: cities: [],
     // places: []) — showing "Города"/"Места" toggles for a level with
@@ -1341,7 +1360,7 @@ export class Game {
     this.el.progressScopeWrap.hidden = level.id !== 'usa' || !this.progressVisible;
     this._setProgressScopeUI();
     this.el.toggleTerrainWrap.hidden = level.id !== 'usa';
-    this.el.toggleTerrain.checked = this.terrainVisible;
+    this._setTerrainMode(terrainMode, { silent: true });
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${level.title} · Обзор`;
@@ -1369,7 +1388,7 @@ export class Game {
       highwaysVisible: this.highwaysVisible,
       progressVisible: level.id === 'usa' && this.progressVisible,
       progressScope: this.progressScope,
-      terrainVisible: level.id === 'usa' && this.terrainVisible,
+      terrainMode: level.id === 'usa' ? this.terrainMode : 'off',
     });
   }
 

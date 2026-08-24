@@ -82,13 +82,15 @@
         </label>
         <!-- Real terrain classification (mountains/forests/plains/desert/
              etc., scripts/build_usa_terrain.js) painted under the state
-             pieces. States only, same as "Прогресс" above — see
-             js/overviewBoard.js's setTerrainVisible. -->
-        <label class="toggle" id="toggle-terrain-wrap" title="Показать рельеф (горы, леса, равнины, пустыни)" hidden>
-          <input type="checkbox" id="toggle-terrain" />
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span class="toggle-text">Рельеф</span>
-        </label>
+             pieces. States only, same as "Прогресс" above. 3-step cycle
+             (выкл -> цвет -> иконки) instead of a plain on/off switch — a
+             button, not a checkbox, since there's no single "checked" bit
+             to bind to. Click cycles data-mode; see js/game.js's
+             _cycleTerrainMode and js/overviewBoard.js's setTerrainMode. -->
+        <button type="button" class="toggle toggle-3way" id="toggle-terrain-wrap" title="Рельеф: выкл / только цвет / иконки" data-mode="off" hidden>
+          <span class="toggle-track toggle-track-3way"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text" id="toggle-terrain-text">Рельеф</span>
+        </button>
         <!-- Custom dropdown, not a native <select> — a native option list
              ignores almost all CSS (renders with the OS's own light-theme
              popup, black-on-white, completely unstyleable), so it looked

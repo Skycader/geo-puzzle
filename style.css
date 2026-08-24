@@ -519,6 +519,31 @@ body {
 .toggle-text { color: var(--base0); }
 .toggle input:checked ~ .toggle-text { color: var(--neon-cyan); }
 
+/* ---------------- 3-way toggle ("Рельеф": выкл/цвет/иконки) ----------------
+   A <button> with data-mode, not a checkbox — there's no single "checked"
+   bit for 3 states. Reuses .toggle/.toggle-track/.toggle-thumb's box model
+   and resets the button's own UA chrome; data-mode drives the thumb's
+   travel/color the same way input:checked does for the 2-way version
+   above. */
+.toggle-3way {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+.toggle-track-3way { width: 58px; }
+.toggle-3way[data-mode='color'] .toggle-track-3way,
+.toggle-3way[data-mode='pattern'] .toggle-track-3way {
+  border-color: var(--neon-cyan);
+  background: rgba(var(--neon-cyan-rgb), 0.1);
+}
+.toggle-3way[data-mode='off'] .toggle-thumb { transform: translateX(0); background: var(--base01); box-shadow: none; }
+.toggle-3way[data-mode='color'] .toggle-thumb { transform: translateX(18px); background: var(--base0); box-shadow: none; }
+.toggle-3way[data-mode='pattern'] .toggle-thumb { transform: translateX(36px); background: var(--neon-cyan); box-shadow: 0 0 8px var(--neon-cyan); }
+.toggle-3way[data-mode='color'] .toggle-text,
+.toggle-3way[data-mode='pattern'] .toggle-text { color: var(--neon-cyan); }
+
 /* Which adaptive-mode scope #toggle-progress-wrap's heatmap visualizes —
    sits right next to it, shown/hidden together (see game.js). Custom
    button+menu, same pattern/look as overviewBoard.js's .layer-switcher —
@@ -1372,6 +1397,22 @@ body {
 .terrain-region[data-terrain='mediterranean'] { fill: url(#terrain-pattern-mediterranean); }
 .terrain-region[data-terrain='tundra'] { fill: url(#terrain-pattern-tundra); }
 .terrain-region[data-terrain='swamp'] { fill: url(#terrain-pattern-swamp); }
+
+/* "Рельеф: цвет" mode (js/overviewBoard.js's setTerrainMode) — flat
+   category color instead of the icon-textured pattern above. Needs its
+   own fill-opacity: the patterns carry their own per-tile opacity
+   (comment above), but a flat var(--terrain-X) fill has none of that
+   baked in and would otherwise render fully opaque. */
+.terrain-layer.terrain-mode-color .terrain-region { fill-opacity: 0.55; }
+.terrain-layer.terrain-mode-color .terrain-region[data-terrain='mountain'] { fill: var(--terrain-mountain); }
+.terrain-layer.terrain-mode-color .terrain-region[data-terrain='forest-boreal'] { fill: var(--terrain-forest-boreal); }
+.terrain-layer.terrain-mode-color .terrain-region[data-terrain='forest-broadleaf'] { fill: var(--terrain-forest-broadleaf); }
+.terrain-layer.terrain-mode-color .terrain-region[data-terrain='forest-coastal'] { fill: var(--terrain-forest-coastal); }
+.terrain-layer.terrain-mode-color .terrain-region[data-terrain='plains'] { fill: var(--terrain-plains); }
+.terrain-layer.terrain-mode-color .terrain-region[data-terrain='desert'] { fill: var(--terrain-desert); }
+.terrain-layer.terrain-mode-color .terrain-region[data-terrain='mediterranean'] { fill: var(--terrain-mediterranean); }
+.terrain-layer.terrain-mode-color .terrain-region[data-terrain='tundra'] { fill: var(--terrain-tundra); }
+.terrain-layer.terrain-mode-color .terrain-region[data-terrain='swamp'] { fill: var(--terrain-swamp); }
 
 /* Anchored to #board-container (see js/game.js), not .zoom-wrap — the
    same "oversized zoom-wrap is a trap for absolutely-positioned overlays"

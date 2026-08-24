@@ -92,7 +92,7 @@ function computeVisibleLonLatBBox(level, rect) {
   return { minLon, minLat, maxLon, maxLat };
 }
 
-// "Рельеф" terrain layer's 8 categories (see setTerrainVisible below) —
+// "Рельеф" terrain layer's 8 categories (see setTerrainMode below) —
 // short explanations of what each one actually IS, not just its name.
 // levels/usaTerrain.js's own `label` field is just the category name (it's
 // generated data, editorial text doesn't belong there) — this is the
@@ -322,12 +322,14 @@ export class OverviewBoard {
     // "Рельеф" — real terrain-classification sub-regions (mountains,
     // forests, plains, desert...) painted underneath the state pieces —
     // opt-in like progress, USA-only (levels/usaTerrain.js has no data for
-    // world/countries). The ~480KB terrain module is dynamic-imported on
-    // first use rather than statically imported at the top of this file,
-    // so loading World/Countries Overview never pays for it — see
-    // setTerrainVisible.
-    this.terrainVisible = opts.terrainVisible === true;
-    this.terrainLayer = null; // built lazily on first setTerrainVisible(true)
+    // world/countries). 3-step: 'off' | 'color' (flat category color) |
+    // 'pattern' (icon-textured, TERRAIN_PATTERNS) — not a plain boolean,
+    // since both non-off looks are useful on their own. The ~480KB terrain
+    // module is dynamic-imported on first use rather than statically
+    // imported at the top of this file, so loading World/Countries
+    // Overview never pays for it — see setTerrainMode.
+    this.terrainMode = opts.terrainMode === 'color' || opts.terrainMode === 'pattern' ? opts.terrainMode : 'off';
+    this.terrainLayer = null; // built lazily on first setTerrainMode() call with a non-'off' mode
     this.terrainLegendEl = null;
     this.terrainRegionsByCategory = null; // category -> <path>, set once terrainLayer is built
     this.terrainLabelsByCategory = null; // category -> Russian label, set alongside terrainRegionsByCategory
@@ -703,8 +705,9 @@ export class OverviewBoard {
     this.svg.addEventListener('contextmenu', (ev) => this._onMapContextMenu(ev));
     this._buildRulerReadout();
     // "Рельеф" hover readout — see _onMapMouseMove. Always bound (not only
-    // while terrainVisible) since it's a no-op early return otherwise; that
-    // avoids adding/removing the listener every time the toggle flips.
+    // while terrainMode !== 'off') since it's a no-op early return
+    // otherwise; that avoids adding/removing the listener every time the
+    // toggle flips.
     this.svg.addEventListener('mousemove', (ev) => this._onMapMouseMove(ev));
     this.svg.addEventListener('mouseleave', () => this._hideTerrainHoverTip());
 
@@ -713,7 +716,7 @@ export class OverviewBoard {
     this.setPlacesVisible(this.placesVisible);
     this.setHighwaysVisible(this.highwaysVisible);
     this.setProgressVisible(this.progressVisible);
-    if (this.terrainVisible) this.setTerrainVisible(true);
+    if (this.terrainMode !== 'off') this.setTerrainMode(this.terrainMode);
   }
 
   // Adds/removes each city's elements from the SVG based on whether it's
@@ -1724,12 +1727,12 @@ export class OverviewBoard {
   }
 
   // Builds the 8 <pattern> elements TERRAIN_PATTERNS describes — called
-  // once, the first time the terrain layer is built (see setTerrainVisible).
+  // once, the first time the terrain layer is built (see setTerrainMode).
   // style.css's `.terrain-region[data-terrain='X'] { fill: url(#terrain-
   // pattern-X); }` rules are what actually point each region at its
   // pattern; this method only needs to make sure those ids exist in the
   // document. Fixed (non-randomized) ids are safe here — unlike
-  // setTerrainVisible's own clip-path id, exactly one OverviewBoard is
+  // setTerrainMode's own clip-path id, exactly one OverviewBoard is
   // ever mounted at a time (game.js destroys the previous one before
   // building a new one), so there's no risk of two boards' defs colliding.
   _buildTerrainPatternDefs() {
@@ -1805,9 +1808,16 @@ export class OverviewBoard {
   // The ~480KB terrain module is dynamic-imported here on first use
   // instead of statically imported at the top of this file, so loading
   // World/Countries Overview never pays for it.
-  async setTerrainVisible(visible) {
+  //
+  // mode is 'off' | 'color' | 'pattern' — the layer itself only ever needs
+  // building once (the <path>s are identical either way); 'color' vs.
+  // 'pattern' is just a CSS class flip (.terrain-mode-color, see
+  // style.css) that swaps each region's fill between its flat
+  // var(--terrain-X) and its url(#terrain-pattern-X).
+  async setTerrainMode(mode) {
     if (this.level.id !== 'usa') return;
-    this.terrainVisible = visible;
+    this.terrainMode = mode;
+    const visible = mode !== 'off';
     this._setStateNativeTooltipsEnabled(!visible);
     if (!visible) {
       if (this.terrainLayer) setElementHidden(this.terrainLayer, true);
@@ -1859,7 +1869,7 @@ export class OverviewBoard {
       // Anchored to this.container (#board-container), not zoomWrap — see
       // the CSS comment on .terrain-legend for why. Every swatch doubles as
       // a per-category filter button — not persisted across reloads, same
-      // as terrainVisible itself (see game.js's terrainVisible comment).
+      // as terrainMode itself (see game.js's terrainMode comment).
       const legend = document.createElement('div');
       legend.className = 'terrain-legend';
       for (const region of usaTerrain.regions) {
@@ -1878,16 +1888,17 @@ export class OverviewBoard {
     }
     // Re-check — the toggle could have been switched off again while the
     // dynamic import above was still in flight.
-    if (!this.terrainVisible) return;
+    if (this.terrainMode === 'off') return;
     setElementHidden(this.terrainLayer, false);
     setElementHidden(this.terrainLegendEl, false);
     this.zonesLayer.classList.add('terrain-active');
+    this.terrainLayer.classList.toggle('terrain-mode-color', this.terrainMode === 'color');
   }
 
   // Per-category filter — clicking a legend swatch hides/shows just that
   // one terrain category's <path> without touching the other 7 or the
   // "Рельеф" toggle itself. Not persisted across reloads, same as
-  // terrainVisible (see game.js's terrainVisible comment) — this is a
+  // terrainMode (see game.js's terrainMode comment) — this is a
   // view filter for the current look at the map, not a settings-panel
   // choice like level/mode/difficulty.
   _toggleTerrainCategory(category) {
@@ -1905,14 +1916,14 @@ export class OverviewBoard {
   // real point-in-polygon test against each category's actual <path>
   // geometry via SVGGeometryElement.isPointInFill, since the terrain
   // layer's own paths are pointer-events:none (see the class comment on
-  // setTerrainVisible) and so can never be ev.target themselves. Filtered-
+  // setTerrainMode) and so can never be ev.target themselves. Filtered-
   // off categories (see _toggleTerrainCategory) are skipped, same as they
   // are visually — hovering there should behave like the layer just isn't
   // there, not silently report a hidden category. Null when terrain isn't
   // built/visible yet, or the point isn't inside any category (Hawaii, or
   // any other gap in the source dataset).
   _terrainCategoryAt(nativePt) {
-    if (!this.terrainVisible || !this.terrainRegionsByCategory) return null;
+    if (this.terrainMode === 'off' || !this.terrainRegionsByCategory) return null;
     const svgPt = this.svg.createSVGPoint();
     svgPt.x = nativePt.x;
     svgPt.y = nativePt.y;
@@ -1927,10 +1938,10 @@ export class OverviewBoard {
   // with "Рельеф" on — a plain state <title> can't do this since its text
   // is fixed per-element, not per-cursor-position, and a state can straddle
   // several terrain categories (see _terrainCategoryAt). Cheap early-outs
-  // (not terrainVisible, not hovering a state) keep this from doing any
+  // (terrainMode 'off', not hovering a state) keep this from doing any
   // point-in-fill work on every ordinary mousemove.
   _onMapMouseMove(ev) {
-    if (!this.terrainVisible) return this._hideTerrainHoverTip();
+    if (this.terrainMode === 'off') return this._hideTerrainHoverTip();
     const kind = ev.target?.dataset?.kind;
     const id = ev.target?.dataset?.id;
     if (kind !== 'state' || !id) return this._hideTerrainHoverTip();
