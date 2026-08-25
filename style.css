@@ -2781,6 +2781,15 @@ body {
   stroke-dasharray: 6 4;
   vector-effect: non-scaling-stroke;
 }
+/* Hawaii's own islands are drawn at true real-world scale (see
+   scripts/build_usa_level.js) — the biggest is ~30 canvas units across and
+   several are under 10, so the same 1.4-unit border every mainland state
+   uses (fine at their ~100-300 unit size) reads as a thick outline
+   swallowing a big fraction of the shape. Thinner border, scoped to just
+   this one piece rather than changing the shared default. */
+path.piece-shape[data-id='HI'] {
+  stroke-width: 0.3;
+}
 .piece:hover .piece-shape {
   stroke: var(--neon-pink);
   filter: drop-shadow(0 0 6px rgba(var(--neon-pink-rgb), 0.7));

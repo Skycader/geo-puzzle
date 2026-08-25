@@ -5,6 +5,27 @@ import { buildStateBackground } from './mapBackground.js';
 import { nativeToLonLat, formatLonLat, findInset } from './geoCoords.js';
 import { loadSuccessStats, setSuccessCount } from './successStats.js';
 
+// Hawaii's own piece is one <path> with 8 real, physically separate
+// island rings (see scripts/build_usa_level.js's Hawaii-splice comment) —
+// a single static tooltip text can't say which one the cursor is actually
+// over. Real center lon/lat per island (verified against the actual
+// TIGER-derived geometry, not guessed) mapped to whichever label reads
+// best there: the island's biggest known town where this game has one
+// (matches levels/usaCities.js), else the island's own name for the four
+// that have no town in our city list (Niʻihau is private/no public roads,
+// Kaʻula is an uninhabited islet, Molokaʻi/Lānaʻi's own towns — Kaunakakai/
+// Lānaʻi City — just aren't in our curated city list).
+const HI_ISLAND_HOVER_LABELS = [
+  { lon: -160.541, lat: 21.654, label: 'Каула' },
+  { lon: -160.152, lat: 21.904, label: 'Ниихау' },
+  { lon: -159.547, lat: 22.053, label: 'Капаа' },
+  { lon: -157.973, lat: 21.479, label: 'Гонолулу' },
+  { lon: -157.008, lat: 21.135, label: 'Молокаи' },
+  { lon: -156.935, lat: 20.833, label: 'Ланаи' },
+  { lon: -156.343, lat: 20.771, label: 'Кахулуи' },
+  { lon: -155.439, lat: 19.592, label: 'Хило' },
+];
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const STATE_LABEL_PX = 12;
 const STATE_LABEL_STROKE_PX = 3;
@@ -482,6 +503,30 @@ export class OverviewBoard {
       title.textContent = `${p.ru} (${p.name})`;
       path.appendChild(title);
       this.zonesLayer.appendChild(path);
+
+      // Hawaii only: swap the static "Гавайи (Hawaii)" tooltip for
+      // "Гавайи — <island's town/name>" based on exactly which of the 8
+      // real island rings the cursor is over (see HI_ISLAND_HOVER_LABELS's
+      // own comment). Native <title> tooltips don't refresh mid-hover, but
+      // updating it on pointermove means it's already right by the time
+      // the browser's own hover-delay timer fires.
+      if (p.id === 'HI') {
+        path.addEventListener('pointermove', (e) => {
+          const native = this._clientToNative(e.clientX, e.clientY);
+          const coords = nativeToLonLat(this.level, native.x, native.y);
+          if (!coords) return;
+          let best = null;
+          let bestD = Infinity;
+          for (const isl of HI_ISLAND_HOVER_LABELS) {
+            const d = (coords.lon - isl.lon) ** 2 + (coords.lat - isl.lat) ** 2;
+            if (d < bestD) {
+              bestD = d;
+              best = isl;
+            }
+          }
+          if (best) title.textContent = `${p.ru} — ${best.label}`;
+        });
+      }
 
       // Usually one label at [cx, cy] — world/countries pieces carry a
       // `labelPoints` array instead (see scripts/build_world_seas.js's/
