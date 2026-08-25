@@ -67,41 +67,32 @@ const scale = TARGET_W / (maxX - minX);
 // its own city's correct cx/cy, enough to push coastal cities (New York,
 // Jacksonville, ...) into the ocean.
 const MARGIN = 3;
+// Shifts the WHOLE canvas so Alaska (true position now, not a corner
+// inset) doesn't land negative — exact value from build_usa_level.js's
+// own console.error output; must match exactly or a silhouette drifts off
+// its city's own cx/cy. See that script's own comment.
+const GLOBAL_SHIFT_X = 839.9193530147361;
+const GLOBAL_SHIFT_Y = 715.4619231706608;
 function toCanvasMain([lon, lat]) {
   const [x, y] = albers([lon, lat]);
-  return [(x - minX) * scale + MARGIN, (y - minY) * scale + MARGIN];
+  return [(x - minX) * scale + MARGIN + GLOBAL_SHIFT_X, (y - minY) * scale + MARGIN + GLOBAL_SHIFT_Y];
 }
 
-// ---- re-derive the exact same AK inset projection (only AK city here) ----
-function insetProjector(featureName, targetW, targetH, offsetX, offsetY) {
-  const feature = states.features.find((f) => f.properties.name === featureName);
-  let lonMin = Infinity, lonMax = -Infinity, latMin = Infinity, latMax = -Infinity;
-  forEachRing(feature.geometry, (ring) => {
-    for (let [lon, lat] of ring) {
-      if (lon > 0) lon -= 360;
-      if (lon < lonMin) lonMin = lon;
-      if (lon > lonMax) lonMax = lon;
-      if (lat < latMin) latMin = lat;
-      if (lat > latMax) latMax = lat;
-    }
-  });
-  const midLat = (latMin + latMax) / 2;
-  const cosLat = Math.cos(deg2rad(midLat));
-  const w = (lonMax - lonMin) * cosLat;
-  const h = latMax - latMin;
-  const s = Math.min(targetW / w, targetH / h);
-  const padX = (targetW - w * s) / 2;
-  const padY = (targetH - h * s) / 2;
+// ---- Alaska: true relative position + true scale (only AK city here) —
+// must exactly match build_usa_level.js's buildTruePosition.
+const TRUE_SCALE = deg2rad(1) * scale;
+function trueScaleProjector(anchorLon, anchorLat) {
+  const cosLat = Math.cos(deg2rad(anchorLat));
+  const [anchorX, anchorY] = toCanvasMain([anchorLon, anchorLat]);
   return ([lon, lat]) => {
-    let l = lon;
-    if (l > 0) l -= 360;
-    return [(l - lonMin) * cosLat * s + offsetX + padX, (latMax - lat) * s + offsetY + padY];
+    const l = lon > 0 ? lon - 360 : lon;
+    const x = (l - anchorLon) * cosLat * TRUE_SCALE + anchorX;
+    const y = (anchorLat - lat) * TRUE_SCALE + anchorY;
+    return [x, y];
   };
 }
-const bboxH = maxY - minY;
-const TARGET_H = bboxH * scale;
-const INSET_Y = TARGET_H + 40;
-const toCanvasAK = insetProjector('Alaska', 230, 150, 10, INSET_Y);
+// Exact anchor from build_usa_level.js's own console.error output.
+const toCanvasAK = trueScaleProjector(-159.4456165, 61.482186500000005);
 
 function project(state, lon, lat) {
   if (state === 'AK') return toCanvasAK([lon, lat]);

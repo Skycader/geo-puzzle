@@ -111,8 +111,8 @@ export default {
       "TX"
     ],
     "i39": [
-      "IL",
-      "WI"
+      "WI",
+      "IL"
     ],
     "i40": [
       "CA",
@@ -141,9 +141,8 @@ export default {
       "TX"
     ],
     "i49-a": [
-      "TX",
-      "AR",
-      "LA"
+      "LA",
+      "AR"
     ],
     "i49-b": [
       "MO",
@@ -304,7 +303,6 @@ export default {
     ],
     "i84-b": [
       "PA",
-      "NJ",
       "NY",
       "CT",
       "MA"
@@ -620,12 +618,6 @@ export default {
         "routeId": "i44",
         "routeNumber": "44",
         "baseRouteId": "i44"
-      },
-      {
-        "to": "AR",
-        "routeId": "i49-a",
-        "routeNumber": "49",
-        "baseRouteId": "i49"
       }
     ],
     "LA": [
@@ -1632,12 +1624,6 @@ export default {
         "baseRouteId": "i40"
       },
       {
-        "to": "TX",
-        "routeId": "i49-a",
-        "routeNumber": "49",
-        "baseRouteId": "i49"
-      },
-      {
         "to": "LA",
         "routeId": "i49-a",
         "routeNumber": "49",
@@ -2206,7 +2192,7 @@ export default {
         "baseRouteId": "i83"
       },
       {
-        "to": "NJ",
+        "to": "NY",
         "routeId": "i84-b",
         "routeNumber": "84",
         "baseRouteId": "i84"
@@ -2275,18 +2261,6 @@ export default {
       },
       {
         "to": "PA",
-        "routeId": "i84-b",
-        "routeNumber": "84",
-        "baseRouteId": "i84"
-      },
-      {
-        "to": "NY",
-        "routeId": "i84-b",
-        "routeNumber": "84",
-        "baseRouteId": "i84"
-      },
-      {
-        "to": "PA",
         "routeId": "i95",
         "routeNumber": "95",
         "baseRouteId": "i95"
@@ -2312,7 +2286,7 @@ export default {
         "baseRouteId": "i81"
       },
       {
-        "to": "NJ",
+        "to": "PA",
         "routeId": "i84-b",
         "routeNumber": "84",
         "baseRouteId": "i84"

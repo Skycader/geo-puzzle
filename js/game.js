@@ -1092,7 +1092,19 @@ export class Game {
     const scale = this._computeScale(level.canvas, this._availableHeight());
     const traySize = 78;
 
-    this.board = new PuzzleBoard(this.el.boardContainer, level, {
+    // Hawaii is excluded from this mode specifically (Alaska stays) — at
+    // its true real-world position/scale (scripts/build_usa_level.js) it
+    // sits far southwest with nothing but ocean around it, which doesn't
+    // suit "drag it onto its own true-position outline" the way a normal
+    // state piece does; it's still a normal, guessable/clickable piece in
+    // every OTHER mode. Same synthetic-level-with-filtered-pieces pattern
+    // Journey mode's puzzle sub-mode already uses (js/game.js's
+    // _startJourney) — PuzzleBoard's own `level.pieces.length`-based
+    // win-check/tray-count automatically scopes correctly, no board
+    // changes needed.
+    const puzzleLevel = { ...level, pieces: level.pieces.filter((p) => p.id !== 'HI') };
+
+    this.board = new PuzzleBoard(this.el.boardContainer, puzzleLevel, {
       toPlaceCount,
       scale,
       traySize,
@@ -1101,6 +1113,14 @@ export class Game {
       onProgress: (p) => this._onPuzzleProgress(p),
       onWin: () => this._onFinish(),
     });
+    // The canvas now also fits true-position Alaska/Canada/Hawaii (see
+    // scripts/build_usa_level.js) — without this, the default camera would
+    // show the WHOLE extended canvas, most of it empty ocean around
+    // Canada/Hawaii, leaving the actual play area tiny. Restrict to just
+    // the mainland+Alaska bbox (exactly what's left in puzzleLevel.pieces
+    // now that Hawaii's filtered out) — same focusOnBBox pattern Journey
+    // mode's puzzle sub-mode already uses.
+    this.board.zoomCtl.focusOnBBox(unionBBox(puzzleLevel.pieces.map((p) => p.bbox)), { animate: false, pad: 0.05 });
   }
 
   _startQuiz(level) {

@@ -58,43 +58,37 @@ for (const f of geo.features) {
 const TARGET_W = 960;
 const scale = TARGET_W / (maxX - minX);
 const MARGIN = 3; // must match build_usa_level.js's own MARGIN exactly
+// Shifts the WHOLE canvas (mainland included) so Alaska/Canada (which
+// land north/negative-y) and Hawaii (far west/negative-x) don't go
+// negative — see build_usa_level.js's own comment. Exact value from that
+// script's console.error output; must match exactly or city dots drift
+// off their state's own outline.
+const GLOBAL_SHIFT_X = 839.9193530147361;
+const GLOBAL_SHIFT_Y = 715.4619231706608;
 function toCanvasMain([lon, lat]) {
   const [x, y] = albers([lon, lat]);
-  return [(x - minX) * scale + MARGIN, (y - minY) * scale + MARGIN];
+  return [(x - minX) * scale + MARGIN + GLOBAL_SHIFT_X, (y - minY) * scale + MARGIN + GLOBAL_SHIFT_Y];
 }
 
-// ---- re-derive the exact same AK / HI inset projections ----
-function insetProjector(featureName, targetW, targetH, offsetX, offsetY) {
-  const feature = geo.features.find((f) => f.properties.name === featureName);
-  let lonMin = Infinity, lonMax = -Infinity, latMin = Infinity, latMax = -Infinity;
-  forEachRing(feature.geometry, (ring) => {
-    for (let [lon, lat] of ring) {
-      if (lon > 0) lon -= 360;
-      if (lon < lonMin) lonMin = lon;
-      if (lon > lonMax) lonMax = lon;
-      if (lat < latMin) latMin = lat;
-      if (lat > latMax) latMax = lat;
-    }
-  });
-  const midLat = (latMin + latMax) / 2;
-  const cosLat = Math.cos(deg2rad(midLat));
-  const w = (lonMax - lonMin) * cosLat;
-  const h = latMax - latMin;
-  const s = Math.min(targetW / w, targetH / h);
-  const padX = (targetW - w * s) / 2;
-  const padY = (targetH - h * s) / 2;
+// ---- Alaska/Hawaii: true relative position + true scale — must exactly
+// match build_usa_level.js's buildTruePosition (same anchor lon/lat, same
+// TRUE_SCALE, same GLOBAL_SHIFT via toCanvasMain above) or city dots land
+// off the state's own outline. See that script's own comment for why the
+// shape uses this local projection instead of the main Albers formula.
+const TRUE_SCALE = deg2rad(1) * scale;
+function trueScaleProjector(anchorLon, anchorLat) {
+  const cosLat = Math.cos(deg2rad(anchorLat));
+  const [anchorX, anchorY] = toCanvasMain([anchorLon, anchorLat]);
   return ([lon, lat]) => {
-    let l = lon;
-    if (l > 0) l -= 360;
-    return [(l - lonMin) * cosLat * s + offsetX + padX, (latMax - lat) * s + offsetY + padY];
+    const l = lon > 0 ? lon - 360 : lon;
+    const x = (l - anchorLon) * cosLat * TRUE_SCALE + anchorX;
+    const y = (anchorLat - lat) * TRUE_SCALE + anchorY;
+    return [x, y];
   };
 }
-// must match build_usa_level.js exactly
-const bboxH = maxY - minY;
-const TARGET_H = bboxH * scale;
-const INSET_Y = TARGET_H + 40;
-const toCanvasAK = insetProjector('Alaska', 230, 150, 10, INSET_Y);
-const toCanvasHI = insetProjector('Hawaii', 150, 90, 270, INSET_Y + 60);
+// Exact anchors from build_usa_level.js's own console.error output.
+const toCanvasAK = trueScaleProjector(-159.4456165, 61.482186500000005);
+const toCanvasHI = trueScaleProjector(-157.2861325, 20.588611);
 
 function project(region, lon, lat) {
   if (region === 'AK') return toCanvasAK([lon, lat]);
@@ -268,6 +262,62 @@ const cities = CITIES.map(([id, name, ru, state, lat, lon, capital, region]) => 
     d: silhouette?.d, bbox: silhouette?.bbox,
   };
 });
+
+// ---- snap onto the coastline any city whose real coordinates land just
+// outside its own state's SIMPLIFIED polygon — a normal, small side
+// effect of a low-vertex-count coastline (Oahu's Pearl Harbor/Kailua Bay/
+// Kaneohe Bay mouths get smoothed straight across), not a projection bug.
+// Nudges onto (and 1.5 units past) the nearest boundary point rather than
+// leaving the dot floating a few km out at sea. Real city coordinates are
+// unchanged for every city that's already inside — this only touches the
+// rare edge case.
+function pointInRing(x, y, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function nearestOnRing(x, y, ring) {
+  let best = null, bestD = Infinity;
+  for (let i = 0; i < ring.length; i++) {
+    const [x1, y1] = ring[i], [x2, y2] = ring[(i + 1) % ring.length];
+    const dx = x2 - x1, dy = y2 - y1;
+    const len2 = dx * dx + dy * dy;
+    let t = len2 > 0 ? ((x - x1) * dx + (y - y1) * dy) / len2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    const cx = x1 + t * dx, cy = y1 + t * dy;
+    const d = Math.hypot(x - cx, y - cy);
+    if (d < bestD) { bestD = d; best = [cx, cy]; }
+  }
+  return { pt: best, dist: bestD };
+}
+function stateRings(featureName, region) {
+  const feature = geo.features.find((f) => f.properties.name === featureName);
+  const rings = [];
+  forEachRing(feature.geometry, (ring) => rings.push(ring.map(([lon, lat]) => project(region, lon, lat))));
+  return rings;
+}
+const STATE_NAME_BY_ID = { HI: 'Hawaii', AK: 'Alaska' };
+const coastlineCache = new Map();
+for (const c of cities) {
+  const stateName = STATE_NAME_BY_ID[c.state];
+  if (!stateName) continue; // only AK/HI's own simplified coastline is a concern here
+  if (!coastlineCache.has(c.state)) coastlineCache.set(c.state, stateRings(stateName, c.state));
+  const rings = coastlineCache.get(c.state);
+  if (rings.some((r) => pointInRing(c.cx, c.cy, r))) continue;
+  let best = null;
+  for (const r of rings) {
+    const { pt, dist } = nearestOnRing(c.cx, c.cy, r);
+    if (!best || dist < best.dist) best = { pt, dist };
+  }
+  const dirX = best.pt[0] - c.cx, dirY = best.pt[1] - c.cy;
+  const len = Math.hypot(dirX, dirY) || 1;
+  console.error(`snapped ${c.id} onto ${stateName}'s coastline (was ${best.dist.toFixed(2)} canvas units outside — simplified-coastline artifact)`);
+  c.cx = +(best.pt[0] + (dirX / len) * 1.5).toFixed(1);
+  c.cy = +(best.pt[1] + (dirY / len) * 1.5).toFixed(1);
+}
 
 console.error('cities', cities.length, '(', Object.keys(SILHOUETTES).length, 'with a real silhouette )');
 console.error('sample', cities.filter((c) => ['new_york', 'los_angeles', 'seattle', 'miami', 'juneau', 'honolulu'].includes(c.id)).map((c) => ({ ...c, d: c.d && c.d.slice(0, 20) + '…' })));

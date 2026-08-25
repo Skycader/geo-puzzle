@@ -1,9 +1,14 @@
 // One-off build script: turns the public-domain PublicaMundi us-states
 // GeoJSON into real state-shaped SVG paths for the puzzle, using a proper
 // Albers equal-area conic projection for the 48 contiguous states + DC
-// (same projection family real US wall maps use), and independent small
-// equirectangular insets for Alaska/Hawaii (standard cartographic
-// convention — they're never shown at true relative scale/position).
+// (same projection family real US wall maps use). Alaska and Hawaii use
+// their own accurate local equirectangular projections (small-area, so no
+// meaningful distortion) but are positioned at their TRUE relative
+// position and scale versus the mainland (not the arbitrary corner-inset
+// convention most printed maps use) — see buildTruePosition's own comment
+// below for why the shape itself can't just go through the main Albers
+// formula. A non-interactive Canada silhouette (`contextLand`) is added
+// for geographic context, at the same true position/scale.
 const fs = require('fs');
 const path = require('path');
 
@@ -219,64 +224,138 @@ for (const f of contiguous) {
   pieces.push({ id: abbr, name, ru, ...piece, area });
 }
 
-// ---- Alaska / Hawaii: independent equirectangular insets ----
-function buildInset(feature, targetW, targetH, offsetX, offsetY) {
-  const rings = [];
+// ---- Alaska / Hawaii: true relative position + true scale ----
+// Each keeps its own accurate LOCAL projection (equirectangular + cosLat
+// correction — fine for an area this size) instead of running its real
+// outline through the main Albers formula above, which is only accurate
+// near ITS OWN standard parallels (29.5-45.5°N) / central meridian (-96°)
+// — numerically verified before writing this: Alaska's real corners come
+// out as a wildly stretched ~650x550-unit diagonal blob under the raw
+// Albers formula, nothing like Alaska's actual shape (it's both 15-45°
+// further north than the standard parallels AND crosses the antimeridian).
+// Only ONE reference point per region — its own real lon/lat bbox-center —
+// goes through the main Albers formula; a single point can't be
+// "distorted", so this gives a real, direction-correct anchor position
+// without the outline-distortion problem. The local shape is then drawn
+// around that anchor at TRUE scale (same km-per-canvas-unit as the main
+// map, derived self-consistently from `scale` above) instead of being
+// letterbox-fit to an arbitrary box like the old inset mechanism was.
+// North stays up (no rotation) — same convention every printed US map
+// uses for its Alaska/Hawaii insets; a real rotation (Alaska's would be
+// ~38°) would need reworking js/geoCoords.js's unrotated inverse-lookup
+// math for no visible benefit (players have no lon/lat grid to notice
+// against).
+const TRUE_SCALE = deg2rad(1) * scale; // canvas units per degree, at true relative scale
+
+function regionBBoxCenter(feature) {
   let lonMin = Infinity, lonMax = -Infinity, latMin = Infinity, latMax = -Infinity;
   forEachRing(feature.geometry, (ring) => {
-    const fixed = ring.map(([lon, lat]) => {
-      const l = lon > 0 ? lon - 360 : lon; // unwrap Aleutians crossing antimeridian
-      return [l, lat];
-    });
-    rings.push(fixed);
-    for (const [lon, lat] of fixed) {
+    for (let [lon, lat] of ring) {
+      if (lon > 0) lon -= 360; // unwrap Aleutians crossing the antimeridian
       if (lon < lonMin) lonMin = lon;
       if (lon > lonMax) lonMax = lon;
       if (lat < latMin) latMin = lat;
       if (lat > latMax) latMax = lat;
     }
   });
-  const midLat = (latMin + latMax) / 2;
-  const cosLat = Math.cos(deg2rad(midLat));
-  const w = (lonMax - lonMin) * cosLat;
-  const h = latMax - latMin;
-  const s = Math.min(targetW / w, targetH / h);
-  const drawW = w * s;
-  const drawH = h * s;
-  const padX = (targetW - drawW) / 2;
-  const padY = (targetH - drawH) / 2;
+  return { lon: (lonMin + lonMax) / 2, lat: (latMin + latMax) / 2 };
+}
 
+function buildTruePosition(feature, anchorLon, anchorLat) {
+  const rings = [];
+  forEachRing(feature.geometry, (ring) => {
+    rings.push(ring.map(([lon, lat]) => [lon > 0 ? lon - 360 : lon, lat]));
+  });
+  const cosLat = Math.cos(deg2rad(anchorLat));
+  const [anchorX, anchorY] = toCanvas(albers([anchorLon, anchorLat]));
   function project([lon, lat]) {
-    const x = (lon - lonMin) * cosLat * s + offsetX + padX;
-    const y = (latMax - lat) * s + offsetY + padY;
+    const x = (lon - anchorLon) * cosLat * TRUE_SCALE + anchorX;
+    const y = (anchorLat - lat) * TRUE_SCALE + anchorY;
     return [x, y];
   }
-
   const canvasRings = rings.map((ring) => ring.map(project));
-  // Projection constants exposed alongside the piece — js/geoCoords.js's
-  // browser-side inverse (right-click "coordinates" context menu) needs
-  // these to convert a click back to lon/lat for anything landing inside
-  // this inset's own bbox, which uses this simple formula, not the main
-  // Albers one below.
-  const projection = { lonMin, cosLat, s, offsetX: offsetX + padX, offsetY: offsetY + padY, latMax };
+  // Same field names/formula shape js/geoCoords.js's insetInverse already
+  // expects (x=(lon-lonMin)*cosLat*s+offsetX, y=(latMax-lat)*s+offsetY) —
+  // just fed the anchor point instead of a box corner, so no runtime code
+  // needs to change, only these values.
+  const projection = { lonMin: anchorLon, latMax: anchorLat, cosLat, s: TRUE_SCALE, offsetX: anchorX, offsetY: anchorY };
   return { ...buildPieceFromRings(canvasRings), projection };
 }
 
-const INSET_Y = TARGET_H + 40;
-const akPiece = buildInset(insets['Alaska'], 230, 150, 10, INSET_Y);
-const hiPiece = buildInset(insets['Hawaii'], 150, 90, 270, INSET_Y + 60);
+const akAnchor = regionBBoxCenter(insets['Alaska']);
+const hiAnchor = regionBBoxCenter(insets['Hawaii']);
+const akPiece = buildTruePosition(insets['Alaska'], akAnchor.lon, akAnchor.lat);
+const hiPiece = buildTruePosition(insets['Hawaii'], hiAnchor.lon, hiAnchor.lat);
 
-// AK/HI sit in their own independent inset projections (see buildInset)
-// with no consistent km-per-canvas-unit scale of their own, so kmPerUnit
-// (calibrated for the main Albers projection) can't convert their
-// areaNative — using the standard US Census total-area figures instead.
+// AK/HI's own local projection has no consistent km-per-canvas-unit scale
+// of its own beyond TRUE_SCALE (which IS real, unlike the old letterboxed
+// inset's `s`) — areaNative is still native-projection area, not real
+// km², so this keeps using the standard US Census total-area figures
+// directly rather than converting it.
 const INSET_AREA_KM2 = { AK: 1723337, HI: 28313 };
 
 pieces.push({ id: 'AK', name: 'Alaska', ru: 'Аляска', inset: true, ...akPiece, area: INSET_AREA_KM2.AK });
 pieces.push({ id: 'HI', name: 'Hawaii', ru: 'Гавайи', inset: true, ...hiPiece, area: INSET_AREA_KM2.HI });
 
-const CANVAS_W = 960 + MARGIN * 2;
-const CANVAS_H = INSET_Y + 160;
+// ---- Canada: non-interactive context silhouette, real position/scale ----
+// Explains at a glance why Alaska sits disconnected up in the corner (it's
+// not disconnected — Canada is just in between). Real geometry from the
+// world-level land dataset (already in the repo, no new download), same
+// true-position technique as AK/HI above. Deliberately NOT added to
+// `pieces` — it would otherwise surface as a guessable/clickable "state"
+// in every quiz/name-state/neighbor/identify/colorfill mode, none of which
+// should know it exists — a separate `contextLand` field (mirroring
+// levels/world.js's own `land` background field) keeps it invisible to
+// all of those while still renderable by js/overviewBoard.js.
+const WORLD_COUNTRIES_SRC = path.join(__dirname, 'data', 'world-countries-simplified.geojson');
+const worldCountries = JSON.parse(fs.readFileSync(WORLD_COUNTRIES_SRC, 'utf8'));
+const canadaFeature = worldCountries.features.find((f) => f.properties.NAME === 'Canada');
+const canadaAnchor = regionBBoxCenter(canadaFeature);
+const canadaPiece = buildTruePosition(canadaFeature, canadaAnchor.lon, canadaAnchor.lat);
+
+// ---- shift the whole canvas so nothing is negative ----
+// Alaska/Hawaii/Canada's true positions land well outside the mainland's
+// own (0,0)-anchored box (Canada and Alaska both go north/negative-y,
+// Hawaii goes far west/negative-x) — everything (mainland included) gets
+// translated by one shared constant so the final canvas starts at (0,0).
+// A pure translation, not a rescale, so it's low-risk to apply uniformly.
+// The other 6 build scripts that re-derive this same projection hardcode
+// this exact constant too (same "duplicate literal constants across
+// scripts" convention this file's old inset-box numbers already used) —
+// see this script's own console.error output when regenerating.
+function translateD(d, dx, dy) {
+  return d.replace(/(-?\d+\.?\d*),(-?\d+\.?\d*)/g, (_, x, y) => `${(parseFloat(x) + dx).toFixed(1)},${(parseFloat(y) + dy).toFixed(1)}`);
+}
+function translatePiece(p, dx, dy) {
+  p.d = translateD(p.d, dx, dy);
+  p.cx += dx;
+  p.cy += dy;
+  p.bbox = [p.bbox[0] + dx, p.bbox[1] + dy, p.bbox[2] + dx, p.bbox[3] + dy];
+  if (p.projection) {
+    p.projection.offsetX += dx;
+    p.projection.offsetY += dy;
+  }
+  return p;
+}
+
+let shiftMinX = Infinity, shiftMinY = Infinity, shiftMaxX = -Infinity, shiftMaxY = -Infinity;
+for (const p of [...pieces, canadaPiece]) {
+  if (p.bbox[0] < shiftMinX) shiftMinX = p.bbox[0];
+  if (p.bbox[1] < shiftMinY) shiftMinY = p.bbox[1];
+  if (p.bbox[2] > shiftMaxX) shiftMaxX = p.bbox[2];
+  if (p.bbox[3] > shiftMaxY) shiftMaxY = p.bbox[3];
+}
+const GLOBAL_SHIFT_X = -shiftMinX + MARGIN;
+const GLOBAL_SHIFT_Y = -shiftMinY + MARGIN;
+for (const p of pieces) translatePiece(p, GLOBAL_SHIFT_X, GLOBAL_SHIFT_Y);
+translatePiece(canadaPiece, GLOBAL_SHIFT_X, GLOBAL_SHIFT_Y);
+
+const CANVAS_W = shiftMaxX + GLOBAL_SHIFT_X + MARGIN;
+const CANVAS_H = shiftMaxY + GLOBAL_SHIFT_Y + MARGIN;
+
+console.error('TRUE_SCALE', TRUE_SCALE);
+console.error('GLOBAL_SHIFT_X', GLOBAL_SHIFT_X, 'GLOBAL_SHIFT_Y', GLOBAL_SHIFT_Y);
+console.error('AK anchor', akAnchor, 'HI anchor', hiAnchor, 'Canada anchor', canadaAnchor);
 
 // ---- adjacency (for the connect-spark effect): decimated min-distance test ----
 function decimate(ring, maxPoints) {
@@ -334,8 +413,10 @@ function esc(s) {
 let out = `// Auto-generated by scripts/build_usa_level.js from a public-domain\n`;
 out += `// US states GeoJSON (PublicaMundi/MappingAPI), projected with a standard\n`;
 out += `// Albers equal-area conic (the same family real US wall maps use) for\n`;
-out += `// the 48 contiguous states, plus independent small insets for Alaska and\n`;
-out += `// Hawaii (never shown at true relative scale/position on any US map).\n`;
+out += `// the 48 contiguous states, plus Alaska/Hawaii at their TRUE relative\n`;
+out += `// position and scale (own accurate local projection, anchored via the\n`;
+out += `// main Albers formula — see buildTruePosition's comment). contextLand\n`;
+out += `// (Canada) is background context only, not a piece.\n`;
 out += `// Regenerate: node scripts/build_usa_level.js\n`;
 out += `export default {\n`;
 out += `  id: 'usa',\n`;
@@ -345,15 +426,18 @@ out += `  canvas: { width: ${Math.round(CANVAS_W)}, height: ${Math.round(CANVAS_
 out += `  kmPerUnit: ${kmPerUnit.toFixed(6)}, // canvas units -> real-world km, for the on-map scale bar\n`;
 // Lets js/geoCoords.js's browser-side inverse (right-click "coordinates"
 // context menu) convert a canvas click back to lon/lat — the main Albers
-// conic covers the 48 contiguous states + DC; `insets` (below, attached
-// per-piece since AK/HI each carry their own independent projection —
-// see buildInset) covers Alaska/Hawaii's corner boxes separately, since
-// neither uses the main projection at all.
+// conic covers the 48 contiguous states + DC. minX/minY here are adjusted
+// by -GLOBAL_SHIFT/scale so albersInverse's `(x-marginPx)/scale+minX`
+// correctly un-does the global canvas shift applied below; marginPx stays
+// the plain MARGIN since that part of the shift is unrelated. Alaska/
+// Hawaii use their own per-piece `projection` (attached below, already
+// shifted) since neither is on the main Albers formula at all.
 out += `  projection: {\n`;
 out += `    type: 'albers',\n`;
-out += `    minX: ${minX}, minY: ${minY}, scale: ${scale}, marginPx: ${MARGIN},\n`;
+out += `    minX: ${minX - GLOBAL_SHIFT_X / scale}, minY: ${minY - GLOBAL_SHIFT_Y / scale}, scale: ${scale}, marginPx: ${MARGIN},\n`;
 out += `    phi1Deg: 29.5, phi2Deg: 45.5, phi0Deg: 23, lambda0Deg: -96,\n`;
 out += `  },\n`;
+out += `  contextLand: [{ d: '${canadaPiece.d}' }],\n`;
 out += `  pieces: [\n`;
 for (const p of pieces) {
   const projStr = p.projection

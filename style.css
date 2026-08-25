@@ -1384,6 +1384,35 @@ body {
 }
 .state-bg-path.state-bg-inset { stroke: rgba(var(--neon-pink-rgb), 0.25); }
 
+/* Canada — non-interactive context silhouette (js/overviewBoard.js,
+   levels/usa.js's `contextLand`, true position/scale — see
+   scripts/build_usa_level.js). Deliberately flat dark gray with no
+   distinct stroke — it should read as "background", never mistaken for a
+   clickable state (which all have the piece-grad gradient + a visible
+   border). It geographically overlaps part of the mainland's own bbox by
+   design (real southern-Canada/northern-US geography) — the mainland
+   pieces painting on top of it afterward is what makes that look right,
+   not a z-index bug. */
+.canada-bg-path {
+  fill: #2a2e33;
+  stroke: none;
+}
+
+/* Hawaii's true-position locator ring (js/overviewBoard.js) — at true
+   relative scale Hawaii is genuinely small and far from everything else
+   (see scripts/build_usa_level.js's own comment), easy to lose against a
+   lot of open ocean at the default zoomed-out view. Non-interactive,
+   always visible, doesn't pretend to be a clickable/answerable shape the
+   way a state piece does. */
+.hawaii-locator {
+  fill: none;
+  stroke: var(--neon-cyan);
+  stroke-width: 1.4;
+  stroke-dasharray: 6 5;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 /* ---------------- "Рельеф" terrain layer (Overview mode, USA) ---------------- */
 
 /* pointer-events:none is the whole reason this layer never needs any

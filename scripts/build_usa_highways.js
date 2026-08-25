@@ -86,9 +86,15 @@ for (const f of statesGeo.features) {
 const TARGET_W = 960;
 const scale = TARGET_W / (maxX - minX);
 const MARGIN = 3; // must match build_usa_level.js's own MARGIN exactly
+// Shifts the WHOLE canvas so Alaska/Canada/Hawaii (now at their true
+// position, not a corner inset) don't land negative — exact value from
+// build_usa_level.js's own console.error output; must match exactly or
+// highway lines drift off the (also-shifted) state borders.
+const GLOBAL_SHIFT_X = 839.9193530147361;
+const GLOBAL_SHIFT_Y = 715.4619231706608;
 function toCanvas([lon, lat]) {
   const [x, y] = albers([lon, lat]);
-  return [(x - minX) * scale + MARGIN, (y - minY) * scale + MARGIN];
+  return [(x - minX) * scale + MARGIN + GLOBAL_SHIFT_X, (y - minY) * scale + MARGIN + GLOBAL_SHIFT_Y];
 }
 
 // Great-circle distance (km) between two [lon,lat] points — TIGER's dbf

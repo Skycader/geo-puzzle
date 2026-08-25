@@ -112,45 +112,33 @@ for (const f of statesGeo.features) {
 }
 const TARGET_W = 960;
 const scale = TARGET_W / (maxX - minX);
-const TARGET_H = (maxY - minY) * scale;
 const MARGIN = 3;
+// Shifts the WHOLE canvas so Alaska (true position now, not a corner
+// inset) doesn't land negative — exact value from build_usa_level.js's
+// own console.error output; must match exactly or terrain regions drift
+// off the (also-shifted) Alaska state outline.
+const GLOBAL_SHIFT_X = 839.9193530147361;
+const GLOBAL_SHIFT_Y = 715.4619231706608;
 function toCanvas([x, y]) {
-  return [(x - minX) * scale + MARGIN, (y - minY) * scale + MARGIN];
+  return [(x - minX) * scale + MARGIN + GLOBAL_SHIFT_X, (y - minY) * scale + MARGIN + GLOBAL_SHIFT_Y];
 }
 function projectMainland(ring) {
   return ring.map((pt) => toCanvas(albers(pt)));
 }
 
-// ---- Re-derive Alaska's inset projection, identical to
-// scripts/build_usa_level.js's buildInset (called there with
-// targetW=230, targetH=150, offsetX=10, offsetY=TARGET_H+40) ----
-const INSET_Y = TARGET_H + 40;
-function deriveAlaskaInset(feature, targetW, targetH, offsetX, offsetY) {
-  let lonMin = Infinity, lonMax = -Infinity, latMin = Infinity, latMax = -Infinity;
-  forEachRing(feature.geometry, (ring) => {
-    for (const [lon, lat] of ring) {
-      const l = lon > 0 ? lon - 360 : lon; // unwrap Aleutians crossing the antimeridian
-      if (l < lonMin) lonMin = l;
-      if (l > lonMax) lonMax = l;
-      if (lat < latMin) latMin = lat;
-      if (lat > latMax) latMax = lat;
-    }
-  });
-  const midLat = (latMin + latMax) / 2;
-  const cosLat = Math.cos(deg2rad(midLat));
-  const w = (lonMax - lonMin) * cosLat;
-  const h = latMax - latMin;
-  const s = Math.min(targetW / w, targetH / h);
-  const padX = (targetW - w * s) / 2;
-  const padY = (targetH - h * s) / 2;
-  return { lonMin, latMax, cosLat, s, offsetX: offsetX + padX, offsetY: offsetY + padY };
-}
-const akInset = deriveAlaskaInset(alaskaFeature, 230, 150, 10, INSET_Y);
+// ---- Re-derive Alaska's true-position projection, identical to
+// scripts/build_usa_level.js's buildTruePosition ----
+const TRUE_SCALE = deg2rad(1) * scale;
+// Exact anchor from build_usa_level.js's own console.error output.
+const AK_ANCHOR_LON = -159.4456165;
+const AK_ANCHOR_LAT = 61.482186500000005;
+const akAnchorCosLat = Math.cos(deg2rad(AK_ANCHOR_LAT));
+const [akAnchorX, akAnchorY] = toCanvas(albers([AK_ANCHOR_LON, AK_ANCHOR_LAT]));
 function projectAlaska(ring) {
   return ring.map(([lon, lat]) => {
     const l = lon > 0 ? lon - 360 : lon;
-    const x = (l - akInset.lonMin) * akInset.cosLat * akInset.s + akInset.offsetX;
-    const y = (akInset.latMax - lat) * akInset.s + akInset.offsetY;
+    const x = (l - AK_ANCHOR_LON) * akAnchorCosLat * TRUE_SCALE + akAnchorX;
+    const y = (AK_ANCHOR_LAT - lat) * TRUE_SCALE + akAnchorY;
     return [x, y];
   });
 }

@@ -449,6 +449,19 @@ export class OverviewBoard {
       this.zonesLayer.appendChild(buildStateBackground(this.level.land, { pathClass: 'world-bg-path' }));
     }
 
+    // Canada — non-interactive geographic context only (USA level), real
+    // position/scale (see scripts/build_usa_level.js's own comment on why
+    // Alaska/Hawaii/Canada use this true-position technique). Painted
+    // FIRST, before the state pieces, since it geographically overlaps
+    // part of the mainland's own bbox (real geography — southern Canada
+    // is genuinely south of a lot of the northern US) — the opaque state
+    // fills painted after it simply cover the overlap, which is correct,
+    // not a glitch. Not a `pieces` entry (see levels/usa.js's own
+    // `contextLand` comment) so no other mode ever sees it.
+    if (this.level.contextLand) {
+      this.zonesLayer.appendChild(buildStateBackground(this.level.contextLand, { pathClass: 'canada-bg-path' }));
+    }
+
     for (const p of this.level.pieces) {
       const path = document.createElementNS(SVG_NS, 'path');
       path.setAttribute('d', p.d);
@@ -504,6 +517,28 @@ export class OverviewBoard {
         this.stateLabels.push({ el: label });
       });
       this.statesById.set(p.id, { data: p, pathEl: path, titleEl: title });
+    }
+
+    // Hawaii's true position (see scripts/build_usa_level.js) puts it far
+    // southwest of the mainland, at true scale — genuinely small and easy
+    // to lose against a lot of open ocean at the default zoomed-out view.
+    // A dashed locator ring (non-interactive, in pointsLayer so it always
+    // reads on top) fixes that without needing to actually enlarge Hawaii
+    // itself out of true scale.
+    if (this.level.id === 'usa') {
+      const hi = this.level.pieces.find((p) => p.id === 'HI');
+      if (hi) {
+        const [bx0, by0, bx1, by1] = hi.bbox;
+        const cx = (bx0 + bx1) / 2;
+        const cy = (by0 + by1) / 2;
+        const r = Math.hypot(bx1 - bx0, by1 - by0) / 2 + 14;
+        const locator = document.createElementNS(SVG_NS, 'circle');
+        locator.setAttribute('class', 'hawaii-locator');
+        locator.setAttribute('cx', cx.toFixed(1));
+        locator.setAttribute('cy', cy.toFixed(1));
+        locator.setAttribute('r', r.toFixed(1));
+        this.pointsLayer.appendChild(locator);
+      }
     }
 
     // Highways (USA only, see levels/usaHighways.js). The line itself is
