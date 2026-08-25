@@ -76,11 +76,16 @@ export const MODES = [
 ];
 
 // "Путешествие" — how the player answers: type the in-between states in
-// order, or drag their (unlabeled) shapes onto the real map. Shown only
-// for that mode, alongside JOURNEY_DIFFICULTIES below.
+// order, drag their (unlabeled) shapes onto the real map with a dashed
+// outline showing exactly where each one goes, or the same drag-assembly
+// with that outline turned off (js/puzzleBoard.js's hintsVisible:false —
+// same mechanism as plain "Собери карту"'s own hardest presets, just
+// applied to Journey's already-smaller piece subset). Shown only for that
+// mode, alongside JOURNEY_DIFFICULTIES below.
 export const JOURNEY_ANSWER_MODES = [
   { id: 'name', title: 'Назови штаты', desc: 'Впиши штаты между по порядку' },
   { id: 'puzzle', title: 'Собери пазл', desc: 'Перетащи штаты на карту' },
+  { id: 'puzzle-blind', title: 'Пазл вслепую', desc: 'Без контуров на карте' },
 ];
 
 // Chain length (states strictly between the 2 endpoints) — min/max are a

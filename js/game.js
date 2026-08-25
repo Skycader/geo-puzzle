@@ -1488,7 +1488,7 @@ export class Game {
     this.el.hudLevel.textContent = `${level.title} · Путешествие: ${startPiece.ru} → ${endPiece.ru}`;
     this.el.hudGroups.hidden = false;
 
-    if (this.journeyAnswerMode === 'puzzle') {
+    if (this.journeyAnswerMode === 'puzzle' || this.journeyAnswerMode === 'puzzle-blind') {
       const betweenIds = pick.chain.slice(1, -1);
       const subsetIds = new Set([pick.startId, pick.endId, ...betweenIds]);
       const syntheticLevel = { ...level, pieces: level.pieces.filter((p) => subsetIds.has(p.id)) };
@@ -1504,6 +1504,10 @@ export class Game {
         scale,
         toPlaceIds: new Set(betweenIds),
         labelsVisible: false,
+        // "Пазл вслепую" — same drag-assembly, no dashed true-position
+        // outline on the map (js/puzzleBoard.js's hintsVisible, same
+        // mechanism plain "Собери карту"'s hardest presets already use).
+        hintsVisible: this.journeyAnswerMode !== 'puzzle-blind',
         routeDots,
         onProgress: (p) => this._onPuzzleProgress(p),
         onWin: () => this._onFinish(),

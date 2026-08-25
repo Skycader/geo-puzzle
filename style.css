@@ -2190,6 +2190,21 @@ body {
   font-size: 12px;
 }
 
+/* Hawaii's named highways (js/overviewBoard.js's _buildHighwayLabel) —
+   plain text along the line, no shield badge. paint-order:stroke gives it
+   a readable dark outline against any land color instead of a background
+   box, same technique as .piece-label. */
+.highway-label-text {
+  fill: var(--magenta);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+  paint-order: stroke;
+  stroke: rgba(var(--ink-rgb), 0.85);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
 /* "Путешествие" (js/journeyNameBoard.js's .journey-route-layer,
    js/puzzleBoard.js's matching one) — a dot at every stop's true centroid,
    connected by a dashed line, in chain order. Deliberately NOT real

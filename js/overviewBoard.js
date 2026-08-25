@@ -525,15 +525,18 @@ export class OverviewBoard {
         path.setAttribute('class', 'highway-path');
         path.dataset.id = hw.id;
         const title = document.createElementNS(SVG_NS, 'title');
-        title.textContent = `I-${hw.number}`;
+        // Hawaii's routes (levels/usaHawaiiHighways.js) aren't part of the
+        // Interstate numbering scheme at all — no `number`, real name in
+        // `ru`/`name` instead — see the marker branch right below.
+        title.textContent = hw.number ? `I-${hw.number}` : hw.ru || hw.name;
         path.appendChild(title);
         this.zonesLayer.appendChild(path);
 
-        const shield = this._buildHighwayShield(hw.number);
-        shield.style.display = 'none';
-        this.pointsLayer.appendChild(shield);
+        const marker = hw.number ? this._buildHighwayShield(hw.number) : this._buildHighwayLabel(hw.ru || hw.name);
+        marker.style.display = 'none';
+        this.pointsLayer.appendChild(marker);
 
-        this.highwayEntries.push({ id: hw.id, number: hw.number, pathEl: path, shieldEl: shield, points: hw.points, lastPos: null });
+        this.highwayEntries.push({ id: hw.id, number: hw.number, pathEl: path, shieldEl: marker, points: hw.points, lastPos: null });
       }
     }
 
@@ -2041,6 +2044,27 @@ export class OverviewBoard {
     title.textContent = `I-${number}`;
     g.appendChild(bg);
     g.appendChild(text);
+    g.appendChild(title);
+    return g;
+  }
+
+  // Hawaii's real named highways (levels/usaHawaiiHighways.js) — a plain
+  // text label along the line instead of a numbered shield, since a real
+  // name like "Kūhiō Highway" has no short number to put in a badge and
+  // the shield iconography specifically evokes the Interstate system,
+  // which these routes aren't part of. Positioned/repositioned by the
+  // exact same _updateHighwayShields/_positionHighwayShield pan-follow
+  // logic as a shield — only the marker's own shape differs.
+  _buildHighwayLabel(text) {
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', 'highway-label');
+    const textEl = document.createElementNS(SVG_NS, 'text');
+    textEl.setAttribute('class', 'highway-label-text');
+    textEl.setAttribute('text-anchor', 'middle');
+    textEl.textContent = text;
+    const title = document.createElementNS(SVG_NS, 'title');
+    title.textContent = text;
+    g.appendChild(textEl);
     g.appendChild(title);
     return g;
   }

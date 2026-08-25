@@ -101,4 +101,12 @@ export default [
   { id: 'madison', name: 'Madison', ru: 'Мадисон', state: 'WI', capital: true, cx: 604.6, cy: 194.1, radiusKm: 8.3 },
   { id: 'milwaukee', name: 'Milwaukee', ru: 'Милуоки', state: 'WI', capital: false, cx: 629.7, cy: 192.9, radiusKm: 8.9 },
   { id: 'cheyenne', name: 'Cheyenne', ru: 'Шайенн', state: 'WY', capital: true, cx: 340.8, cy: 236, radiusKm: 5.48 },
+  { id: 'hilo', name: 'Hilo', ru: 'Хило', state: 'HI', capital: false, cx: 401.4, cy: 763.9, radiusKm: 6.64 },
+  { id: 'kailua_kona', name: 'Kailua-Kona', ru: 'Кайлуа-Кона', state: 'HI', capital: false, cx: 378.1, cy: 766.4, radiusKm: 3.37 },
+  { id: 'kahului', name: 'Kahului', ru: 'Кахулуи', state: 'HI', capital: false, cx: 365.9, cy: 732.1, radiusKm: 3.44 },
+  { id: 'kapaa', name: 'Kapaa', ru: 'Капаа', state: 'HI', capital: false, cx: 292.8, cy: 699.6, radiusKm: 2.87 },
+  { id: 'lihue', name: 'Lihue', ru: 'Лихуэ', state: 'HI', capital: false, cx: 291.5, cy: 702.2, radiusKm: 2.35 },
+  { id: 'kailua_oahu', name: 'Kailua', ru: 'Кайлуа', state: 'HI', capital: false, cx: 333.4, cy: 718, radiusKm: 2.54 },
+  { id: 'kaneohe', name: 'Kaneohe', ru: 'Канеохе', state: 'HI', capital: false, cx: 331.7, cy: 717.6, radiusKm: 2.31 },
+  { id: 'pearl_city', name: 'Pearl City', ru: 'Перл-Сити', state: 'HI', capital: false, cx: 327.3, cy: 718.2, radiusKm: 2.03 },
 ];

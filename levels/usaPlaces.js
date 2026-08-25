@@ -25,4 +25,5 @@ export default [
   { id: 'overlook_hotel', name: 'The Overlook Hotel', ru: 'Отель «Оверлук»', cx: 326.9, cy: 252.6, radiusKm: 2 },
   { id: 'bermuda_triangle', name: 'Bermuda Triangle', ru: 'Бермудский треугольник', cx: 1019.6, cy: 549.4, radiusKm: 2 },
   { id: 'las_vegas_strip', name: 'The Las Vegas Strip', ru: 'Лас-Вегас-Стрип', cx: 139.7, cy: 325, radiusKm: 2 },
+  { id: 'pando', name: 'Pando', ru: 'Пандо', cx: 211.6, cy: 280.9, radiusKm: 2 },
 ];

@@ -252,7 +252,12 @@ export class PuzzleBoard {
 
     const wrap = document.createElement('div');
     wrap.className = 'piece';
-    wrap.title = `${data.ru} (${data.name})`;
+    // Only when labels are on — a native title attribute is a hover
+    // tooltip, same information leak as the on-shape text label itself
+    // (see hard/hardcore presets' labels:false, and Journey mode's
+    // always-labelsVisible:false), so it must follow the same visibility
+    // rule rather than always giving the name away on hover regardless.
+    if (this.labelsVisible) wrap.title = `${data.ru} (${data.name})`;
     wrap.dataset.id = data.id;
 
     const svg = document.createElementNS(SVG_NS, 'svg');
@@ -400,9 +405,13 @@ export class PuzzleBoard {
     path.setAttribute('d', data.d);
     path.setAttribute('class', 'piece-shape placed');
     path.setAttribute('fill', 'url(#piece-grad)');
-    const title = document.createElementNS(SVG_NS, 'title');
-    title.textContent = `${data.ru} (${data.name})`;
-    path.appendChild(title);
+    // Only when labels are on — same hover-tooltip leak as the tray
+    // piece's title attribute above (see that comment).
+    if (this.labelsVisible) {
+      const title = document.createElementNS(SVG_NS, 'title');
+      title.textContent = `${data.ru} (${data.name})`;
+      path.appendChild(title);
+    }
     g.appendChild(path);
 
     const effScale = this.scale * (this.zoomCtl?.getZoom() ?? 1);
@@ -627,6 +636,24 @@ export class PuzzleBoard {
   setLabelsVisible(visible) {
     this.labelsVisible = visible;
     for (const label of this.allLabelEls) label.style.opacity = visible ? '' : '0';
+    // Native hover tooltips (tray div's title attribute, workspace path's
+    // <title>) leak the same name a visible on-shape label would — must
+    // follow this toggle live too, not just at build time (see
+    // _createTrayPiece/_createWorkspacePiece's own comments).
+    for (const [id, wrap] of this.trayWraps) {
+      if (visible) wrap.title = `${this.byId.get(id).ru} (${this.byId.get(id).name})`;
+      else wrap.removeAttribute('title');
+    }
+    for (const [id, { path }] of this.pieceEls) {
+      const existing = path.querySelector('title');
+      if (visible && !existing) {
+        const title = document.createElementNS(SVG_NS, 'title');
+        title.textContent = `${this.byId.get(id).ru} (${this.byId.get(id).name})`;
+        path.appendChild(title);
+      } else if (!visible && existing) {
+        existing.remove();
+      }
+    }
   }
 
   destroy() {

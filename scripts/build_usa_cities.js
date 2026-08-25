@@ -201,6 +201,21 @@ const CITIES = [
   ['madison', 'Madison', 'Мадисон', 'WI', 43.07, -89.40, true],
   ['milwaukee', 'Milwaukee', 'Милуоки', 'WI', 43.04, -87.91, false],
   ['cheyenne', 'Cheyenne', 'Шайенн', 'WY', 41.14, -104.82, true],
+  // Hawaii — beyond the capital (Honolulu, already above), one real town
+  // per major island for actual coverage: Hilo/Kailua-Kona (Hawaii
+  // island), Kahului (Maui), Kapaa/Lihue (Kauai — Kapaa sits right on
+  // Kuhio Highway, see scripts/build_hawaii_highways.js), Kailua/Kaneohe/
+  // Pearl City (windward/central Oahu). Coordinates + land area (for
+  // RADIUS_KM below) verified against Census Bureau CDP profiles, same
+  // sourcing standard as RADIUS_KM's own comment.
+  ['hilo', 'Hilo', 'Хило', 'HI', 19.7297, -155.0900, false, 'HI'],
+  ['kailua_kona', 'Kailua-Kona', 'Кайлуа-Кона', 'HI', 19.6400, -155.9969, false, 'HI'],
+  ['kahului', 'Kahului', 'Кахулуи', 'HI', 20.8893, -156.4729, false, 'HI'],
+  ['kapaa', 'Kapaa', 'Капаа', 'HI', 22.0752, -159.3190, false, 'HI'],
+  ['lihue', 'Lihue', 'Лихуэ', 'HI', 21.9811, -159.3711, false, 'HI'],
+  ['kailua_oahu', 'Kailua', 'Кайлуа', 'HI', 21.4022, -157.7394, false, 'HI'],
+  ['kaneohe', 'Kaneohe', 'Канеохе', 'HI', 21.4180, -157.8036, false, 'HI'],
+  ['pearl_city', 'Pearl City', 'Перл-Сити', 'HI', 21.3972, -157.9752, false, 'HI'],
 ];
 
 // Effective radius (km) of each city's land area — sqrt(land_km2 / pi), so
@@ -240,6 +255,8 @@ const RADIUS_KM = {
   salt_lake_city: 9.56, montpelier: 2.88, richmond: 7.03, virginia_beach: 14.2,
   langley: 4.52, olympia: 3.88, seattle: 8.32, charleston_wv: 5.09,
   madison: 8.3, milwaukee: 8.9, cheyenne: 5.48,
+  hilo: 6.64, kailua_kona: 3.37, kahului: 3.44, kapaa: 2.87, lihue: 2.35,
+  kailua_oahu: 2.54, kaneohe: 2.31, pearl_city: 2.03,
 };
 
 const cities = CITIES.map(([id, name, ru, state, lat, lon, capital, region]) => {

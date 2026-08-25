@@ -132,6 +132,9 @@ const PLACES = [
   ['overlook_hotel', 'The Overlook Hotel', 'Отель «Оверлук»', 40.3775, -105.5217],
   ['bermuda_triangle', 'Bermuda Triangle', 'Бермудский треугольник', 25.0, -71.0],
   ['las_vegas_strip', 'The Las Vegas Strip', 'Лас-Вегас-Стрип', 36.1147, -115.1728],
+  // Wikipedia (verified via the MediaWiki API, not just the article prose):
+  // 38.525°N 111.75°W, Fishlake National Forest, Sevier County, UT.
+  ['pando', 'Pando', 'Пандо', 38.525, -111.75],
 ];
 
 // No Census land-area data applies to a bridge or a hotel — a small
