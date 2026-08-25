@@ -459,6 +459,16 @@ export class OverviewBoard {
     this.pointsLayer = document.createElementNS(SVG_NS, 'g');
     this.pointsLayer.setAttribute('class', 'points-layer');
     this.svg.appendChild(this.pointsLayer);
+    // Above BOTH zones and points — a highway is a route you'd actually
+    // follow on the real map, so it should never disappear under a city
+    // dot/label or a state fill/terrain tile it happens to cross. Holds
+    // both the line and its shield/label marker (see the highways loop
+    // below) so the marker still visually sits on the line, just now with
+    // the whole pair above everything else instead of split across zones/
+    // points like before.
+    this.highwaysLayer = document.createElementNS(SVG_NS, 'g');
+    this.highwaysLayer.setAttribute('class', 'highways-layer');
+    this.svg.appendChild(this.highwaysLayer);
 
     // World level's `pieces` are seas/oceans — unlike states, they don't
     // tile the whole map, so without land context Overview mode showed
@@ -580,16 +590,15 @@ export class OverviewBoard {
       }
     }
 
-    // Highways (USA only, see levels/usaHighways.js). The line itself is
-    // painted after the state fills so it reads on top of them, in
-    // zonesLayer (not clickable, not virtualized as a whole: only ~59 of
-    // them, always in the DOM). The shield badge is a SEPARATE element in
-    // pointsLayer — it needs to render above everything, including the
-    // line itself and state fills, to stay legible — and unlike the line,
-    // its position is NOT fixed: _updateHighwayShields repositions it
-    // (and shows/hides it) on every pan/zoom settle, picking whichever of
-    // the highway's own sampled points is currently closest to the middle
-    // of the visible area. Not part of the states loop above since it's a
+    // Highways (USA only, see levels/usaHighways.js). Both the line and
+    // its shield/label marker live in highwaysLayer (see its own comment
+    // above) — above every state fill, terrain tile, and city dot/label,
+    // not just the state fills like before. Not clickable, not virtualized
+    // as a whole: only ~59 of them, always in the DOM. The marker's
+    // position is NOT fixed: _updateHighwayShields repositions it (and
+    // shows/hides it) on every pan/zoom settle, picking whichever of the
+    // highway's own sampled points is currently closest to the middle of
+    // the visible area. Not part of the states loop above since it's a
     // wholly separate data source with its own id/number scheme, not a
     // per-state piece.
     if (this.level.highways) {
@@ -604,11 +613,11 @@ export class OverviewBoard {
         // `ru`/`name` instead — see the marker branch right below.
         title.textContent = hw.number ? `I-${hw.number}` : hw.ru || hw.name;
         path.appendChild(title);
-        this.zonesLayer.appendChild(path);
+        this.highwaysLayer.appendChild(path);
 
         const marker = hw.number ? this._buildHighwayShield(hw.number) : this._buildHighwayLabel(hw.ru || hw.name);
         marker.style.display = 'none';
-        this.pointsLayer.appendChild(marker);
+        this.highwaysLayer.appendChild(marker);
 
         this.highwayEntries.push({ id: hw.id, number: hw.number, pathEl: path, shieldEl: marker, points: hw.points, lastPos: null });
       }

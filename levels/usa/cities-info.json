@@ -463,5 +463,95 @@
     "extract": "Лаббок — город на северо-западе штата Техас, в регионе Льяно-Эстакадо. Административный центр округа Лаббок и 11-й по величине город Техаса; здесь расположен Техасский технический университет, а также родился пионер рок-н-ролла Бадди Холли.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Lubbock_Skyline.jpg/330px-Lubbock_Skyline.jpg",
     "wikiUrl": "https://ru.wikipedia.org/wiki/Лаббок_(Техас)"
+  },
+  "hilo": {
+    "extract": "Хи́ло — прибрежный город в штате Гавайи, второй по численности населения после Гонолулу, крупнейший на острове Гавайи. Административный центр округа Гавайи. Находится на берегу бухты Хило. По переписи 2000 года численность населения — 40 759 жителей. Находится недалеко от двух щитовых вулканов: действующего Мауна-Лоа и спящего Мауна-Кеа. В городе находится филиал Гавайского университета. Город обслуживается Международным аэропортом Хило.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Hilo_Montage.png/330px-Hilo_Montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Хило"
+  },
+  "kailua_kona": {
+    "extract": "Каилуа-Кона, или Кона, — туристический город в округе Гавайи, штат Гавайи, США, на западном побережье острова Гавайи.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Ali%27i_Drive%2C_Kailua-Kona%2C_Hawaii_%284548895483%29.jpg/330px-Ali%27i_Drive%2C_Kailua-Kona%2C_Hawaii_%284548895483%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Каилуа-Кона"
+  },
+  "kahului": {
+    "extract": "Кахулуи — город на острове Мауи Гавайского архипелага, третий по числу населения в штате Гавайи. Здесь расположен главный аэропорт острова, обслуживающий большую часть туристического потока Мауи.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/AirViewKahului.jpg/330px-AirViewKahului.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Кахулуи"
+  },
+  "kapaa": {
+    "extract": "Капаа — статистически обособленная местность в округе Кауаи, штат Гавайи, США, на восточном побережье острова Кауаи.",
+    "image": "assets/kapa'a.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Капаа"
+  },
+  "lihue": {
+    "extract": "Лиху́э — административный центр округа Кауаи, штат Гавайи, США, вторая по величине статистически обособленная местность на острове Кауаи.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Lihue-hawaii-aerial.jpg/330px-Lihue-hawaii-aerial.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Лихуэ"
+  },
+  "kailua_oahu": {
+    "extract": "Кайлуа — статистически обособленная местность в округе Гонолулу, штат Гавайи. Расположена в округе Коолаупоко на острове Оаху, на наветренном побережье у бухты Кайлуа, примерно в 19 км к северо-востоку от Гонолулу через перевал Нууану-Пали. Отдельной статьи о городе в русской Википедии нет — данные из английской.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Kailua_Aerial.jpg/330px-Kailua_Aerial.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Kailua,_Hawaii"
+  },
+  "kaneohe": {
+    "extract": "Канеохе — статистически обособленная местность в составе города и округа Гонолулу, в округе Коолаупоко на острове Оаху. На гавайском языке «kāneʻohe» означает «бамбуковый мужчина» — по легенде, местная жительница сравнила жестокость мужа с острым краем срезанного бамбука, отсюда и название местности. Отдельной статьи о городе в русской Википедии нет — данные из английской.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Honolulu_County_Hawaii_Incorporated_and_Unincorporated_areas_Kaneohe_Highlighted.svg/330px-Honolulu_County_Hawaii_Incorporated_and_Unincorporated_areas_Kaneohe_Highlighted.svg.png",
+    "wikiUrl": "https://en.wikipedia.org/wiki/K%C4%81ne%CA%BBohe,_Hawaii"
+  },
+  "pearl_city": {
+    "extract": "Перл-Сити — город на острове Оаху Гавайского архипелага, США, на северном берегу Пёрл-Харбора.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Honolulu_County_Hawaii_Incorporated_and_Unincorporated_areas_Pearl_City_Highlighted.svg/langru-330px-Honolulu_County_Hawaii_Incorporated_and_Unincorporated_areas_Pearl_City_Highlighted.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Перл-Сити"
+  },
+  "hanalei": {
+    "extract": "Ханалеи — статистически обособленная местность в округе Кауаи, штат Гавайи, на живописном северном берегу острова Кауаи.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Hanalei%2C_Kauai_HI.JPG/330px-Hanalei%2C_Kauai_HI.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Ханалеи_(поселение)"
+  },
+  "lanai_city": {
+    "extract": "Лана-Сити — статистически обособленная местность на острове Ланаи, округ Мауи. Единственный город острова и его коммерческий центр: вокруг центральной площади с парком Доул расположены большинство магазинов и ресторанов острова, а также его единственная больница. Отдельной статьи о городе в русской Википедии нет — данные из английской.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Starr_070405-6775_Araucaria_columnaris.jpg/330px-Starr_070405-6775_Araucaria_columnaris.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/L%C4%81na%CA%BBi_City,_Hawaii"
+  },
+  "kaunakakai": {
+    "extract": "Каунакакаи — статистически обособленная местность и крупнейший город на острове Молокаи, округ Мауи. Городок-побратим шотландского Эмбо; стал широко известен благодаря песне 1930 года «The Cockeyed Mayor of Kaunakakai», основанной на местной традиции выбирать почётного мэра.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Downtown_Kaunakakai.jpg/330px-Downtown_Kaunakakai.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Каунакакаи"
+  },
+  "wailuku": {
+    "extract": "Вайлуку — статистически обособленная местность в штате Гавайи, административный центр округа Мауи.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/WailukuTownShot.JPG/330px-WailukuTownShot.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Ваилуку_(округ_Мауи)"
+  },
+  "waipahu": {
+    "extract": "Вайпаху — бывший городок при плантации сахарного тростника, ныне статистически обособленная местность в округе Гонолулу, остров Оаху.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Rainbow_over_Waipahu_%2758_Farrington_Hwy.jpg/330px-Rainbow_over_Waipahu_%2758_Farrington_Hwy.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Ваипаху"
+  },
+  "mililani_town": {
+    "extract": "Милилани, или Милилани-Таун, — город недалеко от центра острова Оаху в округе Гонолулу. По переписи 2020 года население самого Милилани составило 28 121 человек, а соседней статистически обособленной местности Милилани-Маука — ещё 21 075.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/PINEAPPLE_FIELDS_IN_MILILANI_TOWN._PINEAPPLE_GROWERS_HAVE_BEEN_DEVELOPING_%22SURPLUS_LAND%22_SINCE_1958._OF_A_PROPOSED..._-_NARA_-_553697.jpg/330px-PINEAPPLE_FIELDS_IN_MILILANI_TOWN._PINEAPPLE_GROWERS_HAVE_BEEN_DEVELOPING_%22SURPLUS_LAND%22_SINCE_1958._OF_A_PROPOSED..._-_NARA_-_553697.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Милилани"
+  },
+  "ewa_beach": {
+    "extract": "Эва-Бич — статистически обособленная местность в округе Эва на подветренном берегу Оаху, у бухты Мамала. По переписи 2020 года население составило 16 415 человек. Отдельной статьи о городе в русской Википедии нет — данные из английской.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Ewa_Aerial.jpg/330px-Ewa_Aerial.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/%CA%BBEwa_Beach,_Hawaii"
+  },
+  "waianae": {
+    "extract": "Ваиане — статистически обособленная местность в городе и округе Гонолулу, на западном (подветренном) берегу Оаху. По переписи 2020 года население составило 13 614 человек. Отдельной статьи о городе в русской Википедии нет — данные из английской.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Waianae_High_School_%285888481033%29.jpg/330px-Waianae_High_School_%285888481033%29.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Wai%CA%BBanae,_Hawaii"
+  },
+  "wahiawa": {
+    "extract": "Вахиава — статистически обособленная местность в округе Гонолулу, на плато в центральной части острова Оаху, между двумя вулканическими горными хребтами. На гавайском языке «wahi a wā» означает «место людей ва». По переписи 2020 года население составило 18 658 человек. Отдельной статьи о городе в русской Википедии нет — данные из английской.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Rainbow_in_Wahiawa%2C_Hawaii.jpg/330px-Rainbow_in_Wahiawa%2C_Hawaii.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Wahiaw%C4%81,_Hawaii"
+  },
+  "waimea": {
+    "extract": "Ваймеа — городок в глубине острова Гавайи (Большой остров), центр скотоводства и культуры паниоло (гавайских ковбоев). Название означает «красноватая вода». Поскольку в штате уже есть почтовое отделение Ваймеа на острове Кауаи, официальное почтовое название этого города — Камуэла, хотя местные жители и дорожные знаки его так не называют. Отдельной статьи о городе в русской Википедии нет — данные из английской.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Waimea_pastures.JPG/330px-Waimea_pastures.JPG",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Waimea,_Hawai%CA%BBi_County,_Hawaii"
   }
 }

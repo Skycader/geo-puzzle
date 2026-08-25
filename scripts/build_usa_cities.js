@@ -210,6 +210,26 @@ const CITIES = [
   ['kailua_oahu', 'Kailua', 'Кайлуа', 'HI', 21.4022, -157.7394, false, 'HI'],
   ['kaneohe', 'Kaneohe', 'Канеохе', 'HI', 21.4180, -157.8036, false, 'HI'],
   ['pearl_city', 'Pearl City', 'Перл-Сити', 'HI', 21.3972, -157.9752, false, 'HI'],
+  // 10 more, requested by name (Hanalei) then filled out for full-island
+  // coverage — the only town on Lanai and the only sizeable one on
+  // Molokai (both previously had zero cities), Wailuku (Maui's own county
+  // seat), Waimea/Kamuela (the Big Island's inland town, not the
+  // same-named Kauai CDP a few miles from Waimea Canyon — picked the
+  // right one of the Gazetteer's two "Waimea CDP" entries by matching its
+  // lat/lon against the real Big Island town), and Oahu's next-biggest
+  // population centers after the ones already above. Coordinates + land
+  // area sourced the same way as RADIUS_KM's own comment (2024 Gazetteer,
+  // matched by CDP name).
+  ['hanalei', 'Hanalei', 'Ханалеи', 'HI', 22.203847, -159.497738, false, 'HI'],
+  ['lanai_city', 'Lanai City', 'Лана-Сити', 'HI', 20.827932, -156.914703, false, 'HI'],
+  ['kaunakakai', 'Kaunakakai', 'Каунакакай', 'HI', 21.094154, -157.000949, false, 'HI'],
+  ['wailuku', 'Wailuku', 'Вайлуку', 'HI', 20.885467, -156.503627, false, 'HI'],
+  ['waipahu', 'Waipahu', 'Вайпаху', 'HI', 21.384938, -158.010993, false, 'HI'],
+  ['mililani_town', 'Mililani Town', 'Милилани-Таун', 'HI', 21.446506, -158.014644, false, 'HI'],
+  ['ewa_beach', 'Ewa Beach', 'Эва-Бич', 'HI', 21.31274, -158.006114, false, 'HI'],
+  ['waianae', 'Waianae', 'Ваиане', 'HI', 21.451816, -158.182043, false, 'HI'],
+  ['wahiawa', 'Wahiawa', 'Вахиава', 'HI', 21.500665, -158.017964, false, 'HI'],
+  ['waimea', 'Waimea', 'Ваймеа', 'HI', 20.010327, -155.625491, false, 'HI'],
 ];
 
 // Effective radius (km) of each city's land area — sqrt(land_km2 / pi), so
@@ -251,6 +271,9 @@ const RADIUS_KM = {
   madison: 8.3, milwaukee: 8.9, cheyenne: 5.48,
   hilo: 6.64, kailua_kona: 3.37, kahului: 3.44, kapaa: 2.87, lihue: 2.35,
   kailua_oahu: 2.54, kaneohe: 2.31, pearl_city: 2.03,
+  hanalei: 0.75, lanai_city: 2.36, kaunakakai: 3.25, wailuku: 2.08,
+  waipahu: 1.49, mililani_town: 1.82, ewa_beach: 0.99, waianae: 2.11,
+  wahiawa: 1.37, waimea: 5.70,
 };
 
 const cities = CITIES.map(([id, name, ru, state, lat, lon, capital, region]) => {

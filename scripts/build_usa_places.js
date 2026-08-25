@@ -126,6 +126,26 @@ const PLACES = [
   // Wikipedia (verified via the MediaWiki API, not just the article prose):
   // 38.525°N 111.75°W, Fishlake National Forest, Sevier County, UT.
   ['pando', 'Pando', 'Пандо', 38.525, -111.75],
+  // 10 more Hawaii landmarks (all real, coordinates verified via the
+  // MediaWiki API's own `coordinates` field, not guessed from prose) — see
+  // levels/usa/places-info.json for the matching info-popup entries. Three
+  // of these (Nā Pali, Hawaiʻi Volcanoes NP, Kalaupapa) have no Russian
+  // Wikipedia article at all (checked via langlinks, not just a failed
+  // search) — same "real English source, honestly linked" call as
+  // usaHawaiiHighways.js's Kaneohe/Kailua city-info entries.
+  ['na_pali_coast', 'Nā Pali Coast', 'На-Пали', 22.17552, -159.64362, 'HI'],
+  ['pearl_harbor', 'USS Arizona Memorial', 'Мемориал USS Arizona (Пёрл-Харбор)', 21.365, -157.95, 'HI'],
+  ['diamond_head', 'Diamond Head', 'Даймонд-Хед', 21.25972, -157.81175, 'HI'],
+  ['haleakala', 'Haleakalā', 'Халеакала', 20.71333, -156.2575, 'HI'],
+  ['hawaii_volcanoes_np', 'Hawaiʻi Volcanoes National Park', 'Нацпарк «Вулканы Гавайев»', 19.38333, -155.2, 'HI'],
+  ['waimea_canyon', 'Waimea Canyon', 'Каньон Ваймеа', 22.05611, -159.66528, 'HI'],
+  ['kalaupapa', 'Kalaupapa', 'Калаупапа', 21.18944, -156.98167, 'HI'],
+  // Anchored at the town of Hāna itself (the highway's real coordinates
+  // API summary has no single `coordinates` point — it's a 103km road) —
+  // the actual destination everyone means by "the road to Hana".
+  ['hana_highway', 'Road to Hāna', 'Дорога в Хану', 20.77, -155.99417, 'HI'],
+  ['iolani_palace', 'ʻIolani Palace', 'Дворец Иолани', 21.306622, -157.858958, 'HI'],
+  ['puuhonua_o_honaunau', 'Puʻuhonua o Hōnaunau', 'Пуухонуа-о-Хонаунау', 19.4219, -155.91, 'HI'],
 ];
 
 // No Census land-area data applies to a bridge or a hotel — a small

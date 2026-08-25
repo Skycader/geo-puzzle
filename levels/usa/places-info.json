@@ -108,5 +108,55 @@
     "extract": "Пандо — колония дрожащих осин (Populus tremuloides) в национальном лесу Фишлейк, штат Юта, представляющая собой единый организм: около 47 000 стволов, генетически идентичных и связанных общей корневой системой. Занимает примерно 43 гектара и весит около 6000 тонн, что делает его одним из самых массивных живых организмов на Земле. Возраст оспаривается: по последним оценкам корневая система насчитывает от 9 до 16 тысяч лет, хотя более ранняя оценка в 80 000 лет впоследствии была отвергнута; сами стволы живут по 100–130 лет и постоянно обновляются через корневые побеги.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Pando_Land_Mass_Outline.jpg/330px-Pando_Land_Mass_Outline.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Pando_(tree)"
+  },
+  "na_pali_coast": {
+    "extract": "На-Пали — государственный парк на северо-западном побережье острова Кауаи, охватывающий 16 миль (26 км) необитаемого скалистого берега. Отвесные зелёные скалы поднимаются здесь над Тихим океаном на высоту до 1200 метров. Парк создан для охраны долины Калалау. Отдельной статьи о нём в русской Википедии нет — данные из английской.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/NaPali_overlook_Kalalau_Valley.jpg/330px-NaPali_overlook_Kalalau_Valley.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/N%C4%81_Pali_Coast_State_Park"
+  },
+  "pearl_harbor": {
+    "extract": "Мемориал линкора «Аризона» расположен в Пёрл-Харборе на месте гибели линкора. Представляет собой бетонную конструкцию, установленную над затонувшим корпусом корабля, не касаясь его. Мемориал построен в честь погибших 1177 человек на линкоре «Аризона» во время нападения японских сил на Пёрл-Харбор 7 декабря 1941 года.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/USS_Arizona_Memorial_%28aerial_view%29.jpg/330px-USS_Arizona_Memorial_%28aerial_view%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Мемориал_линкора_«Аризона»"
+  },
+  "diamond_head": {
+    "extract": "Дайамонд-Хед — вулканический конус, образовавшийся в результате извержения вулкана Коолау. Расположен на острове Оаху, к востоку от Вайкики, района города Гонолулу. Кратеру приблизительно 200 тысяч лет. На языке коренных гавайцев гора-кратер известна как Лииахи. Своё нынешнее название получил в XIX веке, когда британские моряки приняли найденные на дне кратера кристаллы кальцита за алмазы.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Diamond_Head_Hawaii_From_Round_Top_Rd.JPG/330px-Diamond_Head_Hawaii_From_Round_Top_Rd.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Дайамонд-Хед"
+  },
+  "haleakala": {
+    "extract": "Халеакала́ — спящий щитовой вулкан, сформировавший бо́льшую часть острова Мауи. На вулкане расположен Национальный парк Халеакала — гора знаменита восходами солнца, которые открываются с её вершины над облаками на высоте свыше 3000 метров.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Haleakala_crater.jpg/330px-Haleakala_crater.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Халеакала_(вулкан)"
+  },
+  "hawaii_volcanoes_np": {
+    "extract": "Национальный парк «Вулканы Гавайев» на острове Гавайи охватывает два действующих вулкана — Килауэа, один из самых активных вулканов мира, и Мауна-Лоа, крупнейший щитовой вулкан планеты. Парк даёт учёным возможность изучать вулканизм и формирование Гавайских островов, а для гавайской культуры извержения издавна считаются священными. Отдельной статьи о парке в русской Википедии нет — данные из английской.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/P%C4%81hoehoe_and_Aa_flows_at_Hawaii.jpg/330px-P%C4%81hoehoe_and_Aa_flows_at_Hawaii.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Hawai%CA%BBi_Volcanoes_National_Park"
+  },
+  "waimea_canyon": {
+    "extract": "Каньон Ваймеа — крупнейший каньон в Океании, расположен на острове Кауаи. Его нередко называют «Гранд-Каньоном Тихого океана». На дне протекает одноимённая река, впадающая в одноимённый залив, на берегу которого в 1817 году была построена русская крепость Елизавета.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Book-Hawaii-Vtorov-Kauai-020.jpg/330px-Book-Hawaii-Vtorov-Kauai-020.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Каньон_Ваимеа"
+  },
+  "kalaupapa": {
+    "extract": "Калаупапа — небольшое поселение на полуострове на северном берегу острова Молокаи, у подножия одних из самых высоких морских скал в мире. С 1866 по 1969 год здесь принудительно селили людей, больных проказой — остров был выбран из-за естественной изоляции скалами и океаном. Сегодня это национальный исторический парк. Отдельной статьи о нём в русской Википедии нет — данные из английской.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/KalaupapaVillageCliffs.jpg/330px-KalaupapaVillageCliffs.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Kalaupapa,_Hawaii"
+  },
+  "hana_highway": {
+    "extract": "Дорога в Хану — участок гавайских шоссе 36 и 360 длиной около 103 км, соединяющий Кахулуи с городком Хана на восточном Мауи. Несмотря на то, что расстояние по прямой невелико, поездка занимает около 2,5 часов: шоссе петляет через тропический лес, пересекая около 620 поворотов и 59 мостов, многие из которых построены ещё в 1910 году. Отдельной статьи о шоссе в русской Википедии нет — данные из английской.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Hana_Highway_Millennium_Trail_Monument_and_Hana_Highway_Zero-Mile_Marker.jpg/330px-Hana_Highway_Millennium_Trail_Monument_and_Hana_Highway_Zero-Mile_Marker.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/H%C4%81na_Highway"
+  },
+  "iolani_palace": {
+    "extract": "Дворец Иолани — бывшая резиденция гавайских монархов Калакауа и Лилиуокалани в центре Гонолулу, единственный королевский дворец на территории США. С 1978 года открыт для туристов как музей, а до этого на протяжении 80 лет использовался для размещения гавайского правительства.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Iolani_Palace_%281328%29.JPG/330px-Iolani_Palace_%281328%29.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Дворец_Иолани"
+  },
+  "puuhonua_o_honaunau": {
+    "extract": "Национальный исторический парк Пуухонуа-о-Хонаунау — гавайский исторический парк на западном побережье острова Гавайи, где вплоть до начала XIX века гавайцы совершали ритуальные церемонии и могли получить убежище от преследования за нарушение местных законов.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Book-Hawaii-Vtorov-242.jpg/330px-Book-Hawaii-Vtorov-242.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/Пуухонуа-о-Хонаунау"
   }
 }
