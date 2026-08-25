@@ -507,24 +507,18 @@ export class OverviewBoard {
       // Hawaii only: swap the static "Гавайи (Hawaii)" tooltip for
       // "Гавайи — <island's town/name>" based on exactly which of the 8
       // real island rings the cursor is over (see HI_ISLAND_HOVER_LABELS's
-      // own comment). Native <title> tooltips don't refresh mid-hover, but
-      // updating it on pointermove means it's already right by the time
-      // the browser's own hover-delay timer fires.
+      // own comment and _hiIslandLabelAt). Native <title> tooltips don't
+      // refresh mid-hover, but updating it on pointermove means it's
+      // already right by the time the browser's own hover-delay timer
+      // fires. This only covers the native-tooltip path — when "Рельеф" is
+      // on, this <title> is detached (see _setStateNativeTooltipsEnabled)
+      // and _onMapMouseMove's custom terrain-hover-tip takes over instead,
+      // which calls the same _hiIslandLabelAt helper itself.
       if (p.id === 'HI') {
         path.addEventListener('pointermove', (e) => {
           const native = this._clientToNative(e.clientX, e.clientY);
-          const coords = nativeToLonLat(this.level, native.x, native.y);
-          if (!coords) return;
-          let best = null;
-          let bestD = Infinity;
-          for (const isl of HI_ISLAND_HOVER_LABELS) {
-            const d = (coords.lon - isl.lon) ** 2 + (coords.lat - isl.lat) ** 2;
-            if (d < bestD) {
-              bestD = d;
-              best = isl;
-            }
-          }
-          if (best) title.textContent = `${p.ru} — ${best.label}`;
+          const label = this._hiIslandLabelAt(native);
+          if (label) title.textContent = `${p.ru} — ${label}`;
         });
       }
 
@@ -2005,6 +1999,28 @@ export class OverviewBoard {
   // there, not silently report a hidden category. Null when terrain isn't
   // built/visible yet, or the point isn't inside any category (Hawaii, or
   // any other gap in the source dataset).
+  // Nearest of HI_ISLAND_HOVER_LABELS's 8 real island centers to a given
+  // native-coordinate point, or null off the projection's known area
+  // entirely. Shared by the HI piece's native <title> (pointermove, above)
+  // and _onMapMouseMove's custom terrain-hover-tip — Hawaii has no terrain
+  // category data at all (see _terrainCategoryAt's own comment on gaps in
+  // the source dataset), so without this its terrain tooltip falls back to
+  // the bare state name same as before this existed.
+  _hiIslandLabelAt(nativePt) {
+    const coords = nativeToLonLat(this.level, nativePt.x, nativePt.y);
+    if (!coords) return null;
+    let best = null;
+    let bestD = Infinity;
+    for (const isl of HI_ISLAND_HOVER_LABELS) {
+      const d = (coords.lon - isl.lon) ** 2 + (coords.lat - isl.lat) ** 2;
+      if (d < bestD) {
+        bestD = d;
+        best = isl;
+      }
+    }
+    return best?.label ?? null;
+  }
+
   _terrainCategoryAt(nativePt) {
     if (this.terrainMode === 'off' || !this.terrainRegionsByCategory) return null;
     const svgPt = this.svg.createSVGPoint();
@@ -2032,7 +2048,12 @@ export class OverviewBoard {
     const nativePt = this._clientToNative(ev.clientX, ev.clientY);
     const category = this._terrainCategoryAt(nativePt);
     const stateName = state?.data.ru || id;
-    const text = category ? `${stateName} — ${this.terrainLabelsByCategory.get(category)}` : stateName;
+    const hiIsland = category ? null : id === 'HI' ? this._hiIslandLabelAt(nativePt) : null;
+    const text = category
+      ? `${stateName} — ${this.terrainLabelsByCategory.get(category)}`
+      : hiIsland
+        ? `${stateName} — ${hiIsland}`
+        : stateName;
     this._showTerrainHoverTip(ev.clientX, ev.clientY, text);
   }
 
