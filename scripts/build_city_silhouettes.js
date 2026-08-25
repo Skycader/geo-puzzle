@@ -71,7 +71,7 @@ const MARGIN = 3;
 // inset) doesn't land negative — exact value from build_usa_level.js's
 // own console.error output; must match exactly or a silhouette drifts off
 // its city's own cx/cy. See that script's own comment.
-const GLOBAL_SHIFT_X = 839.9193530147361;
+const GLOBAL_SHIFT_X = 856.7122654651434;
 const GLOBAL_SHIFT_Y = 715.4619231706608;
 function toCanvasMain([lon, lat]) {
   const [x, y] = albers([lon, lat]);

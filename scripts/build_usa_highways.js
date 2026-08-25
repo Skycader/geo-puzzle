@@ -90,7 +90,7 @@ const MARGIN = 3; // must match build_usa_level.js's own MARGIN exactly
 // position, not a corner inset) don't land negative — exact value from
 // build_usa_level.js's own console.error output; must match exactly or
 // highway lines drift off the (also-shifted) state borders.
-const GLOBAL_SHIFT_X = 839.9193530147361;
+const GLOBAL_SHIFT_X = 856.7122654651434;
 const GLOBAL_SHIFT_Y = 715.4619231706608;
 function toCanvas([lon, lat]) {
   const [x, y] = albers([lon, lat]);

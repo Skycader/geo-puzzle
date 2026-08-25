@@ -12,6 +12,24 @@
 const fs = require('fs');
 const path = require('path');
 
+// Hawaii's own feature inside us-states.geojson was upgraded in place from
+// PublicaMundi's crude 5-ring/~60-point outline (missing Lanai entirely,
+// and coarse enough to cut several real coastal highways/cities outside
+// it) to real Census TIGER/Line 2023 detail — deliberately *more* detailed
+// than every mainland state, since Hawaii's islands are tiny on this map
+// and deserve it. Source + exact steps (redo only if re-splicing):
+//   1. Download https://www2.census.gov/geo/tiger/TIGER2023/STATE/tl_2023_us_state.zip,
+//      filter to STATEFP "15", -proj wgs84 -o format=geojson (full TIGER
+//      detail kept, no simplification).
+//   2. Keep only the 8 rings whose lon > -161 (the main archipelago: Big
+//      Island, Maui, Oʻahu, Kauaʻi, Molokaʻi, Niʻihau, Lānaʻi, Kaʻula) —
+//      the other 9 rings are the remote Northwestern Hawaiian Islands
+//      (Nihoa, Necker, Kure, ...), hundreds of km away and out of this
+//      game's scope. Result: scripts/data/hawaii-state-detailed.geojson.
+//   3. Splice that geometry into us-states.geojson's existing Hawaii
+//      feature (same properties, geometry replaced) — every build script
+//      here reads us-states.geojson directly, so this is the one place
+//      that needed changing for all of them to pick it up.
 const SRC = path.join(__dirname, 'data', 'us-states.geojson');
 const geo = JSON.parse(fs.readFileSync(SRC, 'utf8'));
 

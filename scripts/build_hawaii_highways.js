@@ -84,7 +84,7 @@ const MARGIN = 3; // must match build_usa_level.js's own MARGIN exactly
 // mainland, not a corner inset) doesn't land negative — exact value from
 // build_usa_level.js's own console.error output; must match exactly or
 // highway lines drift off the (also-shifted) Hawaii state outline.
-const GLOBAL_SHIFT_X = 839.9193530147361;
+const GLOBAL_SHIFT_X = 856.7122654651434;
 const GLOBAL_SHIFT_Y = 715.4619231706608;
 function toCanvasMain([lon, lat]) {
   const [x, y] = albers([lon, lat]);
@@ -105,7 +105,7 @@ function trueScaleProjector(anchorLon, anchorLat) {
   };
 }
 // Exact anchor from build_usa_level.js's own console.error output.
-const toCanvasHI = trueScaleProjector(-157.2861325, 20.588611);
+const toCanvasHI = trueScaleProjector(-157.6783335, 20.5779665);
 
 // ---- name normalization ----
 // TIGER records the same physical highway under several FULLNAME variants

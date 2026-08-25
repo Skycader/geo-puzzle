@@ -117,7 +117,7 @@ const MARGIN = 3;
 // inset) doesn't land negative — exact value from build_usa_level.js's
 // own console.error output; must match exactly or terrain regions drift
 // off the (also-shifted) Alaska state outline.
-const GLOBAL_SHIFT_X = 839.9193530147361;
+const GLOBAL_SHIFT_X = 856.7122654651434;
 const GLOBAL_SHIFT_Y = 715.4619231706608;
 function toCanvas([x, y]) {
   return [(x - minX) * scale + MARGIN + GLOBAL_SHIFT_X, (y - minY) * scale + MARGIN + GLOBAL_SHIFT_Y];

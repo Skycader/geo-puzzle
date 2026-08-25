@@ -56,7 +56,7 @@ const MARGIN = 3; // must match build_usa_level.js's own MARGIN exactly
 // negative-y) and Hawaii (far west/negative-x) don't go negative — exact
 // value from build_usa_level.js's own console.error output; must match
 // exactly or place dots drift off their state's own outline.
-const GLOBAL_SHIFT_X = 839.9193530147361;
+const GLOBAL_SHIFT_X = 856.7122654651434;
 const GLOBAL_SHIFT_Y = 715.4619231706608;
 function toCanvasMain([lon, lat]) {
   const [x, y] = albers([lon, lat]);
@@ -79,7 +79,7 @@ function trueScaleProjector(anchorLon, anchorLat) {
 }
 // Exact anchors from build_usa_level.js's own console.error output.
 const toCanvasAK = trueScaleProjector(-159.4456165, 61.482186500000005);
-const toCanvasHI = trueScaleProjector(-157.2861325, 20.588611);
+const toCanvasHI = trueScaleProjector(-157.6783335, 20.5779665);
 
 function project(region, lon, lat) {
   if (region === 'AK') return toCanvasAK([lon, lat]);
