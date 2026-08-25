@@ -242,27 +242,25 @@ for (const f of contiguous) {
   pieces.push({ id: abbr, name, ru, ...piece, area });
 }
 
-// ---- Alaska / Hawaii: true relative position + true scale ----
-// Each keeps its own accurate LOCAL projection (equirectangular + cosLat
+// ---- Hawaii: true relative position + true scale ----
+// Keeps its own accurate LOCAL projection (equirectangular + cosLat
 // correction — fine for an area this size) instead of running its real
 // outline through the main Albers formula above, which is only accurate
-// near ITS OWN standard parallels (29.5-45.5°N) / central meridian (-96°)
-// — numerically verified before writing this: Alaska's real corners come
-// out as a wildly stretched ~650x550-unit diagonal blob under the raw
-// Albers formula, nothing like Alaska's actual shape (it's both 15-45°
-// further north than the standard parallels AND crosses the antimeridian).
-// Only ONE reference point per region — its own real lon/lat bbox-center —
-// goes through the main Albers formula; a single point can't be
-// "distorted", so this gives a real, direction-correct anchor position
-// without the outline-distortion problem. The local shape is then drawn
-// around that anchor at TRUE scale (same km-per-canvas-unit as the main
-// map, derived self-consistently from `scale` above) instead of being
-// letterbox-fit to an arbitrary box like the old inset mechanism was.
-// North stays up (no rotation) — same convention every printed US map
-// uses for its Alaska/Hawaii insets; a real rotation (Alaska's would be
-// ~38°) would need reworking js/geoCoords.js's unrotated inverse-lookup
-// math for no visible benefit (players have no lon/lat grid to notice
-// against).
+// near ITS OWN standard parallels (29.5-45.5°N) / central meridian (-96°).
+// Only ONE reference point — Hawaii's own real lon/lat bbox-center — goes
+// through the main Albers formula; a single point can't be "distorted", so
+// this gives a real, direction-correct anchor position without an
+// outline-distortion problem. The local shape is then drawn around that
+// anchor at TRUE scale (same km-per-canvas-unit as the main map, derived
+// self-consistently from `scale` above) instead of being letterbox-fit to
+// an arbitrary box like the old inset mechanism was. North stays up (no
+// rotation) — same convention every printed US map uses for its Hawaii
+// inset; a real rotation would need reworking js/geoCoords.js's unrotated
+// inverse-lookup math for no visible benefit (players have no lon/lat grid
+// to notice against). Hawaii is a lone island chain with no shared land
+// border to line up against, so this local approximation's small drift
+// away from its own anchor is never visible the way it was for Alaska/
+// Canada below.
 const TRUE_SCALE = deg2rad(1) * scale; // canvas units per degree, at true relative scale
 
 function regionBBoxCenter(feature) {
@@ -300,9 +298,40 @@ function buildTruePosition(feature, anchorLon, anchorLat) {
   return { ...buildPieceFromRings(canvasRings), projection };
 }
 
-const akAnchor = regionBBoxCenter(insets['Alaska']);
+// Runs a real outline through the mainland's own raw Albers formula
+// (toCanvas(albers(...))), same as the 48 contiguous states — no anchor
+// point, no separate local scale. Used for Alaska and Canada (see each
+// call site's own comment for why), NOT Hawaii, which keeps
+// buildTruePosition above.
+function buildAlbersLand(feature) {
+  const rings = [];
+  forEachRing(feature.geometry, (ring) => {
+    // Unwrap same as buildTruePosition — irrelevant for Canada (never
+    // crosses the antimeridian) but Alaska's Aleutian tail does.
+    rings.push(ring.map(([lon, lat]) => toCanvas(albers([lon > 0 ? lon - 360 : lon, lat]))));
+  });
+  return buildPieceFromRings(rings);
+}
+
+// Alaska: same full-Albers treatment as Canada below, for the same reason
+// — it used to share Hawaii's true-position hybrid (buildTruePosition),
+// which is what caused the Canada-border gap bug fixed below. Once Canada
+// itself switched to raw Albers, Alaska's own hybrid projection started
+// disagreeing with Canada's new one instead — same curved-vs-straight
+// mismatch, just moved to the Alaska-Yukon/BC border (measured: 120-185
+// canvas units, worse than the original mainland gap). Verified this
+// doesn't hit Alaska's own original rejection reason (a wildly distorted
+// shape) before switching: projecting real Anchorage/Fairbanks/Nome/
+// Barrow/Juneau/Ketchikan through raw Albers preserves their correct
+// relative north/south/east/west arrangement. The one real cost is the far
+// Aleutian tail (e.g. Attu, ~172°E) — its own shape gets visibly distorted
+// this far from the standard parallels/central meridian, rendering
+// slightly further north than it should relative to the rest of the
+// chain. Accepted: it's a thin, peripheral decoration, not the state's
+// recognizable silhouette, and far less noticeable than a 150-unit gap at
+// an actual international border.
+const akPiece = buildAlbersLand(insets['Alaska']);
 const hiAnchor = regionBBoxCenter(insets['Hawaii']);
-const akPiece = buildTruePosition(insets['Alaska'], akAnchor.lon, akAnchor.lat);
 const hiPiece = buildTruePosition(insets['Hawaii'], hiAnchor.lon, hiAnchor.lat);
 
 // AK/HI's own local projection has no consistent km-per-canvas-unit scale
@@ -318,18 +347,37 @@ pieces.push({ id: 'HI', name: 'Hawaii', ru: 'Гавайи', inset: true, ...hiPi
 // ---- Canada: non-interactive context silhouette, real position/scale ----
 // Explains at a glance why Alaska sits disconnected up in the corner (it's
 // not disconnected — Canada is just in between). Real geometry from the
-// world-level land dataset (already in the repo, no new download), same
-// true-position technique as AK/HI above. Deliberately NOT added to
-// `pieces` — it would otherwise surface as a guessable/clickable "state"
-// in every quiz/name-state/neighbor/identify/colorfill mode, none of which
-// should know it exists — a separate `contextLand` field (mirroring
-// levels/world.js's own `land` background field) keeps it invisible to
-// all of those while still renderable by js/overviewBoard.js.
+// world-level land dataset (already in the repo, no new download).
+// Deliberately NOT added to `pieces` — it would otherwise surface as a
+// guessable/clickable "state" in every quiz/name-state/neighbor/identify/
+// colorfill mode, none of which should know it exists — a separate
+// `contextLand` field (mirroring levels/world.js's own `land` background
+// field) keeps it invisible to all of those while still renderable by
+// js/overviewBoard.js.
+//
+// UNLIKE Hawaii above, this uses buildAlbersLand (see its own comment,
+// defined next to Alaska's) instead of the true-position local-projection
+// trick — no anchor point, no separate scale. Originally this used
+// buildTruePosition too, but that caused a real, visible bug: Albers is a
+// conic projection, so a real line of constant latitude (like the
+// US-Canada border) comes out CURVED under it, while the true-position
+// hybrid's local projection draws that same line perfectly STRAIGHT — the
+// two disagree more and more the further you get from Canada's own anchor
+// longitude, opening a growing gap between Canada's southern edge and the
+// mainland states' northern edge (measured: ~20 canvas units near the
+// anchor's own longitude, up to ~140-175 units out toward Washington/
+// Maine). Feeding Canada through the exact same Albers formula the
+// mainland states already use eliminates this by construction — both
+// sides of the border are now the same coordinate space, not two
+// approximations being reconciled. Real lon range -141°..-52.6° (no
+// antimeridian crossing); own raw-Albers bounding box comes out at 0.9x0.6
+// (projection units) versus the mainland's 0.7x0.4 — about 1.3-1.5x
+// larger, not a "monstrous" distortion — checked numerically before
+// writing this.
 const WORLD_COUNTRIES_SRC = path.join(__dirname, 'data', 'world-countries-simplified.geojson');
 const worldCountries = JSON.parse(fs.readFileSync(WORLD_COUNTRIES_SRC, 'utf8'));
 const canadaFeature = worldCountries.features.find((f) => f.properties.NAME === 'Canada');
-const canadaAnchor = regionBBoxCenter(canadaFeature);
-const canadaPiece = buildTruePosition(canadaFeature, canadaAnchor.lon, canadaAnchor.lat);
+const canadaPiece = buildAlbersLand(canadaFeature);
 
 // ---- shift the whole canvas so nothing is negative ----
 // Alaska/Hawaii/Canada's true positions land well outside the mainland's
@@ -373,7 +421,7 @@ const CANVAS_H = shiftMaxY + GLOBAL_SHIFT_Y + MARGIN;
 
 console.error('TRUE_SCALE', TRUE_SCALE);
 console.error('GLOBAL_SHIFT_X', GLOBAL_SHIFT_X, 'GLOBAL_SHIFT_Y', GLOBAL_SHIFT_Y);
-console.error('AK anchor', akAnchor, 'HI anchor', hiAnchor, 'Canada anchor', canadaAnchor);
+console.error('HI anchor', hiAnchor);
 
 // ---- adjacency (for the connect-spark effect): decimated min-distance test ----
 function decimate(ring, maxPoints) {

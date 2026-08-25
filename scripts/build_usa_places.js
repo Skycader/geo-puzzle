@@ -57,14 +57,14 @@ const MARGIN = 3; // must match build_usa_level.js's own MARGIN exactly
 // value from build_usa_level.js's own console.error output; must match
 // exactly or place dots drift off their state's own outline.
 const GLOBAL_SHIFT_X = 856.7122654651434;
-const GLOBAL_SHIFT_Y = 715.4619231706608;
+const GLOBAL_SHIFT_Y = 636.0468616448984;
 function toCanvasMain([lon, lat]) {
   const [x, y] = albers([lon, lat]);
   return [(x - minX) * scale + MARGIN + GLOBAL_SHIFT_X, (y - minY) * scale + MARGIN + GLOBAL_SHIFT_Y];
 }
 
-// ---- Alaska/Hawaii: true relative position + true scale — must exactly
-// match build_usa_level.js's buildTruePosition (same anchor lon/lat, same
+// ---- Hawaii: true relative position + true scale — must exactly match
+// build_usa_level.js's buildTruePosition (same anchor lon/lat, same
 // TRUE_SCALE, same GLOBAL_SHIFT via toCanvasMain above).
 const TRUE_SCALE = deg2rad(1) * scale;
 function trueScaleProjector(anchorLon, anchorLat) {
@@ -77,12 +77,13 @@ function trueScaleProjector(anchorLon, anchorLat) {
     return [x, y];
   };
 }
-// Exact anchors from build_usa_level.js's own console.error output.
-const toCanvasAK = trueScaleProjector(-159.4456165, 61.482186500000005);
+// Exact anchor from build_usa_level.js's own console.error output.
 const toCanvasHI = trueScaleProjector(-157.6783335, 20.5779665);
 
+// Alaska now goes through toCanvasMain directly (raw Albers) — see
+// build_usa_level.js's own comment on why Alaska switched off the
+// true-position hybrid.
 function project(region, lon, lat) {
-  if (region === 'AK') return toCanvasAK([lon, lat]);
   if (region === 'HI') return toCanvasHI([lon, lat]);
   return toCanvasMain([lon, lat]);
 }

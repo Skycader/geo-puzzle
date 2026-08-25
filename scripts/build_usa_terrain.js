@@ -118,7 +118,7 @@ const MARGIN = 3;
 // own console.error output; must match exactly or terrain regions drift
 // off the (also-shifted) Alaska state outline.
 const GLOBAL_SHIFT_X = 856.7122654651434;
-const GLOBAL_SHIFT_Y = 715.4619231706608;
+const GLOBAL_SHIFT_Y = 636.0468616448984;
 function toCanvas([x, y]) {
   return [(x - minX) * scale + MARGIN + GLOBAL_SHIFT_X, (y - minY) * scale + MARGIN + GLOBAL_SHIFT_Y];
 }
@@ -126,21 +126,13 @@ function projectMainland(ring) {
   return ring.map((pt) => toCanvas(albers(pt)));
 }
 
-// ---- Re-derive Alaska's true-position projection, identical to
-// scripts/build_usa_level.js's buildTruePosition ----
-const TRUE_SCALE = deg2rad(1) * scale;
-// Exact anchor from build_usa_level.js's own console.error output.
-const AK_ANCHOR_LON = -159.4456165;
-const AK_ANCHOR_LAT = 61.482186500000005;
-const akAnchorCosLat = Math.cos(deg2rad(AK_ANCHOR_LAT));
-const [akAnchorX, akAnchorY] = toCanvas(albers([AK_ANCHOR_LON, AK_ANCHOR_LAT]));
+// Alaska now goes through raw Albers too (toCanvas(albers(...))), same as
+// the mainland — see build_usa_level.js's own comment on why Alaska
+// switched off its true-position hybrid projection. Only real difference
+// from projectMainland: unwrap longitude first, since Alaska's Aleutian
+// tail can cross the antimeridian (mainland never does).
 function projectAlaska(ring) {
-  return ring.map(([lon, lat]) => {
-    const l = lon > 0 ? lon - 360 : lon;
-    const x = (l - AK_ANCHOR_LON) * akAnchorCosLat * TRUE_SCALE + akAnchorX;
-    const y = (AK_ANCHOR_LAT - lat) * TRUE_SCALE + akAnchorY;
-    return [x, y];
-  });
+  return ring.map(([lon, lat]) => toCanvas(albers([lon > 0 ? lon - 360 : lon, lat])));
 }
 
 // Every state's own rings, in the SAME canvas space as the terrain

@@ -72,30 +72,16 @@ const MARGIN = 3;
 // own console.error output; must match exactly or a silhouette drifts off
 // its city's own cx/cy. See that script's own comment.
 const GLOBAL_SHIFT_X = 856.7122654651434;
-const GLOBAL_SHIFT_Y = 715.4619231706608;
+const GLOBAL_SHIFT_Y = 636.0468616448984;
 function toCanvasMain([lon, lat]) {
   const [x, y] = albers([lon, lat]);
   return [(x - minX) * scale + MARGIN + GLOBAL_SHIFT_X, (y - minY) * scale + MARGIN + GLOBAL_SHIFT_Y];
 }
 
-// ---- Alaska: true relative position + true scale (only AK city here) —
-// must exactly match build_usa_level.js's buildTruePosition.
-const TRUE_SCALE = deg2rad(1) * scale;
-function trueScaleProjector(anchorLon, anchorLat) {
-  const cosLat = Math.cos(deg2rad(anchorLat));
-  const [anchorX, anchorY] = toCanvasMain([anchorLon, anchorLat]);
-  return ([lon, lat]) => {
-    const l = lon > 0 ? lon - 360 : lon;
-    const x = (l - anchorLon) * cosLat * TRUE_SCALE + anchorX;
-    const y = (anchorLat - lat) * TRUE_SCALE + anchorY;
-    return [x, y];
-  };
-}
-// Exact anchor from build_usa_level.js's own console.error output.
-const toCanvasAK = trueScaleProjector(-159.4456165, 61.482186500000005);
-
+// Alaska now goes through toCanvasMain directly (raw Albers) — see
+// build_usa_level.js's own comment on why Alaska switched off its
+// true-position hybrid projection.
 function project(state, lon, lat) {
-  if (state === 'AK') return toCanvasAK([lon, lat]);
   return toCanvasMain([lon, lat]);
 }
 
