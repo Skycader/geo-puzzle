@@ -29,6 +29,26 @@ const HI_ISLAND_HOVER_LABELS = [
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const STATE_LABEL_PX = 12;
 const STATE_LABEL_STROKE_PX = 3;
+// Toggle for the space-view label hide below — user's own call ("плохая
+// идея, но пусть пока будет") is that flat zoom-gating isn't the real fix
+// (past LABEL_MIN_ZOOM every territory still shows at once, no per-piece
+// size awareness, so dense regions can still crowd), just an acceptable
+// stopgap for now. Flip to false to fall back to the pre-stopgap behavior
+// (labels always render, exactly as before this const existed) without
+// hunting down every call site again.
+const SPACE_VIEW_LABEL_HIDE_ENABLED = true;
+// Below this zoom level, territory labels (state/country names, and their
+// exclave sub-labels like "США - Аляска") don't render at all — simplest
+// possible fix for the space-view label pile-up (211 country names, plus
+// exclave suffixes, all at a constant screen size, packed into one
+// full-map view): rather than sizing/fitting/collision-detecting each
+// label individually (tried, and reverted — real bugs and a real
+// wheel-zoom perf regression along the way, see game history), just don't
+// draw ANY of them until the player has zoomed in past this point. Above
+// it, labels render exactly as they always have (STATE_LABEL_PX, constant
+// screen size) — nothing about that part changes. Only takes effect when
+// SPACE_VIEW_LABEL_HIDE_ENABLED is true, above.
+const LABEL_MIN_ZOOM = 3;
 const CITY_LABEL_PX = 10;
 const CITY_LABEL_STROKE_PX = 2.5;
 const CITY_DOT_STROKE_PX = 1;
@@ -1670,7 +1690,19 @@ export class OverviewBoard {
   // there's no point paying to lay out elements nobody can see.
   _rescaleForZoom(zoom) {
     const effScale = this.scale * zoom;
+    // Respects the separate global labelsVisible toggle too — both write
+    // to the same opacity property on the same elements, so without this
+    // a zoom event right after the user hides labels would silently turn
+    // them back on (see setLabelsVisible, which calls back into this for
+    // the opposite reason: to re-apply the zoom threshold after its own
+    // blanket toggle).
+    const showLabels = this.labelsVisible && (!SPACE_VIEW_LABEL_HIDE_ENABLED || zoom >= LABEL_MIN_ZOOM);
     for (const { el } of this.stateLabels) {
+      if (!showLabels) {
+        el.style.opacity = '0';
+        continue;
+      }
+      el.style.opacity = '';
       el.style.fontSize = `${(STATE_LABEL_PX / effScale).toFixed(2)}px`;
       el.style.strokeWidth = `${(STATE_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
     }
@@ -1757,6 +1789,11 @@ export class OverviewBoard {
   setLabelsVisible(visible) {
     this.labelsVisible = visible;
     for (const label of this.allLabelEls) label.style.opacity = visible ? '' : '0';
+    // The blanket toggle above just force-showed every stateLabels element
+    // too (they're also in allLabelEls) — re-run the zoom-threshold check
+    // so a territory still too far zoomed-out goes right back to hidden
+    // instead of staying stuck visible.
+    this._rescaleForZoom(this.zoomCtl?.getZoom() ?? 1);
   }
 
   // Turning cities off hides every currently-shown dot/shape immediately
