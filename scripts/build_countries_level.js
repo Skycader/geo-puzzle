@@ -91,9 +91,22 @@ function ringToPath(ring) {
   if (maxX > CANVAS_W) shifts.push(-CANVAS_W);
   return shifts.map((shift) => 'M ' + pts.map(([x, y]) => `${(x + shift).toFixed(2)},${y.toFixed(2)}`).join(' L ') + ' Z').join(' ');
 }
+// Outer ring only (coordinates[0]) — a Polygon/MultiPolygon's later rings
+// are interior holes, and Natural Earth's admin-0 layer uses them for two
+// very different things: a real enclave country's own border (South
+// Africa has one for Lesotho, Italy has two for San Marino/Vatican — safe
+// to drop here, since that spot is correctly covered by that enclave's OWN
+// piece, painted on top) and administrative leftovers this game never
+// models as their own piece at all (Kazakhstan's hole is the Baikonur
+// Cosmodrome, leased to Russia; Kyrgyzstan's is a Fergana Valley exclave)
+// — rendering THOSE holes punched a small unexplained black void straight
+// through the middle of the country's fill, with no piece of its own to
+// explain what it was. Dropping every hole fixes the second case and is a
+// no-op for the first (same pixels either way, since the enclave's own
+// piece already covers it).
 function geometryToPath(geometry) {
-  if (geometry.type === 'Polygon') return geometry.coordinates.map(ringToPath).join(' ');
-  if (geometry.type === 'MultiPolygon') return geometry.coordinates.map((poly) => poly.map(ringToPath).join(' ')).join(' ');
+  if (geometry.type === 'Polygon') return ringToPath(geometry.coordinates[0]);
+  if (geometry.type === 'MultiPolygon') return geometry.coordinates.map((poly) => ringToPath(poly[0])).join(' ');
   return '';
 }
 function geometryBbox(geometry) {
