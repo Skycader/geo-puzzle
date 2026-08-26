@@ -2762,7 +2762,12 @@ body {
    single unified choice covering the whole piece, border included. */
 .piece-shape {
   stroke: var(--piece-stroke);
-  stroke-width: 1.4;
+  /* --piece-stroke-width is set per-board in JS (js/utils.js's
+     pieceStrokeWidth) from the level's own kmPerUnit, so the border reads
+     as the same real-world width on every map instead of one constant
+     swallowing whole micro-states on the world map. 1.4 here is just the
+     fallback for anywhere that never sets the variable. */
+  stroke-width: var(--piece-stroke-width, 1.4);
   transition: filter 0.15s ease, stroke 0.15s ease, fill-opacity 0.2s ease;
 }
 /* "Рельеф" terrain layer (js/overviewBoard.js's setTerrainVisible) paints

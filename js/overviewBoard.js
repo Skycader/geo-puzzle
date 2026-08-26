@@ -1,6 +1,6 @@
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { mark } from './perfDebug.js';
-import { polygonArea, clamp } from './utils.js';
+import { polygonArea, clamp, pieceStrokeWidth } from './utils.js';
 import { buildStateBackground } from './mapBackground.js';
 import { nativeToLonLat, formatLonLat, findInset } from './geoCoords.js';
 import { loadSuccessStats, setSuccessCount } from './successStats.js';
@@ -428,6 +428,7 @@ export class OverviewBoard {
     this.svg.setAttribute('width', baseW);
     this.svg.setAttribute('height', baseH);
     this.svg.classList.add('board-svg');
+    this.svg.style.setProperty('--piece-stroke-width', pieceStrokeWidth(this.level));
 
     const defs = document.createElementNS(SVG_NS, 'defs');
     defs.innerHTML = `

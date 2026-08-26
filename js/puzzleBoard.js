@@ -1,4 +1,4 @@
-import { shuffle, clamp } from './utils.js';
+import { shuffle, clamp, pieceStrokeWidth } from './utils.js';
 import { translatePath } from './pieceShape.js';
 import { playPickup, playSnap, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
@@ -83,6 +83,7 @@ export class PuzzleBoard {
     this.boardSvg.setAttribute('height', baseH);
     this.boardSvg.classList.add('board-svg');
     this.boardSvg.classList.toggle('hide-hints', !this.hintsVisible);
+    this.boardSvg.style.setProperty('--piece-stroke-width', pieceStrokeWidth(this.level));
 
     const defs = document.createElementNS(SVG_NS, 'defs');
     defs.innerHTML = `

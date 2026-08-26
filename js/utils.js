@@ -69,6 +69,26 @@ export function weightedSampleWithoutReplacement(items, getWeight, k) {
 // Smallest bbox [minX,minY,maxX,maxY] containing every input bbox — used by
 // journeyNameBoard.js/game.js's Journey mode to frame the camera around
 // several states' pieces at once (see zoomPan.js's focusOnBBox).
+// .piece-shape's stroke-width (style.css) used to be one constant (1.4)
+// shared by every level, which looked fine for USA (kmPerUnit≈4.79 — a
+// typical state is ~100-300 native units across) but was wildly out of
+// proportion for the world/countries map (kmPerUnit≈34.79, ~7x coarser —
+// a typical country is only ~20 native units across, and micro-states
+// like San Marino/Vatican are smaller than the stroke itself). Deriving
+// the stroke from each level's own kmPerUnit instead keeps the border a
+// constant REAL-WORLD width (~6.7km, USA's own 1.4-unit stroke's real
+// width) on every map, so a state's and a country's borders read as the
+// same kind of line rather than the country one swallowing the shape.
+// Levels without kmPerUnit (shouldn't happen for usa/world/countries, but
+// falls back to USA's own value rather than throwing) get USA's own
+// stroke width unchanged.
+const REFERENCE_KM_PER_UNIT = 4.79174;
+const REFERENCE_STROKE_WIDTH = 1.4;
+export function pieceStrokeWidth(level) {
+  const kmPerUnit = level?.kmPerUnit || REFERENCE_KM_PER_UNIT;
+  return (REFERENCE_STROKE_WIDTH * REFERENCE_KM_PER_UNIT) / kmPerUnit;
+}
+
 export function unionBBox(bboxes) {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const [x0, y0, x1, y1] of bboxes) {

@@ -1,4 +1,4 @@
-import { levenshtein, unionBBox } from './utils.js';
+import { levenshtein, unionBBox, pieceStrokeWidth } from './utils.js';
 import { playSnap, playError, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { loadSuccessStats, recordOutcome } from './successStats.js';
@@ -70,6 +70,7 @@ export class JourneyNameBoard {
     this.svg.setAttribute('width', baseW);
     this.svg.setAttribute('height', baseH);
     this.svg.classList.add('quiz-svg');
+    this.svg.style.setProperty('--piece-stroke-width', pieceStrokeWidth(this.level));
 
     const defs = document.createElementNS(SVG_NS, 'defs');
     defs.innerHTML = `
