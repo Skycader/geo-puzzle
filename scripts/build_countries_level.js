@@ -345,6 +345,7 @@ function attachExclaveSuffixes(entry, dominant, labelPoints) {
     const { lon, lat } = partLonLat(part);
     const name = lookupAdmin1Name(lon, lat);
     if (!name || name === entry.ru || ABSORBED_REGION_NAMES.has(name)) continue;
+    if (SUPPRESS_EXCLAVE_LABELS.has(`${entry.ru}|${name}`)) continue;
     const prev = bestByName.get(name);
     if (!prev || part.area > prev.area) bestByName.set(name, part);
   }
@@ -365,11 +366,28 @@ function attachExclaveSuffixes(entry, dominant, labelPoints) {
   };
   const topCandidates = [...bestByName.entries()].sort((a, b) => wrapDist(b[1]) - wrapDist(a[1])).slice(0, MAX_EXCLAVES_PER_COUNTRY);
   const MERGE_RADIUS = 40; // native units (~9° at this SCALE) — generous enough to catch a cluster's own part, tight enough not to bridge unrelated exclaves
+  // The dominant part's own label point (usually labelPoints[0] — for any
+  // non-antimeridian-split country, computeLabelPoints returns ONLY this
+  // one point, since there's no gap to split on yet) must never receive an
+  // exclave's admin-1 name — that point is the country's own "no suffix,
+  // just the name" label. Without this exclusion, a real bug: Mexico's
+  // dominant-part centroid sits ~35.6 native units from its own Sonora/
+  // Baja California exclave candidate — inside the 40-unit MERGE_RADIUS —
+  // so the nearest-point search below picked labelPoints[0] (Mexico's own
+  // main label) as the "existing cluster" to merge into, mislabeling the
+  // ENTIRE country "Мексика - Нижняя Калифорния" while the real Sonora/
+  // Baja exclaves either got no label or the wrong one.
+  let dominantIdx = -1, dominantDist = Infinity;
+  for (let i = 0; i < labelPoints.length; i++) {
+    const d = Math.hypot(labelPoints[i][0] - dominant.x, labelPoints[i][1] - dominant.y);
+    if (d < dominantDist) { dominantDist = d; dominantIdx = i; }
+  }
   for (const [name, part] of topCandidates) {
     const px = normalizeX(part.x);
     const py = part.y;
     let bestIdx = -1, bestDist = Infinity;
     for (let i = 0; i < labelPoints.length; i++) {
+      if (i === dominantIdx) continue;
       const d = Math.hypot(labelPoints[i][0] - px, labelPoints[i][1] - py);
       if (d < bestDist) { bestDist = d; bestIdx = i; }
     }
@@ -435,6 +453,15 @@ const MERGE_ABSORBED_KEYS = new Set(['Crimea', 'N. Cyprus', 'W. Sahara (Morocco)
 // resurfacing exactly the label the merge was meant to erase. Filtering
 // by the resolved admin-1 name catches either source.
 const ABSORBED_REGION_NAMES = new Set(['Автономная Республика Крым', 'Севастополь', 'Северный Кипр', 'Западная Сахара']);
+// Per-country exclusions for exclave labels that are simply wrong — not a
+// merge/absorption case like the set above, just a bad point-in-polygon
+// hit. Mexico's "Сонора" label: the underlying part is a simplification-
+// artifact fragment of the Baja California peninsula's own coastline
+// (right next to the fragment correctly labeled "Нижняя Калифорния"), but
+// its centroid happens to land just across the strait in Sonora's admin-1
+// polygon — a real place, wrong part. Keyed `"CountryRu|RegionName"` so a
+// future false positive elsewhere doesn't need its own new mechanism.
+const SUPPRESS_EXCLAVE_LABELS = new Set(['Мексика|Сонора']);
 
 const merged = new Map(); // id -> { id, name, ru, dParts: [], bbox, nativeArea, rawPoints, parts }
 function addFeature(f, key) {
