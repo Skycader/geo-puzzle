@@ -413,7 +413,11 @@ const PROMOTE_NAMES = new Set(['Kosovo', 'Palestine']);
 
 const included = land.features.filter((f) => {
   const t = f.properties.TYPE;
-  return t === 'Sovereign country' || t === 'Country' || PROMOTE_NAMES.has(f.properties.NAME);
+  // 'Sovereignty' is the same "fully sovereign state" bucket as 'Sovereign
+  // country', just a different label Natural Earth uses for exactly two
+  // countries (Cuba, Kazakhstan) — missing it silently dropped both real,
+  // well-known countries from the map.
+  return t === 'Sovereign country' || t === 'Country' || t === 'Sovereignty' || PROMOTE_NAMES.has(f.properties.NAME);
 });
 
 // Crimea/N. Cyprus/Western Sahara were deliberately merged into their
