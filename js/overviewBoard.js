@@ -9,21 +9,24 @@ import { loadSuccessStats, setSuccessCount } from './successStats.js';
 // island rings (see scripts/build_usa_level.js's Hawaii-splice comment) —
 // a single static tooltip text can't say which one the cursor is actually
 // over. Real center lon/lat per island (verified against the actual
-// TIGER-derived geometry, not guessed) mapped to whichever label reads
-// best there: the island's biggest known town where this game has one
-// (matches levels/usaCities.js), else the island's own name for the four
-// that have no town in our city list (Niʻihau is private/no public roads,
-// Kaʻula is an uninhabited islet, Molokaʻi/Lānaʻi's own towns — Kaunakakai/
-// Lānaʻi City — just aren't in our curated city list).
+// TIGER-derived geometry, not guessed). `island` is always the island's
+// own name — a player looking for a specific island (Oahu, say) by name
+// has to actually find that name somewhere in the game, and a city name
+// alone doesn't do that. `city` is the island's biggest known town where
+// this game has one (matches levels/usaCities.js) — shown alongside the
+// island name, not instead of it. Four islands have no town in our city
+// list at all (Niʻihau is private/no public roads, Kaʻula is an
+// uninhabited islet, Molokaʻi/Lānaʻi's own towns — Kaunakakai/Lānaʻi City
+// — just aren't in our curated city list), so those are island-name only.
 const HI_ISLAND_HOVER_LABELS = [
-  { lon: -160.541, lat: 21.654, label: 'Каула' },
-  { lon: -160.152, lat: 21.904, label: 'Ниихау' },
-  { lon: -159.547, lat: 22.053, label: 'Капаа' },
-  { lon: -157.973, lat: 21.479, label: 'Гонолулу' },
-  { lon: -157.008, lat: 21.135, label: 'Молокаи' },
-  { lon: -156.935, lat: 20.833, label: 'Ланаи' },
-  { lon: -156.343, lat: 20.771, label: 'Кахулуи' },
-  { lon: -155.439, lat: 19.592, label: 'Хило' },
+  { lon: -160.541, lat: 21.654, island: 'Каула' },
+  { lon: -160.152, lat: 21.904, island: 'Ниихау' },
+  { lon: -159.547, lat: 22.053, island: 'Кауаи', city: 'Капаа' },
+  { lon: -157.973, lat: 21.479, island: 'Оаху', city: 'Гонолулу' },
+  { lon: -157.008, lat: 21.135, island: 'Молокаи' },
+  { lon: -156.935, lat: 20.833, island: 'Ланаи' },
+  { lon: -156.343, lat: 20.771, island: 'Мауи', city: 'Кахулуи' },
+  { lon: -155.439, lat: 19.592, island: 'Гавайи (Большой остров)', city: 'Хило' },
 ];
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -2065,7 +2068,11 @@ export class OverviewBoard {
         best = isl;
       }
     }
-    return best?.label ?? null;
+    if (!best) return null;
+    // Island name always leads — see HI_ISLAND_HOVER_LABELS's own comment
+    // on why a city name alone isn't enough for a player looking for the
+    // island by its actual name (Oahu, say).
+    return best.city ? `${best.island} — ${best.city}` : best.island;
   }
 
   _terrainCategoryAt(nativePt) {
