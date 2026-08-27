@@ -1022,6 +1022,17 @@ body {
   height: 100%;
   overflow: hidden;
   cursor: grab;
+  /* Without this, a touchscreen's default is to let the BROWSER decide
+     whether a one-finger drag here is a page scroll/pinch-zoom gesture
+     rather than handing it to zoomPan.js's own pointerdown/pointermove
+     pan logic (content.addEventListener('pointerdown', ...) below) — on
+     mobile that meant dragging the map either did nothing (nothing else
+     on the page scrolls) or fought the browser's own gesture recognizer,
+     reported as "can't drag the map on phones". touch-action:none hands
+     every touch gesture on the map straight to JS, same as .topo-frame/
+     .piece/.tray-handle already do for their own custom pointer-driven
+     drags elsewhere in this file.  */
+  touch-action: none;
 }
 .zoom-viewport.panning { cursor: grabbing; }
 .zoom-viewport.panning .board-svg,
