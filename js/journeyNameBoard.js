@@ -71,8 +71,16 @@ export class JourneyNameBoard {
     // Every state currently drawn on the map, whether or not it's part of
     // this.chain — the single source of truth both _confirm's adjacency
     // check and _isConnected's win check grow/read from. Seeded with both
-    // endpoints since they're already on the map from the start.
-    this.accepted = new Set([this.startPiece.id, this.endPiece.id]);
+    // endpoints since they're already on the map from the start — UNLESS
+    // the destination is hidden ("Показывать штат назначения" off), in
+    // which case it's deliberately left OUT of the seed: the round must
+    // only finish once the player actually types its name (which passes
+    // through the same isAdjacent-gated success path as any other guess,
+    // see _confirm), not the instant some other accepted state happens to
+    // border it. Building "from the destination outward" via free detours
+    // (the whole point of seeding it) only makes sense once its identity
+    // is actually known.
+    this.accepted = new Set([this.startPiece.id, ...(this.showDestination ? [this.endPiece.id] : [])]);
     // id -> its real <path> element, so a repeat guess (_pulseAlreadyAccepted)
     // and the reject flash (_flashRejectedState, which needs the SHAPE data
     // for a state that was never accepted at all) both have somewhere to
@@ -259,14 +267,6 @@ export class JourneyNameBoard {
     this._rescaleLabels(this.zoomCtl.getZoom());
   }
 
-  // "Показывать штат назначения" off — reveal the hidden endpoint's real
-  // shape/name; no-op once it's already drawn (shown from the start, or
-  // already revealed by a direct name guess in _confirm).
-  _revealDestinationIfHidden() {
-    if (this.stateShapeEls.has(this.endPiece.id)) return;
-    this._revealState(this.endPiece.id);
-  }
-
   // Keeps endpoint labels a constant on-screen size regardless of zoom —
   // same technique as puzzleBoard.js's _rescaleLabelsForZoom.
   _rescaleLabels(zoom) {
@@ -425,31 +425,6 @@ export class JourneyNameBoard {
     if (this.locked || !this.matchedPiece) return;
     const id = this.matchedPiece.id;
 
-    // The hidden destination ("Показывать штат назначения" off) is always
-    // pre-seeded into this.accepted (needed for _isConnected's BFS below)
-    // but was never actually drawn — naming it directly reveals it here,
-    // as a genuine reward for knowing it from geography alone rather than
-    // the usual "already marked" no-op pulse (there's no shape yet to
-    // pulse). This alone doesn't necessarily finish the round — the path
-    // still has to actually connect, checked the same way as any other
-    // guess.
-    if (id === this.endPiece.id && !this.stateShapeEls.has(id)) {
-      playSnap();
-      this._revealState(id);
-      this._setFeedback(t('correctFeedback'), 'correct');
-      this._resetInput();
-      // Now revealed, so the progress bar's own "between X and ???" can
-      // finally show its real name too.
-      this._updateProgressText();
-      if (this._isConnected()) {
-        setTimeout(() => {
-          setTimeout(() => playWin(), 100);
-          this.onFinish({ correct: this.correct, mistakes: this.mistakes, total: this.toGuess.length });
-        }, ADVANCE_DELAY_MS);
-      }
-      return;
-    }
-
     // Third outcome, neither correct nor wrong — the state is real and
     // already part of the journey, just redundant. No mistake counted, no
     // new credit either.
@@ -484,14 +459,22 @@ export class JourneyNameBoard {
     // (adjacent, drawn) detour like Arizona/Utah in the class comment's
     // example is still allowed, just doesn't pay. See the class comment.
     const isChainState = this.toGuess.includes(id);
-    if (isChainState) {
-      const hadHint = this.chainHintsUsed.has(id);
-      this.correct++;
-      if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, id, hadHint);
-      const reward = REWARDS[this.levelId]?.journey ?? 0;
-      if (reward > 0 && !hadHint) {
-        const r = this.confirmBtn.getBoundingClientRect();
-        flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
+    // Naming the hidden destination itself (only reachable this way now —
+    // see the accepted-seeding comment above) isn't a "chain state" either
+    // (toGuess excludes both endpoints, same as it always did), but it's
+    // not an aimless detour — give it its own "Верно!" rather than the
+    // "off route, no coins" wording that'd otherwise apply.
+    const isRevealedDestination = id === this.endPiece.id;
+    if (isChainState || isRevealedDestination) {
+      if (isChainState) {
+        const hadHint = this.chainHintsUsed.has(id);
+        this.correct++;
+        if (this.levelId) recordOutcome(this.levelId, SUCCESS_SCOPE, id, hadHint);
+        const reward = REWARDS[this.levelId]?.journey ?? 0;
+        if (reward > 0 && !hadHint) {
+          const r = this.confirmBtn.getBoundingClientRect();
+          flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
+        }
       }
       this._setFeedback(t('correctFeedback'), 'correct');
     } else {
@@ -505,12 +488,11 @@ export class JourneyNameBoard {
     // cosmetic (letting the reveal animation play before either finishing
     // or unlocking the input for the next guess).
     const finished = this._isConnected();
-    // Reached the hidden destination through some other neighbor, without
-    // ever naming it directly — reveal its real shape/name now, as the
-    // finishing payoff, instead of ending the round on a still-blank spot.
-    if (finished) this._revealDestinationIfHidden();
-    // After the reveal decision above, so a just-revealed destination's
-    // real name replaces the "???" placeholder immediately.
+    // this.endPiece.id can only ever reach this.accepted by going through
+    // this exact success path above (see the accepted-seeding comment in
+    // the constructor) — so if we just got here, it's already drawn,
+    // and the progress bar's "???" placeholder (if it was ever showing
+    // one) is already stale; refresh it.
     this._updateProgressText();
     setTimeout(() => {
       this.inputEl.disabled = false;
