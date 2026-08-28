@@ -4,6 +4,7 @@ import { polygonArea, clamp, pieceStrokeWidth } from './utils.js';
 import { buildStateBackground } from './mapBackground.js';
 import { nativeToLonLat, formatLonLat, findInset } from './geoCoords.js';
 import { loadSuccessStats, setSuccessCount } from './successStats.js';
+import { getLang, t, itemName, terrainDescription, terrainLabel, bilingualLabel, hiIslandName } from './i18n.js';
 
 // Hawaii's own piece is one <path> with 8 real, physically separate
 // island rings (see scripts/build_usa_level.js's Hawaii-splice comment) —
@@ -534,7 +535,7 @@ export class OverviewBoard {
       // having both the native browser tooltip AND the custom one active
       // at once is confusing/redundant, not additive.
       const title = document.createElementNS(SVG_NS, 'title');
-      title.textContent = `${p.ru} (${p.name})`;
+      title.textContent = bilingualLabel(p);
       path.appendChild(title);
       this.zonesLayer.appendChild(path);
 
@@ -552,7 +553,7 @@ export class OverviewBoard {
         path.addEventListener('pointermove', (e) => {
           const native = this._clientToNative(e.clientX, e.clientY);
           const label = this._hiIslandLabelAt(native);
-          if (label) title.textContent = `${p.ru} — ${label}`;
+          if (label) title.textContent = `${itemName(p)} — ${label}`;
         });
       }
 
@@ -582,7 +583,12 @@ export class OverviewBoard {
         // country's `.id` IS its ISO_A3 code where one exists, ~20% fall
         // back to slugify(name) ("south_ossetia") where it doesn't — both
         // rendered as literal, cluttered slug text on the map before this.
-        const baseName = this.level.id === 'usa' ? p.id : p.ru;
+        // labelSuffixes (exclave region names like "Аляска"/"Гавайи") stay
+        // Russian-only — those come from a Russian-only admin-1 name
+        // lookup at build time (scripts/build_countries_level.js), and
+        // there's no English equivalent dataset for them yet; only the
+        // country/state's own base name translates here.
+        const baseName = this.level.id === 'usa' ? p.id : itemName(p);
         const suffix = p.labelSuffixes?.[i];
         label.textContent = suffix ? `${baseName} - ${suffix}` : baseName;
         this.zonesLayer.appendChild(label);
@@ -635,11 +641,11 @@ export class OverviewBoard {
         // Hawaii's routes (levels/usaHawaiiHighways.js) aren't part of the
         // Interstate numbering scheme at all — no `number`, real name in
         // `ru`/`name` instead — see the marker branch right below.
-        title.textContent = hw.number ? `I-${hw.number}` : hw.ru || hw.name;
+        title.textContent = hw.number ? `I-${hw.number}` : itemName(hw) || hw.ru || hw.name;
         path.appendChild(title);
         this.highwaysLayer.appendChild(path);
 
-        const marker = hw.number ? this._buildHighwayShield(hw.number) : this._buildHighwayLabel(hw.ru || hw.name);
+        const marker = hw.number ? this._buildHighwayShield(hw.number) : this._buildHighwayLabel(itemName(hw) || hw.ru || hw.name);
         marker.style.display = 'none';
         this.highwaysLayer.appendChild(marker);
 
@@ -668,7 +674,7 @@ export class OverviewBoard {
         label.setAttribute('x', c.cx);
         label.setAttribute('y', c.cy);
         label.setAttribute('class', 'piece-label');
-        label.textContent = c.ru;
+        label.textContent = itemName(c);
         this.allLabelEls.push(label);
         this.stateLabels.push({ el: label });
 
@@ -708,7 +714,7 @@ export class OverviewBoard {
 
       const leaderLabel = document.createElementNS(SVG_NS, 'text');
       leaderLabel.setAttribute('class', 'overview-city-leader-label');
-      leaderLabel.textContent = c.ru;
+      leaderLabel.textContent = itemName(c);
       this.allLabelEls.push(leaderLabel);
 
       const entry = { id: c.id, cx: c.cx, cy: c.cy, dot, pointMark, leaderPath, leaderLabel, appended: false };
@@ -742,7 +748,7 @@ export class OverviewBoard {
 
       const leaderLabel = document.createElementNS(SVG_NS, 'text');
       leaderLabel.setAttribute('class', 'overview-city-leader-label');
-      leaderLabel.textContent = p.ru;
+      leaderLabel.textContent = itemName(p);
       this.allLabelEls.push(leaderLabel);
 
       const entry = { id: p.id, cx: p.cx, cy: p.cy, dot, pointMark, leaderPath, leaderLabel };
@@ -1013,12 +1019,12 @@ export class OverviewBoard {
     const popup = document.createElement('div');
     popup.className = 'info-popup';
     popup.innerHTML = `
-      <button type="button" class="info-popup-close" title="Закрыть">×</button>
+      <button type="button" class="info-popup-close" title="${t('closeBtn')}">×</button>
       ${info.image ? `<img class="info-popup-image" src="${info.image}" alt="" loading="lazy" />` : ''}
       <div class="info-popup-body">
-        <h3 class="info-popup-title">${source.data.ru}</h3>
+        <h3 class="info-popup-title">${itemName(source.data)}</h3>
         <p class="info-popup-text">${info.extract}</p>
-        <a class="info-popup-link" href="${info.wikiUrl}" target="_blank" rel="noopener">Читать в Википедии →</a>
+        <a class="info-popup-link" href="${info.wikiUrl}" target="_blank" rel="noopener">${t('readOnWikipedia')}</a>
       </div>
     `;
     popup.querySelector('.info-popup-close').addEventListener('click', () => this._closeInfoPopup());
@@ -1089,13 +1095,13 @@ export class OverviewBoard {
     const popup = document.createElement('div');
     popup.className = 'progress-edit-popup';
     popup.innerHTML = `
-      <button type="button" class="info-popup-close" title="Закрыть">×</button>
-      <h3 class="progress-edit-title">${entry.data.ru}</h3>
+      <button type="button" class="info-popup-close" title="${t('closeBtn')}">×</button>
+      <h3 class="progress-edit-title">${itemName(entry.data)}</h3>
       <label class="progress-edit-label">
-        Успехов подряд
+        ${t('successStreakLabel')}
         <input type="number" class="progress-edit-input" min="0" max="99" value="${current}" />
       </label>
-      <button type="button" class="btn btn-primary progress-edit-save">Сохранить</button>
+      <button type="button" class="btn btn-primary progress-edit-save">${t('saveBtn')}</button>
     `;
     popup.style.left = `${x}px`;
     this.zoomWrap.appendChild(popup);
@@ -1133,7 +1139,7 @@ export class OverviewBoard {
     el.hidden = true;
     el.innerHTML = `
       <div class="ruler-readout-body"></div>
-      <button type="button" class="ruler-readout-clear">Очистить</button>
+      <button type="button" class="ruler-readout-clear">${t('rulerClear')}</button>
     `;
     this.rulerReadoutBody = el.querySelector('.ruler-readout-body');
     el.querySelector('.ruler-readout-clear').addEventListener('click', () => this._clearRuler());
@@ -1177,7 +1183,7 @@ export class OverviewBoard {
     const stateId = ev.target?.dataset?.kind === 'state' ? ev.target.dataset.id : null;
     const state = stateId ? this.statesById.get(stateId) : null;
     const category = this._terrainCategoryAt(pt);
-    const label = state ? state.data.ru + (category ? ` — ${this.terrainLabelsByCategory.get(category)}` : '') : null;
+    const label = state ? itemName(state.data) + (category ? ` — ${this.terrainLabelsByCategory.get(category)}` : '') : null;
     this._openContextMenu(ev.clientX, ev.clientY, pt, label);
   }
 
@@ -1195,10 +1201,10 @@ export class OverviewBoard {
     menu.className = 'map-context-menu';
     menu.innerHTML = `
       ${label ? `<div class="map-context-menu-label">${label}</div>` : ''}
-      <div class="map-context-menu-coords">${coords ? formatLonLat(coords) : 'Координаты недоступны'}</div>
-      <button type="button" class="map-context-menu-item" data-action="add-point">Добавить точку</button>
-      <button type="button" class="map-context-menu-item" data-action="open-maps"${coords ? '' : ' disabled'}>Открыть в Google Maps</button>
-      <button type="button" class="map-context-menu-item" data-action="copy"${coords ? '' : ' disabled'}>Скопировать координаты</button>
+      <div class="map-context-menu-coords">${coords ? formatLonLat(coords) : t('coordsUnavailable')}</div>
+      <button type="button" class="map-context-menu-item" data-action="add-point">${t('addPointMenuItem')}</button>
+      <button type="button" class="map-context-menu-item" data-action="open-maps"${coords ? '' : ' disabled'}>${t('openInGoogleMaps')}</button>
+      <button type="button" class="map-context-menu-item" data-action="copy"${coords ? '' : ' disabled'}>${t('copyCoords')}</button>
     `;
     // Attached before positioning so offsetWidth/Height below reflect the
     // menu's real rendered size, not 0 — then clamped to the map frame so
@@ -1287,14 +1293,18 @@ export class OverviewBoard {
   }
 
   _fmtKm(km) {
-    if (km < 10) return `${km.toFixed(2)} км`;
-    if (km < 100) return `${km.toFixed(1)} км`;
-    return `${Math.round(km).toLocaleString('ru-RU')} км`;
+    const unit = t('kmUnit');
+    const locale = getLang() === 'en' ? 'en-US' : 'ru-RU';
+    if (km < 10) return `${km.toFixed(2)} ${unit}`;
+    if (km < 100) return `${km.toFixed(1)} ${unit}`;
+    return `${Math.round(km).toLocaleString(locale)} ${unit}`;
   }
 
   _fmtArea(km2) {
-    if (km2 < 100) return `${km2.toFixed(1)} км²`;
-    return `${Math.round(km2).toLocaleString('ru-RU')} км²`;
+    const unit = t('areaUnit');
+    const locale = getLang() === 'en' ? 'en-US' : 'ru-RU';
+    if (km2 < 100) return `${km2.toFixed(1)} ${unit}`;
+    return `${Math.round(km2).toLocaleString(locale)} ${unit}`;
   }
 
   _clearRuler() {
@@ -1368,10 +1378,10 @@ export class OverviewBoard {
     } else {
       this.rulerReadoutEl.hidden = false;
       const closed = pts.length >= 3;
-      let html = `<div class="ruler-readout-row">${closed ? 'Периметр' : 'Расстояние'}: <strong>${this._fmtKm(totalKm)}</strong></div>`;
+      let html = `<div class="ruler-readout-row">${closed ? t('rulerPerimeter') : t('rulerDistance')}: <strong>${this._fmtKm(totalKm)}</strong></div>`;
       if (closed) {
         const areaKm2 = polygonArea(pts) * kmPerUnit * kmPerUnit;
-        html += `<div class="ruler-readout-row">Площадь: <strong>${this._fmtArea(areaKm2)}</strong></div>`;
+        html += `<div class="ruler-readout-row">${t('rulerArea')}: <strong>${this._fmtArea(areaKm2)}</strong></div>`;
       }
       this.rulerReadoutBody.innerHTML = html;
     }
@@ -1384,26 +1394,26 @@ export class OverviewBoard {
     panel.className = 'overview-panel';
     const tabsHtml =
       this.level.id === 'world'
-        ? `<button type="button" class="overview-tab active" data-tab="oceans">Океаны</button>
-           <button type="button" class="overview-tab" data-tab="seas">Моря</button>
-           <button type="button" class="overview-tab" data-tab="other">Остальное</button>`
+        ? `<button type="button" class="overview-tab active" data-tab="oceans">${t('overviewTabOceans')}</button>
+           <button type="button" class="overview-tab" data-tab="seas">${t('overviewTabSeas')}</button>
+           <button type="button" class="overview-tab" data-tab="other">${t('overviewTabOther')}</button>`
         : this.level.id === 'countries'
           ? // Countries has no cities/places (levels/countries.js: cities: [],
             // places: []) — a single tab, same reasoning as world's
             // Океаны/Моря/Остальное replacing Штаты/Города/Места instead of
             // showing two permanently-empty tabs.
-            `<button type="button" class="overview-tab active" data-tab="states">Страны</button>`
-          : `<button type="button" class="overview-tab active" data-tab="states">Штаты</button>
-           <button type="button" class="overview-tab" data-tab="cities">Города</button>
-           <button type="button" class="overview-tab" data-tab="places">Места</button>`;
+            `<button type="button" class="overview-tab active" data-tab="states">${t('overviewTabCountries')}</button>`
+          : `<button type="button" class="overview-tab active" data-tab="states">${t('overviewTabStates')}</button>
+           <button type="button" class="overview-tab" data-tab="cities">${t('overviewTabCities')}</button>
+           <button type="button" class="overview-tab" data-tab="places">${t('overviewTabPlaces')}</button>`;
     panel.innerHTML = `
       <div class="overview-tabs">
         ${tabsHtml}
       </div>
-      <input type="text" class="overview-search" placeholder="Поиск..." autocomplete="off" />
+      <input type="text" class="overview-search" placeholder="${t('eligSearch')}" autocomplete="off" />
       <div class="overview-list-header">
-        <span class="overview-col-name">Название</span>
-        <button type="button" class="overview-col-sort" data-sort="area">Площадь<span class="overview-sort-arrow"></span></button>
+        <span class="overview-col-name">${t('eligColName')}</span>
+        <button type="button" class="overview-col-sort" data-sort="area">${t('eligColArea')}<span class="overview-sort-arrow"></span></button>
       </div>
       <div class="overview-list-scroll"><div class="overview-item-list"></div></div>
     `;
@@ -1455,7 +1465,7 @@ export class OverviewBoard {
     toggle.type = 'button';
     toggle.className = 'overview-panel-toggle';
     toggle.textContent = '▸';
-    toggle.title = 'Свернуть/развернуть список';
+    toggle.title = t('collapseExpandList');
     toggle.addEventListener('click', () => {
       const collapsed = this.container.classList.toggle('panel-collapsed');
       toggle.textContent = collapsed ? '◂' : '▸';
@@ -1505,13 +1515,14 @@ export class OverviewBoard {
   // rendered a literal "undefined" sub-label for seas (no `.state` field)
   // — same bug already fixed in js/eligibilityList.js's equivalent method.
   _mainColumnHtml(it) {
+    const name = itemName(it);
     if (this.activeTab === 'states' && this.level.id === 'usa') {
-      return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span>`;
+      return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${name}</span></span>`;
     }
     if (this.activeTab === 'cities') {
-      return `<span class="overview-item-main"><span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
+      return `<span class="overview-item-main"><span class="overview-item-name">${name}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
     }
-    return `<span class="overview-item-main"><span class="overview-item-name">${it.ru}</span></span>`;
+    return `<span class="overview-item-main"><span class="overview-item-name">${name}</span></span>`;
   }
 
   // Hover tooltip for a city marker (dot or real-boundary shape alike) —
@@ -1521,14 +1532,14 @@ export class OverviewBoard {
   // on the map while that panel happens to be showing the states tab).
   _cityHoverTitle(c) {
     const areaKm2 = Math.PI * c.radiusKm * c.radiusKm;
-    const areaStr = Math.round(areaKm2).toLocaleString('ru-RU');
-    return `${c.ru} (${c.name}) — R ${c.radiusKm.toFixed(1)} км (${areaStr} км²)`;
+    const areaStr = Math.round(areaKm2).toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU');
+    return `${bilingualLabel(c)} — R ${c.radiusKm.toFixed(1)} ${t('kmUnit')} (${areaStr} ${t('areaUnit')})`;
   }
 
   // Places have no meaningful radius/area (see scripts/build_usa_places.js)
   // — just the name, unlike _cityHoverTitle.
   _placeHoverTitle(p) {
-    return `${p.ru} (${p.name})`;
+    return bilingualLabel(p);
   }
 
   _renderList() {
@@ -1556,13 +1567,14 @@ export class OverviewBoard {
       const dir = this.sortDir === 'asc' ? 1 : -1;
       sorted = [...filtered].sort((a, b) => (this._areaOf(a) - this._areaOf(b)) * dir);
     } else {
-      sorted = [...filtered].sort((a, b) => a.ru.localeCompare(b.ru, 'ru'));
+      const locale = getLang() === 'en' ? 'en' : 'ru';
+      sorted = [...filtered].sort((a, b) => itemName(a).localeCompare(itemName(b), locale));
     }
     this.sortArrowEl.textContent = this.sortBy === 'area' && showArea ? (this.sortDir === 'asc' ? ' ▲' : ' ▼') : '';
 
     this.itemListEl.innerHTML = '';
     if (!sorted.length) {
-      this.itemListEl.innerHTML = '<p class="overview-empty">Ничего не найдено</p>';
+      this.itemListEl.innerHTML = `<p class="overview-empty">${t('eligNothingFound')}</p>`;
       return;
     }
 
@@ -1570,7 +1582,7 @@ export class OverviewBoard {
       const row = document.createElement('button');
       row.type = 'button';
       row.className = 'overview-item';
-      const areaStr = showArea ? Math.round(this._areaOf(it)).toLocaleString('ru-RU') + ' км²' : '';
+      const areaStr = showArea ? Math.round(this._areaOf(it)).toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU') + ' ' + t('areaUnit') : '';
       row.innerHTML = this._mainColumnHtml(it) + `<span class="overview-item-area">${areaStr}</span>`;
       row.addEventListener('click', () => {
         if (this._isPieceTab()) this._focusState(it.id);
@@ -1982,7 +1994,7 @@ export class OverviewBoard {
         // actually reports the category, via _terrainCategoryAt.
         g.appendChild(path);
         this.terrainRegionsByCategory.set(region.category, path);
-        this.terrainLabelsByCategory.set(region.category, region.label);
+        this.terrainLabelsByCategory.set(region.category, terrainLabel(region.category, region.label));
       }
       this.zonesLayer.insertBefore(g, this.zonesLayer.firstChild);
       this.terrainLayer = g;
@@ -2004,9 +2016,10 @@ export class OverviewBoard {
         item.type = 'button';
         item.className = 'terrain-legend-item';
         item.dataset.terrain = region.category;
-        const description = TERRAIN_DESCRIPTIONS[region.category];
-        item.title = description ? `${region.label}\n\n${description}` : region.label;
-        item.innerHTML = `<span class="terrain-legend-swatch" style="background: var(--terrain-${region.category})"></span><span>${region.label}</span>`;
+        const label = terrainLabel(region.category, region.label);
+        const description = terrainDescription(region.category, TERRAIN_DESCRIPTIONS[region.category]);
+        item.title = description ? `${label}\n\n${description}` : label;
+        item.innerHTML = `<span class="terrain-legend-swatch" style="background: var(--terrain-${region.category})"></span><span>${label}</span>`;
         item.addEventListener('click', () => this._toggleTerrainCategory(region.category));
         legend.appendChild(item);
       }
@@ -2072,7 +2085,8 @@ export class OverviewBoard {
     // Island name always leads — see HI_ISLAND_HOVER_LABELS's own comment
     // on why a city name alone isn't enough for a player looking for the
     // island by its actual name (Oahu, say).
-    return best.city ? `${best.island} — ${best.city}` : best.island;
+    const island = hiIslandName(best.island);
+    return best.city ? `${island} — ${hiIslandName(best.city)}` : island;
   }
 
   _terrainCategoryAt(nativePt) {
@@ -2101,7 +2115,7 @@ export class OverviewBoard {
     const state = this.statesById.get(id);
     const nativePt = this._clientToNative(ev.clientX, ev.clientY);
     const category = this._terrainCategoryAt(nativePt);
-    const stateName = state?.data.ru || id;
+    const stateName = state ? itemName(state.data) : id;
     const hiIsland = category ? null : id === 'HI' ? this._hiIslandLabelAt(nativePt) : null;
     const text = category
       ? `${stateName} — ${this.terrainLabelsByCategory.get(category)}`
@@ -2247,7 +2261,7 @@ export class OverviewBoard {
     const wrap = document.createElement('div');
     wrap.className = 'layer-switcher';
     wrap.innerHTML = `
-      <button type="button" class="layer-switcher-btn" title="Слой карты" aria-haspopup="true" aria-expanded="false">
+      <button type="button" class="layer-switcher-btn" title="${t('layerSwitcherTitle')}" aria-haspopup="true" aria-expanded="false">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 3 L21 8 L12 13 L3 8 Z" />
           <path d="M3 12 L12 17 L21 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -2255,9 +2269,9 @@ export class OverviewBoard {
         </svg>
       </button>
       <div class="layer-switcher-menu" hidden>
-        <button type="button" class="layer-switcher-option" data-layer="svg">SVG <span class="layer-switcher-hint">оффлайн</span></button>
+        <button type="button" class="layer-switcher-option" data-layer="svg">SVG <span class="layer-switcher-hint">${t('layerSvgOffline')}</span></button>
         <button type="button" class="layer-switcher-option" data-layer="osm">OpenStreetMap</button>
-        <button type="button" class="layer-switcher-option" data-layer="topo">Топографическая</button>
+        <button type="button" class="layer-switcher-option" data-layer="topo">${t('layerTopo')}</button>
       </div>
     `;
     this.container.appendChild(wrap);

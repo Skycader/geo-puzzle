@@ -14,6 +14,7 @@ import {
 import { loadSuccessStats, recordOutcome } from "./successStats.js";
 import { flyCoinToBalance } from "./coins.js";
 import { REWARDS } from "./constants.js";
+import { t, itemName, answerRevealText, wrongGuessText } from "./i18n.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 // Separate from quizBoard.js's 'quiz-states' scope — clicking a state on
@@ -164,12 +165,12 @@ export class NameStateBoard {
     } else {
       bar.innerHTML = `
         <div class="name-input-row">
-          <button type="button" class="name-hint-btn" data-action="hint" title="Не могу вспомнить — показать название">?</button>
+          <button type="button" class="name-hint-btn" data-action="hint" title="${t('hintBtnTitle')}">?</button>
           <div class="name-input-wrap">
-            <input type="text" class="name-input" placeholder="Впиши название штата..." autocomplete="off" />
+            <input type="text" class="name-input" placeholder="${t('inputPlaceholderState')}" autocomplete="off" />
             <span class="name-match-icon"></span>
           </div>
-          <button type="button" class="name-confirm-btn" data-action="confirm" title="Подтвердить" disabled>✓</button>
+          <button type="button" class="name-confirm-btn" data-action="confirm" title="${t('confirmBtnTitle')}" disabled>✓</button>
         </div>
         <span class="name-feedback"></span>
       `;
@@ -262,7 +263,7 @@ export class NameStateBoard {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "name-option-btn";
-      btn.textContent = opt.ru;
+      btn.textContent = itemName(opt);
       btn.dataset.id = opt.id;
       btn.addEventListener("click", () => this._answerEasy(opt.id, btn));
       this.optionsEl.appendChild(btn);
@@ -306,7 +307,7 @@ export class NameStateBoard {
       btn.disabled = true;
       playError();
       this.mistakes++;
-      this._setFeedback("Не тот штат — попробуй ещё", "wrong");
+      this._setFeedback(t('wrongStateFeedback'), "wrong");
       this._reportProgress();
     }
   }
@@ -359,7 +360,7 @@ export class NameStateBoard {
   _revealHint() {
     if (this.locked || !this.current) return;
     this.roundNeededHelp = true;
-    this._setFeedback(`Ответ: ${this.current.ru} (${this.current.name})`);
+    this._setFeedback(answerRevealText(this.current));
   }
 
   _resetHardInput() {
@@ -392,7 +393,7 @@ export class NameStateBoard {
         const r = this.confirmBtn.getBoundingClientRect();
         flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
       }
-      this._setFeedback("Верно!", "correct");
+      this._setFeedback(t('correctFeedback'), "correct");
       setTimeout(() => {
         this.inputEl.disabled = false;
         this.index++;
@@ -402,7 +403,7 @@ export class NameStateBoard {
       this.roundNeededHelp = true;
       playError();
       this.mistakes++;
-      this._setFeedback(`«${this.matchedPiece.ru}» — не тот штат, попробуй ещё`, "wrong");
+      this._setFeedback(wrongGuessText(this.matchedPiece, 'штат', 'state'), "wrong");
       this.answerBar.classList.add("name-shake");
       setTimeout(
         () => this.answerBar.classList.remove("name-shake"),

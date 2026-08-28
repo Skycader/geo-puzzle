@@ -64,12 +64,12 @@
         <label class="toggle" id="toggle-places-wrap" title="Показать/скрыть места на карте" hidden>
           <input type="checkbox" id="toggle-places" checked />
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span class="toggle-text">Места</span>
+          <span class="toggle-text" id="toggle-places-text">Места</span>
         </label>
         <label class="toggle" id="toggle-highways-wrap" title="Показать/скрыть шоссе на карте" hidden>
           <input type="checkbox" id="toggle-highways" checked />
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span class="toggle-text">Шоссе</span>
+          <span class="toggle-text" id="toggle-highways-text">Шоссе</span>
         </label>
         <!-- "Любование прогрессом" — colors every state from black (0) to
              the current color scheme's accent (10+) by adaptive-mode
@@ -78,7 +78,7 @@
         <label class="toggle" id="toggle-progress-wrap" title="Раскрасить штаты по прогрессу (адаптивная статистика)" hidden>
           <input type="checkbox" id="toggle-progress" />
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span class="toggle-text">Прогресс</span>
+          <span class="toggle-text" id="toggle-progress-text">Прогресс</span>
         </label>
         <!-- Real terrain classification (mountains/forests/plains/desert/
              etc., scripts/build_usa_terrain.js) painted under the state
@@ -109,10 +109,10 @@
             <svg class="progress-scope-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5z" /></svg>
           </button>
           <div class="progress-scope-menu" id="progress-scope-menu" hidden>
-            <button type="button" class="progress-scope-option" data-scope="quiz-states">Найди штат</button>
-            <button type="button" class="progress-scope-option active" data-scope="name-state-states">Назови штат</button>
-            <button type="button" class="progress-scope-option" data-scope="neighbor-states">Назови соседа</button>
-            <button type="button" class="progress-scope-option" data-scope="identify-states">Определи штат</button>
+            <button type="button" class="progress-scope-option" data-scope="quiz-states" data-mode-id="quiz">Найди штат</button>
+            <button type="button" class="progress-scope-option active" data-scope="name-state-states" data-mode-id="name-state">Назови штат</button>
+            <button type="button" class="progress-scope-option" data-scope="neighbor-states" data-mode-id="neighbor">Назови соседа</button>
+            <button type="button" class="progress-scope-option" data-scope="identify-states" data-mode-id="identify">Определи штат</button>
           </div>
         </div>
       </div>
@@ -213,10 +213,10 @@
         </section>
 
         <section class="panel" id="panel-puzzle-settings">
-          <h2>Сложность</h2>
+          <h2 id="puzzle-difficulty-heading">Сложность</h2>
           <div id="preset-list" class="preset-list"></div>
           <div id="custom-count-row" class="custom-count-row" hidden>
-            <label for="custom-count">Штатов, которые нужно вставить: <strong id="custom-count-value">25</strong></label>
+            <label for="custom-count"><span id="custom-count-label">Штатов, которые нужно вставить</span>: <strong id="custom-count-value">25</strong></label>
             <input type="range" id="custom-count" min="1" max="50" value="25" />
           </div>
         </section>
@@ -241,7 +241,7 @@
           <label class="toggle toggle-multiline" id="adaptive-mode-row" hidden>
             <input type="checkbox" id="adaptive-mode-checkbox" />
             <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            <span class="toggle-text">Адаптивный режим — чаще спрашивать штаты, которые даются сложнее</span>
+            <span class="toggle-text" id="adaptive-mode-text">Адаптивный режим — чаще спрашивать штаты, которые даются сложнее</span>
           </label>
           <!-- "Найди X" modes only (quiz/sea-quiz) — right-click submits a
                piece directly instead of the normal click-to-select,
@@ -250,20 +250,20 @@
           <label class="toggle toggle-multiline" id="quick-select-row" hidden>
             <input type="checkbox" id="quick-select-checkbox" />
             <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            <span class="toggle-text">Быстрый выбор (ПКМ) — правый клик сразу подтверждает ответ</span>
+            <span class="toggle-text" id="quick-select-text">Быстрый выбор (ПКМ) — правый клик сразу подтверждает ответ</span>
           </label>
           <div id="quiz-eligible-wrap" class="elig-wrap" hidden></div>
         </section>
 
         <section class="panel" id="panel-overview-settings" hidden>
-          <h2>Отображение</h2>
+          <h2 id="overview-heading">Отображение</h2>
           <div id="overview-list" class="preset-list"></div>
         </section>
 
         <section class="panel" id="panel-journey-settings" hidden>
-          <h2>Как отвечать</h2>
+          <h2 id="journey-answer-heading">Как отвечать</h2>
           <div id="journey-answer-mode" class="preset-list"></div>
-          <h2>Сложность</h2>
+          <h2 id="journey-difficulty-heading">Сложность</h2>
           <div id="journey-difficulty" class="preset-list"></div>
         </section>
       </div>

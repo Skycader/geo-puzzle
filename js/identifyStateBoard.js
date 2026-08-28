@@ -4,6 +4,7 @@ import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } fro
 import { loadSuccessStats, recordOutcome } from './successStats.js';
 import { flyCoinToBalance } from './coins.js';
 import { REWARDS } from './constants.js';
+import { t, itemName, answerRevealText, wrongGuessText } from './i18n.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 // Distinct scope — identifying a state from its bare, isolated shape is a
@@ -75,12 +76,12 @@ export class IdentifyStateBoard {
     } else {
       bar.innerHTML = `
         <div class="name-input-row">
-          <button type="button" class="name-hint-btn" data-action="hint" title="Не могу вспомнить — показать название">?</button>
+          <button type="button" class="name-hint-btn" data-action="hint" title="${t('hintBtnTitle')}">?</button>
           <div class="name-input-wrap">
-            <input type="text" class="name-input" placeholder="Впиши название штата..." autocomplete="off" />
+            <input type="text" class="name-input" placeholder="${t('inputPlaceholderState')}" autocomplete="off" />
             <span class="name-match-icon"></span>
           </div>
-          <button type="button" class="name-confirm-btn" data-action="confirm" title="Подтвердить" disabled>✓</button>
+          <button type="button" class="name-confirm-btn" data-action="confirm" title="${t('confirmBtnTitle')}" disabled>✓</button>
         </div>
         <span class="name-feedback"></span>
       `;
@@ -212,7 +213,7 @@ export class IdentifyStateBoard {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'name-option-btn';
-      btn.textContent = opt.ru;
+      btn.textContent = itemName(opt);
       btn.dataset.id = opt.id;
       btn.addEventListener('click', () => this._answerEasy(opt.id, btn));
       this.optionsEl.appendChild(btn);
@@ -235,7 +236,7 @@ export class IdentifyStateBoard {
       const r = this.svg.getBoundingClientRect();
       flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
     }
-    this.feedbackEl.textContent = 'Верно!';
+    this.feedbackEl.textContent = t('correctFeedback');
     this.feedbackEl.classList.remove('name-feedback-wrong');
     this.feedbackEl.classList.add('name-feedback-correct');
     setTimeout(() => {
@@ -265,7 +266,7 @@ export class IdentifyStateBoard {
       btn.disabled = true;
       playError();
       this.mistakes++;
-      this.feedbackEl.textContent = 'Не тот штат — попробуй ещё';
+      this.feedbackEl.textContent = t('wrongStateFeedback');
       this.feedbackEl.classList.remove('name-feedback-correct');
       this.feedbackEl.classList.add('name-feedback-wrong');
       this._reportProgress();
@@ -301,7 +302,7 @@ export class IdentifyStateBoard {
   _revealHint() {
     if (this.locked || !this.current) return;
     this.roundNeededHelp = true;
-    this.feedbackEl.textContent = `Ответ: ${this.current.ru} (${this.current.name})`;
+    this.feedbackEl.textContent = answerRevealText(this.current);
     this.feedbackEl.classList.remove('name-feedback-correct', 'name-feedback-wrong');
   }
 
@@ -325,7 +326,7 @@ export class IdentifyStateBoard {
       this.roundNeededHelp = true;
       playError();
       this.mistakes++;
-      this.feedbackEl.textContent = `«${this.matchedPiece.ru}» — не тот штат, попробуй ещё`;
+      this.feedbackEl.textContent = wrongGuessText(this.matchedPiece, 'штат', 'state');
       this.feedbackEl.classList.remove('name-feedback-correct');
       this.feedbackEl.classList.add('name-feedback-wrong');
       this.answerBar.classList.add('name-shake');

@@ -4,6 +4,7 @@ import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } fro
 import { buildStateBackground } from './mapBackground.js';
 import { flyCoinToBalance } from './coins.js';
 import { REWARDS } from './constants.js';
+import { t, itemName } from './i18n.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -113,8 +114,8 @@ export class CityPinBoard {
     bar.className = 'city-actions';
     bar.innerHTML = `
       <span class="pin-feedback" id="pin-feedback"></span>
-      <button type="button" class="btn btn-primary" data-action="confirm">Подтвердить</button>
-      <button type="button" class="btn btn-primary" data-action="next" hidden>Далее ▶</button>
+      <button type="button" class="btn btn-primary" data-action="confirm">${t('confirmBtnTitle')}</button>
+      <button type="button" class="btn btn-primary" data-action="next" hidden>${t('nextBtn')}</button>
     `;
     this.feedbackEl = bar.querySelector('.pin-feedback');
     this.confirmBtn = bar.querySelector('[data-action="confirm"]');
@@ -254,7 +255,7 @@ export class CityPinBoard {
         flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
       }
     }
-    this.feedbackEl.textContent = `${this.current.ru}: ${distKm} км от цели`;
+    this.feedbackEl.textContent = `${itemName(this.current)}: ${distKm} ${t('distanceFromTarget')}`;
     this.confirmBtn.hidden = true;
     this.nextBtn.hidden = false;
     this._reportProgress();

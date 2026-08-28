@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 // Backup/restore of everything this game persists to localStorage — coin
 // balance, adaptive-mode success streaks, per-list eligibility selections,
 // last-used settings, color scheme. Exported as one JSON file the player
@@ -55,14 +57,14 @@ export async function importProgressFile(file) {
   try {
     payload = JSON.parse(text);
   } catch {
-    throw new Error('Файл повреждён или это не JSON.');
+    throw new Error(t('importErrCorrupt'));
   }
   if (!payload || typeof payload !== 'object' || !payload.data || typeof payload.data !== 'object') {
-    throw new Error('Это не похоже на файл экспорта GEO PUZZLE.');
+    throw new Error(t('importErrNotExport'));
   }
   const entries = Object.entries(payload.data).filter(([key, value]) => isOwnKey(key) && typeof value === 'string');
   if (!entries.length) {
-    throw new Error('В файле не нашлось данных для восстановления.');
+    throw new Error(t('importErrEmpty'));
   }
   for (const [key, value] of entries) {
     try {

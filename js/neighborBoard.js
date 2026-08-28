@@ -4,6 +4,7 @@ import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } fro
 import { loadSuccessStats, recordOutcome } from './successStats.js';
 import { flyCoinToBalance } from './coins.js';
 import { REWARDS } from './constants.js';
+import { t, itemName, wrongGuessText, correctNeighborText, answerRevealText } from './i18n.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 // Separate scope from quiz-states/name-state-states — knowing a state's
@@ -124,20 +125,20 @@ export class NeighborBoard {
     const bar = document.createElement('div');
     bar.className = 'name-answer-bar';
     if (this.difficulty === 'easy') {
-      bar.innerHTML = `<div class="name-options"></div><span class="name-feedback"></span><button type="button" class="btn btn-primary name-next-btn" hidden>Далее ▶</button>`;
+      bar.innerHTML = `<div class="name-options"></div><span class="name-feedback"></span><button type="button" class="btn btn-primary name-next-btn" hidden>${t('nextBtn')}</button>`;
       this.optionsEl = bar.querySelector('.name-options');
     } else {
       bar.innerHTML = `
         <div class="name-input-row">
-          <button type="button" class="name-hint-btn" data-action="hint" title="Не могу вспомнить — показать название">?</button>
+          <button type="button" class="name-hint-btn" data-action="hint" title="${t('hintBtnTitle')}">?</button>
           <div class="name-input-wrap">
-            <input type="text" class="name-input" placeholder="Впиши название соседа..." autocomplete="off" />
+            <input type="text" class="name-input" placeholder="${t('inputPlaceholderNeighbor')}" autocomplete="off" />
             <span class="name-match-icon"></span>
           </div>
-          <button type="button" class="name-confirm-btn" data-action="confirm" title="Подтвердить" disabled>✓</button>
+          <button type="button" class="name-confirm-btn" data-action="confirm" title="${t('confirmBtnTitle')}" disabled>✓</button>
         </div>
         <span class="name-feedback"></span>
-        <button type="button" class="btn btn-primary name-next-btn" hidden>Далее ▶</button>
+        <button type="button" class="btn btn-primary name-next-btn" hidden>${t('nextBtn')}</button>
       `;
       this.inputEl = bar.querySelector('.name-input');
       this.matchIconEl = bar.querySelector('.name-match-icon');
@@ -318,7 +319,7 @@ export class NeighborBoard {
     label.setAttribute('x', piece.cx);
     label.setAttribute('y', piece.cy);
     label.setAttribute('class', className);
-    label.textContent = piece.ru;
+    label.textContent = itemName(piece);
     this.svg.appendChild(label);
   }
 
@@ -366,7 +367,7 @@ export class NeighborBoard {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'name-option-btn';
-      btn.textContent = opt.ru;
+      btn.textContent = itemName(opt);
       btn.dataset.id = opt.id;
       btn.addEventListener('click', () => this._answerEasy(opt.id, btn));
       this.optionsEl.appendChild(btn);
@@ -390,7 +391,7 @@ export class NeighborBoard {
       const r = this.svg.getBoundingClientRect();
       flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
     }
-    this.feedbackEl.textContent = `Верно! Сосед: ${this.currentNeighbor.ru} (${this.currentNeighbor.name})`;
+    this.feedbackEl.textContent = correctNeighborText(this.currentNeighbor);
     this.feedbackEl.classList.remove('name-feedback-wrong');
     this.feedbackEl.classList.add('name-feedback-correct');
     this._renderRoundBoard(true);
@@ -435,7 +436,7 @@ export class NeighborBoard {
       btn.disabled = true;
       playError();
       this.mistakes++;
-      this.feedbackEl.textContent = 'Не тот сосед — попробуй ещё';
+      this.feedbackEl.textContent = t('wrongNeighborFeedback');
       this.feedbackEl.classList.remove('name-feedback-correct');
       this.feedbackEl.classList.add('name-feedback-wrong');
       this._reportProgress();
@@ -471,7 +472,7 @@ export class NeighborBoard {
   _revealHint() {
     if (this.locked || !this.current) return;
     this.roundNeededHelp = true;
-    this.feedbackEl.textContent = `Ответ: ${this.currentNeighbor.ru} (${this.currentNeighbor.name})`;
+    this.feedbackEl.textContent = answerRevealText(this.currentNeighbor);
     this.feedbackEl.classList.remove('name-feedback-correct', 'name-feedback-wrong');
   }
 
@@ -495,7 +496,7 @@ export class NeighborBoard {
       this.roundNeededHelp = true;
       playError();
       this.mistakes++;
-      this.feedbackEl.textContent = `«${this.matchedPiece.ru}» — не тот сосед, попробуй ещё`;
+      this.feedbackEl.textContent = wrongGuessText(this.matchedPiece, 'сосед', 'neighbor');
       this.feedbackEl.classList.remove('name-feedback-correct');
       this.feedbackEl.classList.add('name-feedback-wrong');
       this.answerBar.classList.add('name-shake');

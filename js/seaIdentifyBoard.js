@@ -2,6 +2,7 @@ import { shuffle, clamp, levenshtein } from './utils.js';
 import { playSnap, playError, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { buildStateBackground } from './mapBackground.js';
+import { t, itemName, answerRevealText, wrongGuessNoNounText } from './i18n.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const OPTION_COUNT = 4;
@@ -65,12 +66,12 @@ export class SeaIdentifyBoard {
     } else {
       bar.innerHTML = `
         <div class="name-input-row">
-          <button type="button" class="name-hint-btn" data-action="hint" title="Не могу вспомнить — показать название">?</button>
+          <button type="button" class="name-hint-btn" data-action="hint" title="${t('hintBtnTitle')}">?</button>
           <div class="name-input-wrap">
-            <input type="text" class="name-input" placeholder="Впиши название моря/океана..." autocomplete="off" />
+            <input type="text" class="name-input" placeholder="${t('inputPlaceholderSea')}" autocomplete="off" />
             <span class="name-match-icon"></span>
           </div>
-          <button type="button" class="name-confirm-btn" data-action="confirm" title="Подтвердить" disabled>✓</button>
+          <button type="button" class="name-confirm-btn" data-action="confirm" title="${t('confirmBtnTitle')}" disabled>✓</button>
         </div>
         <span class="name-feedback"></span>
       `;
@@ -171,7 +172,7 @@ export class SeaIdentifyBoard {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'name-option-btn';
-      btn.textContent = opt.ru;
+      btn.textContent = itemName(opt);
       btn.dataset.id = opt.id;
       btn.addEventListener('click', () => this._answerEasy(opt.id, btn));
       this.optionsEl.appendChild(btn);
@@ -182,7 +183,7 @@ export class SeaIdentifyBoard {
     this.locked = true;
     playSnap();
     this.correct++;
-    this.feedbackEl.textContent = 'Верно!';
+    this.feedbackEl.textContent = t('correctFeedback');
     this.feedbackEl.classList.remove('name-feedback-wrong');
     this.feedbackEl.classList.add('name-feedback-correct');
     setTimeout(() => {
@@ -205,7 +206,7 @@ export class SeaIdentifyBoard {
       btn.disabled = true;
       playError();
       this.mistakes++;
-      this.feedbackEl.textContent = 'Не то море/океан — попробуй ещё';
+      this.feedbackEl.textContent = t('wrongSeaFeedback');
       this.feedbackEl.classList.remove('name-feedback-correct');
       this.feedbackEl.classList.add('name-feedback-wrong');
       this._reportProgress();
@@ -244,7 +245,7 @@ export class SeaIdentifyBoard {
   _revealHint() {
     if (this.locked || !this.current) return;
     this.roundNeededHelp = true;
-    this.feedbackEl.textContent = `Ответ: ${this.current.ru} (${this.current.name})`;
+    this.feedbackEl.textContent = answerRevealText(this.current);
     this.feedbackEl.classList.remove('name-feedback-correct', 'name-feedback-wrong');
   }
 
@@ -268,7 +269,7 @@ export class SeaIdentifyBoard {
       this.roundNeededHelp = true;
       playError();
       this.mistakes++;
-      this.feedbackEl.textContent = `«${this.matchedPiece.ru}» — не то, попробуй ещё`;
+      this.feedbackEl.textContent = wrongGuessNoNounText(this.matchedPiece);
       this.feedbackEl.classList.remove('name-feedback-correct');
       this.feedbackEl.classList.add('name-feedback-wrong');
       this.answerBar.classList.add('name-shake');

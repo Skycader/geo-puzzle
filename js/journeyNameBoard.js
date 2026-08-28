@@ -4,6 +4,7 @@ import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } fro
 import { loadSuccessStats, recordOutcome } from './successStats.js';
 import { flyCoinToBalance } from './coins.js';
 import { REWARDS } from './constants.js';
+import { t, itemName, bilingualLabel, journeyProgressText, journeyNearestChainStateText, journeyNotAdjacentText } from './i18n.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SUCCESS_SCOPE = 'journey-states';
@@ -212,7 +213,7 @@ export class JourneyNameBoard {
     path.setAttribute('class', animate ? 'piece-shape journey-state-reveal' : 'piece-shape');
     path.setAttribute('fill', 'url(#piece-grad)');
     const title = document.createElementNS(SVG_NS, 'title');
-    title.textContent = `${data.ru} (${data.name})`;
+    title.textContent = bilingualLabel(data);
     path.appendChild(title);
     this.stateLayer.appendChild(path);
     this.stateShapeEls.set(data.id, path);
@@ -221,7 +222,7 @@ export class JourneyNameBoard {
     label.setAttribute('x', data.cx);
     label.setAttribute('y', data.cy);
     label.setAttribute('class', animate ? 'piece-label journey-state-reveal' : 'piece-label');
-    label.textContent = data.ru;
+    label.textContent = itemName(data);
     this.stateLayer.appendChild(label);
     this.labelEls.push(label);
   }
@@ -259,12 +260,12 @@ export class JourneyNameBoard {
     bar.innerHTML = `
       <div class="name-journey-progress"></div>
       <div class="name-input-row">
-        <button type="button" class="name-hint-btn" data-action="hint" title="Не могу вспомнить — показать название">?</button>
+        <button type="button" class="name-hint-btn" data-action="hint" title="${t('hintBtnTitle')}">?</button>
         <div class="name-input-wrap">
-          <input type="text" class="name-input" placeholder="Впиши название штата..." autocomplete="off" />
+          <input type="text" class="name-input" placeholder="${t('inputPlaceholderState')}" autocomplete="off" />
           <span class="name-match-icon"></span>
         </div>
-        <button type="button" class="name-confirm-btn" data-action="confirm" title="Подтвердить" disabled>✓</button>
+        <button type="button" class="name-confirm-btn" data-action="confirm" title="${t('confirmBtnTitle')}" disabled>✓</button>
       </div>
       <span class="name-feedback"></span>
     `;
@@ -296,7 +297,7 @@ export class JourneyNameBoard {
   // _isConnected for the actual win condition, which can trip on an
   // accepted state that ISN'T in this.chain at all.
   _updateProgressText() {
-    this.progressEl.textContent = `Штатов цепочки собрано: ${this.correct}/${this.toGuess.length}, между ${this.startPiece.ru} и ${this.endPiece.ru}`;
+    this.progressEl.textContent = journeyProgressText(this.correct, this.toGuess.length, this.startPiece, this.endPiece);
   }
 
   // BFS from the start, over the subgraph induced by this.accepted (a
@@ -383,7 +384,7 @@ export class JourneyNameBoard {
     const target = this._nearestUnguessedChainState();
     if (!target) return; // every this.chain state is already accepted
     this.chainHintsUsed.add(target.id);
-    this._setFeedback(`Ближайший штат цепочки: ${target.ru} (${target.name})`);
+    this._setFeedback(journeyNearestChainStateText(target));
   }
 
   _resetInput() {
@@ -405,7 +406,7 @@ export class JourneyNameBoard {
     // new credit either.
     if (this.accepted.has(id)) {
       this._pulseAlreadyAccepted(id);
-      this._setFeedback('Уже отмечено на карте', 'correct');
+      this._setFeedback(t('journeyAlreadyMarked'), 'correct');
       this._resetInput();
       return;
     }
@@ -415,7 +416,7 @@ export class JourneyNameBoard {
       playError();
       this.mistakes++;
       this._flashRejectedState(id);
-      this._setFeedback(`«${this.matchedPiece.ru}» не граничит ни с чем из уже пройденного`, 'wrong');
+      this._setFeedback(journeyNotAdjacentText(this.matchedPiece), 'wrong');
       this.answerBar.classList.add('name-shake');
       setTimeout(() => this.answerBar.classList.remove('name-shake'), WRONG_FLASH_MS);
       this._reportProgress();
@@ -443,9 +444,9 @@ export class JourneyNameBoard {
         const r = this.confirmBtn.getBoundingClientRect();
         flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
       }
-      this._setFeedback('Верно!', 'correct');
+      this._setFeedback(t('correctFeedback'), 'correct');
     } else {
-      this._setFeedback('Штат на карте, но не в маршруте — без монет', 'correct');
+      this._setFeedback(t('journeyOffRoute'), 'correct');
     }
     this._updateProgressText();
     this._reportProgress();

@@ -36,6 +36,9 @@ import {
   levelText,
   modeText,
   presetText,
+  itemName,
+  importRestoredText,
+  cityPlaceRoundsLabel,
   PRESETS_EN,
   NAME_STATE_DIFFICULTIES_EN,
   NEIGHBOR_DIFFICULTIES_EN,
@@ -62,27 +65,33 @@ const ADAPTIVE_SUCCESS_SCOPE_BY_MODE = {
 };
 
 // 'city-place' isn't here — its heading/label/prompt depend on its own two
-// toggles (entity, interaction), computed by _cityPlaceRoundsText() instead
-// of a static per-mode lookup. quiz/name-state/neighbor/identify are
-// shared between levels.usa and levels.countries (see js/modes.js's
-// `levels` arrays) — the "штатов" wording is wrong on the countries level,
-// so this is looked up per (mode, level) pair via _roundsPanelText() below
-// rather than by mode id alone.
-const ROUNDS_PANEL_TEXT = {
-  quiz: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: 'Найди на карте:' },
-  'name-state': { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
-  neighbor: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
-  identify: { heading: 'Раунд', label: 'Сколько штатов спросить', prompt: '' },
-  colorfill: { heading: 'Раунд', label: 'Сколько штатов закрасить', prompt: '' },
-  'sea-identify': { heading: 'Раунд', label: 'Сколько морей/океанов спросить', prompt: '' },
-  'sea-quiz': { heading: 'Раунд', label: 'Сколько морей/океанов спросить', prompt: 'Найди на карте:' },
+// toggles (entity, interaction), computed by _cityPlaceRoundsText() instead.
+// quiz/name-state/neighbor/identify are shared between levels.usa and
+// levels.countries (see js/modes.js's `levels` arrays) — the "штатов"/
+// "states" wording is wrong on the countries level, so the label key is
+// looked up per (mode, level) pair, not by mode id alone. Both languages'
+// actual text live in js/i18n.js's STRINGS (t()) — this table only maps
+// each mode id to WHICH key applies, so it's language-agnostic itself and
+// never needs a language-swap pass of its own.
+const ROUNDS_PANEL_LABEL_KEY = {
+  quiz: 'howManyStatesAsk',
+  'name-state': 'howManyStatesAsk',
+  neighbor: 'howManyStatesAsk',
+  identify: 'howManyStatesAsk',
+  colorfill: 'howManyStatesColor',
+  'sea-identify': 'howManySeasAsk',
+  'sea-quiz': 'howManySeasAsk',
 };
-const ROUNDS_PANEL_TEXT_COUNTRIES = {
-  quiz: { heading: 'Раунд', label: 'Сколько стран спросить', prompt: 'Найди на карте:' },
-  'name-state': { heading: 'Раунд', label: 'Сколько стран спросить', prompt: '' },
-  neighbor: { heading: 'Раунд', label: 'Сколько стран спросить', prompt: '' },
-  identify: { heading: 'Раунд', label: 'Сколько стран спросить', prompt: '' },
+const ROUNDS_PANEL_LABEL_KEY_COUNTRIES = {
+  quiz: 'howManyCountriesAsk',
+  'name-state': 'howManyCountriesAsk',
+  neighbor: 'howManyCountriesAsk',
+  identify: 'howManyCountriesAsk',
 };
+// Only these two modes show the click-to-find prompt bar at all (the rest
+// pass '' — see _roundsPanelText, which reuses this same set for both
+// levels since the prompt text itself doesn't depend on state-vs-country).
+const ROUNDS_PANEL_HAS_PROMPT = new Set(['quiz', 'sea-quiz']);
 
 // Mode-card title/desc for the same 4 shared modes, on the countries
 // level — MODES' own title/desc say "штат" (grammatically masculine),
@@ -117,8 +126,9 @@ const LAND_SCHEME_STORAGE_KEY = 'geoPuzzleLandScheme';
 // _saveLastSettings (called from startGame()) and _loadLastSettings
 // (called from the constructor, before the menu is first rendered).
 const LAST_SETTINGS_STORAGE_KEY = 'geoPuzzleLastSettings';
-// "Рельеф" toggle's 3 steps — see _setTerrainMode.
-const TERRAIN_MODE_LABELS = { off: 'Рельеф', color: 'Рельеф: цвет', pattern: 'Рельеф: иконки' };
+// "Рельеф" toggle's 3 steps — see _setTerrainMode. Keys into js/i18n.js's
+// STRINGS (t()), not literal text — same reasoning as ROUNDS_PANEL_LABEL_KEY.
+const TERRAIN_MODE_KEYS = { off: 'terrainOff', color: 'terrainColor', pattern: 'terrainPattern' };
 // How far above the map's own rendered bottom edge the finish button sits
 // (see _positionWinBar) — comfortably more than half the button's own
 // height so it never straddles that edge.
@@ -350,20 +360,31 @@ export class Game {
       toggleLabelsText: document.getElementById('toggle-labels-text'),
       togglePlacesWrap: document.getElementById('toggle-places-wrap'),
       togglePlaces: document.getElementById('toggle-places'),
+      togglePlacesText: document.getElementById('toggle-places-text'),
       toggleHighwaysWrap: document.getElementById('toggle-highways-wrap'),
       toggleHighways: document.getElementById('toggle-highways'),
+      toggleHighwaysText: document.getElementById('toggle-highways-text'),
       toggleProgressWrap: document.getElementById('toggle-progress-wrap'),
       toggleProgress: document.getElementById('toggle-progress'),
+      toggleProgressText: document.getElementById('toggle-progress-text'),
       toggleTerrainWrap: document.getElementById('toggle-terrain-wrap'),
       toggleTerrainText: document.getElementById('toggle-terrain-text'),
       progressScopeWrap: document.getElementById('progress-scope-wrap'),
       progressScopeBtn: document.getElementById('progress-scope-btn'),
       progressScopeLabel: document.getElementById('progress-scope-label'),
       progressScopeMenu: document.getElementById('progress-scope-menu'),
+      toggleLandSchemeWrap: document.getElementById('toggle-land-scheme-wrap'),
       toggleLandScheme: document.getElementById('toggle-land-scheme'),
       faviconLink: document.getElementById('favicon-link'),
       coinBalance: document.getElementById('coin-balance'),
       coinBalanceValue: document.getElementById('coin-balance-value'),
+      puzzleDifficultyHeading: document.getElementById('puzzle-difficulty-heading'),
+      customCountLabel: document.getElementById('custom-count-label'),
+      adaptiveModeText: document.getElementById('adaptive-mode-text'),
+      quickSelectText: document.getElementById('quick-select-text'),
+      overviewHeadingEl: document.getElementById('overview-heading'),
+      journeyAnswerHeadingEl: document.getElementById('journey-answer-heading'),
+      journeyDifficultyHeadingEl: document.getElementById('journey-difficulty-heading'),
     };
   }
 
@@ -454,7 +475,7 @@ export class Game {
     this.el.btnExportProgress.addEventListener('click', () => {
       playClick();
       downloadProgressExport();
-      this._setProgressIoStatus('Файл сохранён.', 'success');
+      this._setProgressIoStatus(t('exportSaved'), 'success');
     });
     this.el.btnImportProgress.addEventListener('click', () => {
       playClick();
@@ -464,13 +485,13 @@ export class Game {
       const file = this.el.importProgressInput.files?.[0];
       this.el.importProgressInput.value = ''; // lets the same file be re-selected later
       if (!file) return;
-      if (!confirm('Импорт заменит текущий прогресс (монеты, адаптивную статистику, сохранённые настройки) данными из файла. Продолжить?')) return;
+      if (!confirm(t('importConfirm'))) return;
       try {
         const count = await importProgressFile(file);
-        this._setProgressIoStatus(`Восстановлено записей: ${count}. Перезагружаю…`, 'success');
+        this._setProgressIoStatus(importRestoredText(count), 'success');
         setTimeout(() => location.reload(), 900);
       } catch (err) {
-        this._setProgressIoStatus(err.message || 'Не удалось импортировать файл.', 'error');
+        this._setProgressIoStatus(err.message || t('importFailed'), 'error');
       }
     });
   }
@@ -545,6 +566,48 @@ export class Game {
     // player happened to touch a level/mode card and re-trigger it
     // indirectly.
     this._applyModeVisibility();
+    this._applyStaticUiTranslations();
+  }
+
+  // Every other fixed piece of index.html chrome (topbar tooltips, HUD
+  // toggle labels, panel headings, the Play/Back-to-menu buttons) that
+  // doesn't depend on which level/mode is currently selected — split out
+  // from _applyMenuTranslations above just to keep that one focused on
+  // the level/mode-dependent pieces.
+  _applyStaticUiTranslations() {
+    this.el.btnBrand.title = t('brandTitle');
+    this.el.toggleHintsWrap.title = t('hintsTitle');
+    this.el.toggleLabelsWrap.title = t('lettersTitle');
+    this.el.togglePlacesWrap.title = t('placesTitle');
+    this.el.togglePlacesText.textContent = t('placesToggleText');
+    this.el.toggleHighwaysWrap.title = t('highwaysTitle');
+    this.el.toggleHighwaysText.textContent = t('highwaysToggleText');
+    this.el.toggleProgressWrap.title = t('progressTitle');
+    this.el.toggleProgressText.textContent = t('progressToggleText');
+    this.el.toggleTerrainWrap.title = t('terrainTitle');
+    this.el.toggleTerrainWrap.querySelector('[data-mode="off"]').setAttribute('aria-label', t('terrainOffLabel'));
+    this.el.toggleTerrainWrap.querySelector('[data-mode="color"]').setAttribute('aria-label', t('terrainColorLabel'));
+    this.el.toggleTerrainWrap.querySelector('[data-mode="pattern"]').setAttribute('aria-label', t('terrainPatternLabel'));
+    this.el.progressScopeBtn.title = t('progressScopeTitle');
+    this.el.progressScopeMenu.querySelectorAll('.progress-scope-option').forEach((btn) => {
+      const mode = MODES.find((m) => m.id === btn.dataset.modeId);
+      if (mode) btn.textContent = modeText(mode, 'usa').title; // progress scope is USA-only, no country wording needed
+    });
+    this._setProgressScopeUI();
+    this.el.coinBalance.title = t('coinBalanceTitle');
+    this.el.toggleLandSchemeWrap.title = t('landSchemeTitle');
+    this.el.progressIoBtn.title = t('progressIoTitle');
+    this.el.btnExportProgress.textContent = t('exportProgressBtn');
+    this.el.btnImportProgress.textContent = t('importProgressBtn');
+    this.el.puzzleDifficultyHeading.textContent = t('puzzleDifficultyHeading');
+    this.el.customCountLabel.textContent = t('customCountLabel');
+    this.el.adaptiveModeText.textContent = t('adaptiveModeText');
+    this.el.quickSelectText.textContent = t('quickSelectText');
+    this.el.overviewHeadingEl.textContent = t('overviewHeading');
+    this.el.journeyAnswerHeadingEl.textContent = t('journeyAnswerHeading');
+    this.el.journeyDifficultyHeadingEl.textContent = t('journeyDifficultyHeading');
+    this.el.btnStart.textContent = t('playButton');
+    this.el.btnBackMenu.textContent = t('backToMenuButton');
   }
 
   _openLangSwitcherMenu() {
@@ -611,7 +674,7 @@ export class Game {
   _setTerrainMode(mode, { silent = false } = {}) {
     this.terrainMode = mode;
     this.el.toggleTerrainWrap.dataset.mode = mode;
-    this.el.toggleTerrainText.textContent = TERRAIN_MODE_LABELS[mode];
+    this.el.toggleTerrainText.textContent = t(TERRAIN_MODE_KEYS[mode]);
     if (!silent && this.board?.setTerrainMode) this.board.setTerrainMode(mode);
   }
 
@@ -761,9 +824,9 @@ export class Game {
     this.el.cityPlaceEntityRow.hidden = !isCityPlace;
     this.el.cityPlaceModeRow.hidden = !isCityPlace;
     this.el.cityPlaceEntityCheckbox.checked = this.cityPlaceEntity === 'places';
-    this.el.cityPlaceEntityText.textContent = this.cityPlaceEntity === 'places' ? 'Места' : 'Города';
+    this.el.cityPlaceEntityText.textContent = t(this.cityPlaceEntity === 'places' ? 'cityPlaceEntityPlaces' : 'cityPlaceEntityCities');
     this.el.cityPlaceModeCheckbox.checked = this.cityPlaceMode === 'pin';
-    this.el.cityPlaceModeText.textContent = this.cityPlaceMode === 'pin' ? 'Расставь метку' : 'Найди на карте';
+    this.el.cityPlaceModeText.textContent = t(this.cityPlaceMode === 'pin' ? 'cityPlaceModePin' : 'cityPlaceModeFind');
 
     if (!isRounds) {
       this.eligibilityList?.destroy();
@@ -772,11 +835,7 @@ export class Game {
       return;
     }
 
-    const text = isCityPlace
-      ? this._cityPlaceRoundsText()
-      : this.levelId === 'countries' && ROUNDS_PANEL_TEXT_COUNTRIES[this.modeId]
-        ? ROUNDS_PANEL_TEXT_COUNTRIES[this.modeId]
-        : ROUNDS_PANEL_TEXT[this.modeId];
+    const text = isCityPlace ? this._cityPlaceRoundsText() : this._roundsPanelText();
     this.el.quizPanelHeading.textContent = text.heading;
     this.el.quizCountLabel.textContent = text.label;
     this.el.quizPromptLabel.textContent = text.prompt;
@@ -830,12 +889,21 @@ export class Game {
   // "Города и места"'s heading/label/prompt depend on its own two toggles
   // rather than a static per-mode lookup — see ROUNDS_PANEL_TEXT's comment.
   _cityPlaceRoundsText() {
-    const entityWord = this.cityPlaceEntity === 'places' ? 'мест' : 'городов';
     const isPin = this.cityPlaceMode === 'pin';
     return {
-      heading: 'Раунд',
-      label: `Сколько ${entityWord} ${isPin ? 'отметить' : 'спросить'}`,
-      prompt: isPin ? 'Отметь на карте:' : 'Найди на карте:',
+      heading: t('roundHeading'),
+      label: cityPlaceRoundsLabel(this.cityPlaceEntity === 'places', isPin),
+      prompt: isPin ? t('markOnMapPrompt') : t('findOnMapPrompt'),
+    };
+  }
+
+  _roundsPanelText() {
+    const keyMap = this.levelId === 'countries' ? ROUNDS_PANEL_LABEL_KEY_COUNTRIES : ROUNDS_PANEL_LABEL_KEY;
+    const key = keyMap[this.modeId] ?? ROUNDS_PANEL_LABEL_KEY[this.modeId];
+    return {
+      heading: t('roundHeading'),
+      label: t(key),
+      prompt: ROUNDS_PANEL_HAS_PROMPT.has(this.modeId) ? t('findOnMapPrompt') : '',
     };
   }
 
@@ -854,10 +922,18 @@ export class Game {
     this.el.btnStart.disabled = eligibleCount === 0;
   }
 
-  // "Найди штат"-style mode heading text — same MODE_CARD_TEXT_COUNTRIES
-  // titles already used for the mode-selection cards, reused here for the
-  // in-game HUD heading so the two never drift apart.
+  // "Найди штат"-style mode heading text — reuses the exact same title
+  // js/i18n.js's modeText()/MODE_CARD_TEXT_COUNTRIES already compute for
+  // the mode-selection cards, so the two never drift apart in either
+  // language. `fallback` is the plain Russian title (unchanged call sites
+  // still work) — in English it's routed through modeText() by looking up
+  // the real MODES entry for modeId rather than needing every call site
+  // to also pass its own English fallback.
   _modeHeadingText(modeId, fallback) {
+    if (getLang() === 'en') {
+      const mode = MODES.find((m) => m.id === modeId);
+      if (mode) return modeText(mode, this.levelId).title;
+    }
     return (this.levelId === 'countries' && MODE_CARD_TEXT_COUNTRIES[modeId]?.title) || fallback;
   }
 
@@ -1204,14 +1280,14 @@ export class Game {
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
-    this.el.progressScopeWrap.hidden = true;    this.el.toggleHintsText.textContent = 'Подсказки';
-    this.el.toggleLabelsText.textContent = 'Буквы';
+    this.el.progressScopeWrap.hidden = true;    this.el.toggleHintsText.textContent = t('hints');
+    this.el.toggleLabelsText.textContent = t('letters');
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${level.title} · ${preset.title} (${toPlaceCount})`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${presetText(preset, PRESETS_EN).title} (${toPlaceCount})`;
     this.el.hudProgress.textContent = `0/${toPlaceCount}`;
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = 'Частей: 0';
+    this.el.hudGroups.textContent = `${t('pieces')}: 0`;
 
     // Still "contain" fit (see _computeScale's comment — puzzle mode can
     // never crop the hint outline, unlike every other mode's cover fit),
@@ -1269,10 +1345,10 @@ export class Game {
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
-    this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('quiz', 'Найди штат')} (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('quiz', 'Найди штат')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = 'Ошибки: 0';
+    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new QuizBoard(this.el.boardContainer, level, {
@@ -1299,10 +1375,10 @@ export class Game {
     // the answer.
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('name-state', 'Назови штат')} (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('name-state', 'Назови штат')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = 'Ошибки: 0';
+    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new NameStateBoard(this.el.boardContainer, level, {
@@ -1328,10 +1404,10 @@ export class Game {
     // state + glowing border), same reasoning as _startNameState.
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${level.title} · Назови соседа (${this.quizRounds})`; // "соседа" itself needs no state/country-specific wording
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('neighbor', 'Назови соседа')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = 'Ошибки: 0';
+    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     // Unlike every other board, this one crops/zooms to a DIFFERENT
     // native-unit bounding box every round (just the current state's own
@@ -1360,10 +1436,10 @@ export class Game {
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('identify', 'Определи штат')} (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('identify', 'Определи штат')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = 'Ошибки: 0';
+    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     // Same per-round isolated-shape cropping as _startNeighbor — see its
     // comment for why raw available pixel space is passed instead of a
@@ -1390,10 +1466,10 @@ export class Game {
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${level.title} · Определи море или океан (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('sea-identify', 'Определи море или океан')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = 'Ошибки: 0';
+    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     // Unlike _startIdentify/_startNeighbor's per-round isolated-shape crop,
     // this shows the whole world map with the target sea highlighted —
@@ -1420,10 +1496,10 @@ export class Game {
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
-    this.el.hudLevel.textContent = `${level.title} · Найди море или океан (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('sea-quiz', 'Найди море или океан')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = 'Ошибки: 0';
+    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new SeaQuizBoard(this.el.boardContainer, level, {
@@ -1452,12 +1528,12 @@ export class Game {
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
-    this.el.hudLevel.textContent = `${level.title} · Города и места (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('city-place', 'Города и места')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
 
     if (isPin) {
-      this.el.hudGroups.textContent = 'Ср. ошибка: —';
+      this.el.hudGroups.textContent = `${t('avgError')}: —`;
       const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
       this.board = new CityPinBoard(this.el.boardContainer, level, {
         rounds: this.quizRounds,
@@ -1468,7 +1544,7 @@ export class Game {
         onFinish: () => this._onFinish(),
       });
     } else {
-      this.el.hudGroups.textContent = 'Ошибки: 0';
+      this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
       const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
       this.board = new CityQuizBoard(this.el.boardContainer, level, {
         rounds: this.quizRounds,
@@ -1502,10 +1578,10 @@ export class Game {
     // repeat what's already on screen.
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${level.title} · ${this._modeHeadingText('colorfill', 'Раскраска')} (${this.quizRounds})`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('colorfill', 'Раскраска')} (${this.quizRounds})`;
     this.el.hudProgress.textContent = `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = 'Ошибки: 0';
+    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     const { default: terrainData } = await import('../levels/usaTerrain.js');
     // The player could have switched levels/modes while that import was in
@@ -1553,11 +1629,11 @@ export class Game {
     // nothing for them to show/hide is just confusing clutter. Highways
     // are USA-only for now (levels/usaHighways.js) — same reasoning.
     this.el.toggleHintsWrap.hidden = level.cities.length === 0;
-    this.el.toggleHintsWrap.title = 'Показать/скрыть города на карте';
-    this.el.toggleHintsText.textContent = 'Города';
+    this.el.toggleHintsWrap.title = t('citiesToggleTitle');
+    this.el.toggleHintsText.textContent = t('citiesToggle');
     this.el.toggleHints.checked = this.citiesVisible;
     this.el.toggleLabelsWrap.hidden = false;
-    this.el.toggleLabelsText.textContent = 'Подписи';
+    this.el.toggleLabelsText.textContent = t('labels');
     this.el.toggleLabels.checked = this.labelsVisible;
     this.el.togglePlacesWrap.hidden = level.places.length === 0;
     this.el.togglePlaces.checked = this.placesVisible;
@@ -1574,15 +1650,15 @@ export class Game {
     this._setTerrainMode(terrainMode, { silent: true });
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${level.title} · Обзор`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('overview', 'Обзор')}`;
     // Omit "0 гор. · 0 мест" entirely for levels with none (world) instead
     // of stating a count of zero for something that isn't there at all.
     // World's pieces are oceans/seas/gulfs, not generic "шт." — "акваторий"
     // (water body) covers all three without a per-category breakdown.
-    const pieceUnit = level.id === 'world' ? 'акваторий' : level.id === 'countries' ? 'стран' : 'шт.';
+    const pieceUnit = t(level.id === 'world' ? 'pieceUnitWorld' : level.id === 'countries' ? 'pieceUnitCountries' : 'pieceUnitStates');
     const progressParts = [`${level.pieces.length} ${pieceUnit}`];
-    if (level.cities.length) progressParts.push(`${level.cities.length} гор.`);
-    if (level.places.length) progressParts.push(`${level.places.length} мест`);
+    if (level.cities.length) progressParts.push(`${level.cities.length} ${t('citiesUnit')}`);
+    if (level.places.length) progressParts.push(`${level.places.length} ${t('placesUnit')}`);
     this.el.hudProgress.textContent = progressParts.join(' · ');
     this.el.hudGroups.hidden = true;
 
@@ -1633,7 +1709,7 @@ export class Game {
     // maxAttempts exhaustion.
     if (!pick) pick = pickJourneyPair(candidateIds, level.routeGraph, { minBetween: 1, maxBetween: 20, maxAttempts: 1000 });
     if (!pick) {
-      this.el.hudLevel.textContent = `${level.title} · Путешествие: не удалось подобрать маршрут, попробуй ещё раз`;
+      this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('journey', 'Путешествие')}: ${t('journeyNoRoute')}`;
       this.el.hudProgress.textContent = '';
       this.el.hudGroups.hidden = true;
       this.board = null;
@@ -1642,7 +1718,7 @@ export class Game {
 
     const startPiece = level.pieces.find((p) => p.id === pick.startId);
     const endPiece = level.pieces.find((p) => p.id === pick.endId);
-    this.el.hudLevel.textContent = `${level.title} · Путешествие: ${startPiece.ru} → ${endPiece.ru}`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('journey', 'Путешествие')}: ${itemName(startPiece)} → ${itemName(endPiece)}`;
     this.el.hudGroups.hidden = false;
 
     if (this.journeyAnswerMode === 'puzzle' || this.journeyAnswerMode === 'puzzle-blind') {
@@ -1654,7 +1730,7 @@ export class Game {
       const routeDots = pick.chain.map((id) => level.pieces.find((p) => p.id === id)).filter(Boolean).map((p) => ({ cx: p.cx, cy: p.cy }));
 
       this.el.hudProgress.textContent = `0/${betweenIds.length}`;
-      this.el.hudGroups.textContent = 'Частей: 0';
+      this.el.hudGroups.textContent = `${t('pieces')}: 0`;
 
       const scale = this._computeScale(level.canvas, this._availableHeight());
       this.board = new PuzzleBoard(this.el.boardContainer, syntheticLevel, {
@@ -1675,7 +1751,7 @@ export class Game {
       this.board.zoomCtl.focusOnBBox(unionBBox(syntheticLevel.pieces.map((p) => p.bbox)), { animate: false, pad: 1 });
     } else {
       this.el.hudProgress.textContent = `0/${pick.chain.length - 2}`;
-      this.el.hudGroups.textContent = 'Ошибки: 0';
+      this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
       const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
       this.board = new JourneyNameBoard(this.el.boardContainer, level, {
@@ -1693,34 +1769,50 @@ export class Game {
 
   _onJourneyNameProgress({ chainIndex, total, mistakes }) {
     this.el.hudProgress.textContent = `${chainIndex}/${total}`;
-    this.el.hudGroups.textContent = `Ошибки: ${mistakes}`;
+    this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}`;
   }
 
   _onPuzzleProgress({ placed, total, groups }) {
     this.el.hudProgress.textContent = `${placed}/${total}`;
-    this.el.hudGroups.textContent = `Частей: ${groups}`;
+    this.el.hudGroups.textContent = `${t('pieces')}: ${groups}`;
   }
 
   _onQuizProgress({ index, total, mistakes, promptRu, promptName }) {
     this.el.hudProgress.textContent = `${index}/${total}`;
-    this.el.hudGroups.textContent = `Ошибки: ${mistakes}`;
-    this.el.quizPromptName.textContent = promptName ? `${promptRu} (${promptName})` : promptRu;
+    this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}`;
+    // Prompt names come from the board as separate ru/name fields (same
+    // pair as itemName() picks between elsewhere) — shows both, primary
+    // language first, so the round still teaches the OTHER language's
+    // name as a parenthetical either way.
+    this.el.quizPromptName.textContent = !promptName
+      ? promptRu
+      : getLang() === 'en'
+        ? `${promptName} (${promptRu})`
+        : `${promptRu} (${promptName})`;
   }
 
   _onNameStateProgress({ index, total, mistakes }) {
     this.el.hudProgress.textContent = `${index}/${total}`;
-    this.el.hudGroups.textContent = `Ошибки: ${mistakes}`;
+    this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}`;
   }
 
   _onColorFillProgress({ index, total, mistakes }) {
     this.el.hudProgress.textContent = `${index}/${total}`;
-    this.el.hudGroups.textContent = `Ошибки: ${mistakes}`;
+    this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}`;
   }
 
   _onPinProgress({ index, total, avgDistanceKm, promptRu, promptName }) {
     this.el.hudProgress.textContent = `${index}/${total}`;
-    this.el.hudGroups.textContent = avgDistanceKm == null ? 'Ср. ошибка: —' : `Ср. ошибка: ${avgDistanceKm} км`;
-    this.el.quizPromptName.textContent = promptName ? `${promptRu} (${promptName})` : promptRu;
+    this.el.hudGroups.textContent = avgDistanceKm == null ? `${t('avgError')}: —` : `${t('avgError')}: ${avgDistanceKm} ${t('kmUnit')}`;
+    // Prompt names come from the board as separate ru/name fields (same
+    // pair as itemName() picks between elsewhere) — shows both, primary
+    // language first, so the round still teaches the OTHER language's
+    // name as a parenthetical either way.
+    this.el.quizPromptName.textContent = !promptName
+      ? promptRu
+      : getLang() === 'en'
+        ? `${promptName} (${promptRu})`
+        : `${promptRu} (${promptName})`;
   }
 
   _onFinish() {

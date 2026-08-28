@@ -2,6 +2,7 @@ import { shuffle, clamp, pieceStrokeWidth } from './utils.js';
 import { translatePath } from './pieceShape.js';
 import { playPickup, playSnap, playWin } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
+import { t, bilingualLabel } from './i18n.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const TRAY_PAD = 6;
@@ -135,7 +136,7 @@ export class PuzzleBoard {
     this.trayEl.className = 'tray';
     this.trayHandle = document.createElement('div');
     this.trayHandle.className = 'tray-handle';
-    this.trayHandle.title = 'Потяните вверх или прокрутите, чтобы открыть лоток';
+    this.trayHandle.title = t('trayHandleTitle');
     this.trayEl.appendChild(this.trayHandle);
     this.trayPieces = document.createElement('div');
     this.trayPieces.className = 'tray-pieces';
@@ -258,7 +259,7 @@ export class PuzzleBoard {
     // (see hard/hardcore presets' labels:false, and Journey mode's
     // always-labelsVisible:false), so it must follow the same visibility
     // rule rather than always giving the name away on hover regardless.
-    if (this.labelsVisible) wrap.title = `${data.ru} (${data.name})`;
+    if (this.labelsVisible) wrap.title = bilingualLabel(data);
     wrap.dataset.id = data.id;
 
     const svg = document.createElementNS(SVG_NS, 'svg');
@@ -410,7 +411,7 @@ export class PuzzleBoard {
     // piece's title attribute above (see that comment).
     if (this.labelsVisible) {
       const title = document.createElementNS(SVG_NS, 'title');
-      title.textContent = `${data.ru} (${data.name})`;
+      title.textContent = bilingualLabel(data);
       path.appendChild(title);
     }
     g.appendChild(path);
@@ -642,14 +643,14 @@ export class PuzzleBoard {
     // follow this toggle live too, not just at build time (see
     // _createTrayPiece/_createWorkspacePiece's own comments).
     for (const [id, wrap] of this.trayWraps) {
-      if (visible) wrap.title = `${this.byId.get(id).ru} (${this.byId.get(id).name})`;
+      if (visible) wrap.title = bilingualLabel(this.byId.get(id));
       else wrap.removeAttribute('title');
     }
     for (const [id, { path }] of this.pieceEls) {
       const existing = path.querySelector('title');
       if (visible && !existing) {
         const title = document.createElementNS(SVG_NS, 'title');
-        title.textContent = `${this.byId.get(id).ru} (${this.byId.get(id).name})`;
+        title.textContent = bilingualLabel(this.byId.get(id));
         path.appendChild(title);
       } else if (!visible && existing) {
         existing.remove();

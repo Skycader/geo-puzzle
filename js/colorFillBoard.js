@@ -4,6 +4,7 @@ import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } fro
 import { loadSuccessStats, recordOutcome } from './successStats.js';
 import { flyCoinToBalance } from './coins.js';
 import { REWARDS } from './constants.js';
+import { terrainLabel } from './i18n.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SUCCESS_SCOPE = 'colorfill-states';
@@ -145,7 +146,7 @@ export class ColorFillBoard {
       btn.type = 'button';
       btn.className = 'colorfill-swatch-btn';
       btn.dataset.category = region.category;
-      btn.innerHTML = `<span class="colorfill-swatch" style="background: var(--terrain-${region.category})"></span><span>${region.label}</span>`;
+      btn.innerHTML = `<span class="colorfill-swatch" style="background: var(--terrain-${region.category})"></span><span>${terrainLabel(region.category, region.label)}</span>`;
       btn.addEventListener('click', () => this._selectCategory(region.category, btn));
       bar.appendChild(btn);
     }

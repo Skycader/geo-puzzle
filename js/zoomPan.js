@@ -1,5 +1,6 @@
 import { mountFpsMeter } from './fpsMeter.js';
 import { mark } from './perfDebug.js';
+import { t } from './i18n.js';
 
 // Shared wheel/button/drag zoom for an SVG sitting inside a fixed-size
 // viewport. Zoom/pan works by moving the SVG's own `viewBox` — literally
@@ -364,10 +365,10 @@ export function createZoomControls(zoomCtl) {
   const wrap = document.createElement('div');
   wrap.className = 'zoom-controls';
   wrap.innerHTML = `
-    <button type="button" class="zoom-btn" data-action="in" title="Приблизить">+</button>
-    <span class="zoom-level" title="Текущий масштаб"></span>
-    <button type="button" class="zoom-btn" data-action="reset" title="Сбросить масштаб">⟲</button>
-    <button type="button" class="zoom-btn" data-action="out" title="Отдалить">−</button>
+    <button type="button" class="zoom-btn" data-action="in" title="${t('zoomIn')}">+</button>
+    <span class="zoom-level" title="${t('currentZoom')}"></span>
+    <button type="button" class="zoom-btn" data-action="reset" title="${t('resetZoom')}">⟲</button>
+    <button type="button" class="zoom-btn" data-action="out" title="${t('zoomOut')}">−</button>
   `;
   wrap.querySelector('[data-action="in"]').addEventListener('click', () => zoomCtl.zoomIn());
   wrap.querySelector('[data-action="reset"]').addEventListener('click', () => zoomCtl.reset());
@@ -407,7 +408,7 @@ export function createScaleBar(zoomCtl, opts = {}) {
     const km = (barPx / effScale) * kmPerUnit;
     const mi = km * KM_PER_MI;
     const fmt = (v) => (v < 10 ? v.toFixed(1) : Math.round(v));
-    labelEl.textContent = `${fmt(km)} км / ${fmt(mi)} mi`;
+    labelEl.textContent = `${fmt(km)} ${t('kmUnit')} / ${fmt(mi)} mi`;
   };
   update(zoomCtl.getZoom());
   zoomCtl.subscribe(update);
