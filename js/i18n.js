@@ -124,6 +124,9 @@ const STRINGS = {
   overviewHeading: { ru: 'Отображение', en: 'Display' },
   journeyAnswerHeading: { ru: 'Как отвечать', en: 'How to answer' },
   journeyDifficultyHeading: { ru: 'Сложность', en: 'Difficulty' },
+  journeyLabelStatesText: { ru: 'Подписывать штаты', en: 'Label states' },
+  journeyShowDestinationText: { ru: 'Показывать штат назначения', en: 'Show destination state' },
+  journeyDestinationHidden: { ru: '???', en: '???' },
   playButton: { ru: 'Играть ▶', en: 'Play ▶' },
   backToMenuButton: { ru: 'Вернуться в меню', en: 'Back to menu' },
   // Tooltips (title=/aria-label=) — lower visual priority than the text
@@ -450,10 +453,14 @@ export function wrongGuessNoNounText(matched) {
   return getLang() === 'en' ? `"${matched.name}" — not that one, try again` : `«${matched.ru}» — не то, попробуй ещё`;
 }
 
-// journeyNameBoard.js's free-order chain-progress bar text.
-export function journeyProgressText(correct, total, startPiece, endPiece) {
+// journeyNameBoard.js's free-order chain-progress bar text. hideEnd (the
+// "Показывать штат назначения" checkbox, off and not yet revealed) swaps
+// the real destination name for the same "???" placeholder game.js's HUD
+// line uses — otherwise this bar would spell it out even though the map
+// and HUD both keep it hidden.
+export function journeyProgressText(correct, total, startPiece, endPiece, hideEnd = false) {
   const start = itemName(startPiece);
-  const end = itemName(endPiece);
+  const end = hideEnd ? t('journeyDestinationHidden') : itemName(endPiece);
   return getLang() === 'en'
     ? `Chain states collected: ${correct}/${total}, between ${start} and ${end}`
     : `Штатов цепочки собрано: ${correct}/${total}, между ${start} и ${end}`;

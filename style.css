@@ -936,6 +936,14 @@ body {
   text-transform: uppercase;
   color: var(--neon-violet);
 }
+/* Journey's panel has 2 headings ("Как отвечать" + "Сложность") stacked in
+   one panel — every other panel has only 1, so this never showed up
+   before. Without a top margin the 2nd heading sits glued directly under
+   the 1st heading's preset-list (bug: "Сложность" reads as stuck to the
+   answer-mode cards above it). */
+.panel h2:not(:first-child) {
+  margin-top: 18px;
+}
 
 .level-list,
 .preset-list {

@@ -265,6 +265,19 @@
           <div id="journey-answer-mode" class="preset-list"></div>
           <h2 id="journey-difficulty-heading">Сложность</h2>
           <div id="journey-difficulty" class="preset-list"></div>
+          <!-- "Назови штаты" only — options that don't apply to the drag-
+               assembly answer modes (js/game.js's _applyJourneyNameOptionsVisibility
+               shows/hides this row based on journeyAnswerMode). -->
+          <label class="toggle toggle-multiline" id="journey-label-states-row">
+            <input type="checkbox" id="journey-label-states-checkbox" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text" id="journey-label-states-text">Подписывать штаты</span>
+          </label>
+          <label class="toggle toggle-multiline" id="journey-show-destination-row">
+            <input type="checkbox" id="journey-show-destination-checkbox" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text" id="journey-show-destination-text">Показывать штат назначения</span>
+          </label>
         </section>
       </div>
 

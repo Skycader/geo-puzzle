@@ -191,6 +191,14 @@ export class Game {
     this.seaIdentifyDifficulty = SEA_IDENTIFY_DIFFICULTIES[0].id;
     this.journeyAnswerMode = JOURNEY_ANSWER_MODES[0].id;
     this.journeyDifficulty = JOURNEY_DIFFICULTIES[0].id;
+    // "Назови штаты" only (js/journeyNameBoard.js) — harder-mode toggles.
+    // journeyLabelStates: whether a state's name is written on its shape
+    // once it's on the map (both endpoints and newly-revealed ones).
+    // journeyShowDestination: whether the destination's real shape/name is
+    // drawn from the start, or stays a mystery (route dot only) until it's
+    // either named directly or reached by connecting through it.
+    this.journeyLabelStates = true;
+    this.journeyShowDestination = true;
     // "Города и места" — two independent toggles instead of separate mode
     // cards: WHAT to ask about (cities vs places) and HOW to answer
     // (click-to-find vs place-a-pin). See _startCityPlace.
@@ -343,6 +351,10 @@ export class Game {
       panelJourneySettings: document.getElementById('panel-journey-settings'),
       journeyAnswerModeEl: document.getElementById('journey-answer-mode'),
       journeyDifficultyEl: document.getElementById('journey-difficulty'),
+      journeyLabelStatesRow: document.getElementById('journey-label-states-row'),
+      journeyLabelStatesCheckbox: document.getElementById('journey-label-states-checkbox'),
+      journeyShowDestinationRow: document.getElementById('journey-show-destination-row'),
+      journeyShowDestinationCheckbox: document.getElementById('journey-show-destination-checkbox'),
       quizPanelHeading: document.getElementById('quiz-panel-heading'),
       quizCountLabel: document.getElementById('quiz-count-label'),
       customCountRow: document.getElementById('custom-count-row'),
@@ -417,6 +429,8 @@ export class Game {
       overviewHeadingEl: document.getElementById('overview-heading'),
       journeyAnswerHeadingEl: document.getElementById('journey-answer-heading'),
       journeyDifficultyHeadingEl: document.getElementById('journey-difficulty-heading'),
+      journeyLabelStatesText: document.getElementById('journey-label-states-text'),
+      journeyShowDestinationText: document.getElementById('journey-show-destination-text'),
     };
   }
 
@@ -453,6 +467,8 @@ export class Game {
     if (SEA_IDENTIFY_DIFFICULTIES.some((d) => d.id === saved.seaIdentifyDifficulty)) this.seaIdentifyDifficulty = saved.seaIdentifyDifficulty;
     if (JOURNEY_ANSWER_MODES.some((m) => m.id === saved.journeyAnswerMode)) this.journeyAnswerMode = saved.journeyAnswerMode;
     if (JOURNEY_DIFFICULTIES.some((d) => d.id === saved.journeyDifficulty)) this.journeyDifficulty = saved.journeyDifficulty;
+    if (typeof saved.journeyLabelStates === 'boolean') this.journeyLabelStates = saved.journeyLabelStates;
+    if (typeof saved.journeyShowDestination === 'boolean') this.journeyShowDestination = saved.journeyShowDestination;
     if (saved.cityPlaceEntity === 'cities' || saved.cityPlaceEntity === 'places') this.cityPlaceEntity = saved.cityPlaceEntity;
     if (saved.cityPlaceMode === 'find' || saved.cityPlaceMode === 'pin') this.cityPlaceMode = saved.cityPlaceMode;
     if (typeof saved.adaptiveMode === 'boolean') this.adaptiveMode = saved.adaptiveMode;
@@ -479,6 +495,8 @@ export class Game {
       seaIdentifyDifficulty: this.seaIdentifyDifficulty,
       journeyAnswerMode: this.journeyAnswerMode,
       journeyDifficulty: this.journeyDifficulty,
+      journeyLabelStates: this.journeyLabelStates,
+      journeyShowDestination: this.journeyShowDestination,
       cityPlaceEntity: this.cityPlaceEntity,
       cityPlaceMode: this.cityPlaceMode,
       adaptiveMode: this.adaptiveMode,
@@ -638,6 +656,8 @@ export class Game {
     this.el.overviewHeadingEl.textContent = t('overviewHeading');
     this.el.journeyAnswerHeadingEl.textContent = t('journeyAnswerHeading');
     this.el.journeyDifficultyHeadingEl.textContent = t('journeyDifficultyHeading');
+    this.el.journeyLabelStatesText.textContent = t('journeyLabelStatesText');
+    this.el.journeyShowDestinationText.textContent = t('journeyShowDestinationText');
     this.el.btnStart.textContent = t('playButton');
     this.el.btnBackMenu.textContent = t('backToMenuButton');
   }
@@ -831,6 +851,7 @@ export class Game {
     if (isJourney) {
       this._renderJourneyAnswerMode();
       this._renderJourneyDifficulty();
+      this._applyJourneyNameOptionsVisibility();
     }
     this.el.quizEligibleWrap.hidden = !hasEligibility;
     this.el.nameStateDifficultyEl.hidden = !(isNameState || isNeighbor || isIdentify || isSeaIdentify);
@@ -1059,10 +1080,24 @@ export class Game {
       this.journeyAnswerMode,
       (id) => {
         this.journeyAnswerMode = id;
+        this._applyJourneyNameOptionsVisibility();
       },
       this.el.journeyAnswerModeEl,
       JOURNEY_ANSWER_MODES_EN,
     );
+  }
+
+  // "Подписывать штаты"/"Показывать штат назначения" only make sense for
+  // the "Назови штаты" answer mode (js/journeyNameBoard.js) — the drag-
+  // assembly modes (puzzle/puzzle-blind) never label pieces at all and
+  // always show both endpoints as fixed anchors to drag onto, so these
+  // rows would have nothing to affect there.
+  _applyJourneyNameOptionsVisibility() {
+    const isNameMode = this.journeyAnswerMode === 'name';
+    this.el.journeyLabelStatesRow.hidden = !isNameMode;
+    this.el.journeyShowDestinationRow.hidden = !isNameMode;
+    this.el.journeyLabelStatesCheckbox.checked = this.journeyLabelStates;
+    this.el.journeyShowDestinationCheckbox.checked = this.journeyShowDestination;
   }
 
   _renderJourneyDifficulty() {
@@ -1180,6 +1215,14 @@ export class Game {
     this.el.cityPlaceModeCheckbox.addEventListener('change', (ev) => {
       this.cityPlaceMode = ev.target.checked ? 'pin' : 'find';
       this._applyModeVisibility(); // eligibility only applies to "найти", not "расставь"
+      this._saveLastSettings();
+    });
+    this.el.journeyLabelStatesCheckbox.addEventListener('change', (ev) => {
+      this.journeyLabelStates = ev.target.checked;
+      this._saveLastSettings();
+    });
+    this.el.journeyShowDestinationCheckbox.addEventListener('change', (ev) => {
+      this.journeyShowDestination = ev.target.checked;
       this._saveLastSettings();
     });
     this.el.quizCountInput.addEventListener('input', (ev) => {
@@ -1751,7 +1794,12 @@ export class Game {
 
     const startPiece = level.pieces.find((p) => p.id === pick.startId);
     const endPiece = level.pieces.find((p) => p.id === pick.endId);
-    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('journey', 'Путешествие')}: ${itemName(startPiece)} → ${itemName(endPiece)}`;
+    // "Показывать штат назначения" (name-answer mode only) hides the
+    // destination's name here too — spelling it out in the HUD would
+    // defeat the whole point of hiding its shape/label on the map.
+    const hideDestination = this.journeyAnswerMode === 'name' && !this.journeyShowDestination;
+    const endLabel = hideDestination ? t('journeyDestinationHidden') : itemName(endPiece);
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('journey', 'Путешествие')}: ${itemName(startPiece)} → ${endLabel}`;
     this.el.hudGroups.hidden = false;
 
     if (this.journeyAnswerMode === 'puzzle' || this.journeyAnswerMode === 'puzzle-blind') {
@@ -1794,6 +1842,8 @@ export class Game {
         chain: pick.chain,
         hops: pick.hops,
         levelId: this.levelId,
+        labelStates: this.journeyLabelStates,
+        showDestination: this.journeyShowDestination,
         onProgress: (p) => this._onJourneyNameProgress(p),
         onFinish: () => this._onFinish(),
       });

@@ -58,6 +58,11 @@ export class JourneyNameBoard {
     this.startPiece = level.pieces.find((p) => p.id === opts.startId);
     this.endPiece = level.pieces.find((p) => p.id === opts.endId);
     this.chain = opts.chain || [];
+    // Hard-mode toggles (js/game.js's journeyLabelStates/journeyShowDestination,
+    // set via the "Назови штаты"-only checkboxes in the journey settings
+    // panel) — both default true, matching this class's original behavior.
+    this.labelStates = opts.labelStates !== false;
+    this.showDestination = opts.showDestination !== false;
     // The states that actually earn coins/streak credit when named —
     // excludes both endpoints (they're given, shown on the map already).
     // NOT the same as "states the player is required to name" any more —
@@ -158,7 +163,12 @@ export class JourneyNameBoard {
     this.stateLayer.setAttribute('class', 'journey-state-layer');
     this.svg.appendChild(this.stateLayer);
     this._buildEndpointPiece(this.startPiece);
-    this._buildEndpointPiece(this.endPiece);
+    // "Показывать штат назначения" off — the destination's real shape/name
+    // stays hidden (only its route dot, drawn above, marks its position)
+    // until the player either names it directly or reaches it by
+    // connecting through some other accepted state — see _confirm and the
+    // finish path below, which both reveal it at that point.
+    if (this.showDestination) this._buildEndpointPiece(this.endPiece);
 
     this.zoomViewport.appendChild(this.svg);
     this.container.appendChild(this.zoomWrap);
@@ -218,13 +228,18 @@ export class JourneyNameBoard {
     this.stateLayer.appendChild(path);
     this.stateShapeEls.set(data.id, path);
 
-    const label = document.createElementNS(SVG_NS, 'text');
-    label.setAttribute('x', data.cx);
-    label.setAttribute('y', data.cy);
-    label.setAttribute('class', animate ? 'piece-label journey-state-reveal' : 'piece-label');
-    label.textContent = itemName(data);
-    this.stateLayer.appendChild(label);
-    this.labelEls.push(label);
+    // "Подписывать штаты" off — shapes still appear on the map (so the
+    // player gets visual confirmation something was placed), just without
+    // the name written on them.
+    if (this.labelStates) {
+      const label = document.createElementNS(SVG_NS, 'text');
+      label.setAttribute('x', data.cx);
+      label.setAttribute('y', data.cy);
+      label.setAttribute('class', animate ? 'piece-label journey-state-reveal' : 'piece-label');
+      label.textContent = itemName(data);
+      this.stateLayer.appendChild(label);
+      this.labelEls.push(label);
+    }
   }
 
   _buildEndpointPiece(data) {
@@ -242,6 +257,14 @@ export class JourneyNameBoard {
     // A label added just now needs its font-size set immediately (it
     // wasn't on the map yet for the last _rescaleLabels call to reach).
     this._rescaleLabels(this.zoomCtl.getZoom());
+  }
+
+  // "Показывать штат назначения" off — reveal the hidden endpoint's real
+  // shape/name; no-op once it's already drawn (shown from the start, or
+  // already revealed by a direct name guess in _confirm).
+  _revealDestinationIfHidden() {
+    if (this.stateShapeEls.has(this.endPiece.id)) return;
+    this._revealState(this.endPiece.id);
   }
 
   // Keeps endpoint labels a constant on-screen size regardless of zoom —
@@ -297,7 +320,8 @@ export class JourneyNameBoard {
   // _isConnected for the actual win condition, which can trip on an
   // accepted state that ISN'T in this.chain at all.
   _updateProgressText() {
-    this.progressEl.textContent = journeyProgressText(this.correct, this.toGuess.length, this.startPiece, this.endPiece);
+    const hideEnd = !this.showDestination && !this.stateShapeEls.has(this.endPiece.id);
+    this.progressEl.textContent = journeyProgressText(this.correct, this.toGuess.length, this.startPiece, this.endPiece, hideEnd);
   }
 
   // BFS from the start, over the subgraph induced by this.accepted (a
@@ -401,6 +425,31 @@ export class JourneyNameBoard {
     if (this.locked || !this.matchedPiece) return;
     const id = this.matchedPiece.id;
 
+    // The hidden destination ("Показывать штат назначения" off) is always
+    // pre-seeded into this.accepted (needed for _isConnected's BFS below)
+    // but was never actually drawn — naming it directly reveals it here,
+    // as a genuine reward for knowing it from geography alone rather than
+    // the usual "already marked" no-op pulse (there's no shape yet to
+    // pulse). This alone doesn't necessarily finish the round — the path
+    // still has to actually connect, checked the same way as any other
+    // guess.
+    if (id === this.endPiece.id && !this.stateShapeEls.has(id)) {
+      playSnap();
+      this._revealState(id);
+      this._setFeedback(t('correctFeedback'), 'correct');
+      this._resetInput();
+      // Now revealed, so the progress bar's own "between X and ???" can
+      // finally show its real name too.
+      this._updateProgressText();
+      if (this._isConnected()) {
+        setTimeout(() => {
+          setTimeout(() => playWin(), 100);
+          this.onFinish({ correct: this.correct, mistakes: this.mistakes, total: this.toGuess.length });
+        }, ADVANCE_DELAY_MS);
+      }
+      return;
+    }
+
     // Third outcome, neither correct nor wrong — the state is real and
     // already part of the journey, just redundant. No mistake counted, no
     // new credit either.
@@ -448,7 +497,6 @@ export class JourneyNameBoard {
     } else {
       this._setFeedback(t('journeyOffRoute'), 'correct');
     }
-    this._updateProgressText();
     this._reportProgress();
 
     // Checked right after accepting, not inside the setTimeout below — the
@@ -457,6 +505,13 @@ export class JourneyNameBoard {
     // cosmetic (letting the reveal animation play before either finishing
     // or unlocking the input for the next guess).
     const finished = this._isConnected();
+    // Reached the hidden destination through some other neighbor, without
+    // ever naming it directly — reveal its real shape/name now, as the
+    // finishing payoff, instead of ending the round on a still-blank spot.
+    if (finished) this._revealDestinationIfHidden();
+    // After the reveal decision above, so a just-revealed destination's
+    // real name replaces the "???" placeholder immediately.
+    this._updateProgressText();
     setTimeout(() => {
       this.inputEl.disabled = false;
       if (finished) {
