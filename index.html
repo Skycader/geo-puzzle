@@ -151,21 +151,64 @@
             <span id="progress-io-status" class="progress-io-status" role="status"></span>
           </div>
         </div>
+        <!-- Language switcher — rightmost in the topbar. v1, scoped to the
+             main menu screen only (level cards, mode cards, menu chrome)
+             per the user's own explicit scope for this first pass; the
+             rest of the app's UI stays Russian-only until a later
+             expansion. Same open/close dropdown pattern as .progress-io.
+             SVG flags, not emoji — Windows doesn't reliably render
+             Unicode regional-indicator flag emoji (🇷🇺/🇺🇸 show as plain
+             letters or tofu for some users), so a real vector icon is the
+             only rendering-guaranteed option. See js/game.js's
+             LANG_FLAG_SVG and _bindLangSwitcher. -->
+        <div class="lang-switcher" id="lang-switcher-wrap">
+          <button type="button" class="lang-switcher-btn" id="lang-switcher-btn" aria-haspopup="true" aria-expanded="false" title="Язык меню / Menu language">
+            <span id="lang-switcher-flag" class="lang-flag"></span>
+          </button>
+          <div class="lang-switcher-menu" id="lang-switcher-menu" hidden>
+            <button type="button" class="lang-switcher-option" data-lang="ru">
+              <span class="lang-flag">
+                <svg viewBox="0 0 20 14" aria-hidden="true">
+                  <rect width="20" height="14" fill="#fff" />
+                  <rect y="4.67" width="20" height="4.67" fill="#0039a6" />
+                  <rect y="9.33" width="20" height="4.67" fill="#d52b1e" />
+                </svg>
+              </span>
+              RU
+            </button>
+            <button type="button" class="lang-switcher-option" data-lang="en">
+              <span class="lang-flag">
+                <svg viewBox="0 0 20 14" aria-hidden="true">
+                  <rect width="20" height="14" fill="#fff" />
+                  <rect y="0" width="20" height="1.08" fill="#b22234" />
+                  <rect y="2.15" width="20" height="1.08" fill="#b22234" />
+                  <rect y="4.31" width="20" height="1.08" fill="#b22234" />
+                  <rect y="6.46" width="20" height="1.08" fill="#b22234" />
+                  <rect y="8.62" width="20" height="1.08" fill="#b22234" />
+                  <rect y="10.77" width="20" height="1.08" fill="#b22234" />
+                  <rect y="12.92" width="20" height="1.08" fill="#b22234" />
+                  <rect width="8" height="7.54" fill="#3c3b6e" />
+                </svg>
+              </span>
+              EN
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 
     <main id="screen-menu" class="screen screen-menu">
       <h1 class="title">GEO PUZZLE</h1>
-      <p class="subtitle">Настрой под настроение — и вперёд.</p>
+      <p class="subtitle" id="menu-subtitle">Настрой под настроение — и вперёд.</p>
 
       <div class="menu-columns">
         <section class="panel">
-          <h2>Уровень</h2>
+          <h2 id="menu-level-heading">Уровень</h2>
           <div id="level-list" class="level-list"></div>
         </section>
 
         <section class="panel">
-          <h2>Режим</h2>
+          <h2 id="menu-mode-heading">Режим</h2>
           <div id="mode-list" class="preset-list"></div>
         </section>
 

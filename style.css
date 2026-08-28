@@ -696,6 +696,75 @@ body {
 .progress-io-status.error { color: var(--neon-pink); }
 .progress-io-status.success { color: var(--neon-cyan); }
 
+/* Language switcher (js/i18n.js, js/game.js's _bindLangSwitcher) — flag
+   emoji + dropdown, identical open/close mechanics and look to
+   .progress-io right next to it in the topbar, just showing a flag
+   instead of an icon. */
+.lang-switcher {
+  position: relative;
+}
+.lang-switcher-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(var(--ink-rgb), 0.8);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+/* The flag SVG itself (button's current-language icon + each dropdown
+   option's own icon) — a real vector rectangle, not emoji (see
+   js/game.js's LANG_FLAG_SVG for why), so it needs explicit sizing +
+   rounded corners + a hairline border since a plain white/red rectangle
+   has no edge definition against this UI's dark background otherwise. */
+.lang-flag {
+  display: flex;
+  width: 20px;
+  height: 14px;
+  flex: none;
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.lang-flag svg { width: 100%; height: 100%; display: block; }
+.lang-switcher-btn:hover,
+.lang-switcher-btn[aria-expanded='true'] {
+  background: rgba(var(--neon-cyan-rgb), 0.15);
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.4);
+}
+.lang-switcher-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  min-width: 100px;
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.4);
+  border-radius: 8px;
+  background: rgba(var(--ink-rgb), 0.92);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+.lang-switcher-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  color: var(--base0);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.lang-switcher-option:hover { background: rgba(var(--neon-cyan-rgb), 0.12); }
+
 /* Shared by any .toggle whose label is a full descriptive sentence rather
    than a single word ("Города"/"Шоссе" etc.) — smaller text + tighter
    line-height so a 2-3 line wrap stays readable instead of looming over

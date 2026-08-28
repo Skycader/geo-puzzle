@@ -1,3 +1,5 @@
+import { getLang, t, itemName } from './i18n.js';
+
 // A searchable, sortable checklist for picking which states/cities are
 // allowed to appear in a quiz round pool — same look and search/sort
 // behavior as OverviewBoard's side panel list (js/overviewBoard.js), reused
@@ -47,13 +49,14 @@ export class EligibilityList {
   // into the 'cities' template by default, which rendered a literal
   // "undefined" sub-label for anything without a `.state` field.
   _mainColumnHtml(it) {
+    const name = itemName(it);
     if (this.kind === 'states') {
-      return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${it.ru}</span></span>`;
+      return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${name}</span></span>`;
     }
     if (this.kind === 'cities') {
-      return `<span class="overview-item-main"><span class="overview-item-name">${it.ru}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
+      return `<span class="overview-item-main"><span class="overview-item-name">${name}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
     }
-    return `<span class="overview-item-main"><span class="overview-item-name">${it.ru}</span></span>`;
+    return `<span class="overview-item-main"><span class="overview-item-name">${name}</span></span>`;
   }
 
   _loadSelection() {
@@ -89,20 +92,20 @@ export class EligibilityList {
     this.container.innerHTML = `
       ${this.getStat ? `
       <div class="elig-familiarity">
-        <span class="elig-familiarity-label">Знакомство с картой</span>
+        <span class="elig-familiarity-label">${t('eligFamiliarity')}</span>
         <span class="elig-familiarity-value"></span>
       </div>` : ''}
       <div class="elig-header">
         <span class="elig-count"></span>
         <div class="elig-bulk">
-          <button type="button" class="elig-bulk-btn" data-bulk="all">Все</button>
-          <button type="button" class="elig-bulk-btn" data-bulk="none">Никого</button>
+          <button type="button" class="elig-bulk-btn" data-bulk="all">${t('eligAll')}</button>
+          <button type="button" class="elig-bulk-btn" data-bulk="none">${t('eligNone')}</button>
         </div>
       </div>
-      <input type="text" class="overview-search" placeholder="Поиск..." autocomplete="off" />
+      <input type="text" class="overview-search" placeholder="${t('eligSearch')}" autocomplete="off" />
       <div class="overview-list-header${this.getStat ? ' overview-list-header-with-stat' : ''}">
-        <span class="overview-col-name">Название</span>
-        <button type="button" class="overview-col-sort" data-sort="area">Площадь<span class="overview-sort-arrow" data-arrow="area"></span></button>
+        <span class="overview-col-name">${t('eligColName')}</span>
+        <button type="button" class="overview-col-sort" data-sort="area">${t('eligColArea')}<span class="overview-sort-arrow" data-arrow="area"></span></button>
         ${this.getStat ? `<button type="button" class="overview-col-sort overview-col-stat" data-sort="stat">${this.statLabel}<span class="overview-sort-arrow" data-arrow="stat"></span></button>` : ''}
       </div>
       <div class="overview-list-scroll"><div class="overview-item-list"></div></div>
@@ -144,7 +147,8 @@ export class EligibilityList {
   }
 
   _updateCount() {
-    this.countEl.textContent = `Выбрано: ${this.selected.size} из ${this.items.length}`;
+    this.countEl.textContent =
+      getLang() === 'en' ? `Selected: ${this.selected.size} of ${this.items.length}` : `Выбрано: ${this.selected.size} из ${this.items.length}`;
   }
 
   // (Количество штатов/городов со success > 0) / всего * 100% — показывает,
@@ -156,7 +160,7 @@ export class EligibilityList {
     const known = this.items.filter((it) => this.getStat(it) > 0).length;
     const pct = Math.round((known / this.items.length) * 100);
     this.familiarityValueEl.textContent = `${pct}%`;
-    this.familiarityValueEl.title = `${known} из ${this.items.length}`;
+    this.familiarityValueEl.title = getLang() === 'en' ? `${known} of ${this.items.length}` : `${known} из ${this.items.length}`;
   }
 
   _renderList() {
@@ -173,7 +177,8 @@ export class EligibilityList {
       const dir = this.sortDir === 'asc' ? 1 : -1;
       sorted = [...filtered].sort((a, b) => (this.getStat(a) - this.getStat(b)) * dir);
     } else {
-      sorted = [...filtered].sort((a, b) => a.ru.localeCompare(b.ru, 'ru'));
+      const locale = getLang() === 'en' ? 'en' : 'ru';
+      sorted = [...filtered].sort((a, b) => itemName(a).localeCompare(itemName(b), locale));
     }
     this.arrowEls.forEach((el) => {
       el.textContent = this.sortBy === el.dataset.arrow ? (this.sortDir === 'asc' ? ' ▲' : ' ▼') : '';
@@ -183,14 +188,14 @@ export class EligibilityList {
 
     this.itemListEl.innerHTML = '';
     if (!sorted.length) {
-      this.itemListEl.innerHTML = '<p class="overview-empty">Ничего не найдено</p>';
+      this.itemListEl.innerHTML = `<p class="overview-empty">${t('eligNothingFound')}</p>`;
       return;
     }
 
     for (const it of sorted) {
       const row = document.createElement('label');
       row.className = 'overview-item elig-item' + (this.getStat ? ' elig-item-with-stat' : '');
-      const areaStr = Math.round(this._areaOf(it)).toLocaleString('ru-RU') + ' км²';
+      const areaStr = Math.round(this._areaOf(it)).toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU') + ' ' + t('areaUnit');
       const checked = this.selected.has(it.id);
       const statHtml = this.getStat ? `<span class="overview-item-stat">${this.getStat(it)}</span>` : '';
       row.innerHTML = `<input type="checkbox" class="elig-checkbox"${checked ? ' checked' : ''} />${this._mainColumnHtml(it)}<span class="overview-item-area">${areaStr}</span>${statHtml}`;

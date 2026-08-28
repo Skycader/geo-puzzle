@@ -29,6 +29,22 @@ import {
 import { playClick } from './audio.js';
 import { loadSuccessStats } from './successStats.js';
 import { downloadProgressExport, importProgressFile } from './dataPortability.js';
+import {
+  getLang,
+  setLang,
+  t,
+  levelText,
+  modeText,
+  presetText,
+  PRESETS_EN,
+  NAME_STATE_DIFFICULTIES_EN,
+  NEIGHBOR_DIFFICULTIES_EN,
+  IDENTIFY_DIFFICULTIES_EN,
+  SEA_IDENTIFY_DIFFICULTIES_EN,
+  JOURNEY_ANSWER_MODES_EN,
+  JOURNEY_DIFFICULTIES_EN,
+  OVERVIEW_MODES_EN,
+} from './i18n.js';
 
 // Distinct scopes per mode — clicking a state on the map (quiz), recalling
 // its name from a highlight (name-state), naming its neighbor (neighbor),
@@ -77,6 +93,19 @@ const MODE_CARD_TEXT_COUNTRIES = {
   'name-state': { title: 'Назови страну', desc: 'Назови подсвеченную страну' },
   neighbor: { title: 'Назови соседа', desc: 'Назови соседнюю страну' },
   identify: { title: 'Определи страну', desc: 'Угадай страну по форме' },
+};
+
+// Language switcher's flag icons — real SVG, not emoji: Windows doesn't
+// reliably render Unicode regional-indicator flag emoji (🇷🇺/🇺🇸 show as
+// plain letters or tofu for a lot of users), so a vector icon is the only
+// rendering-guaranteed option. Markup mirrors index.html's own dropdown-
+// option flags exactly (kept in sync by hand, not shared/templated — this
+// project has no build step to generate one from the other) since
+// _bindLangSwitcher below also needs to set this SAME icon on the button
+// itself, whose content changes at runtime based on the selected language.
+const LANG_FLAG_SVG = {
+  ru: '<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" fill="#fff"/><rect y="4.67" width="20" height="4.67" fill="#0039a6"/><rect y="9.33" width="20" height="4.67" fill="#d52b1e"/></svg>',
+  en: '<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" fill="#fff"/><rect y="0" width="20" height="1.08" fill="#b22234"/><rect y="2.15" width="20" height="1.08" fill="#b22234"/><rect y="4.31" width="20" height="1.08" fill="#b22234"/><rect y="6.46" width="20" height="1.08" fill="#b22234"/><rect y="8.62" width="20" height="1.08" fill="#b22234"/><rect y="10.77" width="20" height="1.08" fill="#b22234"/><rect y="12.92" width="20" height="1.08" fill="#b22234"/><rect width="8" height="7.54" fill="#3c3b6e"/></svg>',
 };
 
 // Global "land color scheme" toggle (topbar, always visible, independent
@@ -159,12 +188,12 @@ export class Game {
     this._cacheDom();
     this._initLandScheme();
     this._initCoins();
-    this._renderLevelList();
-    this._renderModeList();
-    this._renderPresetList();
-    this._renderOverviewList();
+    // Renders level/mode/preset/overview cards AND applies mode
+    // visibility (difficulty lists, eligibility checklist) — same reason
+    // _loadLastSettings() runs before this: reflects a saved language
+    // choice on first paint, not just RU.
+    this._applyMenuTranslations();
     this._bindEvents();
-    this._applyModeVisibility();
   }
 
   // Reads the persisted global color-scheme choice ('blue' default — the
@@ -292,6 +321,13 @@ export class Game {
       quickSelectRow: document.getElementById('quick-select-row'),
       quickSelectCheckbox: document.getElementById('quick-select-checkbox'),
       btnStart: document.getElementById('btn-start'),
+      langSwitcherWrap: document.getElementById('lang-switcher-wrap'),
+      langSwitcherBtn: document.getElementById('lang-switcher-btn'),
+      langSwitcherMenu: document.getElementById('lang-switcher-menu'),
+      langSwitcherFlag: document.getElementById('lang-switcher-flag'),
+      menuSubtitle: document.getElementById('menu-subtitle'),
+      menuLevelHeading: document.getElementById('menu-level-heading'),
+      menuModeHeading: document.getElementById('menu-mode-heading'),
       progressIoWrap: document.getElementById('progress-io-wrap'),
       progressIoBtn: document.getElementById('progress-io-btn'),
       progressIoMenu: document.getElementById('progress-io-menu'),
@@ -468,6 +504,74 @@ export class Game {
     this._progressIoKeyHandler = null;
   }
 
+  // Language switcher — v1, menu-only (see js/i18n.js's own comment for
+  // exact scope). Same topbar icon+dropdown open/close pattern (outside-
+  // click + Escape) as _bindProgressIo right above.
+  _bindLangSwitcher() {
+    this.el.langSwitcherFlag.innerHTML = LANG_FLAG_SVG[getLang()];
+    this.el.langSwitcherBtn.addEventListener('click', () => {
+      if (this.el.langSwitcherMenu.hidden) this._openLangSwitcherMenu();
+      else this._closeLangSwitcherMenu();
+    });
+    for (const btn of this.el.langSwitcherMenu.querySelectorAll('.lang-switcher-option')) {
+      btn.addEventListener('click', () => {
+        playClick();
+        setLang(btn.dataset.lang);
+        this.el.langSwitcherFlag.innerHTML = LANG_FLAG_SVG[btn.dataset.lang];
+        this._applyMenuTranslations();
+        this._closeLangSwitcherMenu();
+      });
+    }
+  }
+
+  // Re-renders exactly the menu-screen text this v1 covers — see
+  // js/i18n.js's own comment on why the rest of the app isn't touched yet.
+  _applyMenuTranslations() {
+    this.el.menuSubtitle.textContent = t('menuSubtitle');
+    this.el.menuLevelHeading.textContent = t('levelHeading');
+    this.el.menuModeHeading.textContent = t('modeHeading');
+    this._renderLevelList();
+    this._renderModeList();
+    // Puzzle-mode's piece-count presets and Overview's info-display modes
+    // are each only ever rendered here + once more at construction — unlike
+    // the other difficulty lists below, nothing else re-triggers them on a
+    // level/mode change, so without this they'd stay stuck in whichever
+    // language was active when the page first loaded.
+    this._renderPresetList();
+    this._renderOverviewList();
+    // Difficulty-preset cards and the states/countries eligibility
+    // checklist both live behind this — without it, switching language
+    // mid-session would leave them showing the old language until the
+    // player happened to touch a level/mode card and re-trigger it
+    // indirectly.
+    this._applyModeVisibility();
+  }
+
+  _openLangSwitcherMenu() {
+    this.el.langSwitcherMenu.hidden = false;
+    this.el.langSwitcherBtn.setAttribute('aria-expanded', 'true');
+    setTimeout(() => {
+      this._langSwitcherOutsideHandler = (e) => {
+        if (!this.el.langSwitcherWrap.contains(e.target)) this._closeLangSwitcherMenu();
+      };
+      this._langSwitcherKeyHandler = (e) => {
+        if (e.key === 'Escape') this._closeLangSwitcherMenu();
+      };
+      window.addEventListener('pointerdown', this._langSwitcherOutsideHandler, true);
+      window.addEventListener('keydown', this._langSwitcherKeyHandler);
+    }, 0);
+  }
+
+  _closeLangSwitcherMenu() {
+    if (this.el.langSwitcherMenu.hidden) return;
+    this.el.langSwitcherMenu.hidden = true;
+    this.el.langSwitcherBtn.setAttribute('aria-expanded', 'false');
+    window.removeEventListener('pointerdown', this._langSwitcherOutsideHandler, true);
+    window.removeEventListener('keydown', this._langSwitcherKeyHandler);
+    this._langSwitcherOutsideHandler = null;
+    this._langSwitcherKeyHandler = null;
+  }
+
   // Which adaptive-mode scope the Overview progress heatmap visualizes —
   // a custom dropdown, not a native <select> (see index.html's comment:
   // native option lists ignore this app's dark theme entirely). Same
@@ -552,7 +656,8 @@ export class Game {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'level-card' + (id === this.levelId ? ' selected' : '');
-      card.innerHTML = `<strong>${level.title}</strong><p>${level.subtitle || ''}</p>`;
+      const text = levelText(level);
+      card.innerHTML = `<strong>${text.title}</strong><p>${text.subtitle || ''}</p>`;
       card.addEventListener('click', () => {
         this.levelId = id;
         this.el.levelList.querySelectorAll('.level-card').forEach((c) => c.classList.remove('selected'));
@@ -588,7 +693,8 @@ export class Game {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'preset-card' + (mode.id === this.modeId ? ' selected' : '');
-      const text = (this.levelId === 'countries' && MODE_CARD_TEXT_COUNTRIES[mode.id]) || mode;
+      const ruText = (this.levelId === 'countries' && MODE_CARD_TEXT_COUNTRIES[mode.id]) || mode;
+      const text = getLang() === 'en' ? modeText(mode, this.levelId) : ruText;
       card.innerHTML = `<strong>${text.title}</strong><p>${text.desc}</p>`;
       card.addEventListener('click', () => {
         this.modeId = mode.id;
@@ -690,7 +796,7 @@ export class Game {
       const statOpts = adaptiveScope
         ? (() => {
             const stats = loadSuccessStats(this.levelId, adaptiveScope);
-            return { getStat: (it) => stats[it.id] || 0, statLabel: 'Успехов' };
+            return { getStat: (it) => stats[it.id] || 0, statLabel: t('eligSuccesses') };
           })()
         : {};
       // "Назови соседа" can only ask about states that actually HAVE a
@@ -762,7 +868,8 @@ export class Game {
   // both arrays is already level-agnostic ("Впиши название сам" etc), so
   // this one substitution is the only thing that needs fixing here.
   _countryAwareDesc(desc) {
-    return this.levelId === 'countries' ? desc.replace('Штат повёрнут', 'Страна повёрнута') : desc;
+    if (this.levelId !== 'countries') return desc;
+    return desc.replace('Штат повёрнут', 'Страна повёрнута').replace('State rotated', 'Country rotated');
   }
 
   // containerEl defaults to the single shared element name-state/neighbor/
@@ -771,13 +878,14 @@ export class Game {
   // (answer mode + difficulty), which doesn't fit that assumption — its 2
   // call sites (_renderJourneyAnswerMode/_renderJourneyDifficulty) pass
   // their own containers instead.
-  _renderDifficultyList(diffs, currentId, onSelect, containerEl = this.el.nameStateDifficultyEl) {
+  _renderDifficultyList(diffs, currentId, onSelect, containerEl = this.el.nameStateDifficultyEl, enDict = {}) {
     containerEl.innerHTML = '';
     for (const diff of diffs) {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'preset-card' + (diff.id === currentId ? ' selected' : '');
-      card.innerHTML = `<strong>${diff.title}</strong><p>${this._countryAwareDesc(diff.desc)}</p>`;
+      const text = presetText(diff, enDict);
+      card.innerHTML = `<strong>${text.title}</strong><p>${this._countryAwareDesc(text.desc)}</p>`;
       card.addEventListener('click', () => {
         onSelect(diff.id);
         containerEl.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
@@ -789,27 +897,51 @@ export class Game {
   }
 
   _renderNameStateDifficulty() {
-    this._renderDifficultyList(NAME_STATE_DIFFICULTIES, this.nameStateDifficulty, (id) => {
-      this.nameStateDifficulty = id;
-    });
+    this._renderDifficultyList(
+      NAME_STATE_DIFFICULTIES,
+      this.nameStateDifficulty,
+      (id) => {
+        this.nameStateDifficulty = id;
+      },
+      this.el.nameStateDifficultyEl,
+      NAME_STATE_DIFFICULTIES_EN,
+    );
   }
 
   _renderNeighborDifficulty() {
-    this._renderDifficultyList(NEIGHBOR_DIFFICULTIES, this.neighborDifficulty, (id) => {
-      this.neighborDifficulty = id;
-    });
+    this._renderDifficultyList(
+      NEIGHBOR_DIFFICULTIES,
+      this.neighborDifficulty,
+      (id) => {
+        this.neighborDifficulty = id;
+      },
+      this.el.nameStateDifficultyEl,
+      NEIGHBOR_DIFFICULTIES_EN,
+    );
   }
 
   _renderIdentifyDifficulty() {
-    this._renderDifficultyList(IDENTIFY_DIFFICULTIES, this.identifyDifficulty, (id) => {
-      this.identifyDifficulty = id;
-    });
+    this._renderDifficultyList(
+      IDENTIFY_DIFFICULTIES,
+      this.identifyDifficulty,
+      (id) => {
+        this.identifyDifficulty = id;
+      },
+      this.el.nameStateDifficultyEl,
+      IDENTIFY_DIFFICULTIES_EN,
+    );
   }
 
   _renderSeaIdentifyDifficulty() {
-    this._renderDifficultyList(SEA_IDENTIFY_DIFFICULTIES, this.seaIdentifyDifficulty, (id) => {
-      this.seaIdentifyDifficulty = id;
-    });
+    this._renderDifficultyList(
+      SEA_IDENTIFY_DIFFICULTIES,
+      this.seaIdentifyDifficulty,
+      (id) => {
+        this.seaIdentifyDifficulty = id;
+      },
+      this.el.nameStateDifficultyEl,
+      SEA_IDENTIFY_DIFFICULTIES_EN,
+    );
   }
 
   _renderJourneyAnswerMode() {
@@ -820,6 +952,7 @@ export class Game {
         this.journeyAnswerMode = id;
       },
       this.el.journeyAnswerModeEl,
+      JOURNEY_ANSWER_MODES_EN,
     );
   }
 
@@ -831,6 +964,7 @@ export class Game {
         this.journeyDifficulty = id;
       },
       this.el.journeyDifficultyEl,
+      JOURNEY_DIFFICULTIES_EN,
     );
   }
 
@@ -840,7 +974,8 @@ export class Game {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'preset-card' + (mode.id === this.overviewModeId ? ' selected' : '');
-      card.innerHTML = `<strong>${mode.title}</strong><p>${mode.desc}</p>`;
+      const text = presetText(mode, OVERVIEW_MODES_EN);
+      card.innerHTML = `<strong>${text.title}</strong><p>${text.desc}</p>`;
       card.addEventListener('click', () => {
         this.overviewModeId = mode.id;
         this.el.overviewList.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
@@ -857,7 +992,8 @@ export class Game {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'preset-card' + (preset.id === this.presetId ? ' selected' : '');
-      card.innerHTML = `<strong>${preset.title}</strong><p>${preset.desc}</p>`;
+      const text = presetText(preset, PRESETS_EN);
+      card.innerHTML = `<strong>${text.title}</strong><p>${text.desc}</p>`;
       card.addEventListener('click', () => {
         this.presetId = preset.id;
         this.el.presetList.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));
@@ -876,6 +1012,7 @@ export class Game {
       this.startGame();
     });
     this._bindProgressIo();
+    this._bindLangSwitcher();
     // "Press R to replay" (see .replay-hint's keycap+reload badge in
     // win-bar) — only live while the win-bar is actually showing, so R
     // doesn't do anything unexpected mid-round or on the menu.
