@@ -2289,6 +2289,43 @@ body {
   100% { opacity: 1; }
 }
 
+/* A guessed state that doesn't border anything accepted yet (js/
+   journeyNameBoard.js's _flashRejectedState) — a throwaway shape, never
+   added to this.accepted, removed from the DOM once the fade finishes
+   (REJECT_FLASH_MS). Solid red fill (not just an outline) so it reads at
+   a glance as "rejected", distinct from .journey-route-line's dashed
+   red skeleton which is always-on background chrome, not feedback. */
+/* Compound selector (.piece-shape.journey-state-reject), not just
+   .journey-state-reject alone — the shape carries BOTH classes (see
+   _flashRejectedState), and .piece-shape's own `stroke` rule sits further
+   down this file; a same-specificity single-class selector here would
+   lose that tie on source order alone and silently keep the normal
+   border color instead of red. */
+.piece-shape.journey-state-reject {
+  fill: var(--red);
+  stroke: var(--red);
+  pointer-events: none;
+  animation: journey-state-reject-fade 3s ease forwards;
+}
+@keyframes journey-state-reject-fade {
+  0% { opacity: 0.7; }
+  80% { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+
+/* Re-typing a state already accepted into the chain (js/
+   journeyNameBoard.js's _pulseAlreadyAccepted) — a brief gold pulse on
+   its ALREADY-drawn shape, distinct from both the cyan "just revealed"
+   glow (.journey-state-reveal, a one-time appearance animation) and the
+   red rejection flash above — this state is neither new nor wrong, just
+   redundant. --neon-yellow matches the coin-balance color elsewhere in
+   this file, reading as "you already have this" rather than an error. */
+.piece-shape.journey-state-already { animation: journey-state-already-pulse 0.8s ease; }
+@keyframes journey-state-already-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+  35% { filter: drop-shadow(0 0 14px var(--neon-yellow)); }
+}
+
 /* ---------------- right-click map context menu (js/overviewBoard.js's _openContextMenu) ---------------- */
 
 .map-context-menu {
