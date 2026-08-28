@@ -18,6 +18,7 @@ import { clamp, unionBBox } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
 import {
   MODES,
+  MENU_ORDER,
   OVERVIEW_MODES,
   NAME_STATE_DIFFICULTIES,
   NEIGHBOR_DIFFICULTIES,
@@ -115,6 +116,37 @@ const MODE_CARD_TEXT_COUNTRIES = {
 const LANG_FLAG_SVG = {
   ru: '<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" fill="#fff"/><rect y="4.67" width="20" height="4.67" fill="#0039a6"/><rect y="9.33" width="20" height="4.67" fill="#d52b1e"/></svg>',
   en: '<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" fill="#fff"/><rect y="0" width="20" height="1.08" fill="#b22234"/><rect y="2.15" width="20" height="1.08" fill="#b22234"/><rect y="4.31" width="20" height="1.08" fill="#b22234"/><rect y="6.46" width="20" height="1.08" fill="#b22234"/><rect y="8.62" width="20" height="1.08" fill="#b22234"/><rect y="10.77" width="20" height="1.08" fill="#b22234"/><rect y="12.92" width="20" height="1.08" fill="#b22234"/><rect width="8" height="7.54" fill="#3c3b6e"/></svg>',
+};
+
+// Mode-card icons (game-plans.md item 1) — one currentColor line icon per
+// mode, matching the app's existing minimal neon stroke style (viewBox
+// 24x24, stroke~1.7, mostly fill:none — same language as the brand/coin/
+// progress-io icons already in index.html), not emoji, for the same
+// rendering-reliability reason LANG_FLAG_SVG above uses real SVG rather
+// than emoji flags. Keyed by mode id; display order comes from
+// MENU_ORDER (js/modes.js), not from this object's own key order.
+const MODE_ICON_SVG = {
+  overview:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><ellipse cx="12" cy="12" rx="4" ry="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3 12h18M4.5 7.2h15M4.5 16.8h15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  puzzle:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v2a2 2 0 1 0 4 0V4h6v6h-2a2 2 0 1 0 0 4h2v6h-6v-2a2 2 0 1 0-4 0v2H4v-6h2a2 2 0 1 0 0-4H4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  quiz: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M15.3 15.3 21 21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  'name-state':
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H9l-4 4v-4H4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+  neighbor:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="8" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13" y="7" width="8" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M11 12h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  identify:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l8-3 8 3v9l-8 6-8-6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 10a2 2 0 1 1 3 1.7c-.8.5-1 .9-1 1.6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="12" cy="16.2" r="0.9" fill="currentColor" stroke="none"/></svg>',
+  colorfill:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="12" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9 10v4h3v6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  'city-place':
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9l5-3v14M9 20V4l6 3v13M15 20v-8l5 2v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><path d="M3 20h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  'sea-quiz':
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M2 15c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  'sea-identify':
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 17c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M9.5 6a2 2 0 1 1 3 1.7c-.8.5-1 .9-1 1.6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="11.5" cy="11.6" r="0.9" fill="currentColor" stroke="none"/></svg>',
+  journey:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="19" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 8c3 2 3 6 6 7s5-2 6 1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-dasharray="1 3.2"/></svg>',
 };
 
 // Global "land color scheme" toggle (topbar, always visible, independent
@@ -747,7 +779,7 @@ export class Game {
   // Modes with no `levels` field (currently just "Обзор") work generically
   // for any level; everything else is scoped to specific ones.
   _modesForCurrentLevel() {
-    return MODES.filter((m) => !m.levels || m.levels.includes(this.levelId));
+    return MENU_ORDER.map((id) => MODES.find((m) => m.id === id)).filter((m) => m && (!m.levels || m.levels.includes(this.levelId)));
   }
 
   _renderModeList() {
@@ -755,10 +787,11 @@ export class Game {
     for (const mode of this._modesForCurrentLevel()) {
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = 'preset-card' + (mode.id === this.modeId ? ' selected' : '');
+      card.className = 'preset-card mode-card' + (mode.id === this.modeId ? ' selected' : '');
       const ruText = (this.levelId === 'countries' && MODE_CARD_TEXT_COUNTRIES[mode.id]) || mode;
       const text = getLang() === 'en' ? modeText(mode, this.levelId) : ruText;
-      card.innerHTML = `<strong>${text.title}</strong><p>${text.desc}</p>`;
+      const icon = MODE_ICON_SVG[mode.id] || '';
+      card.innerHTML = `<span class="mode-card-icon">${icon}</span><span class="mode-card-text"><strong>${text.title}</strong><p>${text.desc}</p></span>`;
       card.addEventListener('click', () => {
         this.modeId = mode.id;
         this.el.modeList.querySelectorAll('.preset-card').forEach((c) => c.classList.remove('selected'));

@@ -978,6 +978,28 @@ body {
   background: rgba(var(--neon-pink-rgb), 0.06);
 }
 
+/* Mode cards (game-plans.md item 1) get an icon alongside the title/desc
+   text — scoped to .mode-card specifically so difficulty/overview-mode/
+   journey-answer-mode cards (plain .preset-card, no icon markup) are
+   unaffected. */
+.mode-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mode-card-icon {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  color: var(--neon-pink);
+}
+.mode-card-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.mode-card-text { min-width: 0; }
+
 .custom-count-row {
   margin-top: 10px;
   padding: 10px 16px;

@@ -7,6 +7,33 @@
 // (works generically off level.pieces/cities/places for any level) — see
 // game.js's _renderModeList, which filters this list by the currently
 // selected level.
+// Menu display order — deliberately separate from MODES' own declaration
+// order below (which just groups related modes together, not "what order
+// should a new player see these in"). Overview first (no task, no
+// pressure, just look around), then roughly increasing
+// difficulty/complexity: casual drag-and-drop, then recognition (find by
+// name), then recall (name what's highlighted), then relational recall
+// (name a NEIGHBOR), then context-free recognition (shape alone, no
+// location), then the two "different skill entirely" modes (terrain,
+// cities), then the world-level sea modes (same find→identify escalation
+// as the state ones), then Journey last — the only genuinely compound
+// task (has to know a whole region's connectivity, not just one state at
+// a time). See js/game.js's _modesForCurrentLevel, which sorts by this
+// before filtering to whichever modes the current level supports.
+export const MENU_ORDER = [
+  'overview',
+  'puzzle',
+  'quiz',
+  'name-state',
+  'neighbor',
+  'identify',
+  'colorfill',
+  'city-place',
+  'sea-quiz',
+  'sea-identify',
+  'journey',
+];
+
 export const MODES = [
   {
     id: 'puzzle',
