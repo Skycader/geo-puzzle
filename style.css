@@ -526,10 +526,11 @@ body {
    the track is its own real <button> (.toggle-3way-zone), so any mode is
    one click away from any other; the thumb is purely a visual position
    indicator (pointer-events:none — clicks pass through it to whichever
-   zone button is underneath) and stays a constant red regardless of mode,
-   just sliding to mark which zone is active — not gray/cyan like the 2-way
-   switch above, per explicit feedback that a gray middle dot read as
-   "disabled". */
+   zone button is underneath) and stays a constant accent color (--neon-cyan,
+   reactive to the app's own blue/gray color-scheme toggle — see that rule
+   below) regardless of mode, just sliding to mark which zone is active —
+   never gray like the 2-way switch's unchecked state above, per explicit
+   feedback that a gray middle dot read as "disabled". */
 .toggle-track-3way {
   width: 60px;
   display: flex;
@@ -543,17 +544,25 @@ body {
   cursor: pointer;
 }
 .toggle-thumb { pointer-events: none; }
-.toggle-3way .toggle-thumb { background: var(--red); box-shadow: 0 0 6px var(--red); }
+/* Was a hardcoded Solarized red (var(--red)) regardless of the app's own
+   blue/gray color-scheme toggle — every other accent in the UI reacts to
+   that scheme via --neon-cyan/--neon-pink/--neon-violet, so this control
+   alone stayed a fixed color while everything around it changed. Switched
+   to --neon-cyan (matches the other 2-way toggles' own accent) so it
+   follows the scheme like everything else — still colored in every mode
+   including "off" (not var(--base01)/gray), per the earlier decision
+   above that a gray dot here reads as "disabled". */
+.toggle-3way .toggle-thumb { background: var(--neon-cyan); box-shadow: 0 0 6px var(--neon-cyan); }
 .toggle-3way[data-mode='off'] .toggle-thumb { transform: translateX(0); }
 .toggle-3way[data-mode='color'] .toggle-thumb { transform: translateX(18px); }
 .toggle-3way[data-mode='pattern'] .toggle-thumb { transform: translateX(36px); }
 .toggle-3way[data-mode='color'] .toggle-track-3way,
 .toggle-3way[data-mode='pattern'] .toggle-track-3way {
-  border-color: var(--red);
-  background: color-mix(in srgb, var(--red) 10%, transparent);
+  border-color: var(--neon-cyan);
+  background: color-mix(in srgb, var(--neon-cyan) 10%, transparent);
 }
 .toggle-3way[data-mode='color'] .toggle-text,
-.toggle-3way[data-mode='pattern'] .toggle-text { color: var(--red); }
+.toggle-3way[data-mode='pattern'] .toggle-text { color: var(--neon-cyan); }
 
 /* Which adaptive-mode scope #toggle-progress-wrap's heatmap visualizes —
    sits right next to it, shown/hidden together (see game.js). Custom
