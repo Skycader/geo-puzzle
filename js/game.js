@@ -158,9 +158,6 @@ const LAND_SCHEME_STORAGE_KEY = 'geoPuzzleLandScheme';
 // _saveLastSettings (called from startGame()) and _loadLastSettings
 // (called from the constructor, before the menu is first rendered).
 const LAST_SETTINGS_STORAGE_KEY = 'geoPuzzleLastSettings';
-// "Рельеф" toggle's 3 steps — see _setTerrainMode. Keys into js/i18n.js's
-// STRINGS (t()), not literal text — same reasoning as ROUNDS_PANEL_LABEL_KEY.
-const TERRAIN_MODE_KEYS = { off: 'terrainOff', color: 'terrainColor', pattern: 'terrainPattern' };
 // How far above the map's own rendered bottom edge the finish button sits
 // (see _positionWinBar) — comfortably more than half the button's own
 // height so it never straddles that edge.
@@ -212,6 +209,7 @@ export class Game {
     this.labelsVisible = true;
     this.citiesVisible = true;
     this.placesVisible = true;
+    this.lakesVisible = true;
     // Overview's "progress heatmap" — off by default (opt-in, unlike the
     // *Visible flags above), scoped to whichever adaptive-mode success
     // stat (see ADAPTIVE_SUCCESS_SCOPE_BY_MODE) the player wants to see
@@ -405,6 +403,13 @@ export class Game {
       togglePlacesWrap: document.getElementById('toggle-places-wrap'),
       togglePlaces: document.getElementById('toggle-places'),
       togglePlacesText: document.getElementById('toggle-places-text'),
+      toggleLakesWrap: document.getElementById('toggle-lakes-wrap'),
+      toggleLakes: document.getElementById('toggle-lakes'),
+      toggleLakesText: document.getElementById('toggle-lakes-text'),
+      settingsFlyoutWrap: document.getElementById('settings-flyout-wrap'),
+      settingsFlyoutBtn: document.getElementById('settings-flyout-btn'),
+      settingsFlyoutMenu: document.getElementById('settings-flyout-menu'),
+      settingsFlyoutLabel: document.getElementById('settings-flyout-label'),
       toggleHighwaysWrap: document.getElementById('toggle-highways-wrap'),
       toggleHighways: document.getElementById('toggle-highways'),
       toggleHighwaysText: document.getElementById('toggle-highways-text'),
@@ -630,11 +635,16 @@ export class Game {
     this.el.toggleLabelsWrap.title = t('lettersTitle');
     this.el.togglePlacesWrap.title = t('placesTitle');
     this.el.togglePlacesText.textContent = t('placesToggleText');
+    this.el.toggleLakesWrap.title = t('lakesTitle');
+    this.el.toggleLakesText.textContent = t('lakesToggleText');
+    this.el.settingsFlyoutBtn.title = t('settingsFlyoutTitle');
+    this.el.settingsFlyoutLabel.textContent = t('settingsFlyoutLabel');
     this.el.toggleHighwaysWrap.title = t('highwaysTitle');
     this.el.toggleHighwaysText.textContent = t('highwaysToggleText');
     this.el.toggleProgressWrap.title = t('progressTitle');
     this.el.toggleProgressText.textContent = t('progressToggleText');
     this.el.toggleTerrainWrap.title = t('terrainTitle');
+    this.el.toggleTerrainText.textContent = t('terrainToggleText');
     this.el.toggleTerrainWrap.querySelector('[data-mode="off"]').setAttribute('aria-label', t('terrainOffLabel'));
     this.el.toggleTerrainWrap.querySelector('[data-mode="color"]').setAttribute('aria-label', t('terrainColorLabel'));
     this.el.toggleTerrainWrap.querySelector('[data-mode="pattern"]').setAttribute('aria-label', t('terrainPatternLabel'));
@@ -687,6 +697,55 @@ export class Game {
     this._langSwitcherKeyHandler = null;
   }
 
+  // Consolidates every display-layer toggle (hints/labels/places/lakes/
+  // highways/progress/terrain + the progress-scope dropdown) into one
+  // hover-triggered flyout instead of a long row of switches cluttering
+  // the topbar — see index.html's own comment on why every toggle kept its
+  // id/behavior unchanged, just moved. Hover-driven (mouseenter/mouseleave
+  // on the WRAPPER, which contains both the button and the menu as real
+  // DOM descendants — moving the pointer from one to the other never fires
+  // a mouseleave on the wrapper itself, so no debounce/delay is needed),
+  // plus a click toggle on the button as a touch/keyboard fallback where
+  // hover never fires at all.
+  _bindSettingsFlyout() {
+    this.el.settingsFlyoutWrap.addEventListener('mouseenter', () => this._openSettingsFlyout());
+    this.el.settingsFlyoutWrap.addEventListener('mouseleave', () => this._closeSettingsFlyout());
+    this.el.settingsFlyoutBtn.addEventListener('click', () => {
+      if (this.el.settingsFlyoutMenu.hidden) this._openSettingsFlyout();
+      else this._closeSettingsFlyout();
+    });
+  }
+
+  _openSettingsFlyout() {
+    if (!this.el.settingsFlyoutMenu.hidden) return;
+    this.el.settingsFlyoutMenu.hidden = false;
+    this.el.settingsFlyoutBtn.setAttribute('aria-expanded', 'true');
+    // Capture phase + a fresh task, same reasoning as _openProgressIoMenu/
+    // _openLangSwitcherMenu above: attaching synchronously within the very
+    // click that opened it (the touch-fallback path) would let that
+    // click's own bubble-up close it again immediately.
+    setTimeout(() => {
+      this._settingsFlyoutOutsideHandler = (e) => {
+        if (!this.el.settingsFlyoutWrap.contains(e.target)) this._closeSettingsFlyout();
+      };
+      this._settingsFlyoutKeyHandler = (e) => {
+        if (e.key === 'Escape') this._closeSettingsFlyout();
+      };
+      window.addEventListener('pointerdown', this._settingsFlyoutOutsideHandler, true);
+      window.addEventListener('keydown', this._settingsFlyoutKeyHandler);
+    }, 0);
+  }
+
+  _closeSettingsFlyout() {
+    if (this.el.settingsFlyoutMenu.hidden) return;
+    this.el.settingsFlyoutMenu.hidden = true;
+    this.el.settingsFlyoutBtn.setAttribute('aria-expanded', 'false');
+    window.removeEventListener('pointerdown', this._settingsFlyoutOutsideHandler, true);
+    window.removeEventListener('keydown', this._settingsFlyoutKeyHandler);
+    this._settingsFlyoutOutsideHandler = null;
+    this._settingsFlyoutKeyHandler = null;
+  }
+
   // Which adaptive-mode scope the Overview progress heatmap visualizes —
   // a custom dropdown, not a native <select> (see index.html's comment:
   // native option lists ignore this app's dark theme entirely). Same
@@ -716,17 +775,18 @@ export class Game {
     this.el.progressScopeMenu.querySelectorAll('.progress-scope-option').forEach((b) => b.classList.toggle('active', b === active));
   }
 
-  // Syncs the "Рельеф" button's data-mode/label to this.terrainMode and
-  // (unless silent) pushes it to the live board — called both from the
-  // click handler above and from _startOverview's initial sync, same
-  // split as _setProgressScopeUI/setProgressScope. silent is used by
-  // _startOverview: the board doesn't exist yet at that point (it's built
-  // right after with terrainMode passed into its constructor options), so
-  // there's nothing to push to yet.
+  // Syncs the "Рельеф" button's data-mode (which segment the thumb slides
+  // to — the label text itself is constant, set once in
+  // _applyStaticUiTranslations) to this.terrainMode and (unless silent)
+  // pushes it to the live board — called both from the click handler above
+  // and from _startOverview's initial sync, same split as
+  // _setProgressScopeUI/setProgressScope. silent is used by _startOverview:
+  // the board doesn't exist yet at that point (it's built right after with
+  // terrainMode passed into its constructor options), so there's nothing to
+  // push to yet.
   _setTerrainMode(mode, { silent = false } = {}) {
     this.terrainMode = mode;
     this.el.toggleTerrainWrap.dataset.mode = mode;
-    this.el.toggleTerrainText.textContent = t(TERRAIN_MODE_KEYS[mode]);
     if (!silent && this.board?.setTerrainMode) this.board.setTerrainMode(mode);
   }
 
@@ -1157,6 +1217,7 @@ export class Game {
     });
     this._bindProgressIo();
     this._bindLangSwitcher();
+    this._bindSettingsFlyout();
     // "Press R to replay" (see .replay-hint's keycap+reload badge in
     // win-bar) — only live while the win-bar is actually showing, so R
     // doesn't do anything unexpected mid-round or on the menu.
@@ -1248,6 +1309,10 @@ export class Game {
     this.el.togglePlaces.addEventListener('change', (ev) => {
       this.placesVisible = ev.target.checked;
       if (this.board?.setPlacesVisible) this.board.setPlacesVisible(this.placesVisible);
+    });
+    this.el.toggleLakes.addEventListener('change', (ev) => {
+      this.lakesVisible = ev.target.checked;
+      if (this.board?.setLakesVisible) this.board.setLakesVisible(this.lakesVisible);
     });
     this.el.toggleHighways.addEventListener('change', (ev) => {
       this.highwaysVisible = ev.target.checked;
@@ -1694,6 +1759,7 @@ export class Game {
     this.labelsVisible = isFull;
     this.citiesVisible = isFull;
     this.placesVisible = isFull;
+    this.lakesVisible = isFull;
     this.highwaysVisible = isFull;
     // USA-only, same as the toggle itself being hidden for world/countries
     // below. "Full" defaults to the richest look ('pattern'), same spirit
@@ -1713,6 +1779,8 @@ export class Game {
     this.el.toggleLabels.checked = this.labelsVisible;
     this.el.togglePlacesWrap.hidden = level.places.length === 0;
     this.el.togglePlaces.checked = this.placesVisible;
+    this.el.toggleLakesWrap.hidden = !level.lakes?.length;
+    this.el.toggleLakes.checked = this.lakesVisible;
     this.el.toggleHighwaysWrap.hidden = !level.highways?.length;
     this.el.toggleHighways.checked = this.highwaysVisible;
     // States only for now (per the feature's own scope) — every adaptive-
@@ -1735,6 +1803,7 @@ export class Game {
     const progressParts = [`${level.pieces.length} ${pieceUnit}`];
     if (level.cities.length) progressParts.push(`${level.cities.length} ${t('citiesUnit')}`);
     if (level.places.length) progressParts.push(`${level.places.length} ${t('placesUnit')}`);
+    if (level.lakes?.length) progressParts.push(`${level.lakes.length} ${t('lakesUnit')}`);
     this.el.hudProgress.textContent = progressParts.join(' · ');
     this.el.hudGroups.hidden = true;
 
@@ -1748,6 +1817,7 @@ export class Game {
       labelsVisible: this.labelsVisible,
       citiesVisible: this.citiesVisible,
       placesVisible: this.placesVisible,
+      lakesVisible: this.lakesVisible,
       highwaysVisible: this.highwaysVisible,
       progressVisible: level.id === 'usa' && this.progressVisible,
       progressScope: this.progressScope,

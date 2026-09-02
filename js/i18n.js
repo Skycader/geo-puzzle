@@ -72,9 +72,11 @@ const STRINGS = {
   citiesToggle: { ru: 'Города', en: 'Cities' },
   placesToggle: { ru: 'Места', en: 'Places' },
   citiesToggleTitle: { ru: 'Показать/скрыть города на карте', en: 'Show/hide cities on the map' },
-  terrainOff: { ru: 'Рельеф', en: 'Terrain' },
-  terrainColor: { ru: 'Рельеф: цвет', en: 'Terrain: color' },
-  terrainPattern: { ru: 'Рельеф: иконки', en: 'Terrain: icons' },
+  // One constant label regardless of which of the 3 modes is active — the
+  // toggle's own thumb position already shows which mode is selected, a
+  // ": цвет"/": иконки" text suffix was redundant with that (and, per
+  // explicit feedback, distracting/confusing on its own).
+  terrainToggleText: { ru: 'Рельеф', en: 'Terrain' },
   // "Города и места" mode's own two sub-toggles (js/game.js's
   // cityPlaceEntityText/cityPlaceModeText — separate from the shared
   // citiesToggle/placesToggle above, which is Overview's layer toggle).
@@ -104,11 +106,15 @@ const STRINGS = {
   pieceUnitStates: { ru: 'шт.', en: 'states' },
   citiesUnit: { ru: 'гор.', en: 'cities' },
   placesUnit: { ru: 'мест', en: 'places' },
+  lakesUnit: { ru: 'водоёмов', en: 'water bodies' },
   // Journey mode (js/game.js's _startJourney).
   journeyNoRoute: { ru: 'не удалось подобрать маршрут, попробуй ещё раз', en: "couldn't find a route, try again" },
   // Static index.html chrome outside the menu screen — the persistent
   // topbar/HUD and the puzzle/quiz/overview/journey settings panels.
   placesToggleText: { ru: 'Места', en: 'Places' },
+  lakesToggleText: { ru: 'Водоёмы', en: 'Water Bodies' },
+  settingsFlyoutLabel: { ru: 'Слои', en: 'Layers' },
+  settingsFlyoutTitle: { ru: 'Слои и настройки отображения', en: 'Layers and display settings' },
   highwaysToggleText: { ru: 'Шоссе', en: 'Highways' },
   progressToggleText: { ru: 'Прогресс', en: 'Progress' },
   puzzleDifficultyHeading: { ru: 'Сложность', en: 'Difficulty' },
@@ -135,6 +141,7 @@ const STRINGS = {
   hintsTitle: { ru: 'Показать/скрыть фоновый контур карты-подсказки', en: 'Show/hide the background hint outline' },
   lettersTitle: { ru: 'Показать/скрыть буквы-подписи на кусочках', en: 'Show/hide letter labels on pieces' },
   placesTitle: { ru: 'Показать/скрыть места на карте', en: 'Show/hide places on the map' },
+  lakesTitle: { ru: 'Показать/скрыть водоёмы на карте', en: 'Show/hide water bodies on the map' },
   highwaysTitle: { ru: 'Показать/скрыть шоссе на карте', en: 'Show/hide highways on the map' },
   progressTitle: { ru: 'Раскрасить штаты по прогрессу (адаптивная статистика)', en: 'Color states by progress (adaptive-mode stats)' },
   terrainTitle: { ru: 'Рельеф: выкл / только цвет / иконки', en: 'Terrain: off / color only / icons' },
@@ -168,6 +175,7 @@ const STRINGS = {
   overviewTabStates: { ru: 'Штаты', en: 'States' },
   overviewTabCities: { ru: 'Города', en: 'Cities' },
   overviewTabPlaces: { ru: 'Места', en: 'Places' },
+  overviewTabLakes: { ru: 'Водоёмы', en: 'Water Bodies' },
   collapseExpandList: { ru: 'Свернуть/развернуть список', en: 'Collapse/expand list' },
   layerSwitcherTitle: { ru: 'Слой карты', en: 'Map layer' },
   layerSvgOffline: { ru: 'оффлайн', en: 'offline' },

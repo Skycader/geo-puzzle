@@ -503,7 +503,13 @@ out += `    type: 'albers',\n`;
 out += `    minX: ${minX - GLOBAL_SHIFT_X / scale}, minY: ${minY - GLOBAL_SHIFT_Y / scale}, scale: ${scale}, marginPx: ${MARGIN},\n`;
 out += `    phi1Deg: 29.5, phi2Deg: 45.5, phi0Deg: 23, lambda0Deg: -96,\n`;
 out += `  },\n`;
-out += `  contextLand: [{ d: '${canadaPiece.d}' }],\n`;
+out += `  contextLand: [{\n`;
+out += `    id: 'canada', name: 'Canada', ru: 'Канада',\n`;
+out += `    cx: ${canadaPiece.cx.toFixed(1)}, cy: ${canadaPiece.cy.toFixed(1)},\n`;
+out += `    bbox: [${canadaPiece.bbox.map((v) => v.toFixed(1)).join(', ')}],\n`;
+out += `    area: ${Math.round(canadaPiece.areaNative * kmPerUnit * kmPerUnit)},\n`;
+out += `    d: '${canadaPiece.d}',\n`;
+out += `  }],\n`;
 out += `  pieces: [\n`;
 for (const p of pieces) {
   const projStr = p.projection

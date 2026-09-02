@@ -281,12 +281,14 @@ function setElementHidden(el, hide) {
 }
 
 // Info-popup: hand-editable Wikipedia-sourced blurbs (see
-// levels/usa/cities-info.json / places-info.json / lakes-info.json — plain
-// JSON, not baked into a JS module, specifically so they're easy to
-// hand-edit/extend without touching any code). Fetched once and cached at
-// module scope so re-entering Overview mode doesn't refetch. Only
-// cities/places/lakes with an entry here get click-to-info behavior —
-// everything else stays inert.
+// levels/usa/cities-info.json / places-info.json / lakes-info.json /
+// contextland-info.json — plain JSON, not baked into a JS module,
+// specifically so they're easy to hand-edit/extend without touching any
+// code). Fetched once and cached at module scope so re-entering Overview
+// mode doesn't refetch. Only cities/places/lakes with an entry here get
+// click-to-info behavior — everything else stays inert. contextland
+// (Canada) is the one exception: it's opened via the right-click menu
+// (_onMapContextMenu/_openContextMenu), not a direct tap — see there.
 let _infoLoadPromise = null;
 function loadInfo() {
   if (!_infoLoadPromise) {
@@ -302,7 +304,8 @@ function loadInfo() {
       fetchJson('./levels/usa/cities-info.json'),
       fetchJson('./levels/usa/places-info.json'),
       fetchJson('./levels/usa/lakes-info.json'),
-    ]).then(([cities, places, lakes]) => ({ cities, places, lakes }));
+      fetchJson('./levels/usa/contextland-info.json'),
+    ]).then(([cities, places, lakes, contextland]) => ({ cities, places, lakes, contextland }));
   }
   return _infoLoadPromise;
 }
@@ -351,6 +354,7 @@ export class OverviewBoard {
     // states) — always rendered, no `appended` bookkeeping needed.
     this.placeEntries = []; // { id, cx, cy, dot, pointMark, leaderPath, leaderLabel }
     this.placesVisible = opts.placesVisible !== false;
+    this.lakesVisible = opts.lakesVisible !== false;
     // USA-only, only ~59 of them (see levels/usaHighways.js) — same
     // "few enough to just always be in the DOM" reasoning as places.
     // { id, number, pathEl, shieldEl, points, lastPos } — pathEl is the
@@ -387,6 +391,8 @@ export class OverviewBoard {
     this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
     this.placesById = new Map(); // id -> { data, dotEl }
     this.lakesById = new Map(); // id -> { data, pathEl }
+    this.lakeEls = []; // { pathEl, labelEl } — see setLakesVisible
+    this.contextLandById = new Map(); // id -> { data } — Canada, see build_usa_level.js's contextLand
     // World's side panel splits level.pieces into three tabs by name
     // instead of USA's states/cities/places (world has no cities/places at
     // all — see _pieceCategory) — 'oceans' first since that's the smallest,
@@ -400,7 +406,7 @@ export class OverviewBoard {
     this._revealQueue = [];
     this._revealScheduled = false;
     this._destroyed = false;
-    this.info = { cities: {}, places: {}, lakes: {} }; // populated async — see loadInfo()
+    this.info = { cities: {}, places: {}, lakes: {}, contextland: {} }; // populated async — see loadInfo()
     this._openPopupId = null;
     this._infoPopupEl = null;
     this._infoConnectorEl = null;
@@ -518,8 +524,26 @@ export class OverviewBoard {
     // fills painted after it simply cover the overlap, which is correct,
     // not a glitch. Not a `pieces` entry (see levels/usa.js's own
     // `contextLand` comment) so no other mode ever sees it.
+    // Not routed through buildStateBackground (unlike world.js's `land`
+    // above) — that helper is shared with other non-interactive callers
+    // (city-quiz's background, sea boards' country outline), so making ITS
+    // output interactive would change behavior there too. Canada is
+    // rendered directly instead, with its own dataset.kind/id (right-click
+    // → "Канада" in _onMapContextMenu; hover title) and a permanent label
+    // (added after the state-pieces loop below, alongside lake labels, so
+    // it's never hidden under a state fill even right at the border).
     if (this.level.contextLand) {
-      this.zonesLayer.appendChild(buildStateBackground(this.level.contextLand, { pathClass: 'canada-bg-path' }));
+      for (const land of this.level.contextLand) {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', land.d);
+        path.setAttribute('class', 'canada-bg-path');
+        path.dataset.kind = 'contextland';
+        path.dataset.id = land.id;
+        const title = document.createElementNS(SVG_NS, 'title');
+        title.textContent = bilingualLabel(land);
+        path.appendChild(title);
+        this.zonesLayer.appendChild(path);
+      }
     }
 
     for (const p of this.level.pieces) {
@@ -630,8 +654,26 @@ export class OverviewBoard {
       this.zonesLayer.appendChild(label);
       this.allLabelEls.push(label);
       this.stateLabels.push({ el: label }); // reuses the same "Подписи" toggle + zoom rescale as state labels
+      this.lakeEls.push({ pathEl: path, labelEl: label }); // see setLakesVisible
 
       this.lakesById.set(lake.id, { data: lake, pathEl: path });
+    }
+
+    // Canada's own permanent label — added AFTER the state pieces above
+    // (not inside the contextLand loop, which paints before them) so it's
+    // never covered by a state fill, same reasoning as lake labels above.
+    // Reuses the exact same "Подписи" toggle + zoom rescale as state/lake
+    // labels (this.stateLabels), not a new mechanism.
+    for (const land of this.level.contextLand || []) {
+      const label = document.createElementNS(SVG_NS, 'text');
+      label.setAttribute('x', land.cx);
+      label.setAttribute('y', land.cy);
+      label.setAttribute('class', 'piece-label overview-contextland-label');
+      label.textContent = itemName(land);
+      this.zonesLayer.appendChild(label);
+      this.allLabelEls.push(label);
+      this.stateLabels.push({ el: label });
+      this.contextLandById.set(land.id, { data: land });
     }
 
     // Hawaii's true position (see scripts/build_usa_level.js) puts it far
@@ -866,6 +908,7 @@ export class OverviewBoard {
     this._rescaleForZoom(1);
     this.setLabelsVisible(this.labelsVisible);
     this.setPlacesVisible(this.placesVisible);
+    this.setLakesVisible(this.lakesVisible);
     this.setHighwaysVisible(this.highwaysVisible);
     this.setProgressVisible(this.progressVisible);
     if (this.terrainMode !== 'off') this.setTerrainMode(this.terrainMode);
@@ -1045,15 +1088,34 @@ export class OverviewBoard {
     }
   }
 
-  _openInfoPopup(kind, id, info) {
+  // anchorClientXY (optional, {x, y} in client coords) overrides the
+  // default "center of the dot/shape" position — used by the right-click
+  // menu's "Канада" item, where the shape itself is huge (Canada's own
+  // centroid can easily be off-screen) and the popup should instead anchor
+  // to wherever the player actually right-clicked, matching a normal
+  // context-menu action's own feel.
+  _openInfoPopup(kind, id, info, anchorClientXY) {
     this._closeInfoPopup();
-    const source = kind === 'city' ? this.citiesById.get(id) : kind === 'lake' ? this.lakesById.get(id) : this.placesById.get(id);
+    const source =
+      kind === 'city'
+        ? this.citiesById.get(id)
+        : kind === 'lake'
+          ? this.lakesById.get(id)
+          : kind === 'contextland'
+            ? this.contextLandById.get(id)
+            : this.placesById.get(id);
     if (!source) return;
-    const dotEl = source.dotEl || source.pathEl;
     const wrapRect = this.zoomWrap.getBoundingClientRect();
-    const dotRect = dotEl.getBoundingClientRect();
-    const dotX = dotRect.left + dotRect.width / 2 - wrapRect.left;
-    const dotY = dotRect.top + dotRect.height / 2 - wrapRect.top;
+    let dotX, dotY;
+    if (anchorClientXY) {
+      dotX = anchorClientXY.x - wrapRect.left;
+      dotY = anchorClientXY.y - wrapRect.top;
+    } else {
+      const dotEl = source.dotEl || source.pathEl;
+      const dotRect = dotEl.getBoundingClientRect();
+      dotX = dotRect.left + dotRect.width / 2 - wrapRect.left;
+      dotY = dotRect.top + dotRect.height / 2 - wrapRect.top;
+    }
 
     const popup = document.createElement('div');
     popup.className = 'info-popup';
@@ -1221,9 +1283,17 @@ export class OverviewBoard {
     // e.g. ocean/background), never the terrain layer (pointer-events:none).
     const stateId = ev.target?.dataset?.kind === 'state' ? ev.target.dataset.id : null;
     const state = stateId ? this.statesById.get(stateId) : null;
+    // Canada (contextLand) — same dataset-based hit lookup, gets its own
+    // "Канада" menu item below instead of the coords-only label.
+    const contextLandId = ev.target?.dataset?.kind === 'contextland' ? ev.target.dataset.id : null;
+    const contextLand = contextLandId ? this.contextLandById.get(contextLandId) : null;
     const category = this._terrainCategoryAt(pt);
-    const label = state ? itemName(state.data) + (category ? ` — ${this.terrainLabelsByCategory.get(category)}` : '') : null;
-    this._openContextMenu(ev.clientX, ev.clientY, pt, label);
+    const label = state
+      ? itemName(state.data) + (category ? ` — ${this.terrainLabelsByCategory.get(category)}` : '')
+      : contextLand
+        ? itemName(contextLand.data)
+        : null;
+    this._openContextMenu(ev.clientX, ev.clientY, pt, label, contextLand);
   }
 
   // Coordinates come from js/geoCoords.js — a different inverse-projection
@@ -1232,15 +1302,20 @@ export class OverviewBoard {
   // asks for whatever nativeToLonLat can figure out; null (a future level
   // with no known projection) degrades to "Добавить точку" still working,
   // with the coordinate-dependent actions disabled rather than crashing.
-  _openContextMenu(clientX, clientY, nativePt, label) {
+  _openContextMenu(clientX, clientY, nativePt, label, contextLand) {
     this._closeContextMenu();
     const coords = nativeToLonLat(this.level, nativePt.x, nativePt.y);
+    // Only offer the info item once its wiki entry has actually loaded —
+    // same "only clickable things with real content" rule places/cities/
+    // lakes already follow (see _applyInfoAvailability).
+    const contextLandInfo = contextLand ? this.info.contextland[contextLand.data.id] : null;
 
     const menu = document.createElement('div');
     menu.className = 'map-context-menu';
     menu.innerHTML = `
       ${label ? `<div class="map-context-menu-label">${label}</div>` : ''}
       <div class="map-context-menu-coords">${coords ? formatLonLat(coords) : t('coordsUnavailable')}</div>
+      ${contextLandInfo ? `<button type="button" class="map-context-menu-item" data-action="info">${itemName(contextLand.data)}</button>` : ''}
       <button type="button" class="map-context-menu-item" data-action="add-point">${t('addPointMenuItem')}</button>
       <button type="button" class="map-context-menu-item" data-action="open-maps"${coords ? '' : ' disabled'}>${t('openInGoogleMaps')}</button>
       <button type="button" class="map-context-menu-item" data-action="copy"${coords ? '' : ' disabled'}>${t('copyCoords')}</button>
@@ -1255,6 +1330,12 @@ export class OverviewBoard {
     menu.style.left = `${Math.min(Math.max(clientX - wrapRect.left, 8), maxLeft)}px`;
     menu.style.top = `${Math.min(Math.max(clientY - wrapRect.top, 8), maxTop)}px`;
 
+    if (contextLandInfo) {
+      menu.querySelector('[data-action="info"]').addEventListener('click', () => {
+        this._openInfoPopup('contextland', contextLand.data.id, contextLandInfo, { x: clientX, y: clientY });
+        this._closeContextMenu();
+      });
+    }
     menu.querySelector('[data-action="add-point"]').addEventListener('click', () => {
       this.rulerPoints.push(nativePt);
       this._renderRuler();
@@ -1444,7 +1525,8 @@ export class OverviewBoard {
             `<button type="button" class="overview-tab active" data-tab="states">${t('overviewTabCountries')}</button>`
           : `<button type="button" class="overview-tab active" data-tab="states">${t('overviewTabStates')}</button>
            <button type="button" class="overview-tab" data-tab="cities">${t('overviewTabCities')}</button>
-           <button type="button" class="overview-tab" data-tab="places">${t('overviewTabPlaces')}</button>`;
+           <button type="button" class="overview-tab" data-tab="places">${t('overviewTabPlaces')}</button>
+           <button type="button" class="overview-tab" data-tab="lakes">${t('overviewTabLakes')}</button>`;
     panel.innerHTML = `
       <div class="overview-tabs">
         ${tabsHtml}
@@ -1534,10 +1616,11 @@ export class OverviewBoard {
 
   // Effective area (km²) of an item — states and (world level) seas both
   // carry a real `area` field (see build_usa_level.js / build_world_seas.js);
-  // cities only store a radius, so their area is derived (they're rendered
-  // as a circle of that radius to begin with).
+  // lakes do too (scripts/build_usa_lakes.js, computed from the projected
+  // geometry, not derived); cities only store a radius, so their area is
+  // derived (they're rendered as a circle of that radius to begin with).
   _areaOf(it) {
-    return this._isPieceTab() ? it.area : Math.PI * it.radiusKm * it.radiusKm;
+    return this._isPieceTab() || this.activeTab === 'lakes' ? it.area : Math.PI * it.radiusKm * it.radiusKm;
   }
 
   // 'states': short `.id` codes (AL, CA…) fit a dedicated abbreviation
@@ -1598,7 +1681,9 @@ export class OverviewBoard {
           ? this.level.pieces.filter((p) => this._pieceCategory(p) === this.activeTab)
           : this.activeTab === 'places'
             ? this.level.places
-            : this.level.cities;
+            : this.activeTab === 'lakes'
+              ? this.level.lakes || []
+              : this.level.cities;
     const q = this.searchQuery;
     const filtered = q
       ? items.filter((it) => it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q))
@@ -1635,6 +1720,7 @@ export class OverviewBoard {
       row.addEventListener('click', () => {
         if (this._isPieceTab()) this._focusState(it.id);
         else if (this.activeTab === 'places') this._focusPlace(it.id);
+        else if (this.activeTab === 'lakes') this._focusLake(it.id);
         else this._focusCity(it.id);
       });
       this.itemListEl.appendChild(row);
@@ -1701,6 +1787,15 @@ export class OverviewBoard {
     entry.dotEl.classList.add('overview-focused');
     this.focusedEl = entry.dotEl;
     this._scheduleAutoClear();
+  }
+
+  // Lakes have a real bbox/`d` (scripts/build_usa_lakes.js), same as
+  // states — reuses _focusShape unchanged rather than the point-feature
+  // zoom math _focusPlace/_focusCity's dot branch use.
+  _focusLake(id) {
+    const entry = this.lakesById.get(id);
+    if (!entry) return;
+    this._focusShape(entry.data);
   }
 
   // Shared by states and by the handful of cities with a real boundary
@@ -2296,6 +2391,18 @@ export class OverviewBoard {
       entry.pointMark.style.display = visible ? '' : 'none';
       entry.leaderPath.style.display = visible ? '' : 'none';
       entry.leaderLabel.style.display = visible ? '' : 'none';
+    }
+  }
+
+  // Independent of the general "Подписи" toggle — labelEl's display here
+  // and its opacity there (see _rescaleForZoom's stateLabels loop) are
+  // different properties, so a lake label stays hidden if EITHER toggle
+  // says so, with no special-casing needed in either place.
+  setLakesVisible(visible) {
+    this.lakesVisible = visible;
+    for (const { pathEl, labelEl } of this.lakeEls) {
+      pathEl.style.display = visible ? '' : 'none';
+      labelEl.style.display = visible ? '' : 'none';
     }
   }
 

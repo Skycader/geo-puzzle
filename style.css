@@ -470,6 +470,69 @@ body {
   white-space: nowrap;
 }
 
+/* ---------------- settings flyout (all display toggles) ----------------
+   One button + hover-panel replacing what used to be a long row of
+   individual toggle switches directly in the topbar (js/game.js's
+   _bindSettingsFlyout) — sits right after the round-status chips
+   (hud-level/progress/groups/timer). Same button+menu visual language as
+   .progress-scope-btn/.progress-scope-menu below, just hover-triggered
+   (mouseenter/mouseleave on the wrapper) instead of click-triggered, with
+   a click fallback on the button itself for touch/keyboard. */
+.settings-flyout { position: relative; }
+.settings-flyout-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(var(--ink-rgb), 0.8);
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  cursor: pointer;
+}
+.settings-flyout-icon { width: 20px; height: 20px; flex: none; }
+.settings-flyout-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 220px;
+  padding: 14px 16px;
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.4);
+  background: rgba(var(--ink-rgb), 0.92);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+/* Invisible hover bridge over the 8px visual gap above — .settings-flyout
+   only spans the BUTTON's own box (position:absolute content never
+   enlarges an ancestor's bounding rect), so without this, moving the
+   mouse from the button down into the menu crosses a strip that belongs
+   to neither one — hit-testing resolves to whatever's underneath instead,
+   firing the wrapper's mouseleave before the pointer ever reaches the
+   menu (confirmed: the menu closed on the way down, impossible to hover
+   into). Being this menu's own ::before makes that strip part of the
+   menu's hit-tested subtree instead, so the "hovering something in this
+   dropdown" state never lapses during the crossing. */
+.settings-flyout-menu::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -8px;
+  height: 8px;
+}
+/* Every moved toggle/dropdown keeps its own existing look (.toggle,
+   .toggle-3way, .progress-scope) completely unchanged — this just stacks
+   them in a column instead of the topbar's inline row, and gives the
+   nested progress-scope dropdown room to open below its own row without
+   the flyout panel clipping it. */
+.settings-flyout-menu .progress-scope { align-self: stretch; }
+
 /* ---------------- toggle switch ---------------- */
 
 .toggle {

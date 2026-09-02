@@ -51,68 +51,94 @@
         <span id="hud-progress" class="hud-item hud-chip">0/0</span>
         <span id="hud-groups" class="hud-item hud-chip">Частей: 0</span>
         <span id="hud-timer" class="hud-item hud-chip">00:00</span>
-        <label class="toggle" id="toggle-hints-wrap" title="Показать/скрыть фоновый контур карты-подсказки">
-          <input type="checkbox" id="toggle-hints" checked />
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span class="toggle-text" id="toggle-hints-text">Подсказки</span>
-        </label>
-        <label class="toggle" id="toggle-labels-wrap" title="Показать/скрыть буквы-подписи на кусочках">
-          <input type="checkbox" id="toggle-labels" checked />
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span class="toggle-text" id="toggle-labels-text">Буквы</span>
-        </label>
-        <label class="toggle" id="toggle-places-wrap" title="Показать/скрыть места на карте" hidden>
-          <input type="checkbox" id="toggle-places" checked />
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span class="toggle-text" id="toggle-places-text">Места</span>
-        </label>
-        <label class="toggle" id="toggle-highways-wrap" title="Показать/скрыть шоссе на карте" hidden>
-          <input type="checkbox" id="toggle-highways" checked />
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span class="toggle-text" id="toggle-highways-text">Шоссе</span>
-        </label>
-        <!-- "Любование прогрессом" — colors every state from black (0) to
-             the current color scheme's accent (10+) by adaptive-mode
-             success streak (js/successStats.js). States only for now — see
-             js/overviewBoard.js's setProgressVisible. -->
-        <label class="toggle" id="toggle-progress-wrap" title="Раскрасить штаты по прогрессу (адаптивная статистика)" hidden>
-          <input type="checkbox" id="toggle-progress" />
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span class="toggle-text" id="toggle-progress-text">Прогресс</span>
-        </label>
-        <!-- Real terrain classification (mountains/forests/plains/desert/
-             etc., scripts/build_usa_terrain.js) painted under the state
-             pieces. States only, same as "Прогресс" above. 3-way segmented
-             switch (выкл / цвет / иконки), not a plain on/off checkbox nor
-             a cycling button — each third of the track is its own real
-             <button> so any mode is reachable directly from whatever mode
-             is currently active, no forced click-through-the-middle order.
-             See js/game.js's click delegation and
-             js/overviewBoard.js's setTerrainMode. -->
-        <div class="toggle toggle-3way" id="toggle-terrain-wrap" title="Рельеф: выкл / только цвет / иконки" data-mode="off" hidden>
-          <span class="toggle-track toggle-track-3way">
-            <button type="button" class="toggle-3way-zone" data-mode="off" aria-label="Рельеф: выключено"></button>
-            <button type="button" class="toggle-3way-zone" data-mode="color" aria-label="Рельеф: только цвет"></button>
-            <button type="button" class="toggle-3way-zone" data-mode="pattern" aria-label="Рельеф: иконки"></button>
-            <span class="toggle-thumb"></span>
-          </span>
-          <span class="toggle-text" id="toggle-terrain-text">Рельеф</span>
-        </div>
-        <!-- Custom dropdown, not a native <select> — a native option list
-             ignores almost all CSS (renders with the OS's own light-theme
-             popup, black-on-white, completely unstyleable), so it looked
-             broken sitting in this dark neon UI. Same button+menu pattern
-             as overviewBoard.js's .layer-switcher. -->
-        <div class="progress-scope" id="progress-scope-wrap" hidden>
-          <button type="button" class="progress-scope-btn" id="progress-scope-btn" aria-haspopup="true" aria-expanded="false" title="По какому режиму показывать прогресс">
-            <span id="progress-scope-label">Назови штат</span>
-            <svg class="progress-scope-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5z" /></svg>
+        <!-- All the display toggles used to sit here directly in the topbar
+             — consolidated into one hover-flyout (js/game.js's
+             _bindSettingsFlyout) so the bar itself stays short regardless
+             of how many layers a level/mode happens to have. Every element
+             below keeps its own id/behavior completely unchanged — only
+             its DOM position moved, so all the show/hide-per-mode and
+             translation code that already targets these ids by
+             getElementById needed zero changes. -->
+        <div class="settings-flyout" id="settings-flyout-wrap">
+          <button type="button" class="settings-flyout-btn" id="settings-flyout-btn" aria-haspopup="true" aria-expanded="false" title="Слои и настройки отображения">
+            <svg class="settings-flyout-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 6h9M18 6h3M3 12h3M10 12h11M3 18h13M20 18h1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none" />
+              <circle cx="14" cy="6" r="2.2" fill="none" stroke="currentColor" stroke-width="1.7" />
+              <circle cx="7" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.7" />
+              <circle cx="17" cy="18" r="2.2" fill="none" stroke="currentColor" stroke-width="1.7" />
+            </svg>
+            <span id="settings-flyout-label">Слои</span>
           </button>
-          <div class="progress-scope-menu" id="progress-scope-menu" hidden>
-            <button type="button" class="progress-scope-option" data-scope="quiz-states" data-mode-id="quiz">Найди штат</button>
-            <button type="button" class="progress-scope-option active" data-scope="name-state-states" data-mode-id="name-state">Назови штат</button>
-            <button type="button" class="progress-scope-option" data-scope="neighbor-states" data-mode-id="neighbor">Назови соседа</button>
-            <button type="button" class="progress-scope-option" data-scope="identify-states" data-mode-id="identify">Определи штат</button>
+          <div class="settings-flyout-menu" id="settings-flyout-menu" hidden>
+            <label class="toggle" id="toggle-hints-wrap" title="Показать/скрыть фоновый контур карты-подсказки">
+              <input type="checkbox" id="toggle-hints" checked />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-text" id="toggle-hints-text">Подсказки</span>
+            </label>
+            <label class="toggle" id="toggle-labels-wrap" title="Показать/скрыть буквы-подписи на кусочках">
+              <input type="checkbox" id="toggle-labels" checked />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-text" id="toggle-labels-text">Буквы</span>
+            </label>
+            <label class="toggle" id="toggle-places-wrap" title="Показать/скрыть места на карте" hidden>
+              <input type="checkbox" id="toggle-places" checked />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-text" id="toggle-places-text">Места</span>
+            </label>
+            <label class="toggle" id="toggle-lakes-wrap" title="Показать/скрыть водоёмы на карте" hidden>
+              <input type="checkbox" id="toggle-lakes" checked />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-text" id="toggle-lakes-text">Водоёмы</span>
+            </label>
+            <label class="toggle" id="toggle-highways-wrap" title="Показать/скрыть шоссе на карте" hidden>
+              <input type="checkbox" id="toggle-highways" checked />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-text" id="toggle-highways-text">Шоссе</span>
+            </label>
+            <!-- "Любование прогрессом" — colors every state from black (0) to
+                 the current color scheme's accent (10+) by adaptive-mode
+                 success streak (js/successStats.js). States only for now — see
+                 js/overviewBoard.js's setProgressVisible. -->
+            <label class="toggle" id="toggle-progress-wrap" title="Раскрасить штаты по прогрессу (адаптивная статистика)" hidden>
+              <input type="checkbox" id="toggle-progress" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-text" id="toggle-progress-text">Прогресс</span>
+            </label>
+            <!-- Real terrain classification (mountains/forests/plains/desert/
+                 etc., scripts/build_usa_terrain.js) painted under the state
+                 pieces. States only, same as "Прогресс" above. 3-way segmented
+                 switch (выкл / цвет / иконки), not a plain on/off checkbox nor
+                 a cycling button — each third of the track is its own real
+                 <button> so any mode is reachable directly from whatever mode
+                 is currently active, no forced click-through-the-middle order.
+                 See js/game.js's click delegation and
+                 js/overviewBoard.js's setTerrainMode. -->
+            <div class="toggle toggle-3way" id="toggle-terrain-wrap" title="Рельеф: выкл / только цвет / иконки" data-mode="off" hidden>
+              <span class="toggle-track toggle-track-3way">
+                <button type="button" class="toggle-3way-zone" data-mode="off" aria-label="Рельеф: выключено"></button>
+                <button type="button" class="toggle-3way-zone" data-mode="color" aria-label="Рельеф: только цвет"></button>
+                <button type="button" class="toggle-3way-zone" data-mode="pattern" aria-label="Рельеф: иконки"></button>
+                <span class="toggle-thumb"></span>
+              </span>
+              <span class="toggle-text" id="toggle-terrain-text">Рельеф</span>
+            </div>
+            <!-- Custom dropdown, not a native <select> — a native option list
+                 ignores almost all CSS (renders with the OS's own light-theme
+                 popup, black-on-white, completely unstyleable), so it looked
+                 broken sitting in this dark neon UI. Same button+menu pattern
+                 as overviewBoard.js's .layer-switcher. -->
+            <div class="progress-scope" id="progress-scope-wrap" hidden>
+              <button type="button" class="progress-scope-btn" id="progress-scope-btn" aria-haspopup="true" aria-expanded="false" title="По какому режиму показывать прогресс">
+                <span id="progress-scope-label">Назови штат</span>
+                <svg class="progress-scope-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5z" /></svg>
+              </button>
+              <div class="progress-scope-menu" id="progress-scope-menu" hidden>
+                <button type="button" class="progress-scope-option" data-scope="quiz-states" data-mode-id="quiz">Найди штат</button>
+                <button type="button" class="progress-scope-option active" data-scope="name-state-states" data-mode-id="name-state">Назови штат</button>
+                <button type="button" class="progress-scope-option" data-scope="neighbor-states" data-mode-id="neighbor">Назови соседа</button>
+                <button type="button" class="progress-scope-option" data-scope="identify-states" data-mode-id="identify">Определи штат</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
