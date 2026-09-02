@@ -637,6 +637,46 @@ function applyUsaLabels(piece) {
 const usaPiece = pieces.find((p) => p.ru === 'США');
 if (usaPiece) applyUsaLabels(usaPiece);
 
+// Sakhalin + the Kuril Islands are two real, distinct, player-relevant
+// regions, but Natural Earth's admin-1 data files BOTH under the same
+// name ("Сахалинская область" — the Kuril Islands really are
+// administratively part of Sakhalin Oblast), so attachExclaveSuffixes'
+// generic by-NAME dedup (only the single largest part per name survives)
+// collapsed them into one candidate, which never even made the cut
+// against Chukotka/Kaliningrad's higher distance ranking. Split them back
+// out geographically instead — same technique as applyUsaLabels above,
+// just ADDING to the labelPoints/labelSuffixes the generic pass already
+// got right (Chukotka, Kaliningrad), not replacing them. Real, hand-
+// verified lon/lat ranges (checked against this build's own part-by-part
+// dump): Sakhalin is a single ~118,000 km² landmass at lon 141-145.5°E;
+// the Kuril chain is 6 disconnected island-sized parts, all lon
+// 145.5-157°E, arcing southwest from Kamchatka toward Hokkaido.
+const RUSSIA_FAR_EAST_BOX = {
+  sakhalin: (lon, lat) => lon >= 141 && lon < 145.5 && lat >= 45 && lat <= 55,
+  kuril: (lon, lat) => lon >= 145.5 && lon <= 157 && lat >= 43 && lat <= 51,
+};
+function applyRussiaFarEastLabels(piece) {
+  const groups = { sakhalin: [], kuril: [] };
+  for (const part of piece._parts) {
+    const { lon, lat } = partLonLat(part);
+    if (RUSSIA_FAR_EAST_BOX.sakhalin(lon, lat)) groups.sakhalin.push(part);
+    else if (RUSSIA_FAR_EAST_BOX.kuril(lon, lat)) groups.kuril.push(part);
+  }
+  if (!piece.labelSuffixes) piece.labelSuffixes = piece.labelPoints.map(() => null);
+  for (const [bucket, suffix] of [['sakhalin', 'Сахалин'], ['kuril', 'Курильские острова']]) {
+    if (!groups[bucket].length) continue;
+    // Kuril Islands specifically are several comparably-sized islands, not
+    // one dominant landmass — same "largest single part's centroid, not a
+    // weighted average across the group" reasoning as Hawaii above (an
+    // average would land in open water between islands).
+    const c = dominantPartCentroid(groups[bucket]);
+    piece.labelPoints.push([+c.x.toFixed(1), +c.y.toFixed(1)]);
+    piece.labelSuffixes.push(suffix);
+  }
+}
+const rusPiece = pieces.find((p) => p.ru === 'Россия');
+if (rusPiece) applyRussiaFarEastLabels(rusPiece);
+
 for (const p of pieces) {
   p.neighbors = neighbors[p.id] || [];
   delete p._rawPoints;
