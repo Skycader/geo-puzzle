@@ -281,11 +281,12 @@ function setElementHidden(el, hide) {
 }
 
 // Info-popup: hand-editable Wikipedia-sourced blurbs (see
-// levels/usa/cities-info.json / places-info.json — plain JSON, not baked
-// into a JS module, specifically so they're easy to hand-edit/extend
-// without touching any code). Fetched once and cached at module scope so
-// re-entering Overview mode doesn't refetch. Only cities/places with an
-// entry here get click-to-info behavior — everything else stays inert.
+// levels/usa/cities-info.json / places-info.json / lakes-info.json — plain
+// JSON, not baked into a JS module, specifically so they're easy to
+// hand-edit/extend without touching any code). Fetched once and cached at
+// module scope so re-entering Overview mode doesn't refetch. Only
+// cities/places/lakes with an entry here get click-to-info behavior —
+// everything else stays inert.
 let _infoLoadPromise = null;
 function loadInfo() {
   if (!_infoLoadPromise) {
@@ -297,9 +298,11 @@ function loadInfo() {
       fetch(url, { cache: 'no-store' })
         .then((r) => (r.ok ? r.json() : {}))
         .catch(() => ({}));
-    _infoLoadPromise = Promise.all([fetchJson('./levels/usa/cities-info.json'), fetchJson('./levels/usa/places-info.json')]).then(
-      ([cities, places]) => ({ cities, places })
-    );
+    _infoLoadPromise = Promise.all([
+      fetchJson('./levels/usa/cities-info.json'),
+      fetchJson('./levels/usa/places-info.json'),
+      fetchJson('./levels/usa/lakes-info.json'),
+    ]).then(([cities, places, lakes]) => ({ cities, places, lakes }));
   }
   return _infoLoadPromise;
 }
@@ -383,6 +386,7 @@ export class OverviewBoard {
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
     this.placesById = new Map(); // id -> { data, dotEl }
+    this.lakesById = new Map(); // id -> { data, pathEl }
     // World's side panel splits level.pieces into three tabs by name
     // instead of USA's states/cities/places (world has no cities/places at
     // all — see _pieceCategory) — 'oceans' first since that's the smallest,
@@ -396,7 +400,7 @@ export class OverviewBoard {
     this._revealQueue = [];
     this._revealScheduled = false;
     this._destroyed = false;
-    this.info = { cities: {}, places: {} }; // populated async — see loadInfo()
+    this.info = { cities: {}, places: {}, lakes: {} }; // populated async — see loadInfo()
     this._openPopupId = null;
     this._infoPopupEl = null;
     this._infoConnectorEl = null;
@@ -598,6 +602,38 @@ export class OverviewBoard {
       this.statesById.set(p.id, { data: p, pathEl: path, titleEl: title });
     }
 
+    // Lakes (USA only, see levels/usaLakes.js) — real polygon shapes with a
+    // real computed `area`, not a place-style point. Painted into
+    // zonesLayer AFTER the state pieces above (so it visually sits ON TOP
+    // of them) rather than relying on state borders leaving a clean gap —
+    // the two shapes come from different source datasets/simplification
+    // levels, so a small edge mismatch is expected; painting the lake last
+    // makes ITS real outline the one that reads, same reasoning
+    // build_usa_level.js's own Canada-then-states order already uses (just
+    // reversed, since here the smaller/more-detailed shape needs to win).
+    for (const lake of this.level.lakes || []) {
+      const path = document.createElementNS(SVG_NS, 'path');
+      path.setAttribute('d', lake.d);
+      path.setAttribute('class', 'overview-lake-shape');
+      path.dataset.kind = 'lake';
+      path.dataset.id = lake.id;
+      const title = document.createElementNS(SVG_NS, 'title');
+      title.textContent = this._lakeHoverTitle(lake);
+      path.appendChild(title);
+      this.zonesLayer.appendChild(path);
+
+      const label = document.createElementNS(SVG_NS, 'text');
+      label.setAttribute('x', lake.cx);
+      label.setAttribute('y', lake.cy);
+      label.setAttribute('class', 'piece-label overview-lake-label');
+      label.textContent = itemName(lake);
+      this.zonesLayer.appendChild(label);
+      this.allLabelEls.push(label);
+      this.stateLabels.push({ el: label }); // reuses the same "Подписи" toggle + zoom rescale as state labels
+
+      this.lakesById.set(lake.id, { data: lake, pathEl: path });
+    }
+
     // Hawaii's true position (see scripts/build_usa_level.js) puts it far
     // southwest of the mainland, at true scale — genuinely small and easy
     // to lose against a lot of open ocean at the default zoomed-out view.
@@ -756,18 +792,6 @@ export class OverviewBoard {
       this.placesById.set(p.id, { data: p, dotEl: dot });
 
       this.pointsLayer.appendChild(dot);
-      // Lakes get an extra wave-glyph accent layered over their own dot —
-      // purely decorative (pointer-events:none), doesn't touch/replace
-      // `dot` itself, so hit-testing, the focused-pulse highlight and
-      // hover-title all keep working on lakes exactly like every other
-      // place. See _rescaleForZoom for how it stays a constant screen size.
-      if (p.kind === 'lake') {
-        const wave = document.createElementNS(SVG_NS, 'path');
-        wave.setAttribute('class', 'overview-place-wave');
-        wave.setAttribute('d', 'M -4,0 C -3,-2.2 -1,-2.2 0,0 C 1,2.2 3,2.2 4,0');
-        entry.wave = wave;
-        this.pointsLayer.appendChild(wave);
-      }
       this.pointsLayer.appendChild(pointMark);
       this.pointsLayer.appendChild(leaderPath);
       this.pointsLayer.appendChild(leaderLabel);
@@ -993,6 +1017,9 @@ export class OverviewBoard {
     for (const entry of this.placeEntries) {
       if (this.info.places[entry.id]) entry.dot.classList.add('overview-has-info');
     }
+    for (const [id, entry] of this.lakesById) {
+      if (this.info.lakes[id]) entry.pathEl.classList.add('overview-has-info');
+    }
   }
 
   _onMapTap(ev) {
@@ -1005,7 +1032,7 @@ export class OverviewBoard {
       this._openProgressEditPopup(id, ev.clientX, ev.clientY);
       return;
     }
-    const entry = kind === 'city' ? this.info.cities[id] : kind === 'place' ? this.info.places[id] : null;
+    const entry = kind === 'city' ? this.info.cities[id] : kind === 'place' ? this.info.places[id] : kind === 'lake' ? this.info.lakes[id] : null;
     if (entry) {
       if (this._openPopupId === id) {
         this._closeInfoPopup(); // tapping the same dot again toggles it closed
@@ -1020,7 +1047,7 @@ export class OverviewBoard {
 
   _openInfoPopup(kind, id, info) {
     this._closeInfoPopup();
-    const source = kind === 'city' ? this.citiesById.get(id) : this.placesById.get(id);
+    const source = kind === 'city' ? this.citiesById.get(id) : kind === 'lake' ? this.lakesById.get(id) : this.placesById.get(id);
     if (!source) return;
     const dotEl = source.dotEl || source.pathEl;
     const wrapRect = this.zoomWrap.getBoundingClientRect();
@@ -1554,6 +1581,15 @@ export class OverviewBoard {
     return bilingualLabel(p);
   }
 
+  // Lakes DO have a real area (scripts/build_usa_lakes.js computes it from
+  // the projected geometry, not derived from a radius like _cityHoverTitle)
+  // — shown directly rather than routed through _areaOf, which only knows
+  // about the side panel's currently active tab.
+  _lakeHoverTitle(l) {
+    const areaStr = Math.round(l.area).toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU');
+    return `${bilingualLabel(l)} — ${areaStr} ${t('areaUnit')}`;
+  }
+
   _renderList() {
     const items =
       this.activeTab === 'states'
@@ -1747,14 +1783,6 @@ export class OverviewBoard {
       // screen-px marker like the label text/leader-line around it.
       entry.dot.setAttribute('r', (PLACE_DOT_R_PX / effScale).toFixed(2));
       entry.dot.style.strokeWidth = `${(PLACE_DOT_STROKE_PX / effScale).toFixed(2)}px`;
-      if (entry.wave) {
-        // The path's own `d` is drawn in local units already sized to
-        // PLACE_DOT_R_PX at scale 1 — same divide-by-effScale the dot's
-        // own `r` uses above, just applied as a transform instead (a
-        // `<path>` has no `r` attribute to rescale).
-        const s = (1 / effScale).toFixed(3);
-        entry.wave.setAttribute('transform', `translate(${entry.cx},${entry.cy}) scale(${s})`);
-      }
     }
     // Keeps whichever shields are already showing at a constant screen
     // size DURING a zoom gesture — _updateHighwayShields itself only runs
@@ -2265,7 +2293,6 @@ export class OverviewBoard {
     this.placesVisible = visible;
     for (const entry of this.placeEntries) {
       entry.dot.style.display = visible ? '' : 'none';
-      if (entry.wave) entry.wave.style.display = visible ? '' : 'none';
       entry.pointMark.style.display = visible ? '' : 'none';
       entry.leaderPath.style.display = visible ? '' : 'none';
       entry.leaderLabel.style.display = visible ? '' : 'none';
