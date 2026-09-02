@@ -756,6 +756,18 @@ export class OverviewBoard {
       this.placesById.set(p.id, { data: p, dotEl: dot });
 
       this.pointsLayer.appendChild(dot);
+      // Lakes get an extra wave-glyph accent layered over their own dot —
+      // purely decorative (pointer-events:none), doesn't touch/replace
+      // `dot` itself, so hit-testing, the focused-pulse highlight and
+      // hover-title all keep working on lakes exactly like every other
+      // place. See _rescaleForZoom for how it stays a constant screen size.
+      if (p.kind === 'lake') {
+        const wave = document.createElementNS(SVG_NS, 'path');
+        wave.setAttribute('class', 'overview-place-wave');
+        wave.setAttribute('d', 'M -4,0 C -3,-2.2 -1,-2.2 0,0 C 1,2.2 3,2.2 4,0');
+        entry.wave = wave;
+        this.pointsLayer.appendChild(wave);
+      }
       this.pointsLayer.appendChild(pointMark);
       this.pointsLayer.appendChild(leaderPath);
       this.pointsLayer.appendChild(leaderLabel);
@@ -1735,6 +1747,14 @@ export class OverviewBoard {
       // screen-px marker like the label text/leader-line around it.
       entry.dot.setAttribute('r', (PLACE_DOT_R_PX / effScale).toFixed(2));
       entry.dot.style.strokeWidth = `${(PLACE_DOT_STROKE_PX / effScale).toFixed(2)}px`;
+      if (entry.wave) {
+        // The path's own `d` is drawn in local units already sized to
+        // PLACE_DOT_R_PX at scale 1 — same divide-by-effScale the dot's
+        // own `r` uses above, just applied as a transform instead (a
+        // `<path>` has no `r` attribute to rescale).
+        const s = (1 / effScale).toFixed(3);
+        entry.wave.setAttribute('transform', `translate(${entry.cx},${entry.cy}) scale(${s})`);
+      }
     }
     // Keeps whichever shields are already showing at a constant screen
     // size DURING a zoom gesture — _updateHighwayShields itself only runs
@@ -2245,6 +2265,7 @@ export class OverviewBoard {
     this.placesVisible = visible;
     for (const entry of this.placeEntries) {
       entry.dot.style.display = visible ? '' : 'none';
+      if (entry.wave) entry.wave.style.display = visible ? '' : 'none';
       entry.pointMark.style.display = visible ? '' : 'none';
       entry.leaderPath.style.display = visible ? '' : 'none';
       entry.leaderLabel.style.display = visible ? '' : 'none';

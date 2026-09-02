@@ -88,7 +88,7 @@ function project(region, lon, lat) {
   return toCanvasMain([lon, lat]);
 }
 
-// [id, name, ru, lat, lon, region?] — a mix of real sites and famous
+// [id, name, ru, lat, lon, region?, kind?] — a mix of real sites and famous
 // fictional/semi-fictional ones pinned at their real-world or commonly-
 // attributed location. Notes on the judgment calls:
 //   - The Overlook Hotel (fictional, "The Shining") -> the Stanley Hotel,
@@ -127,6 +127,21 @@ const PLACES = [
   // Wikipedia (verified via the MediaWiki API, not just the article prose):
   // 38.525°N 111.75°W, Fishlake National Forest, Sevier County, UT.
   ['pando', 'Pando', 'Пандо', 38.525, -111.75],
+  // Major lakes — kind: 'lake' (see js/overviewBoard.js's place-dot
+  // render, branches on this to draw a wave glyph instead of the usual
+  // dot). Coordinates are each lake's own Wikipedia infobox coordinate
+  // (its stated geographic center), not eyeballed. The Great Lakes only
+  // border the US on one shore each (Canada has the other) — same
+  // "landmark sits right at/near the border" situation golden_gate_bridge
+  // etc. already handle fine, nothing special needed here.
+  ['lake_superior', 'Lake Superior', 'Озеро Верхнее', 47.7, -87.5, undefined, 'lake'],
+  ['lake_michigan', 'Lake Michigan', 'Озеро Мичиган', 44.0, -87.0, undefined, 'lake'],
+  ['lake_huron', 'Lake Huron', 'Озеро Гурон', 44.8, -82.4, undefined, 'lake'],
+  ['lake_erie', 'Lake Erie', 'Озеро Эри', 42.2, -81.2, undefined, 'lake'],
+  ['lake_ontario', 'Lake Ontario', 'Озеро Онтарио', 43.7, -77.9, undefined, 'lake'],
+  ['great_salt_lake', 'Great Salt Lake', 'Большое Солёное озеро', 41.1667, -112.5833, undefined, 'lake'],
+  ['lake_tahoe', 'Lake Tahoe', 'Озеро Тахо', 39.1, -120.0333, undefined, 'lake'],
+  ['lake_mead', 'Lake Mead', 'Озеро Мид', 36.0, -114.7333, undefined, 'lake'],
   // 10 more Hawaii landmarks (all real, coordinates verified via the
   // MediaWiki API's own `coordinates` field, not guessed from prose) — see
   // levels/usa/places-info.json for the matching info-popup entries. Three
@@ -155,9 +170,11 @@ const PLACES = [
 // any changes to that shared code.
 const NOMINAL_RADIUS_KM = 2;
 
-const places = PLACES.map(([id, name, ru, lat, lon, region]) => {
+const places = PLACES.map(([id, name, ru, lat, lon, region, kind]) => {
   const [cx, cy] = project(region, lon, lat);
-  return { id, name, ru, cx: +cx.toFixed(1), cy: +cy.toFixed(1), radiusKm: NOMINAL_RADIUS_KM };
+  const place = { id, name, ru, cx: +cx.toFixed(1), cy: +cy.toFixed(1), radiusKm: NOMINAL_RADIUS_KM };
+  if (kind) place.kind = kind; // e.g. 'lake' — see js/overviewBoard.js's place-dot render
+  return place;
 });
 
 console.error('places', places.length);
@@ -170,7 +187,8 @@ out += `// build_usa_cities.js, so these line up with levels/usa.js.\n`;
 out += `// Regenerate: node scripts/build_usa_places.js\n`;
 out += `export default [\n`;
 for (const p of places) {
-  out += `  { id: '${p.id}', name: '${p.name.replace(/'/g, "\\'")}', ru: '${p.ru.replace(/'/g, "\\'")}', cx: ${p.cx}, cy: ${p.cy}, radiusKm: ${p.radiusKm} },\n`;
+  const kindField = p.kind ? `, kind: '${p.kind}'` : '';
+  out += `  { id: '${p.id}', name: '${p.name.replace(/'/g, "\\'")}', ru: '${p.ru.replace(/'/g, "\\'")}', cx: ${p.cx}, cy: ${p.cy}, radiusKm: ${p.radiusKm}${kindField} },\n`;
 }
 out += `];\n`;
 

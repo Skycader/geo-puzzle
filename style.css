@@ -1754,6 +1754,19 @@ body {
   cursor: default;
 }
 
+/* Lake accent — a small wave squiggle layered over a lake's own
+   .overview-place-dot (see js/overviewBoard.js's render loop and
+   _rescaleForZoom). Purely decorative: the dot underneath stays the real
+   hit-target/focus-highlight/hover-title, unchanged from every other
+   place, so this never needs pointer events of its own. */
+.overview-place-wave {
+  fill: none;
+  stroke: var(--neon-violet);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
 .overview-focus-glow {
   fill: var(--neon-yellow);
   stroke: var(--neon-yellow);
