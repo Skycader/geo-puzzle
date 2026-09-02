@@ -127,6 +127,11 @@ const PLACES = [
   // Wikipedia (verified via the MediaWiki API, not just the article prose):
   // 38.525°N 111.75°W, Fishlake National Forest, Sevier County, UT.
   ['pando', 'Pando', 'Пандо', 38.525, -111.75],
+  // MediaWiki API's own coordinates field for "Плотина Гувера":
+  // 36.01583333°N 114.73777778°W. Sits right on Lake Mead's own shore
+  // (see levels/usaLakes.js) — that's real geography, not a coincidence
+  // (the dam is what impounds the Colorado River into Lake Mead).
+  ['hoover_dam', 'Hoover Dam', 'Плотина Гувера', 36.01583333, -114.73777778],
   // Major lakes used to live here as point placeholders (kind: 'lake') —
   // moved to their own real-polygon layer instead (level.lakes, see
   // scripts/build_usa_lakes.js) once a plain dot's nominal 2km radius

@@ -26,6 +26,7 @@ export default [
   { id: 'bermuda_triangle', name: 'Bermuda Triangle', ru: 'Бермудский треугольник', cx: 1876.3, cy: 1185.4, radiusKm: 2 },
   { id: 'las_vegas_strip', name: 'The Las Vegas Strip', ru: 'Лас-Вегас-Стрип', cx: 996.5, cy: 961.1, radiusKm: 2 },
   { id: 'pando', name: 'Pando', ru: 'Пандо', cx: 1068.3, cy: 917, radiusKm: 2 },
+  { id: 'hoover_dam', name: 'Hoover Dam', ru: 'Плотина Гувера', cx: 1003.9, cy: 964.9, radiusKm: 2 },
   { id: 'na_pali_coast', name: 'Nā Pali Coast', ru: 'На-Пали', cx: 23.8, cy: 886.8, radiusKm: 2 },
   { id: 'pearl_harbor', name: 'USS Arizona Memorial', ru: 'Мемориал USS Arizona (Пёрл-Харбор)', cx: 60.6, cy: 905.6, radiusKm: 2 },
   { id: 'diamond_head', name: 'Diamond Head', ru: 'Даймонд-Хед', cx: 63.6, cy: 908, radiusKm: 2 },
