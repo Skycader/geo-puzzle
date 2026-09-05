@@ -1864,12 +1864,16 @@ export class Game {
 
     const startPiece = level.pieces.find((p) => p.id === pick.startId);
     const endPiece = level.pieces.find((p) => p.id === pick.endId);
-    // "Показывать штат назначения" (name-answer mode only) hides the
-    // destination's name here too — spelling it out in the HUD would
-    // defeat the whole point of hiding its shape/label on the map.
-    const hideDestination = this.journeyAnswerMode === 'name' && !this.journeyShowDestination;
-    const endLabel = hideDestination ? t('journeyDestinationHidden') : itemName(endPiece);
-    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('journey', 'Путешествие')}: ${itemName(startPiece)} → ${endLabel}`;
+    // "Подписывать штаты"/"Показывать штат назначения" (name-answer mode
+    // only) hide their piece's name here too — spelling it out in the HUD
+    // would defeat the whole point of hiding it on the map. Unlike the
+    // destination, the start has no later "reveal" — with labels off it
+    // just never appears here for the whole round.
+    const isNameMode = this.journeyAnswerMode === 'name';
+    const startLabel = isNameMode && !this.journeyLabelStates ? t('journeyNameHidden') : itemName(startPiece);
+    const hideDestination = isNameMode && (!this.journeyLabelStates || !this.journeyShowDestination);
+    const endLabel = hideDestination ? t('journeyNameHidden') : itemName(endPiece);
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('journey', 'Путешествие')}: ${startLabel} → ${endLabel}`;
     this.el.hudGroups.hidden = false;
 
     if (this.journeyAnswerMode === 'puzzle' || this.journeyAnswerMode === 'puzzle-blind') {

@@ -132,7 +132,10 @@ const STRINGS = {
   journeyDifficultyHeading: { ru: 'Сложность', en: 'Difficulty' },
   journeyLabelStatesText: { ru: 'Подписывать штаты', en: 'Label states' },
   journeyShowDestinationText: { ru: 'Показывать штат назначения', en: 'Show destination state' },
-  journeyDestinationHidden: { ru: '???', en: '???' },
+  // Placeholder for ANY masked state name in Journey mode text (HUD line,
+  // progress bar) — start ("Подписывать штаты" off) or destination
+  // ("Показывать штат назначения" off and not yet revealed) alike.
+  journeyNameHidden: { ru: '???', en: '???' },
   playButton: { ru: 'Играть ▶', en: 'Play ▶' },
   backToMenuButton: { ru: 'Вернуться в меню', en: 'Back to menu' },
   // Tooltips (title=/aria-label=) — lower visual priority than the text
@@ -461,14 +464,15 @@ export function wrongGuessNoNounText(matched) {
   return getLang() === 'en' ? `"${matched.name}" — not that one, try again` : `«${matched.ru}» — не то, попробуй ещё`;
 }
 
-// journeyNameBoard.js's free-order chain-progress bar text. hideEnd (the
-// "Показывать штат назначения" checkbox, off and not yet revealed) swaps
-// the real destination name for the same "???" placeholder game.js's HUD
-// line uses — otherwise this bar would spell it out even though the map
-// and HUD both keep it hidden.
-export function journeyProgressText(correct, total, startPiece, endPiece, hideEnd = false) {
-  const start = itemName(startPiece);
-  const end = hideEnd ? t('journeyDestinationHidden') : itemName(endPiece);
+// journeyNameBoard.js's free-order chain-progress bar text. hideStart
+// ("Подписывать штаты" off — no state name is ever shown as text,
+// including the start's own) and hideEnd ("Показывать штат назначения"
+// off and not yet revealed) each swap their piece's real name for the
+// same "???" placeholder game.js's HUD line uses — otherwise this bar
+// would spell a name out even though the map/HUD both keep it hidden.
+export function journeyProgressText(correct, total, startPiece, endPiece, hideStart = false, hideEnd = false) {
+  const start = hideStart ? t('journeyNameHidden') : itemName(startPiece);
+  const end = hideEnd ? t('journeyNameHidden') : itemName(endPiece);
   return getLang() === 'en'
     ? `Chain states collected: ${correct}/${total}, between ${start} and ${end}`
     : `Штатов цепочки собрано: ${correct}/${total}, между ${start} и ${end}`;

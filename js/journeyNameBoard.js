@@ -230,16 +230,21 @@ export class JourneyNameBoard {
     path.setAttribute('d', data.d);
     path.setAttribute('class', animate ? 'piece-shape journey-state-reveal' : 'piece-shape');
     path.setAttribute('fill', 'url(#piece-grad)');
-    const title = document.createElementNS(SVG_NS, 'title');
-    title.textContent = bilingualLabel(data);
-    path.appendChild(title);
     this.stateLayer.appendChild(path);
     this.stateShapeEls.set(data.id, path);
 
     // "Подписывать штаты" off — shapes still appear on the map (so the
     // player gets visual confirmation something was placed), just without
-    // the name written on them.
+    // the name written on them. The native hover tooltip is the SAME
+    // "reveal the name" leak as the on-map text label, just easier to miss
+    // (real bug, reported: labels were correctly hidden but hovering a
+    // shape still showed its bilingual name) — gated behind the exact same
+    // condition, not just the visible label.
     if (this.labelStates) {
+      const title = document.createElementNS(SVG_NS, 'title');
+      title.textContent = bilingualLabel(data);
+      path.appendChild(title);
+
       const label = document.createElementNS(SVG_NS, 'text');
       label.setAttribute('x', data.cx);
       label.setAttribute('y', data.cy);
@@ -320,8 +325,16 @@ export class JourneyNameBoard {
   // _isConnected for the actual win condition, which can trip on an
   // accepted state that ISN'T in this.chain at all.
   _updateProgressText() {
-    const hideEnd = !this.showDestination && !this.stateShapeEls.has(this.endPiece.id);
-    this.progressEl.textContent = journeyProgressText(this.correct, this.toGuess.length, this.startPiece, this.endPiece, hideEnd);
+    // "Подписывать штаты" off means no state name is ever shown as text,
+    // period — including the start's own (there's no "reveal" for it the
+    // way the destination has one; it stays masked for the whole round).
+    const hideStart = !this.labelStates;
+    // Destination: masked either by the same blanket "no names at all"
+    // rule, or by "Показывать штат назначения" specifically, until it's
+    // actually been revealed (named directly or reached by connecting
+    // through it — see the accepted-seeding comment in the constructor).
+    const hideEnd = !this.labelStates || (!this.showDestination && !this.stateShapeEls.has(this.endPiece.id));
+    this.progressEl.textContent = journeyProgressText(this.correct, this.toGuess.length, this.startPiece, this.endPiece, hideStart, hideEnd);
   }
 
   // BFS from the start, over the subgraph induced by this.accepted (a
