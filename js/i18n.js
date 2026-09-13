@@ -67,6 +67,7 @@ const STRINGS = {
   avgError: { ru: 'Ср. ошибка', en: 'Avg. error' },
   heartsLabel: { ru: 'Попытки', en: 'Attempts' },
   roundsPassedLabel: { ru: 'Пройдено', en: 'Passed' },
+  placeStateToleranceLabel: { ru: 'Погрешность', en: 'Tolerance' },
   // Top toggle row (index.html's #hud, js/game.js's per-mode _start*).
   hints: { ru: 'Подсказки', en: 'Hints' },
   letters: { ru: 'Буквы', en: 'Letters' },
@@ -310,6 +311,7 @@ const PLACE_STATE_DIFFICULTIES_EN = {
   easy: { title: 'Easy', desc: 'Guiding arrow, unlimited attempts' },
   medium: { title: 'Medium', desc: '"Hot/cold" feedback, 3 attempts' },
   hard: { title: 'Hard', desc: 'No hints, 3 attempts' },
+  custom: { title: 'Custom', desc: 'Pick your own tolerance' },
 };
 const JOURNEY_ANSWER_MODES_EN = {
   name: { title: 'Name the States', desc: 'Type the in-between states in order' },

@@ -250,6 +250,13 @@
         <section class="panel" id="panel-quiz-settings" hidden>
           <h2 id="quiz-panel-heading">Раунд</h2>
           <div id="name-state-difficulty" class="preset-list name-state-difficulty" hidden></div>
+          <div id="place-state-tolerance-row" class="custom-count-row" hidden>
+            <label for="place-state-tolerance"
+              ><span id="place-state-tolerance-label">Погрешность</span>: <strong id="place-state-tolerance-value">100</strong>
+              <span id="place-state-tolerance-unit">км</span></label
+            >
+            <input type="range" id="place-state-tolerance" min="20" max="300" step="5" value="100" />
+          </div>
           <label class="toggle" id="city-place-entity-row" hidden>
             <input type="checkbox" id="city-place-entity-checkbox" />
             <span class="toggle-track"><span class="toggle-thumb"></span></span>

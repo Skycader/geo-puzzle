@@ -26,6 +26,8 @@ import {
   IDENTIFY_DIFFICULTIES,
   SEA_IDENTIFY_DIFFICULTIES,
   PLACE_STATE_DIFFICULTIES,
+  PLACE_STATE_TOLERANCE_KM,
+  PLACE_STATE_TOLERANCE_RANGE,
   JOURNEY_ANSWER_MODES,
   JOURNEY_DIFFICULTIES,
 } from './modes.js';
@@ -82,6 +84,7 @@ const ROUNDS_PANEL_LABEL_KEY = {
   'name-state': 'howManyStatesAsk',
   neighbor: 'howManyStatesAsk',
   identify: 'howManyStatesAsk',
+  'place-state': 'howManyStatesAsk',
   colorfill: 'howManyStatesColor',
   'sea-identify': 'howManySeasAsk',
   'sea-quiz': 'howManySeasAsk',
@@ -192,6 +195,7 @@ export class Game {
     this.identifyDifficulty = IDENTIFY_DIFFICULTIES[0].id;
     this.seaIdentifyDifficulty = SEA_IDENTIFY_DIFFICULTIES[0].id;
     this.placeStateDifficulty = PLACE_STATE_DIFFICULTIES[0].id;
+    this.placeStateToleranceKm = PLACE_STATE_TOLERANCE_KM.medium;
     this.journeyAnswerMode = JOURNEY_ANSWER_MODES[0].id;
     this.journeyDifficulty = JOURNEY_DIFFICULTIES[0].id;
     // "Назови штаты" only (js/journeyNameBoard.js) — harder-mode toggles.
@@ -368,6 +372,11 @@ export class Game {
       quizCountValue: document.getElementById('quiz-count-value'),
       quizEligibleWrap: document.getElementById('quiz-eligible-wrap'),
       nameStateDifficultyEl: document.getElementById('name-state-difficulty'),
+      placeStateToleranceRow: document.getElementById('place-state-tolerance-row'),
+      placeStateToleranceLabel: document.getElementById('place-state-tolerance-label'),
+      placeStateToleranceValue: document.getElementById('place-state-tolerance-value'),
+      placeStateToleranceUnit: document.getElementById('place-state-tolerance-unit'),
+      placeStateToleranceInput: document.getElementById('place-state-tolerance'),
       cityPlaceEntityRow: document.getElementById('city-place-entity-row'),
       cityPlaceEntityCheckbox: document.getElementById('city-place-entity-checkbox'),
       cityPlaceEntityText: document.getElementById('city-place-entity-text'),
@@ -477,6 +486,8 @@ export class Game {
     if (IDENTIFY_DIFFICULTIES.some((d) => d.id === saved.identifyDifficulty)) this.identifyDifficulty = saved.identifyDifficulty;
     if (SEA_IDENTIFY_DIFFICULTIES.some((d) => d.id === saved.seaIdentifyDifficulty)) this.seaIdentifyDifficulty = saved.seaIdentifyDifficulty;
     if (PLACE_STATE_DIFFICULTIES.some((d) => d.id === saved.placeStateDifficulty)) this.placeStateDifficulty = saved.placeStateDifficulty;
+    if (Number.isFinite(saved.placeStateToleranceKm))
+      this.placeStateToleranceKm = clamp(saved.placeStateToleranceKm, PLACE_STATE_TOLERANCE_RANGE.min, PLACE_STATE_TOLERANCE_RANGE.max);
     if (JOURNEY_ANSWER_MODES.some((m) => m.id === saved.journeyAnswerMode)) this.journeyAnswerMode = saved.journeyAnswerMode;
     if (JOURNEY_DIFFICULTIES.some((d) => d.id === saved.journeyDifficulty)) this.journeyDifficulty = saved.journeyDifficulty;
     if (typeof saved.journeyLabelStates === 'boolean') this.journeyLabelStates = saved.journeyLabelStates;
@@ -506,6 +517,7 @@ export class Game {
       identifyDifficulty: this.identifyDifficulty,
       seaIdentifyDifficulty: this.seaIdentifyDifficulty,
       placeStateDifficulty: this.placeStateDifficulty,
+      placeStateToleranceKm: this.placeStateToleranceKm,
       journeyAnswerMode: this.journeyAnswerMode,
       journeyDifficulty: this.journeyDifficulty,
       journeyLabelStates: this.journeyLabelStates,
@@ -669,6 +681,8 @@ export class Game {
     this.el.btnImportProgress.textContent = t('importProgressBtn');
     this.el.puzzleDifficultyHeading.textContent = t('puzzleDifficultyHeading');
     this.el.customCountLabel.textContent = t('customCountLabel');
+    this.el.placeStateToleranceLabel.textContent = t('placeStateToleranceLabel');
+    this.el.placeStateToleranceUnit.textContent = t('kmUnit');
     this.el.adaptiveModeText.textContent = t('adaptiveModeText');
     this.el.quickSelectText.textContent = t('quickSelectText');
     this.el.overviewHeadingEl.textContent = t('overviewHeading');
@@ -925,6 +939,11 @@ export class Game {
     }
     this.el.quizEligibleWrap.hidden = !hasEligibility;
     this.el.nameStateDifficultyEl.hidden = !(isNameState || isNeighbor || isIdentify || isSeaIdentify || isPlaceState);
+    // place-state-only — _renderPlaceStateDifficulty re-syncs its actual
+    // shown/hidden state (Easy vs Medium/Hard/Custom) below, but only when
+    // isPlaceState is true; switching to any OTHER mode needs this to
+    // unconditionally hide it, since nothing else re-renders it.
+    if (!isPlaceState) this.el.placeStateToleranceRow.hidden = true;
     // Each of these has its own differently-sized difficulty list sharing
     // the same panel element — re-render it for whichever mode is now
     // active so the right cards (and the right one marked "selected")
@@ -1151,10 +1170,28 @@ export class Game {
       this.placeStateDifficulty,
       (id) => {
         this.placeStateDifficulty = id;
+        // Medium/Hard each snap the shared tolerance slider to their own
+        // default — Custom leaves whatever value is already there alone
+        // (that's the whole point of it), Easy doesn't use the slider at
+        // all (fraction-based, see statePlacementBoard.js).
+        if (id === 'medium' || id === 'hard') this.placeStateToleranceKm = PLACE_STATE_TOLERANCE_KM[id];
+        this._syncPlaceStateToleranceUI();
       },
       this.el.nameStateDifficultyEl,
       PLACE_STATE_DIFFICULTIES_EN,
     );
+    this._syncPlaceStateToleranceUI();
+  }
+
+  // Keeps the tolerance slider's visibility/value in sync with whichever
+  // place-state difficulty card is selected — called both after a card
+  // click and after the slider itself is dragged (see _bindEvents' input
+  // listener, which flips the selection to 'custom' and re-renders the
+  // whole difficulty list, which calls back in here).
+  _syncPlaceStateToleranceUI() {
+    this.el.placeStateToleranceRow.hidden = this.placeStateDifficulty === 'easy';
+    this.el.placeStateToleranceInput.value = String(this.placeStateToleranceKm);
+    this.el.placeStateToleranceValue.textContent = this.placeStateToleranceKm;
   }
 
   _renderJourneyAnswerMode() {
@@ -1312,6 +1349,12 @@ export class Game {
     this.el.quizCountInput.addEventListener('input', (ev) => {
       this.quizRounds = Number(ev.target.value);
       this.el.quizCountValue.textContent = this.quizRounds;
+      this._saveLastSettings();
+    });
+    this.el.placeStateToleranceInput.addEventListener('input', (ev) => {
+      this.placeStateToleranceKm = Number(ev.target.value);
+      this.placeStateDifficulty = 'custom';
+      this._renderPlaceStateDifficulty();
       this._saveLastSettings();
     });
     this.el.toggleHints.addEventListener('change', (ev) => {
@@ -1681,6 +1724,7 @@ export class Game {
     this.board = new StatePlacementBoard(this.el.boardContainer, level, {
       rounds: this.quizRounds,
       difficulty: this.placeStateDifficulty,
+      toleranceKm: this.placeStateToleranceKm,
       levelId: this.levelId,
       scale,
       onProgress: (p) => this._onPlaceStateProgress(p),

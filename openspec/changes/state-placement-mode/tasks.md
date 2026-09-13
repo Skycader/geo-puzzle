@@ -84,3 +84,28 @@
 - Отсутствовали переводы `checkBtnTitle`, `heartsLabel`,
   `roundsPassedLabel`, `statePlacementPrompt`, `placementErrorLabel`,
   `placementWrongLabel`, `placementFailedLabel`, `MODE_EN['place-state']`
+
+### Правки после первого прохода (по фидбеку пользователя)
+- Панорамирование ЛКМ по серому контуру не работало (пропускалось
+  `attachZoomPan`'s "pan only on `ev.target === content`" проверку) —
+  добавлен `pointer-events: none` на `.state-placement-outline`
+- Видимый более тёмный прямоугольник поверх карты ("4:3 в 16:9") — SVG
+  рисовался на весь `level.canvas` (с пустым местом под инсеты
+  Аляски/Гавайев, которых этот режим не использует). Исправлено:
+  `viewBox` подгоняется под собственный bbox контура —
+  `outlineViewBox()` в `js/statePlacementBoard.js`
+- Контур карты игнорировал глобальный переключатель "серый/цветной"
+  (был захардкожен на `var(--base01)`/`var(--base00)` вместо
+  `--land-fill`/`--land-stroke`)
+- `zoom-wrap` был меньше `board-container` (contain-fit оставлял пустое
+  поле) — переключено на cover-fit (`_computeScale(..., true)`), как у
+  всех остальных "плоских карт" режимов
+- Отсутствовала подпись у слайдера количества раундов (`place-state` не
+  было в `ROUNDS_PANEL_LABEL_KEY`, `t(undefined)` рендерил пустоту)
+- Погрешность среднего/сложного уровней переведена с доли от площади
+  штата на фиксированные километры (100 км / 50 км по умолчанию),
+  добавлен ползунок и 4-й уровень "Кастом" (обратная связь как у
+  Сложного, но с произвольным числом км) — `PLACE_STATE_TOLERANCE_KM`/
+  `PLACE_STATE_TOLERANCE_RANGE` в `js/modes.js`. Заодно исправлен баг:
+  конструктор `StatePlacementBoard` не принимал `'custom'` как валидную
+  сложность и тихо откатывал её на `'easy'`

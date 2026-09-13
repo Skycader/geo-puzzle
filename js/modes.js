@@ -173,12 +173,26 @@ export const SEA_IDENTIFY_DIFFICULTIES = [
 ];
 
 // "Расположи штат" — unlike every other 3-tier difficulty above, these
-// three genuinely change the FEEDBACK MECHANISM, not just the answer
+// tiers genuinely change the FEEDBACK MECHANISM, not just the answer
 // method: an always-on guiding arrow (no attempt limit), hot/cold color
 // during drag (3 attempts), or no feedback at all until you check
-// (3 attempts) — see js/statePlacementBoard.js.
+// (3 attempts) — see js/statePlacementBoard.js. Custom shares Hard's
+// (blind) feedback mechanic — it only lets the exact tolerance number
+// differ from Hard's own default.
 export const PLACE_STATE_DIFFICULTIES = [
   { id: 'easy', title: 'Лёгкий', desc: 'Стрелка-подсказка, без ограничения попыток' },
   { id: 'medium', title: 'Средний', desc: '«Горячо-холодно», 3 попытки' },
   { id: 'hard', title: 'Сложный', desc: 'Без подсказок, 3 попытки' },
+  { id: 'custom', title: 'Кастом', desc: 'Сам выбери погрешность' },
 ];
+
+// Medium/Hard/Custom's accept-zone radius, in real-world km — flat, same
+// for every state regardless of its own size (unlike Easy, which stays a
+// fraction of each state's own "equivalent radius" — see
+// statePlacementBoard.js's EASY_TOLERANCE_FRACTION comment for why Easy
+// alone needed that). Exposed as a slider (js/game.js's
+// place-state-tolerance row): picking Medium/Hard snaps the slider to its
+// own default below; dragging the slider manually switches the selected
+// card to Custom.
+export const PLACE_STATE_TOLERANCE_KM = { medium: 100, hard: 50, custom: 75 };
+export const PLACE_STATE_TOLERANCE_RANGE = { min: 20, max: 300, step: 5 };

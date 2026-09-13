@@ -20,12 +20,16 @@ function lerpColor(frac) {
   return `rgb(${r},${g},${b})`;
 }
 
-// Tolerance as a FRACTION of each state's own "equivalent radius"
+// Easy's tolerance is a FRACTION of each state's own "equivalent radius"
 // (sqrt(area/π) — radius of a circle with the same real area), not a flat
-// km number — see openspec/changes/state-placement-mode/design.md's own
-// reasoning: a flat km tolerance would make Rhode Island effectively
-// impossible and Texas trivial at the same setting.
-const TOLERANCE_FRACTION = { easy: 0.5, medium: 0.2, hard: 0.08 };
+// km number — a flat km tolerance would make Rhode Island effectively
+// impossible and Texas trivial at the same setting, and Easy has no
+// numeric feedback anyway (just the arrow), so per-state scaling doesn't
+// need to be legible as a number. Medium/Hard/Custom went the other way
+// (see js/modes.js's PLACE_STATE_TOLERANCE_KM) — a flat, player-set km
+// value, exposed as a slider, since those tiers DO show/imply a concrete
+// number and the player wanted direct control over it.
+const EASY_TOLERANCE_FRACTION = 0.5;
 const HEARTS_START = 3;
 // Color-tint distance reference for medium's hot/cold feedback — beyond
 // this many tolerance-radii away reads as fully red, same "some sane cap,
@@ -71,7 +75,11 @@ export class StatePlacementBoard {
     this.level = level;
     this.levelId = opts.levelId;
     this.scale = opts.scale || 1;
-    this.difficulty = opts.difficulty === 'medium' || opts.difficulty === 'hard' ? opts.difficulty : 'easy';
+    this.difficulty = ['medium', 'hard', 'custom'].includes(opts.difficulty) ? opts.difficulty : 'easy';
+    // Only meaningful for medium/hard/custom (js/game.js's tolerance
+    // slider) — falls back to a sane default if omitted so a stale saved
+    // setting or a direct-construction call can't leave it undefined.
+    this.toleranceKm = Number.isFinite(opts.toleranceKm) ? opts.toleranceKm : 100;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
 
@@ -259,8 +267,12 @@ export class StatePlacementBoard {
     this.revealLayer.innerHTML = '';
     this.arrowEl.hidden = true;
 
-    const equivRadiusKm = Math.sqrt(this.piece.area / Math.PI);
-    this.toleranceNative = (equivRadiusKm / this.level.kmPerUnit) * TOLERANCE_FRACTION[this.difficulty];
+    if (this.difficulty === 'easy') {
+      const equivRadiusKm = Math.sqrt(this.piece.area / Math.PI);
+      this.toleranceNative = (equivRadiusKm / this.level.kmPerUnit) * EASY_TOLERANCE_FRACTION;
+    } else {
+      this.toleranceNative = this.toleranceKm / this.level.kmPerUnit;
+    }
     const { ox, oy } = this._pickStartOffset();
     this.offsetX = ox;
     this.offsetY = oy;
