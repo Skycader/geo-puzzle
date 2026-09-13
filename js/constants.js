@@ -32,5 +32,6 @@ export const REWARDS = {
     // above (it's the same drag-assembly interaction, not discrete
     // per-answer rounds).
     journey: 1,
+    state_placement: 1,
   },
 };

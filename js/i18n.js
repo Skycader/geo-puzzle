@@ -65,6 +65,8 @@ const STRINGS = {
   mistakes: { ru: 'Ошибки', en: 'Mistakes' },
   pieces: { ru: 'Частей', en: 'Pieces' },
   avgError: { ru: 'Ср. ошибка', en: 'Avg. error' },
+  heartsLabel: { ru: 'Попытки', en: 'Attempts' },
+  roundsPassedLabel: { ru: 'Пройдено', en: 'Passed' },
   // Top toggle row (index.html's #hud, js/game.js's per-mode _start*).
   hints: { ru: 'Подсказки', en: 'Hints' },
   letters: { ru: 'Буквы', en: 'Letters' },
@@ -198,6 +200,12 @@ const STRINGS = {
   nextBtn: { ru: 'Далее ▶', en: 'Next ▶' },
   trayHandleTitle: { ru: 'Потяните вверх или прокрутите, чтобы открыть лоток', en: 'Drag up or scroll to open the tray' },
   distanceFromTarget: { ru: 'км от цели', en: 'km from target' },
+  // js/statePlacementBoard.js's action bar.
+  statePlacementPrompt: { ru: 'Расположи', en: 'Place' },
+  checkBtnTitle: { ru: 'Проверить', en: 'Check' },
+  placementErrorLabel: { ru: 'Погрешность', en: 'Error' },
+  placementWrongLabel: { ru: 'Неверно', en: 'Wrong' },
+  placementFailedLabel: { ru: 'Не угадано — вот настоящее место', en: 'Not placed — here is the real spot' },
   journeyAlreadyMarked: { ru: 'Уже отмечено на карте', en: 'Already marked on the map' },
   journeyOffRoute: { ru: 'Штат на карте, но не в маршруте — без монет', en: 'On the map, but not on the route — no coins' },
   // js/zoomPan.js's zoom control cluster.
@@ -249,6 +257,7 @@ const MODE_EN = {
   'name-state': { title: 'Name the State', desc: 'Name the highlighted state' },
   neighbor: { title: 'Name the Neighbor', desc: 'Name the neighboring state' },
   identify: { title: 'Identify the State', desc: 'Guess the state by its shape' },
+  'place-state': { title: 'Place the State', desc: 'Drag the state to its real location' },
   'city-place': { title: 'Cities & Places', desc: 'Switch what and how you play' },
   colorfill: { title: 'Color Fill', desc: 'Color the state by terrain type' },
   'sea-identify': { title: 'Identify the Sea', desc: 'Guess the sea by its shape' },
@@ -297,6 +306,11 @@ const IDENTIFY_DIFFICULTIES_EN = {
   medium: { title: 'Medium', desc: 'Type the name yourself' },
   hard: { title: 'Hard', desc: 'State rotated to a random angle' },
 };
+const PLACE_STATE_DIFFICULTIES_EN = {
+  easy: { title: 'Easy', desc: 'Guiding arrow, unlimited attempts' },
+  medium: { title: 'Medium', desc: '"Hot/cold" feedback, 3 attempts' },
+  hard: { title: 'Hard', desc: 'No hints, 3 attempts' },
+};
 const JOURNEY_ANSWER_MODES_EN = {
   name: { title: 'Name the States', desc: 'Type the in-between states in order' },
   puzzle: { title: 'Assemble the Puzzle', desc: 'Drag states onto the map' },
@@ -317,6 +331,7 @@ export {
   SEA_IDENTIFY_DIFFICULTIES_EN,
   NEIGHBOR_DIFFICULTIES_EN,
   IDENTIFY_DIFFICULTIES_EN,
+  PLACE_STATE_DIFFICULTIES_EN,
   JOURNEY_ANSWER_MODES_EN,
   JOURNEY_DIFFICULTIES_EN,
   OVERVIEW_MODES_EN,

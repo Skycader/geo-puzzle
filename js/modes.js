@@ -27,6 +27,7 @@ export const MENU_ORDER = [
   'name-state',
   'neighbor',
   'identify',
+  'place-state',
   'colorfill',
   'city-place',
   'sea-quiz',
@@ -69,6 +70,12 @@ export const MODES = [
     id: 'city-place',
     title: 'Города и места',
     desc: 'Переключи объект и способ игры',
+    levels: ['usa'],
+  },
+  {
+    id: 'place-state',
+    title: 'Расположи штат',
+    desc: 'Перетащи штат на его настоящее место',
     levels: ['usa'],
   },
   {
@@ -163,4 +170,15 @@ export const IDENTIFY_DIFFICULTIES = [
 export const SEA_IDENTIFY_DIFFICULTIES = [
   { id: 'easy', title: 'Лёгкий', desc: '4 варианта на выбор' },
   { id: 'hard', title: 'Сложный', desc: 'Впиши название сам' },
+];
+
+// "Расположи штат" — unlike every other 3-tier difficulty above, these
+// three genuinely change the FEEDBACK MECHANISM, not just the answer
+// method: an always-on guiding arrow (no attempt limit), hot/cold color
+// during drag (3 attempts), or no feedback at all until you check
+// (3 attempts) — see js/statePlacementBoard.js.
+export const PLACE_STATE_DIFFICULTIES = [
+  { id: 'easy', title: 'Лёгкий', desc: 'Стрелка-подсказка, без ограничения попыток' },
+  { id: 'medium', title: 'Средний', desc: '«Горячо-холодно», 3 попытки' },
+  { id: 'hard', title: 'Сложный', desc: 'Без подсказок, 3 попытки' },
 ];

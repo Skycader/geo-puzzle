@@ -2323,6 +2323,95 @@ body {
   filter: drop-shadow(0 0 8px rgba(var(--neon-cyan-rgb), 0.8));
 }
 
+/* ---------------- "Расположи штат" (js/statePlacementBoard.js) ---------------- */
+
+/* Border-less silhouette (levels/usaOutline.js) — deliberately flat and
+   featureless (no individual state borders), the whole point of this
+   mode's map. Same --land-fill/--land-stroke scheme as .world-bg-path/
+   .state-bg-path (see :root) so the global land-color-scheme toggle
+   (gray/color) applies here too — a hardcoded base01/base00 fill was
+   found to ignore that toggle entirely (still showed blue under the gray
+   scheme). */
+.state-placement-outline {
+  fill: var(--land-fill);
+  stroke: var(--land-stroke);
+  stroke-width: 1.5;
+  /* Not interactive — without this, attachZoomPan's "start a pan only on
+     bare background (ev.target === content)" check never fires when the
+     press lands on the silhouette itself, since ev.target would be this
+     path instead of the svg. The silhouette covers most of the visible
+     map, so without pointer-events:none the map was nearly impossible to
+     pan by dragging (see .state-bg-layer for the same convention
+     elsewhere). */
+  pointer-events: none;
+}
+.state-placement-piece { cursor: grab; }
+.state-placement-piece.dragging { cursor: grabbing; }
+.state-placement-piece.solved .piece-shape {
+  filter: drop-shadow(0 0 10px var(--green));
+}
+.state-placement-piece.wrong-shake { animation: name-shake 0.4s ease; }
+/* Easy tier's direction hint — points from the piece's current centroid
+   toward its true one, see statePlacementBoard.js's _renderArrow. */
+.state-placement-arrow {
+  fill: var(--neon-yellow);
+  stroke: var(--neon-yellow);
+  stroke-width: 2;
+  opacity: 0.85;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+/* Shown at the true position once all hearts are spent (medium/hard) —
+   dashed outline, same visual language as puzzleBoard.js's own
+   hintsVisible true-position outline. */
+.state-placement-reveal {
+  fill: none;
+  stroke: var(--neon-cyan);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.state-placement-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  border-radius: 0;
+  background: rgba(var(--ink-rgb), 0.85);
+  backdrop-filter: blur(4px);
+  max-width: calc(100% - 20px);
+}
+.state-placement-prompt {
+  font-size: 15px;
+  color: var(--base1);
+}
+.state-placement-prompt strong { color: var(--base2); }
+.state-placement-feedback {
+  font-size: 14px;
+  color: var(--base1);
+  min-width: 120px;
+}
+.state-placement-hearts { display: flex; gap: 3px; }
+.state-placement-heart {
+  width: 20px;
+  height: 20px;
+  fill: var(--red);
+  filter: drop-shadow(0 0 4px var(--red));
+  transition: opacity 0.15s ease, fill 0.15s ease;
+}
+.state-placement-heart.lost {
+  fill: var(--base01);
+  filter: none;
+  opacity: 0.6;
+}
+
 /* ---------------- ruler tool (js/overviewBoard.js's _renderRuler) ---------------- */
 /* Orange — every other map layer here already has its own accent (states'
    gradient, cities pink, places violet, focus/hint yellow, info-popup

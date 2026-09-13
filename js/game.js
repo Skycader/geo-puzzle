@@ -8,6 +8,7 @@ import { CityPinBoard } from './cityPinBoard.js';
 import { ColorFillBoard } from './colorFillBoard.js';
 import { SeaIdentifyBoard } from './seaIdentifyBoard.js';
 import { SeaQuizBoard } from './seaQuizBoard.js';
+import { StatePlacementBoard, outlineViewBox } from './statePlacementBoard.js';
 import { OverviewBoard } from './overviewBoard.js';
 import { JourneyNameBoard } from './journeyNameBoard.js';
 import { pickJourneyPair } from './journeyRoute.js';
@@ -24,6 +25,7 @@ import {
   NEIGHBOR_DIFFICULTIES,
   IDENTIFY_DIFFICULTIES,
   SEA_IDENTIFY_DIFFICULTIES,
+  PLACE_STATE_DIFFICULTIES,
   JOURNEY_ANSWER_MODES,
   JOURNEY_DIFFICULTIES,
 } from './modes.js';
@@ -45,6 +47,7 @@ import {
   NEIGHBOR_DIFFICULTIES_EN,
   IDENTIFY_DIFFICULTIES_EN,
   SEA_IDENTIFY_DIFFICULTIES_EN,
+  PLACE_STATE_DIFFICULTIES_EN,
   JOURNEY_ANSWER_MODES_EN,
   JOURNEY_DIFFICULTIES_EN,
   OVERVIEW_MODES_EN,
@@ -137,6 +140,8 @@ const MODE_ICON_SVG = {
     '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="8" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13" y="7" width="8" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M11 12h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
   identify:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l8-3 8 3v9l-8 6-8-6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 10a2 2 0 1 1 3 1.7c-.8.5-1 .9-1 1.6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="12" cy="16.2" r="0.9" fill="currentColor" stroke="none"/></svg>',
+  'place-state':
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15l4-9 4 3 4-5 4 11z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-dasharray="1 2.6"/><circle cx="17" cy="17" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M17 15.2v3.6M15.2 17h3.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
   colorfill:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="12" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9 10v4h3v6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   'city-place':
@@ -186,6 +191,7 @@ export class Game {
     this.neighborDifficulty = NEIGHBOR_DIFFICULTIES[0].id;
     this.identifyDifficulty = IDENTIFY_DIFFICULTIES[0].id;
     this.seaIdentifyDifficulty = SEA_IDENTIFY_DIFFICULTIES[0].id;
+    this.placeStateDifficulty = PLACE_STATE_DIFFICULTIES[0].id;
     this.journeyAnswerMode = JOURNEY_ANSWER_MODES[0].id;
     this.journeyDifficulty = JOURNEY_DIFFICULTIES[0].id;
     // "Назови штаты" only (js/journeyNameBoard.js) — harder-mode toggles.
@@ -470,6 +476,7 @@ export class Game {
     if (NEIGHBOR_DIFFICULTIES.some((d) => d.id === saved.neighborDifficulty)) this.neighborDifficulty = saved.neighborDifficulty;
     if (IDENTIFY_DIFFICULTIES.some((d) => d.id === saved.identifyDifficulty)) this.identifyDifficulty = saved.identifyDifficulty;
     if (SEA_IDENTIFY_DIFFICULTIES.some((d) => d.id === saved.seaIdentifyDifficulty)) this.seaIdentifyDifficulty = saved.seaIdentifyDifficulty;
+    if (PLACE_STATE_DIFFICULTIES.some((d) => d.id === saved.placeStateDifficulty)) this.placeStateDifficulty = saved.placeStateDifficulty;
     if (JOURNEY_ANSWER_MODES.some((m) => m.id === saved.journeyAnswerMode)) this.journeyAnswerMode = saved.journeyAnswerMode;
     if (JOURNEY_DIFFICULTIES.some((d) => d.id === saved.journeyDifficulty)) this.journeyDifficulty = saved.journeyDifficulty;
     if (typeof saved.journeyLabelStates === 'boolean') this.journeyLabelStates = saved.journeyLabelStates;
@@ -498,6 +505,7 @@ export class Game {
       neighborDifficulty: this.neighborDifficulty,
       identifyDifficulty: this.identifyDifficulty,
       seaIdentifyDifficulty: this.seaIdentifyDifficulty,
+      placeStateDifficulty: this.placeStateDifficulty,
       journeyAnswerMode: this.journeyAnswerMode,
       journeyDifficulty: this.journeyDifficulty,
       journeyLabelStates: this.journeyLabelStates,
@@ -899,9 +907,11 @@ export class Game {
     const isColorFill = this.modeId === 'colorfill';
     const isSeaIdentify = this.modeId === 'sea-identify';
     const isSeaQuiz = this.modeId === 'sea-quiz';
+    const isPlaceState = this.modeId === 'place-state';
     // "Города и места" only gets an eligibility checklist in "найти" mode —
     // "расставь метку" always draws from the full pool, same as the old
-    // separate city-pins mode used to.
+    // separate city-pins mode used to. "Расположи штат" has no checklist at
+    // all (not asked for) — it always draws from the full 48-state pool.
     const hasEligibility =
       isQuiz || isNameState || isNeighbor || isIdentify || isColorFill || isSeaIdentify || isSeaQuiz || (isCityPlace && this.cityPlaceMode === 'find');
     this.el.panelPuzzleSettings.hidden = !isPuzzle;
@@ -914,7 +924,7 @@ export class Game {
       this._applyJourneyNameOptionsVisibility();
     }
     this.el.quizEligibleWrap.hidden = !hasEligibility;
-    this.el.nameStateDifficultyEl.hidden = !(isNameState || isNeighbor || isIdentify || isSeaIdentify);
+    this.el.nameStateDifficultyEl.hidden = !(isNameState || isNeighbor || isIdentify || isSeaIdentify || isPlaceState);
     // Each of these has its own differently-sized difficulty list sharing
     // the same panel element — re-render it for whichever mode is now
     // active so the right cards (and the right one marked "selected")
@@ -924,6 +934,7 @@ export class Game {
     else if (isNeighbor) this._renderNeighborDifficulty();
     else if (isIdentify) this._renderIdentifyDifficulty();
     else if (isSeaIdentify) this._renderSeaIdentifyDifficulty();
+    else if (isPlaceState) this._renderPlaceStateDifficulty();
     // No adaptive mode for the two new sea modes (not asked for, keeps
     // this new level's scope tight) — same "no adaptive" default
     // city-place's pin mode already has.
@@ -1131,6 +1142,18 @@ export class Game {
       },
       this.el.nameStateDifficultyEl,
       SEA_IDENTIFY_DIFFICULTIES_EN,
+    );
+  }
+
+  _renderPlaceStateDifficulty() {
+    this._renderDifficultyList(
+      PLACE_STATE_DIFFICULTIES,
+      this.placeStateDifficulty,
+      (id) => {
+        this.placeStateDifficulty = id;
+      },
+      this.el.nameStateDifficultyEl,
+      PLACE_STATE_DIFFICULTIES_EN,
     );
   }
 
@@ -1388,6 +1411,7 @@ export class Game {
     else if (this.modeId === 'city-place') this._startCityPlace(level);
     else if (this.modeId === 'colorfill') this._startColorFill(level);
     else if (this.modeId === 'sea-identify') this._startSeaIdentify(level);
+    else if (this.modeId === 'place-state') this._startPlaceState(level);
     else if (this.modeId === 'sea-quiz') this._startSeaQuiz(level);
     else if (this.modeId === 'overview') this._startOverview(level);
     else if (this.modeId === 'journey') this._startJourney(level);
@@ -1624,6 +1648,42 @@ export class Game {
       difficulty: this.seaIdentifyDifficulty,
       scale,
       onProgress: (p) => this._onNameStateProgress(p),
+      onFinish: () => this._onFinish(),
+    });
+  }
+
+  _startPlaceState(level) {
+    this.el.toggleHintsWrap.hidden = true;
+    this.el.togglePlacesWrap.hidden = true;
+    this.el.toggleLabelsWrap.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;
+    this.el.quizPrompt.hidden = true;
+
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('place-state', 'Расположи штат')} (${this.quizRounds})`;
+    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudGroups.hidden = false;
+    this.el.hudGroups.textContent = `${t('heartsLabel')}: —`;
+
+    // Fit against the outline's own (padded) bbox, not the full
+    // level.canvas — that canvas reserves large empty margins for the
+    // Alaska/Hawaii inset boxes this mode's outline doesn't have, which
+    // read as a visibly darker unused rectangle otherwise (see
+    // statePlacementBoard.js's outlineViewBox comment). cover:true (same
+    // as quiz/name-state/identify/etc.) fills the whole board-container —
+    // without it (contain fit, like puzzle/journey) the zoom-wrap comes
+    // out smaller than board-container on one axis and just sits centered
+    // with dead space around it, which read as a layout bug.
+    const vb = outlineViewBox();
+    const scale = this._computeScale({ width: vb.width, height: vb.height }, this._availableHeight(), undefined, true);
+    this.board = new StatePlacementBoard(this.el.boardContainer, level, {
+      rounds: this.quizRounds,
+      difficulty: this.placeStateDifficulty,
+      levelId: this.levelId,
+      scale,
+      onProgress: (p) => this._onPlaceStateProgress(p),
       onFinish: () => this._onFinish(),
     });
   }
@@ -1951,6 +2011,15 @@ export class Game {
   _onNameStateProgress({ index, total, mistakes }) {
     this.el.hudProgress.textContent = `${index}/${total}`;
     this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}`;
+  }
+
+  _onPlaceStateProgress({ index, total, roundsPassed, hearts, difficulty }) {
+    this.el.hudProgress.textContent = `${index}/${total}`;
+    // Easy has unlimited attempts (no hearts to show) — report rounds
+    // passed so far instead; medium/hard show remaining hearts.
+    this.el.hudGroups.textContent = difficulty === 'easy'
+      ? `${t('roundsPassedLabel')}: ${roundsPassed}`
+      : `${t('heartsLabel')}: ${hearts}`;
   }
 
   _onColorFillProgress({ index, total, mistakes }) {
