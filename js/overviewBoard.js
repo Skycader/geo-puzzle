@@ -850,6 +850,22 @@ export class OverviewBoard {
     this.svg.appendChild(this.rulerLayer);
 
     this.zoomViewport.appendChild(this.svg);
+    // Moved up from its old spot further down (only this.zoomWrap is
+    // needed, already built) so it exists before the early _rescaleForZoom
+    // call right below, which reaches it via _renderRuler.
+    this._buildRulerReadout();
+    // Applied here — while this.svg is still detached, so this can't paint
+    // a visible frame — rather than left to the later call further down
+    // (still there, now a harmless no-op repeat). Doing it only later meant
+    // every label sat at its default opacity (1) through _calibrateCharWidth's
+    // getComputedTextLength() call below, which forces a synchronous style
+    // flush and so actually COMMITS that opacity:1 as a real rendered value;
+    // the later hide then had a genuine "before" state to animate away from,
+    // and .piece-label's own `transition: opacity 0.15s ease` turned what
+    // should've been an instant hide into a visible flash-then-fade — worse
+    // still on a level with hundreds of labels, where the low frame rate
+    // stretches out how long that fade takes to visually finish.
+    this._rescaleForZoom(1);
     // The wrap must be attached to the live document BEFORE attachZoomPan()
     // runs — it measures viewport.clientWidth/Height immediately (for pan
     // clamping and the initial virtualization pass), which reads 0 on a
@@ -897,7 +913,6 @@ export class OverviewBoard {
     // separate event types), so the ruler needs no "enter ruler mode"
     // toggle at all.
     this.svg.addEventListener('contextmenu', (ev) => this._onMapContextMenu(ev));
-    this._buildRulerReadout();
     // "Рельеф" hover readout — see _onMapMouseMove. Always bound (not only
     // while terrainMode !== 'off') since it's a no-op early return
     // otherwise; that avoids adding/removing the listener every time the
