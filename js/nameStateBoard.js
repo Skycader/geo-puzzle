@@ -30,6 +30,15 @@ const WRONG_FLASH_MS = 500;
 // See the worked example in js/utils.js's levenshtein doc comment: a single
 // missing letter (dist 1) matches; two or more edits (dist 2+) doesn't.
 const FUZZY_MATCH_MAX_DIST = 1;
+// Сложный/Хардкор's point marker — constant ON-SCREEN radius (see
+// overviewBoard.js's city dots for the same effScale-division technique)
+// and how far (in native units, relative to the target state's own
+// "equivalent radius" — same sqrt(area/π) measure statePlacementBoard.js
+// uses) a candidate interior point must stay from the border to count as
+// "not on the edge" for Хардкор — see _randomInteriorPoint.
+const HINT_DOT_R_PX = 7;
+const HINT_DOT_EDGE_MARGIN_FRAC = 0.03;
+const HINT_DOT_MAX_ATTEMPTS = 40;
 
 // "Назови штат" — the reverse of "Найди штат": the map highlights a state
 // (a pulsing glow, same visual language as quizBoard.js's post-mistake
@@ -46,7 +55,9 @@ export class NameStateBoard {
     this.level = level;
     this.levelId = opts.levelId;
     this.scale = opts.scale || 1;
-    this.difficulty = opts.difficulty === "hard" ? "hard" : "easy";
+    this.difficulty = ["medium", "hard", "ultra"].includes(opts.difficulty)
+      ? opts.difficulty
+      : "easy";
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
 
@@ -109,6 +120,18 @@ export class NameStateBoard {
     this.svg.setAttribute("width", baseW);
     this.svg.setAttribute("height", baseH);
     this.svg.classList.add("quiz-svg");
+    // Сложный/Хардкор show only the dot, no shape hint — but every OTHER
+    // state's border was still being drawn, so the target could just be
+    // traced by eye from where its neighbors' outlines enclose the dot,
+    // no geography knowledge required (found via user feedback: the
+    // whole point of these tiers is knowing WHERE a state is, not
+    // recognizing its outline). Every .quiz-path already shares the same
+    // fill — dropping the stroke too makes adjacent states visually melt
+    // into one solid mass, leaving only the outer coastline (where there
+    // is no same-colored neighbor to blend into) as a landmark.
+    if (this.difficulty === "hard" || this.difficulty === "ultra") {
+      this.svg.classList.add("name-hide-borders");
+    }
 
     for (const p of this.level.pieces) {
       const path = document.createElementNS(SVG_NS, "path");
@@ -118,6 +141,15 @@ export class NameStateBoard {
       this.svg.appendChild(path);
       this.paths.set(p.id, path);
     }
+
+    // Сложный/Хардкор's point highlight — a single marker reused across
+    // rounds (repositioned in _showHintDot), hidden whenever the current
+    // difficulty highlights the whole shape instead (see .quiz-hint
+    // above). SVGElement.hidden is a no-op, hence the hidden ATTRIBUTE.
+    this.hintDot = document.createElementNS(SVG_NS, "circle");
+    this.hintDot.setAttribute("class", "name-hint-dot");
+    this.hintDot.setAttribute("hidden", "");
+    this.svg.appendChild(this.hintDot);
 
     this.zoomViewport.appendChild(this.svg);
     // The wrap must be attached to the live document BEFORE attachZoomPan()
@@ -134,6 +166,10 @@ export class NameStateBoard {
       baseWidth: baseW,
       baseHeight: baseH,
       panFromAnywhere: true,
+      // Keeps the hint dot a constant ON-SCREEN size as the round's
+      // initial focus zoom (and any manual zoom after it) changes — same
+      // technique as overviewBoard.js's city dots.
+      onZoomChange: (zoom) => this._rescaleHintDot(zoom),
     });
     // Appended to this.container (#board-container), NOT this.zoomWrap —
     // .zoom-wrap is deliberately sized larger than the visible area by
@@ -216,6 +252,7 @@ export class NameStateBoard {
 
   _nextQuestion() {
     this.currentPath?.classList.remove("quiz-hint");
+    this.hintDot.setAttribute("hidden", "");
     if (this.index >= this.queue.length) {
       setTimeout(() => playWin(), 100);
       this.onFinish({
@@ -228,7 +265,11 @@ export class NameStateBoard {
     this.locked = false;
     this.current = this.queue[this.index];
     this.currentPath = this.paths.get(this.current.id);
-    this.currentPath.classList.add("quiz-hint");
+    // Лёгкий/Средний highlight the whole shape; Сложный/Хардкор drop that
+    // (it would give away the answer by silhouette alone) for a single
+    // point instead — see _showHintDot.
+    if (this.difficulty === "hard" || this.difficulty === "ultra") this._showHintDot();
+    else this.currentPath.classList.add("quiz-hint");
     this._setFeedback("");
     this.wrongOptionIds.clear();
     this.roundNeededHelp = false;
@@ -251,6 +292,68 @@ export class NameStateBoard {
     });
 
     this._reportProgress();
+  }
+
+  // Positions and reveals the point marker for the current state —
+  // dead center on "Сложный", a random interior point (kept away from
+  // the border) on "Хардкор". Radius is set immediately at the CURRENT
+  // zoom so it's correct even before the focus-zoom animation's first
+  // onZoomChange tick fires.
+  _showHintDot() {
+    const point =
+      this.difficulty === "ultra"
+        ? this._randomInteriorPoint(this.current)
+        : { x: this.current.cx, y: this.current.cy };
+    this.hintDot.setAttribute("cx", point.x.toFixed(2));
+    this.hintDot.setAttribute("cy", point.y.toFixed(2));
+    this.hintDot.removeAttribute("hidden");
+    this._rescaleHintDot(this.zoomCtl.getZoom());
+  }
+
+  _rescaleHintDot(zoom) {
+    if (!this.hintDot) return;
+    const effScale = this.scale * zoom;
+    this.hintDot.setAttribute("r", (HINT_DOT_R_PX / effScale).toFixed(2));
+  }
+
+  // Random point strictly inside `piece`'s own polygon, kept a small
+  // margin away from the border — checked via isPointInFill against the
+  // candidate itself plus 4 neighboring points at a fixed offset (a
+  // cheap approximation of distance-to-edge, same "good enough, not
+  // exact" tradeoff as js/statePlacementBoard.js's _pickStartOffset).
+  // Falls back to the state's own centroid (always safely interior) if
+  // no candidate clears both checks within HINT_DOT_MAX_ATTEMPTS — only
+  // realistic for an unusually thin/sliver-shaped state.
+  _randomInteriorPoint(piece) {
+    const [minX, minY, maxX, maxY] = piece.bbox;
+    const w = maxX - minX;
+    const h = maxY - minY;
+    // Sample from the central ~70% of the bbox — cheap protection
+    // against wasting attempts near bbox corners a non-rectangular
+    // state may not actually cover.
+    const marginX = w * 0.15;
+    const marginY = h * 0.15;
+    const equivRadius = Math.sqrt(piece.area / Math.PI);
+    const edgeMargin = Math.max(equivRadius * HINT_DOT_EDGE_MARGIN_FRAC, 1);
+    const path = this.paths.get(piece.id);
+    const svgPoint = this.svg.createSVGPoint();
+    const isInside = (x, y) => {
+      svgPoint.x = x;
+      svgPoint.y = y;
+      return path.isPointInFill(svgPoint);
+    };
+    for (let i = 0; i < HINT_DOT_MAX_ATTEMPTS; i++) {
+      const x = minX + marginX + Math.random() * (w - 2 * marginX);
+      const y = minY + marginY + Math.random() * (h - 2 * marginY);
+      if (!isInside(x, y)) continue;
+      const clearOfEdge =
+        isInside(x + edgeMargin, y) &&
+        isInside(x - edgeMargin, y) &&
+        isInside(x, y + edgeMargin) &&
+        isInside(x, y - edgeMargin);
+      if (clearOfEdge) return { x, y };
+    }
+    return { x: piece.cx, y: piece.cy };
   }
 
   _renderOptions() {

@@ -2690,6 +2690,39 @@ body {
 
 .name-state-difficulty { margin-bottom: 10px; }
 
+/* Сложный/Хардкор (js/nameStateBoard.js) — every .quiz-path already
+   shares the same fill; dropping the stroke too makes adjacent states'
+   shared edges invisible (same fill on both sides, no line drawn), so
+   they visually melt into one undifferentiated mass. Only the outer
+   coastline survives (there's no same-colored neighbor outside the
+   country to blend into) — otherwise the dot's enclosing shape could
+   just be traced by eye off the still-visible borders, defeating the
+   whole point of these tiers (found via user feedback). */
+.name-hide-borders .quiz-path {
+  stroke: none;
+}
+
+/* Сложный/Хардкор's point highlight (js/nameStateBoard.js's
+   _showHintDot) — deliberately NOT the yellow .quiz-hint "look here"
+   semantic color (revealing the shape would defeat the whole point of
+   these tiers); uses the general accent instead, same var(--neon-cyan)
+   that already flips blue/red with the global land-color-scheme toggle,
+   per the user's own request. Pulses at half hint-pulse's rate (2.2s,
+   same "slow" precedent as .replay-hint) — meant to read as a beacon to
+   watch, not an urgent alert. */
+.name-hint-dot {
+  fill: var(--neon-cyan);
+  stroke: rgba(var(--ink-rgb), 0.9);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 6px rgba(var(--neon-cyan-rgb), 0.8));
+  pointer-events: none;
+  animation: name-hint-dot-pulse 2.2s ease-in-out infinite;
+}
+@keyframes name-hint-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* Lives INSIDE the map (a child of .zoom-wrap — see nameStateBoard.js's
    _buildAnswerBar) instead of a sibling row that reserves its own flow
    height below the map. Same rule/reasoning as .quiz-prompt and .win-bar. */

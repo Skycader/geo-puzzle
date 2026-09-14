@@ -138,10 +138,19 @@ export const OVERVIEW_MODES = [
   { id: 'hidden', title: 'Скрытая информация', desc: 'Наведи курсор — узнаешь название' },
 ];
 
-// Answer method for "Назови штат" — shown only for that mode.
+// Answer method AND highlight style for "Назови штат" — shown only for
+// that mode. Unlike most other 3/4-tier difficulty lists in this file,
+// these genuinely change what's shown on the map, not just how you
+// answer: Лёгкий/Средний both highlight the target state's whole shape
+// (see nameStateBoard.js's .quiz-hint) and differ only in answer method
+// (choice vs typed); Сложный/Хардкор drop the shape hint entirely and
+// show only a slowly-pulsing dot (center vs a random interior point),
+// both answered by typing — see js/nameStateBoard.js.
 export const NAME_STATE_DIFFICULTIES = [
   { id: 'easy', title: 'Лёгкий', desc: '4 варианта на выбор' },
-  { id: 'hard', title: 'Сложный', desc: 'Впиши название сам' },
+  { id: 'medium', title: 'Средний', desc: 'Впиши название сам' },
+  { id: 'hard', title: 'Сложный', desc: 'Точка в центре штата' },
+  { id: 'ultra', title: 'Хардкор', desc: 'Точка в случайном месте штата' },
 ];
 
 // Answer method for "Назови соседа" — a third "ultra" tier on top of the

@@ -294,9 +294,20 @@ const PRESETS_EN = {
 // why these stay as separate named dicts instead of one flat id->text map.
 const NAME_STATE_DIFFICULTIES_EN = {
   easy: { title: 'Easy', desc: 'Choose from 4 options' },
+  medium: { title: 'Medium', desc: 'Type the name yourself' },
+  hard: { title: 'Hard', desc: "Dot at the state's center" },
+  ultra: { title: 'Hardcore', desc: 'Dot at a random spot inside the state' },
+};
+// Used to alias straight to NAME_STATE_DIFFICULTIES_EN (both were once
+// easy/hard-only with identical text) — split into its own object once
+// NAME_STATE_DIFFICULTIES_EN's 'hard'/'ultra' diverged to mean a point
+// highlight instead of sea-identify's own unrelated "type it yourself"
+// hard tier (js/modes.js's SEA_IDENTIFY_DIFFICULTIES never gained those
+// tiers, so the shared object would have mistranslated it).
+const SEA_IDENTIFY_DIFFICULTIES_EN = {
+  easy: { title: 'Easy', desc: 'Choose from 4 options' },
   hard: { title: 'Hard', desc: 'Type the name yourself' },
 };
-const SEA_IDENTIFY_DIFFICULTIES_EN = NAME_STATE_DIFFICULTIES_EN;
 const NEIGHBOR_DIFFICULTIES_EN = {
   easy: { title: 'Easy', desc: 'Choose from 4 options' },
   hard: { title: 'Hard', desc: 'Type the name yourself' },
