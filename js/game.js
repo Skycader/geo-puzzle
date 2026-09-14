@@ -372,6 +372,8 @@ export class Game {
       quizCountValue: document.getElementById('quiz-count-value'),
       quizEligibleWrap: document.getElementById('quiz-eligible-wrap'),
       nameStateDifficultyEl: document.getElementById('name-state-difficulty'),
+      nameStateBordersRow: document.getElementById('name-state-borders-row'),
+      nameStateBordersText: document.getElementById('name-state-borders-text'),
       placeStateToleranceRow: document.getElementById('place-state-tolerance-row'),
       placeStateToleranceLabel: document.getElementById('place-state-tolerance-label'),
       placeStateToleranceValue: document.getElementById('place-state-tolerance-value'),
@@ -685,6 +687,7 @@ export class Game {
     this.el.placeStateToleranceUnit.textContent = t('kmUnit');
     this.el.adaptiveModeText.textContent = t('adaptiveModeText');
     this.el.quickSelectText.textContent = t('quickSelectText');
+    this.el.nameStateBordersText.textContent = t('nameStateBordersText');
     this.el.overviewHeadingEl.textContent = t('overviewHeading');
     this.el.journeyAnswerHeadingEl.textContent = t('journeyAnswerHeading');
     this.el.journeyDifficultyHeadingEl.textContent = t('journeyDifficultyHeading');
@@ -944,6 +947,11 @@ export class Game {
     // isPlaceState is true; switching to any OTHER mode needs this to
     // unconditionally hide it, since nothing else re-renders it.
     if (!isPlaceState) this.el.placeStateToleranceRow.hidden = true;
+    // name-state-only — _renderNameStateDifficulty (below) re-syncs this
+    // properly (Сложный/Хардкор only) whenever isNameState is true;
+    // switching to any OTHER mode needs this unconditional hide, same
+    // reasoning as placeStateToleranceRow above.
+    if (!isNameState) this.el.nameStateBordersRow.hidden = true;
     // Each of these has its own differently-sized difficulty list sharing
     // the same panel element — re-render it for whichever mode is now
     // active so the right cards (and the right one marked "selected")
@@ -1122,10 +1130,12 @@ export class Game {
       this.nameStateDifficulty,
       (id) => {
         this.nameStateDifficulty = id;
+        this.el.nameStateBordersRow.hidden = !['hard', 'ultra'].includes(id);
       },
       this.el.nameStateDifficultyEl,
       NAME_STATE_DIFFICULTIES_EN,
     );
+    this.el.nameStateBordersRow.hidden = !['hard', 'ultra'].includes(this.nameStateDifficulty);
   }
 
   _renderNeighborDifficulty() {

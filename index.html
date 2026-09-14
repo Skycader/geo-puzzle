@@ -250,6 +250,18 @@
         <section class="panel" id="panel-quiz-settings" hidden>
           <h2 id="quiz-panel-heading">Раунд</h2>
           <div id="name-state-difficulty" class="preset-list name-state-difficulty" hidden></div>
+          <!-- "Назови штат"'s Сложный/Хардкор only (js/nameStateBoard.js) —
+               informational only: always checked and disabled, since these
+               two tiers always show faint borders + hover (no way to turn
+               it off right now) — the row just tells the player that's
+               deliberate, not a bug. Visibility toggled the same place the
+               difficulty cards are re-rendered (game.js's
+               _renderNameStateDifficulty). -->
+          <label class="toggle toggle-multiline" id="name-state-borders-row" hidden>
+            <input type="checkbox" id="name-state-borders-checkbox" checked disabled />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text" id="name-state-borders-text">Едва заметные границы штатов</span>
+          </label>
           <div id="place-state-tolerance-row" class="custom-count-row" hidden>
             <label for="place-state-tolerance"
               ><span id="place-state-tolerance-label">Погрешность</span>: <strong id="place-state-tolerance-value">100</strong>

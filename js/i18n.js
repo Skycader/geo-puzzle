@@ -130,6 +130,7 @@ const STRINGS = {
     ru: 'Быстрый выбор (ПКМ) — правый клик сразу подтверждает ответ',
     en: 'Quick select (right-click) — right-click confirms the answer instantly',
   },
+  nameStateBordersText: { ru: 'Едва заметные границы штатов', en: 'Faint state borders' },
   overviewHeading: { ru: 'Отображение', en: 'Display' },
   journeyAnswerHeading: { ru: 'Как отвечать', en: 'How to answer' },
   journeyDifficultyHeading: { ru: 'Сложность', en: 'Difficulty' },
