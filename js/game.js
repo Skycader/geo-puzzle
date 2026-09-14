@@ -191,6 +191,9 @@ export class Game {
     this.customCount = DEFAULT_CUSTOM_COUNT;
     this.quizRounds = 15;
     this.nameStateDifficulty = NAME_STATE_DIFFICULTIES[0].id;
+    // "Назови штат"'s Сложный/Хардкор only — see js/nameStateBoard.js's
+    // omitIndividualStates.
+    this.nameStateShowBorders = true;
     this.neighborDifficulty = NEIGHBOR_DIFFICULTIES[0].id;
     this.identifyDifficulty = IDENTIFY_DIFFICULTIES[0].id;
     this.seaIdentifyDifficulty = SEA_IDENTIFY_DIFFICULTIES[0].id;
@@ -373,6 +376,7 @@ export class Game {
       quizEligibleWrap: document.getElementById('quiz-eligible-wrap'),
       nameStateDifficultyEl: document.getElementById('name-state-difficulty'),
       nameStateBordersRow: document.getElementById('name-state-borders-row'),
+      nameStateBordersCheckbox: document.getElementById('name-state-borders-checkbox'),
       nameStateBordersText: document.getElementById('name-state-borders-text'),
       placeStateToleranceRow: document.getElementById('place-state-tolerance-row'),
       placeStateToleranceLabel: document.getElementById('place-state-tolerance-label'),
@@ -484,6 +488,7 @@ export class Game {
     if (Number.isFinite(saved.customCount)) this.customCount = clamp(saved.customCount, 1, 50);
     if (Number.isFinite(saved.quizRounds)) this.quizRounds = clamp(saved.quizRounds, 1, 50);
     if (NAME_STATE_DIFFICULTIES.some((d) => d.id === saved.nameStateDifficulty)) this.nameStateDifficulty = saved.nameStateDifficulty;
+    if (typeof saved.nameStateShowBorders === 'boolean') this.nameStateShowBorders = saved.nameStateShowBorders;
     if (NEIGHBOR_DIFFICULTIES.some((d) => d.id === saved.neighborDifficulty)) this.neighborDifficulty = saved.neighborDifficulty;
     if (IDENTIFY_DIFFICULTIES.some((d) => d.id === saved.identifyDifficulty)) this.identifyDifficulty = saved.identifyDifficulty;
     if (SEA_IDENTIFY_DIFFICULTIES.some((d) => d.id === saved.seaIdentifyDifficulty)) this.seaIdentifyDifficulty = saved.seaIdentifyDifficulty;
@@ -515,6 +520,7 @@ export class Game {
       customCount: this.customCount,
       quizRounds: this.quizRounds,
       nameStateDifficulty: this.nameStateDifficulty,
+      nameStateShowBorders: this.nameStateShowBorders,
       neighborDifficulty: this.neighborDifficulty,
       identifyDifficulty: this.identifyDifficulty,
       seaIdentifyDifficulty: this.seaIdentifyDifficulty,
@@ -1136,6 +1142,7 @@ export class Game {
       NAME_STATE_DIFFICULTIES_EN,
     );
     this.el.nameStateBordersRow.hidden = !['hard', 'ultra'].includes(this.nameStateDifficulty);
+    this.el.nameStateBordersCheckbox.checked = this.nameStateShowBorders;
   }
 
   _renderNeighborDifficulty() {
@@ -1336,6 +1343,10 @@ export class Game {
     });
     this.el.quickSelectCheckbox.addEventListener('change', (ev) => {
       this.quickSelect = ev.target.checked;
+      this._saveLastSettings();
+    });
+    this.el.nameStateBordersCheckbox.addEventListener('change', (ev) => {
+      this.nameStateShowBorders = ev.target.checked;
       this._saveLastSettings();
     });
     this.el.cityPlaceEntityCheckbox.addEventListener('change', (ev) => {
@@ -1603,6 +1614,7 @@ export class Game {
       rounds: this.quizRounds,
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       difficulty: this.nameStateDifficulty,
+      showBorders: this.nameStateShowBorders,
       levelId: this.levelId,
       adaptive: this.adaptiveMode,
       scale,

@@ -15,6 +15,11 @@ import { loadSuccessStats, recordOutcome } from "./successStats.js";
 import { flyCoinToBalance } from "./coins.js";
 import { REWARDS } from "./constants.js";
 import { t, itemName, answerRevealText, wrongGuessText } from "./i18n.js";
+// USA-only merged mainland silhouette (same asset/projection as
+// state-placement-mode's board — its coordinates already line up with
+// levels/usa.js's own piece paths, no reprojection needed) — used ONLY
+// when Сложный/Хардкор's border toggle is off, see _build.
+import usaOutline from "../levels/usaOutline.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 // Separate from quizBoard.js's 'quiz-states' scope — clicking a state on
@@ -58,6 +63,11 @@ export class NameStateBoard {
     this.difficulty = ["medium", "hard", "ultra"].includes(opts.difficulty)
       ? opts.difficulty
       : "easy";
+    // Сложный/Хардкор only — when true (default), every state still
+    // exists as its own <path> (borders hidden via CSS, see _build).
+    // When false, those per-state elements aren't created at all — only
+    // the country's own outer silhouette — see _build.
+    this.showBorders = opts.showBorders ?? true;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
 
@@ -125,22 +135,45 @@ export class NameStateBoard {
     // traced by eye from where its neighbors' outlines enclose the dot,
     // no geography knowledge required (found via user feedback: the
     // whole point of these tiers is knowing WHERE a state is, not
-    // recognizing its outline). Every .quiz-path already shares the same
-    // fill — dropping the stroke too makes adjacent states visually melt
-    // into one solid mass, leaving only the outer coastline (where there
-    // is no same-colored neighbor to blend into) as a landmark.
-    if (this.difficulty === "hard" || this.difficulty === "ultra") {
-      this.svg.classList.add("name-hide-borders");
+    // recognizing its outline). "Едва заметные границы" OFF goes further
+    // than hiding them with CSS (stroke:none still leaves 50 real
+    // .quiz-path elements sitting there, hoverable, fill/filter intact —
+    // a past source of bugs): with the toggle off, those per-state
+    // elements simply aren't created at all — only ONE path for the
+    // country's own outer silhouette. Nothing granular exists to hover.
+    // USA-only for now — no equivalent merged outline asset exists for
+    // the Countries level, so that level keeps the old (toggle-on)
+    // per-state-elements-with-hidden-stroke behavior regardless of the
+    // checkbox.
+    const omitIndividualStates =
+      (this.difficulty === "hard" || this.difficulty === "ultra") && !this.showBorders && this.levelId === "usa";
+    if (omitIndividualStates) {
+      const outline = document.createElementNS(SVG_NS, "path");
+      outline.setAttribute("d", usaOutline.d);
+      outline.setAttribute("class", "name-outer-outline");
+      this.svg.appendChild(outline);
+    } else {
+      if (this.difficulty === "hard" || this.difficulty === "ultra") {
+        this.svg.classList.add("name-hide-borders");
+      }
+      for (const p of this.level.pieces) {
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("d", p.d);
+        path.setAttribute("class", "quiz-path");
+        path.dataset.id = p.id;
+        this.svg.appendChild(path);
+        this.paths.set(p.id, path);
+      }
     }
 
-    for (const p of this.level.pieces) {
-      const path = document.createElementNS(SVG_NS, "path");
-      path.setAttribute("d", p.d);
-      path.setAttribute("class", "quiz-path");
-      path.dataset.id = p.id;
-      this.svg.appendChild(path);
-      this.paths.set(p.id, path);
-    }
+    // Hidden geometry-only path, independent of omitIndividualStates
+    // above — Хардкор's _randomInteriorPoint needs SOME <path> to run
+    // isPointInFill against for whichever state is current, even when no
+    // per-state elements are on screen at all. Its `d` is set to the
+    // current round's target in _nextQuestion.
+    this.geometryPath = document.createElementNS(SVG_NS, "path");
+    this.geometryPath.setAttribute("class", "name-geometry-path");
+    this.svg.appendChild(this.geometryPath);
 
     // Сложный/Хардкор's point highlight — a single marker reused across
     // rounds (repositioned in _showHintDot), hidden whenever the current
@@ -265,6 +298,7 @@ export class NameStateBoard {
     this.locked = false;
     this.current = this.queue[this.index];
     this.currentPath = this.paths.get(this.current.id);
+    this.geometryPath.setAttribute("d", this.current.d);
     // Лёгкий/Средний highlight the whole shape; Сложный/Хардкор drop that
     // (it would give away the answer by silhouette alone) for a single
     // point instead — see _showHintDot.
@@ -335,7 +369,11 @@ export class NameStateBoard {
     const marginY = h * 0.15;
     const equivRadius = Math.sqrt(piece.area / Math.PI);
     const edgeMargin = Math.max(equivRadius * HINT_DOT_EDGE_MARGIN_FRAC, 1);
-    const path = this.paths.get(piece.id);
+    // Not this.paths.get(piece.id) — that map may be empty entirely when
+    // individual state elements were omitted (border toggle off). This
+    // geometry-only path (see _build) always has the current target's
+    // `d`, regardless of what's actually on screen.
+    const path = this.geometryPath;
     const svgPoint = this.svg.createSVGPoint();
     const isInside = (x, y) => {
       svgPoint.x = x;

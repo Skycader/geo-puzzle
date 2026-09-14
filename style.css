@@ -2702,6 +2702,28 @@ body {
   stroke: none;
 }
 
+/* "Едва заметные границы" OFF (js/nameStateBoard.js) — the single merged
+   outer-silhouette path used INSTEAD OF the 50 individual .quiz-path
+   elements above (they aren't created at all in this mode). Same
+   fill/no-stroke combo .quiz-path ends up with under .name-hide-borders,
+   so toggling doesn't cause a visible color jump — just no per-state
+   seams to melt together in the first place, and pointer-events:none
+   since there's nothing here to answer with a hover reveal anyway. */
+.name-outer-outline {
+  fill: rgba(var(--quiz-fill-rgb), 0.22);
+  stroke: none;
+  pointer-events: none;
+}
+
+/* Hidden geometry-only path (js/nameStateBoard.js's _randomInteriorPoint)
+   — never meant to be seen, just queried via isPointInFill. */
+.name-geometry-path {
+  fill: none;
+  stroke: none;
+  pointer-events: none;
+  opacity: 0;
+}
+
 /* Сложный/Хардкор's point highlight (js/nameStateBoard.js's
    _showHintDot) — deliberately NOT the yellow .quiz-hint "look here"
    semantic color (revealing the shape would defeat the whole point of

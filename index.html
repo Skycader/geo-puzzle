@@ -251,14 +251,16 @@
           <h2 id="quiz-panel-heading">Раунд</h2>
           <div id="name-state-difficulty" class="preset-list name-state-difficulty" hidden></div>
           <!-- "Назови штат"'s Сложный/Хардкор only (js/nameStateBoard.js) —
-               informational only: always checked and disabled, since these
-               two tiers always show faint borders + hover (no way to turn
-               it off right now) — the row just tells the player that's
-               deliberate, not a bug. Visibility toggled the same place the
-               difficulty cards are re-rendered (game.js's
+               checked (default): every state still exists as its own
+               <path> (border hidden via CSS). Unchecked: those per-state
+               elements aren't created at all — only the country's outer
+               silhouette (USA level only — see nameStateBoard.js's
+               omitIndividualStates for why Countries falls back to the
+               checked behavior regardless). Visibility toggled the same
+               place the difficulty cards are re-rendered (game.js's
                _renderNameStateDifficulty). -->
           <label class="toggle toggle-multiline" id="name-state-borders-row" hidden>
-            <input type="checkbox" id="name-state-borders-checkbox" checked disabled />
+            <input type="checkbox" id="name-state-borders-checkbox" checked />
             <span class="toggle-track"><span class="toggle-thumb"></span></span>
             <span class="toggle-text" id="name-state-borders-text">Едва заметные границы штатов</span>
           </label>
