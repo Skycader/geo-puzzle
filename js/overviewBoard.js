@@ -1509,24 +1509,46 @@ export class OverviewBoard {
 
   // ---------------- side panel: search + tabbed state/city list ----------------
 
+  // Item count for a given tab id — same per-tab dataset _renderList reads
+  // (identical `_pieceCategory` filter for oceans/seas/other), just
+  // counted once at panel-build time instead of on every render, since
+  // the underlying arrays never change size during a session.
+  _tabCount(tab) {
+    if (tab === 'states') return this.level.pieces.length;
+    if (tab === 'oceans' || tab === 'seas' || tab === 'other') return this.level.pieces.filter((p) => this._pieceCategory(p) === tab).length;
+    if (tab === 'cities') return this.level.cities.length;
+    if (tab === 'places') return this.level.places.length;
+    if (tab === 'lakes') return (this.level.lakes || []).length;
+    return 0;
+  }
+
+  // "Моря (23)" instead of a bare "Моря" — lets the player see at a
+  // glance how many items are actually in each tab before clicking into
+  // it, same reasoning as the level cards' own "N морей и океанов"
+  // subtitle (js/game.js's levelText) — found worth doing once the world
+  // level's tab counts stopped being small, easily-eyeballed numbers.
+  _tabLabel(tab, key) {
+    return `${t(key)} (${this._tabCount(tab)})`;
+  }
+
   _buildSidePanel() {
     const panel = document.createElement('div');
     panel.className = 'overview-panel';
     const tabsHtml =
       this.level.id === 'world'
-        ? `<button type="button" class="overview-tab active" data-tab="oceans">${t('overviewTabOceans')}</button>
-           <button type="button" class="overview-tab" data-tab="seas">${t('overviewTabSeas')}</button>
-           <button type="button" class="overview-tab" data-tab="other">${t('overviewTabOther')}</button>`
+        ? `<button type="button" class="overview-tab active" data-tab="oceans">${this._tabLabel('oceans', 'overviewTabOceans')}</button>
+           <button type="button" class="overview-tab" data-tab="seas">${this._tabLabel('seas', 'overviewTabSeas')}</button>
+           <button type="button" class="overview-tab" data-tab="other">${this._tabLabel('other', 'overviewTabOther')}</button>`
         : this.level.id === 'countries'
           ? // Countries has no cities/places (levels/countries.js: cities: [],
             // places: []) — a single tab, same reasoning as world's
             // Океаны/Моря/Остальное replacing Штаты/Города/Места instead of
             // showing two permanently-empty tabs.
-            `<button type="button" class="overview-tab active" data-tab="states">${t('overviewTabCountries')}</button>`
-          : `<button type="button" class="overview-tab active" data-tab="states">${t('overviewTabStates')}</button>
-           <button type="button" class="overview-tab" data-tab="cities">${t('overviewTabCities')}</button>
-           <button type="button" class="overview-tab" data-tab="places">${t('overviewTabPlaces')}</button>
-           <button type="button" class="overview-tab" data-tab="lakes">${t('overviewTabLakes')}</button>`;
+            `<button type="button" class="overview-tab active" data-tab="states">${this._tabLabel('states', 'overviewTabCountries')}</button>`
+          : `<button type="button" class="overview-tab active" data-tab="states">${this._tabLabel('states', 'overviewTabStates')}</button>
+           <button type="button" class="overview-tab" data-tab="cities">${this._tabLabel('cities', 'overviewTabCities')}</button>
+           <button type="button" class="overview-tab" data-tab="places">${this._tabLabel('places', 'overviewTabPlaces')}</button>
+           <button type="button" class="overview-tab" data-tab="lakes">${this._tabLabel('lakes', 'overviewTabLakes')}</button>`;
     panel.innerHTML = `
       <div class="overview-tabs">
         ${tabsHtml}
