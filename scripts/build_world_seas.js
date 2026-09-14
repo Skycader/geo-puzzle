@@ -27,13 +27,23 @@ const fs = require('fs');
 const path = require('path');
 
 const MARINE_SRC = path.join(__dirname, 'data', 'world-marine-polys.geojson');
-// The Sargasso Sea has no coastline (it's bounded by ocean currents, not
-// land), so it's absent from Natural Earth's 110m marine layer entirely —
-// confirmed missing even at 50m. It IS present at 10m
-// (ne_10m_geography_marine_polys.geojson), so this is just that one
-// feature extracted out, rather than switching the whole marine layer to
-// 10m (306 features, many obscure straits/channels not worth quizzing on —
-// a much bigger, separate call from patching one well-known omission).
+// The 110m marine layer is too coarse for several real, well-known seas —
+// the Sargasso Sea has no coastline at all (bounded by ocean currents, not
+// land) so it's absent even at 50m, and Northern Europe's regional seas
+// (North/Baltic/Norwegian/White/Barents + the Gulfs of Bothnia/Finland +
+// Bay of Biscay) are simply swallowed into one undifferentiated stretch of
+// "Северный Ледовитый океан"/Atlantic — found via a player screenshot
+// showing a huge unlabeled blob there. All of these DO exist at 10m
+// (ne_10m_geography_marine_polys.geojson) — this file is just those
+// features extracted out one at a time, rather than switching the whole
+// marine layer to 10m (306 features, many obscure straits/channels/bays
+// not worth quizzing on — a much bigger, separate call from patching
+// specific well-known omissions). To add another: download the 10m file
+// (curl -sL -o /tmp/ne10.geojson
+// https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_geography_marine_polys.geojson),
+// find the feature by name_en, push it into
+// scripts/data/world-marine-extra.geojson's features array, rerun this
+// script.
 const MARINE_EXTRA_SRC = path.join(__dirname, 'data', 'world-marine-extra.geojson');
 const LAND_SRC = path.join(__dirname, 'data', 'world-countries-simplified.geojson');
 const marine = JSON.parse(fs.readFileSync(MARINE_SRC, 'utf8'));

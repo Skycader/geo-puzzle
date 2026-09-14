@@ -248,7 +248,7 @@ export function cityPlaceRoundsLabel(isPlaces, isPin) {
 // levels/usa.js, levels/world.js, levels/countries.js — id -> {title, subtitle}.
 const LEVEL_EN = {
   usa: { title: 'USA: States', subtitle: 'Assemble and connect all 50 states' },
-  world: { title: 'Seas & Oceans', subtitle: '28 seas and oceans' },
+  world: { title: 'Seas & Oceans', subtitle: '36 seas and oceans' },
   countries: { title: 'World Countries', subtitle: '211 countries' },
 };
 
