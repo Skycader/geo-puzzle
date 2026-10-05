@@ -96,6 +96,8 @@ export default [
   { id: 'virginia_beach', name: 'Virginia Beach', ru: 'Виргиния-Бич', state: 'VA', capital: false, cx: 1715.6, cy: 941, radiusKm: 14.2 },
   { id: 'norfolk', name: 'Norfolk', ru: 'Норфолк', state: 'VA', capital: false, cx: 1710.1, cy: 942.2, radiusKm: 6.63 },
   { id: 'suffolk', name: 'Suffolk', ru: 'Саффолк', state: 'VA', capital: false, cx: 1705.4, cy: 946, radiusKm: 18.14 },
+  { id: 'arlington_va', name: 'Arlington', ru: 'Арлингтон', state: 'VA', capital: false, cx: 1686.1, cy: 898.5, radiusKm: 4.63 },
+  { id: 'takoma_park', name: 'Takoma Park', ru: 'Такома-Парк', state: 'MD', capital: false, cx: 1687.2, cy: 896, radiusKm: 1.31 },
   { id: 'langley', name: 'Langley (CIA HQ)', ru: 'Лэнгли (штаб-квартира ЦРУ)', state: 'VA', capital: false, cx: 1684.9, cy: 897.1, radiusKm: 4.52 },
   { id: 'olympia', name: 'Olympia', ru: 'Олимпия', state: 'WA', capital: true, cx: 928.4, cy: 681.7, radiusKm: 3.88 },
   { id: 'seattle', name: 'Seattle', ru: 'Сиэтл', state: 'WA', capital: false, cx: 940.7, cy: 671.6, radiusKm: 8.32 },

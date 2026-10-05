@@ -28,5 +28,10 @@
     "extract": "The Appalachian Mountains are a vast mountain range situated in eastern North America, extending roughly 2,050 miles (3,300 km) from central Alabama to Newfoundland along a generally southwest–northeast axis. The range's highest peak is 6,684-foot (2,037 m) Mount Mitchell in the Black Mountains subrange of North Carolina, which themselves are part of the larger Blue Ridge Mountains.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Blue_Ridge_Parkway_Sunset_%2843691100%29.jpeg/330px-Blue_Ridge_Parkway_Sunset_%2843691100%29.jpeg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Appalachian_Mountains"
+  },
+  "pentagon": {
+    "extract": "The Pentagon is the headquarters of the United States Department of Defense, in Arlington County, Virginia, across the Potomac River from Washington, D.C. The building was constructed on an accelerated schedule during World War II. As a symbol of the U.S. military, the phrase The Pentagon is often used as a metonym for the Department of Defense and its leadership.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/The_Pentagon%2C_Headquarters_of_the_US_Department_of_Defense_%28cropped2%29.jpg/330px-The_Pentagon%2C_Headquarters_of_the_US_Department_of_Defense_%28cropped2%29.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/The_Pentagon"
   }
 }

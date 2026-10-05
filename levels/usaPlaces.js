@@ -28,6 +28,7 @@ export default [
   { id: 'pando', name: 'Pando', ru: 'Пандо', cx: 1068.3, cy: 917, radiusKm: 2 },
   { id: 'hoover_dam', name: 'Hoover Dam', ru: 'Плотина Гувера', cx: 1003.9, cy: 964.9, radiusKm: 2 },
   { id: 'appalachians', name: 'Appalachian Mountains', ru: 'Аппалачи', cx: 1665.3, cy: 875.9, radiusKm: 2 },
+  { id: 'pentagon', name: 'The Pentagon', ru: 'Пентагон', cx: 1686.9, cy: 898.6, radiusKm: 2 },
   { id: 'na_pali_coast', name: 'Nā Pali Coast', ru: 'На-Пали', cx: 23.8, cy: 886.8, radiusKm: 2 },
   { id: 'pearl_harbor', name: 'USS Arizona Memorial', ru: 'Мемориал USS Arizona (Пёрл-Харбор)', cx: 60.6, cy: 905.6, radiusKm: 2 },
   { id: 'diamond_head', name: 'Diamond Head', ru: 'Даймонд-Хед', cx: 63.6, cy: 908, radiusKm: 2 },

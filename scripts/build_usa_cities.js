@@ -193,6 +193,10 @@ const CITIES = [
   ['virginia_beach', 'Virginia Beach', 'Виргиния-Бич', 'VA', 36.85, -75.98, false],
   ['norfolk', 'Norfolk', 'Норфолк', 'VA', 36.85, -76.29, false],
   ['suffolk', 'Suffolk', 'Саффолк', 'VA', 36.73, -76.58, false],
+  // Arlington County, VA (a county that is itself the "city" — no incorporated
+  // municipality inside it); radius from the Census "Arlington CDP" row.
+  ['arlington_va', 'Arlington', 'Арлингтон', 'VA', 38.88, -77.10, false],
+  ['takoma_park', 'Takoma Park', 'Такома-Парк', 'MD', 38.978, -77.0075, false],
   ['langley', 'Langley (CIA HQ)', 'Лэнгли (штаб-квартира ЦРУ)', 'VA', 38.95, -77.15, false],
   ['olympia', 'Olympia', 'Олимпия', 'WA', 47.04, -122.90, true],
   ['seattle', 'Seattle', 'Сиэтл', 'WA', 47.61, -122.33, false],
@@ -271,7 +275,7 @@ const RADIUS_KM = {
   nashville: 19.8, memphis: 15.46, austin: 16.4, houston: 22.98,
   san_antonio: 20.28, dallas: 16.73, fort_worth: 17.03, el_paso: 14.61,
   amarillo: 9.19, lubbock: 10.09,
-  salt_lake_city: 9.56, montpelier: 2.88, richmond: 7.03, virginia_beach: 14.2, norfolk: 6.63, suffolk: 18.14,
+  salt_lake_city: 9.56, montpelier: 2.88, richmond: 7.03, virginia_beach: 14.2, norfolk: 6.63, suffolk: 18.14, arlington_va: 4.63, takoma_park: 1.31,
   langley: 4.52, olympia: 3.88, seattle: 8.32, charleston_wv: 5.09,
   madison: 8.3, milwaukee: 8.9, cheyenne: 5.48,
   hilo: 6.64, kailua_kona: 3.37, kahului: 3.44, kapaa: 2.87, lihue: 2.35,

@@ -135,6 +135,8 @@ const PLACES = [
   // A 2400 km mountain range has no single point — pinned at the coordinates
   // Wikipedia itself gives for it (40°N 78°W, central Pennsylvania).
   ['appalachians', 'Appalachian Mountains', 'Аппалачи', 40, -78],
+  // MediaWiki API coordinates for "Пентагон" (Arlington, VA).
+  ['pentagon', 'The Pentagon', 'Пентагон', 38.8709889, -77.0559611],
   // Major lakes used to live here as point placeholders (kind: 'lake') —
   // moved to their own real-polygon layer instead (level.lakes, see
   // scripts/build_usa_lakes.js) once a plain dot's nominal 2km radius
