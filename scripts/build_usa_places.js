@@ -132,6 +132,9 @@ const PLACES = [
   // (see levels/usaLakes.js) — that's real geography, not a coincidence
   // (the dam is what impounds the Colorado River into Lake Mead).
   ['hoover_dam', 'Hoover Dam', 'Плотина Гувера', 36.01583333, -114.73777778],
+  // A 2400 km mountain range has no single point — pinned at the coordinates
+  // Wikipedia itself gives for it (40°N 78°W, central Pennsylvania).
+  ['appalachians', 'Appalachian Mountains', 'Аппалачи', 40, -78],
   // Major lakes used to live here as point placeholders (kind: 'lake') —
   // moved to their own real-polygon layer instead (level.lakes, see
   // scripts/build_usa_lakes.js) once a plain dot's nominal 2km radius

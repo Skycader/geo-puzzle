@@ -424,6 +424,16 @@
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Virginia_Beach_from_Fishing_Pier.jpg/330px-Virginia_Beach_from_Fishing_Pier.jpg",
     "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B5%D1%80%D0%B4%D0%B6%D0%B8%D0%BD%D0%B8%D1%8F-%D0%91%D0%B8%D1%87"
   },
+  "norfolk": {
+    "extract": "Но́рфолк — город-порт в устье Чесапикского залива, в юго-восточной части штата Виргиния, США. В Норфолке расположена главная военно-морская база США в Атлантическом океане.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/MontageNorfolkVAUSA.jpg/330px-MontageNorfolkVAUSA.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D0%BE%D1%80%D1%84%D0%BE%D0%BB%D0%BA_(%D0%92%D0%B8%D1%80%D0%B3%D0%B8%D0%BD%D0%B8%D1%8F)"
+  },
+  "suffolk": {
+    "extract": "Саффолк — независимый город в штате Виргиния, США. Население, по данным переписи 2010 года, составляло 84585 человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Downtown_Suffolk%2C_VA.jpg/330px-Downtown_Suffolk%2C_VA.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D1%84%D1%84%D0%BE%D0%BB%D0%BA_(%D0%92%D0%B8%D1%80%D0%B3%D0%B8%D0%BD%D0%B8%D1%8F)"
+  },
   "langley": {
     "extract": "Лэнгли — невключённая территория в статистически обособленной местности Мак-Лейн в округе Фэрфакс в штате Виргиния, США. Расположен в 13 км от столицы США Вашингтона и является его «спальным районом».",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Langley_High_School.jpg/330px-Langley_High_School.jpg",

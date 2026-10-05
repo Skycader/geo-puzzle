@@ -23,5 +23,10 @@
     "extract": "Niagara Falls is a group of three waterfalls at the southern end of Niagara Gorge, spanning the border between the Canadian province of Ontario and the U.S. state of New York. The largest of the three is Horseshoe Falls. The smaller American Falls and Bridal Veil Falls lie within the United States.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/3Falls_Niagara.jpg/330px-3Falls_Niagara.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Niagara_Falls"
+  },
+  "appalachians": {
+    "extract": "The Appalachian Mountains are a vast mountain range situated in eastern North America, extending roughly 2,050 miles (3,300 km) from central Alabama to Newfoundland along a generally southwest–northeast axis. The range's highest peak is 6,684-foot (2,037 m) Mount Mitchell in the Black Mountains subrange of North Carolina, which themselves are part of the larger Blue Ridge Mountains.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Blue_Ridge_Parkway_Sunset_%2843691100%29.jpeg/330px-Blue_Ridge_Parkway_Sunset_%2843691100%29.jpeg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Appalachian_Mountains"
   }
 }
