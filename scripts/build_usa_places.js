@@ -141,6 +141,9 @@ const PLACES = [
   // coordinates), whose Midpoint Café is the road's famous geographic halfway
   // mark between Chicago and Santa Monica (1139 mi to each end).
   ['route_66', 'Route 66', 'Шоссе 66 (Route 66)', 35.27416667, -102.66722222],
+  // MediaWiki API coordinates for the causeway (mid-lake — a 38 km bridge, so
+  // the point sits over the water between Metairie and Mandeville).
+  ['lake_pontchartrain_causeway', 'Lake Pontchartrain Causeway', 'Мост-дамба через озеро Пончартрейн', 30.16472, -90.12889],
   // Major lakes used to live here as point placeholders (kind: 'lake') —
   // moved to their own real-polygon layer instead (level.lakes, see
   // scripts/build_usa_lakes.js) once a plain dot's nominal 2km radius

@@ -1147,23 +1147,27 @@ export class OverviewBoard {
     this.zoomWrap.appendChild(popup);
 
     // Prefer the right side of the dot; flip to the left if that would
-    // overflow the map frame. Vertically centered on the dot, clamped so it
-    // never runs off the top/bottom either.
-    const wrapW = wrapRect.width;
-    const wrapH = wrapRect.height;
+    // overflow the visible map area. Vertically centered on the dot, clamped
+    // so it never runs off the top/bottom either — and sized to fit: the
+    // card shrinks (its text area scrolls, the image stays put) rather than
+    // ever extending past the visible edge.
+    const vb = this._visibleBounds();
+    const popW = Math.max(200, Math.min(POPUP_W_PX, vb.right - vb.left - 2 * POPUP_EDGE_PAD_PX));
+    popup.style.width = `${popW}px`;
+    popup.style.maxHeight = `${Math.max(160, vb.bottom - vb.top - 2 * POPUP_EDGE_PAD_PX)}px`;
     let popX = dotX + POPUP_MARGIN_PX;
     let connectSide = 'left'; // which edge of the popup the connector line touches
-    if (popX + POPUP_W_PX > wrapW - POPUP_EDGE_PAD_PX) {
-      popX = dotX - POPUP_MARGIN_PX - POPUP_W_PX;
+    if (popX + popW > vb.right - POPUP_EDGE_PAD_PX) {
+      popX = dotX - POPUP_MARGIN_PX - popW;
       connectSide = 'right';
     }
-    popX = Math.min(Math.max(popX, POPUP_EDGE_PAD_PX), wrapW - POPUP_W_PX - POPUP_EDGE_PAD_PX);
+    popX = clamp(popX, vb.left + POPUP_EDGE_PAD_PX, vb.right - popW - POPUP_EDGE_PAD_PX);
     popup.style.left = `${popX}px`;
     const popH = popup.offsetHeight; // real height, now that content + width are set
-    const popY = Math.min(Math.max(dotY - popH / 2, POPUP_EDGE_PAD_PX), wrapH - popH - POPUP_EDGE_PAD_PX);
+    const popY = clamp(dotY - popH / 2, vb.top + POPUP_EDGE_PAD_PX, vb.bottom - popH - POPUP_EDGE_PAD_PX);
     popup.style.top = `${popY}px`;
 
-    const connectX = connectSide === 'left' ? popX : popX + POPUP_W_PX;
+    const connectX = connectSide === 'left' ? popX : popX + popW;
     const connectY = popY + popH / 2;
     const connectorSvg = document.createElementNS(SVG_NS, 'svg');
     connectorSvg.setAttribute('class', 'info-popup-connector-svg');
@@ -1179,6 +1183,24 @@ export class OverviewBoard {
     this._openPopupId = id;
     this._infoPopupEl = popup;
     this._infoConnectorEl = connectorSvg;
+  }
+
+  // The part of this.zoomWrap a player can actually see, in zoomWrap-local
+  // px: .zoom-wrap is deliberately oversized by "cover" fit and cropped by
+  // #board-container, and the side panel floats over the map's right edge,
+  // so clamping popups against zoomWrap's own box (as this used to) could
+  // park them partly off-screen or under the panel. Intersects zoomWrap
+  // with the container, the window, and (while open) the panel.
+  _visibleBounds() {
+    const wrap = this.zoomWrap.getBoundingClientRect();
+    const box = this.container.getBoundingClientRect();
+    let right = Math.min(wrap.right, box.right, window.innerWidth);
+    const panel = this.container.querySelector('.overview-panel');
+    if (panel && !this.container.classList.contains('panel-collapsed')) right = Math.min(right, panel.getBoundingClientRect().left);
+    const left = Math.max(wrap.left, box.left, 0);
+    const top = Math.max(wrap.top, box.top, 0);
+    const bottom = Math.min(wrap.bottom, box.bottom, window.innerHeight);
+    return { left: left - wrap.left, top: top - wrap.top, right: right - wrap.left, bottom: bottom - wrap.top };
   }
 
   _closeInfoPopup() {
@@ -1206,7 +1228,8 @@ export class OverviewBoard {
     const current = stats[id] || 0;
 
     const wrapRect = this.zoomWrap.getBoundingClientRect();
-    const x = clamp(clientX - wrapRect.left, POPUP_EDGE_PAD_PX, wrapRect.width - PROGRESS_EDIT_POPUP_W_PX - POPUP_EDGE_PAD_PX);
+    const vb = this._visibleBounds();
+    const x = clamp(clientX - wrapRect.left, vb.left + POPUP_EDGE_PAD_PX, vb.right - PROGRESS_EDIT_POPUP_W_PX - POPUP_EDGE_PAD_PX);
 
     const popup = document.createElement('div');
     popup.className = 'progress-edit-popup';
@@ -1221,7 +1244,7 @@ export class OverviewBoard {
     `;
     popup.style.left = `${x}px`;
     this.zoomWrap.appendChild(popup);
-    const y = clamp(clientY - wrapRect.top, POPUP_EDGE_PAD_PX, wrapRect.height - popup.offsetHeight - POPUP_EDGE_PAD_PX);
+    const y = clamp(clientY - wrapRect.top, vb.top + POPUP_EDGE_PAD_PX, vb.bottom - popup.offsetHeight - POPUP_EDGE_PAD_PX);
     popup.style.top = `${y}px`;
 
     popup.querySelector('.info-popup-close').addEventListener('click', () => this._closeProgressEditPopup());
@@ -1340,10 +1363,11 @@ export class OverviewBoard {
     // a right-click near an edge doesn't spawn a menu that runs off it.
     this.zoomWrap.appendChild(menu);
     const wrapRect = this.zoomWrap.getBoundingClientRect();
-    const maxLeft = Math.max(8, wrapRect.width - menu.offsetWidth - 8);
-    const maxTop = Math.max(8, wrapRect.height - menu.offsetHeight - 8);
-    menu.style.left = `${Math.min(Math.max(clientX - wrapRect.left, 8), maxLeft)}px`;
-    menu.style.top = `${Math.min(Math.max(clientY - wrapRect.top, 8), maxTop)}px`;
+    const vb = this._visibleBounds();
+    const maxLeft = Math.max(vb.left + 8, vb.right - menu.offsetWidth - 8);
+    const maxTop = Math.max(vb.top + 8, vb.bottom - menu.offsetHeight - 8);
+    menu.style.left = `${Math.min(Math.max(clientX - wrapRect.left, vb.left + 8), maxLeft)}px`;
+    menu.style.top = `${Math.min(Math.max(clientY - wrapRect.top, vb.top + 8), maxTop)}px`;
 
     if (contextLandInfo) {
       menu.querySelector('[data-action="info"]').addEventListener('click', () => {

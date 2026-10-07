@@ -1878,7 +1878,11 @@ body {
   position: absolute;
   width: 480px;
   max-height: 80vh;
-  overflow-y: auto;
+  /* Two zones: the image is pinned at the top, only .info-popup-body
+     scrolls (JS also caps max-height to the visible map area). */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: rgba(var(--ink-rgb), 0.97);
   border-radius: 0;
   box-shadow: 0 0 32px rgba(var(--neon-cyan-rgb), 0.3), 0 12px 36px rgba(0, 0, 0, 0.55);
@@ -1908,11 +1912,17 @@ body {
 .info-popup-image {
   display: block;
   width: 100%;
-  height: 240px;
+  height: min(240px, 38vh);
+  flex: none;
   object-fit: cover;
   border-radius: 0;
 }
-.info-popup-body { padding: 18px 24px 22px; }
+.info-popup-body {
+  padding: 18px 24px 22px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
 .info-popup-title {
   margin: 0 0 12px;
   font-family: var(--font-mono);
