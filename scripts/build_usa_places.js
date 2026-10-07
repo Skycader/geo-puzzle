@@ -144,6 +144,9 @@ const PLACES = [
   // MediaWiki API coordinates for the causeway (mid-lake — a 38 km bridge, so
   // the point sits over the water between Metairie and Mandeville).
   ['lake_pontchartrain_causeway', 'Lake Pontchartrain Causeway', 'Мост-дамба через озеро Пончартрейн', 30.16472, -90.12889],
+  // Whittier, AK — the building where nearly the whole town lives (MediaWiki
+  // API coordinates).
+  ['begich_towers', 'Begich Towers', 'Башни Бегич', 60.77222, -148.68556],
   // Major lakes used to live here as point placeholders (kind: 'lake') —
   // moved to their own real-polygon layer instead (level.lakes, see
   // scripts/build_usa_lakes.js) once a plain dot's nominal 2km radius

@@ -31,6 +31,7 @@ export default [
   { id: 'pentagon', name: 'The Pentagon', ru: 'Пентагон', cx: 1686.9, cy: 898.6, radiusKm: 2 },
   { id: 'route_66', name: 'Route 66', ru: 'Шоссе 66 (Route 66)', cx: 1225, cy: 1012.1, radiusKm: 2 },
   { id: 'lake_pontchartrain_causeway', name: 'Lake Pontchartrain Causeway', ru: 'Мост-дамба через озеро Пончартрейн', cx: 1467.7, cy: 1132.1, radiusKm: 2 },
+  { id: 'begich_towers', name: 'Begich Towers', ru: 'Башни Бегич', cx: 715.3, cy: 257.1, radiusKm: 2 },
   { id: 'na_pali_coast', name: 'Nā Pali Coast', ru: 'На-Пали', cx: 23.8, cy: 886.8, radiusKm: 2 },
   { id: 'pearl_harbor', name: 'USS Arizona Memorial', ru: 'Мемориал USS Arizona (Пёрл-Харбор)', cx: 60.6, cy: 905.6, radiusKm: 2 },
   { id: 'diamond_head', name: 'Diamond Head', ru: 'Даймонд-Хед', cx: 63.6, cy: 908, radiusKm: 2 },
