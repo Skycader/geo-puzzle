@@ -533,6 +533,43 @@ body {
    the flyout panel clipping it. */
 .settings-flyout-menu .progress-scope { align-self: stretch; }
 
+/* Rows holding a source button stretch to the menu's full width so the
+   button sits at the right edge. */
+.settings-flyout-menu .toggle { align-self: stretch; }
+.source-btn {
+  margin-left: auto;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--base0);
+  cursor: pointer;
+}
+.source-btn[hidden] { display: none; }
+.source-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.source-btn:hover, .source-btn.active { color: var(--neon-cyan); border-color: rgba(var(--neon-cyan-rgb), 0.5); }
+.source-note {
+  align-self: stretch;
+  max-width: 300px;
+  margin-top: -4px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--neon-cyan);
+  background: rgba(var(--neon-cyan-rgb), 0.07);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--base1);
+}
+.source-note-title { font-weight: 700; color: var(--neon-cyan); margin-bottom: 4px; }
+.source-note-license { margin: 4px 0 6px; color: var(--base00); font-size: 11px; }
+.source-note-link { display: block; color: var(--neon-cyan); text-decoration: none; }
+.source-note-link:hover { text-decoration: underline; }
+
 /* ---------------- toggle switch ---------------- */
 
 .toggle {

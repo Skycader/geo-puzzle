@@ -74,6 +74,7 @@
               <input type="checkbox" id="toggle-hints" checked />
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
               <span class="toggle-text" id="toggle-hints-text">Подсказки</span>
+              <button type="button" class="source-btn" data-source="cities" hidden title="Источник данных" aria-label="Источник данных"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" /><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></svg></button>
             </label>
             <label class="toggle" id="toggle-labels-wrap" title="Показать/скрыть буквы-подписи на кусочках">
               <input type="checkbox" id="toggle-labels" checked />
@@ -84,21 +85,25 @@
               <input type="checkbox" id="toggle-places" checked />
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
               <span class="toggle-text" id="toggle-places-text">Места</span>
+              <button type="button" class="source-btn" data-source="places" hidden title="Источник данных" aria-label="Источник данных"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" /><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></svg></button>
             </label>
             <label class="toggle" id="toggle-lakes-wrap" title="Показать/скрыть водоёмы на карте" hidden>
               <input type="checkbox" id="toggle-lakes" checked />
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
               <span class="toggle-text" id="toggle-lakes-text">Водоёмы</span>
+              <button type="button" class="source-btn" data-source="lakes" hidden title="Источник данных" aria-label="Источник данных"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" /><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></svg></button>
             </label>
             <label class="toggle" id="toggle-highways-wrap" title="Показать/скрыть шоссе на карте" hidden>
               <input type="checkbox" id="toggle-highways" checked />
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
               <span class="toggle-text" id="toggle-highways-text">Шоссе</span>
+              <button type="button" class="source-btn" data-source="highways" hidden title="Источник данных" aria-label="Источник данных"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" /><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></svg></button>
             </label>
             <label class="toggle" id="toggle-airports-wrap" title="Показать/скрыть аэропорты на карте" hidden>
               <input type="checkbox" id="toggle-airports" checked />
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
               <span class="toggle-text" id="toggle-airports-text">Аэропорты</span>
+              <button type="button" class="source-btn" data-source="airports" hidden title="Источник данных" aria-label="Источник данных"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" /><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></svg></button>
             </label>
             <!-- "Любование прогрессом" — colors every state from black (0) to
                  the current color scheme's accent (10+) by adaptive-mode
@@ -126,6 +131,7 @@
                 <span class="toggle-thumb"></span>
               </span>
               <span class="toggle-text" id="toggle-terrain-text">Рельеф</span>
+              <button type="button" class="source-btn" data-source="terrain" hidden title="Источник данных" aria-label="Источник данных"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" /><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></svg></button>
             </div>
             <!-- Custom dropdown, not a native <select> — a native option list
                  ignores almost all CSS (renders with the OS's own light-theme

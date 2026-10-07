@@ -10,6 +10,7 @@ import { SeaIdentifyBoard } from './seaIdentifyBoard.js';
 import { SeaQuizBoard } from './seaQuizBoard.js';
 import { StatePlacementBoard, outlineViewBox } from './statePlacementBoard.js';
 import { OverviewBoard } from './overviewBoard.js';
+import { sourceNoteHtml } from './dataSources.js';
 import { JourneyNameBoard } from './journeyNameBoard.js';
 import { pickJourneyPair } from './journeyRoute.js';
 import { EligibilityList } from './eligibilityList.js';
@@ -674,6 +675,12 @@ export class Game {
     this.el.toggleHighwaysText.textContent = t('highwaysToggleText');
     this.el.toggleAirportsWrap.title = t('airportsTitle');
     this.el.toggleAirportsText.textContent = t('airportsToggleText');
+    for (const b of this.el.settingsFlyoutMenu.querySelectorAll('.source-btn')) {
+      b.title = t('sourceBtnTitle');
+      b.setAttribute('aria-label', t('sourceBtnTitle'));
+    }
+    // An already-open note is in the old language — rebuild it.
+    for (const note of this.el.settingsFlyoutMenu.querySelectorAll('.source-note')) note.innerHTML = sourceNoteHtml(note.dataset.source);
     this.el.toggleProgressWrap.title = t('progressTitle');
     this.el.toggleProgressText.textContent = t('progressToggleText');
     this.el.toggleTerrainWrap.title = t('terrainTitle');
@@ -750,6 +757,41 @@ export class Game {
       if (this.el.settingsFlyoutMenu.hidden) this._openSettingsFlyout();
       else this._closeSettingsFlyout();
     });
+  }
+
+  // The ⓘ-style database icon at the right of a layer's row toggles a note
+  // directly under that row (inside the flyout, so hovering it never closes
+  // the menu): who the data comes from, its license, and official-site links.
+  _bindSourceButtons() {
+    for (const btn of this.el.settingsFlyoutMenu.querySelectorAll('.source-btn')) {
+      btn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const row = btn.closest('.toggle');
+        const existing = row.nextElementSibling?.classList.contains('source-note') ? row.nextElementSibling : null;
+        if (existing) {
+          existing.remove();
+          btn.classList.remove('active');
+          return;
+        }
+        const note = document.createElement('div');
+        note.className = 'source-note';
+        note.dataset.source = btn.dataset.source;
+        note.innerHTML = sourceNoteHtml(btn.dataset.source);
+        row.after(note);
+        btn.classList.add('active');
+      });
+    }
+  }
+
+  // Shows the source icon only on rows whose layer is actually on offer for
+  // the current level (called from _startOverview), and drops any open note.
+  _showSourceButtons(keys) {
+    for (const note of this.el.settingsFlyoutMenu.querySelectorAll('.source-note')) note.remove();
+    for (const btn of this.el.settingsFlyoutMenu.querySelectorAll('.source-btn')) {
+      btn.hidden = !keys.includes(btn.dataset.source);
+      btn.classList.remove('active');
+    }
   }
 
   _openSettingsFlyout() {
@@ -1300,6 +1342,7 @@ export class Game {
     this._bindProgressIo();
     this._bindLangSwitcher();
     this._bindSettingsFlyout();
+    this._bindSourceButtons();
     // "Press R to replay" (see .replay-hint's keycap+reload badge in
     // win-bar) — only live while the win-bar is actually showing, so R
     // doesn't do anything unexpected mid-round or on the menu.
@@ -1474,6 +1517,7 @@ export class Game {
     // never needed this since the win-bar is already hidden by then.
     this.el.winBar.hidden = true;
     this.el.hud.hidden = false;
+    this._showSourceButtons([]); // only Overview offers layer sources — it re-enables its own
 
     if (this.board) this.board.destroy();
 
@@ -1940,6 +1984,16 @@ export class Game {
     this._setProgressScopeUI();
     this.el.toggleTerrainWrap.hidden = level.id !== 'usa';
     this._setTerrainMode(terrainMode, { silent: true });
+    this._showSourceButtons(
+      [
+        level.cities.length && 'cities',
+        level.places.length && 'places',
+        level.lakes?.length && 'lakes',
+        level.highways?.length && 'highways',
+        level.airports?.length && 'airports',
+        level.id === 'usa' && 'terrain',
+      ].filter(Boolean)
+    );
     this.el.quizPrompt.hidden = true;
 
     this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('overview', 'Обзор')}`;
