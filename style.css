@@ -1282,14 +1282,14 @@ body {
    immediately once reported. A plain ancestor class costs nothing extra
    per frame, only re-evaluating when the class itself actually changes
    (built once, and on each panel collapse/expand toggle).
-   Sits to the LEFT of the 300px-wide panel instead of underneath it,
+   Sits to the LEFT of the 340px-wide panel instead of underneath it,
    then slides back out to the plain viewport edge when the panel is
-   collapsed (#board-container.panel-collapsed) — same 300px/0
+   collapsed (#board-container.panel-collapsed) — same 340px/0
    right-offset swap .overview-panel-toggle itself already does, just
    applied to this corner cluster too instead of only the panel edge. */
 #board-container.has-overview-panel .zoom-controls,
 #board-container.has-overview-panel .layer-switcher {
-  right: 320px;
+  right: 360px;
   transition: right 0.2s ease;
 }
 #board-container.has-overview-panel.panel-collapsed .zoom-controls,
@@ -1827,6 +1827,23 @@ body {
    two are still easy to tell apart at a glance when both are visible.
    Unlike a city dot, r/stroke-width are rescaled every zoom step (js) since
    there's no true physical radius to stay fixed to. */
+.overview-airport-plane {
+  fill: #8fd0ff;
+  stroke: rgba(var(--ink-rgb), 0.95);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+  cursor: default;
+}
+.overview-airport-plane.overview-focused { fill: var(--neon-yellow) !important; }
+/* Real runways: true length and bearing, constant-width blue strokes. */
+.airport-runway {
+  fill: none;
+  stroke: #2f9bff;
+  stroke-width: 3px;
+  stroke-linecap: butt;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
 .overview-place-dot {
   fill: var(--neon-violet);
   stroke: rgba(var(--ink-rgb), 0.85);
@@ -1929,6 +1946,12 @@ body {
   font-size: 1.4rem;
   color: var(--neon-cyan);
 }
+.info-popup-meta {
+  margin: 0 0 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--blue);
+}
 .info-popup-text {
   margin: 0 0 16px;
   font-family: var(--font-mono);
@@ -2020,7 +2043,7 @@ body {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 300px;
+  width: 340px;
   z-index: 15;
   display: flex;
   flex-direction: column;
@@ -2044,7 +2067,7 @@ body {
 .overview-panel-toggle {
   position: absolute;
   top: 50%;
-  right: 300px;
+  right: 340px;
   transform: translateY(-50%);
   z-index: 16;
   width: 22px;
@@ -2086,7 +2109,7 @@ body {
 .overview-tab {
   flex: 1 0 auto;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1.25;
   text-align: center;
@@ -2097,7 +2120,7 @@ body {
   border-radius: 0;
   background: transparent;
   color: var(--base0);
-  padding: 6px 4px 7px;
+  padding: 6px 3px 7px;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 .overview-tab .overview-tab-count {

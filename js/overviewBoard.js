@@ -83,6 +83,15 @@ const PLACE_DOT_R_PX = 4;
 const PLACE_DOT_STROKE_PX = 1;
 const PLACE_FOCUS_RADIUS_KM = 30;
 
+// Airports: a constant-screen-px plane icon (Material "flight" glyph, 24x24
+// box, nose up — rotated 45° at render) over the airport's runways, which
+// are drawn at their TRUE length/bearing (see levels/usaAirports.js).
+const AIRPORT_ICON_PX = 18;
+const AIRPORT_PLANE_D = 'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z';
+// Focusing an airport frames at least this many canvas units (~12 km) so
+// the player sees the runways with some surroundings, not a bare line.
+const AIRPORT_FOCUS_MIN_UNITS = 2.5;
+
 // OSM layer toggle: converts the currently-visible native rect into a
 // lon/lat bounding box for OpenStreetMap's own embeddable viewer
 // (openstreetmap.org/export/embed.html?bbox=...) — an officially
@@ -306,7 +315,8 @@ function loadInfo() {
       fetchJson('./levels/usa/places-info.json'),
       fetchJson('./levels/usa/lakes-info.json'),
       fetchJson('./levels/usa/contextland-info.json'),
-    ]).then(([cities, places, lakes, contextland]) => ({ cities, places, lakes, contextland }));
+      fetchJson('./levels/usa/airports-info.json'),
+    ]).then(([cities, places, lakes, contextland, airports]) => ({ cities, places, lakes, contextland, airports }));
   }
   return _infoLoadPromise;
 }
@@ -365,6 +375,7 @@ export class OverviewBoard {
     // regardless of pan/zoom, never zero and never a cluttered pile of them.
     this.highwayEntries = [];
     this.highwaysVisible = opts.highwaysVisible !== false;
+    this.airportsVisible = opts.airportsVisible !== false;
     // "Progress heatmap" — opt-IN (default off), unlike the *Visible flags
     // above, since this replaces the map's normal coloring rather than
     // adding to it. progressScope picks which adaptive-mode success stat
@@ -391,6 +402,9 @@ export class OverviewBoard {
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
     this.placesById = new Map(); // id -> { data, dotEl }
+    // USA only (levels/usaAirports.js): a plane icon + the airport's real runways.
+    this.airportEntries = []; // { id, cx, cy, icon, runway, pointMark, leaderPath, leaderLabel }
+    this.airportsById = new Map(); // id -> { data, dotEl }
     this.lakesById = new Map(); // id -> { data, pathEl }
     this.lakeEls = []; // { pathEl, labelEl } — see setLakesVisible
     this.contextLandById = new Map(); // id -> { data } — Canada, see build_usa_level.js's contextLand
@@ -407,7 +421,7 @@ export class OverviewBoard {
     this._revealQueue = [];
     this._revealScheduled = false;
     this._destroyed = false;
-    this.info = { cities: {}, places: {}, lakes: {}, contextland: {} }; // populated async — see loadInfo()
+    this.info = { cities: {}, places: {}, lakes: {}, contextland: {}, airports: {} }; // populated async — see loadInfo()
     this._openPopupId = null;
     this._infoPopupEl = null;
     this._infoConnectorEl = null;
@@ -840,6 +854,47 @@ export class OverviewBoard {
       this.pointsLayer.appendChild(leaderLabel);
     }
 
+    // Airports — always rendered like places. Runways go first so every
+    // plane icon (and label) paints over them; the icon is the tap target
+    // (dataset.kind 'airport') and, like a place, doubles as the point mark,
+    // so the usual small point-mark circle stays hidden.
+    for (const a of this.level.airports || []) {
+      const runway = document.createElementNS(SVG_NS, 'path');
+      runway.setAttribute('d', a.d);
+      runway.setAttribute('class', 'airport-runway');
+      this.pointsLayer.appendChild(runway);
+
+      const icon = document.createElementNS(SVG_NS, 'path');
+      icon.setAttribute('d', AIRPORT_PLANE_D);
+      icon.setAttribute('class', 'overview-airport-plane');
+      icon.dataset.id = a.id;
+      icon.dataset.kind = 'airport';
+      const title = document.createElementNS(SVG_NS, 'title');
+      title.textContent = this._airportHoverTitle(a);
+      icon.appendChild(title);
+
+      const pointMark = document.createElementNS(SVG_NS, 'circle');
+      pointMark.setAttribute('class', 'overview-city-point');
+      pointMark.style.display = 'none';
+
+      const leaderPath = document.createElementNS(SVG_NS, 'path');
+      leaderPath.setAttribute('class', 'overview-city-leader');
+      this.allLabelEls.push(leaderPath);
+
+      const leaderLabel = document.createElementNS(SVG_NS, 'text');
+      leaderLabel.setAttribute('class', 'overview-city-leader-label');
+      leaderLabel.textContent = a.iata;
+      this.allLabelEls.push(leaderLabel);
+
+      this.airportEntries.push({ id: a.id, cx: a.cx, cy: a.cy, icon, runway, pointMark, leaderPath, leaderLabel });
+      this.airportsById.set(a.id, { data: a, dotEl: icon });
+
+      this.pointsLayer.appendChild(icon);
+      this.pointsLayer.appendChild(pointMark);
+      this.pointsLayer.appendChild(leaderPath);
+      this.pointsLayer.appendChild(leaderLabel);
+    }
+
     // Ruler layer — kept as its own <g> so _renderRuler can cheaply
     // rebuild just its contents (innerHTML='') without touching anything
     // else, and so it can be re-appended (moved) to the end of this.svg's
@@ -924,6 +979,7 @@ export class OverviewBoard {
     this._rescaleForZoom(1);
     this.setLabelsVisible(this.labelsVisible);
     this.setPlacesVisible(this.placesVisible);
+    this.setAirportsVisible(this.airportsVisible);
     this.setLakesVisible(this.lakesVisible);
     this.setHighwaysVisible(this.highwaysVisible);
     this.setProgressVisible(this.progressVisible);
@@ -1079,6 +1135,9 @@ export class OverviewBoard {
     for (const [id, entry] of this.lakesById) {
       if (this.info.lakes[id]) entry.pathEl.classList.add('overview-has-info');
     }
+    for (const entry of this.airportEntries) {
+      if (this.info.airports[entry.id]) entry.icon.classList.add('overview-has-info');
+    }
   }
 
   _onMapTap(ev) {
@@ -1091,7 +1150,16 @@ export class OverviewBoard {
       this._openProgressEditPopup(id, ev.clientX, ev.clientY);
       return;
     }
-    const entry = kind === 'city' ? this.info.cities[id] : kind === 'place' ? this.info.places[id] : kind === 'lake' ? this.info.lakes[id] : null;
+    const entry =
+      kind === 'city'
+        ? this.info.cities[id]
+        : kind === 'place'
+          ? this.info.places[id]
+          : kind === 'lake'
+            ? this.info.lakes[id]
+            : kind === 'airport'
+              ? this.info.airports[id]
+              : null;
     if (entry) {
       if (this._openPopupId === id) {
         this._closeInfoPopup(); // tapping the same dot again toggles it closed
@@ -1119,7 +1187,9 @@ export class OverviewBoard {
           ? this.lakesById.get(id)
           : kind === 'contextland'
             ? this.contextLandById.get(id)
-            : this.placesById.get(id);
+            : kind === 'airport'
+              ? this.airportsById.get(id)
+              : this.placesById.get(id);
     if (!source) return;
     const wrapRect = this.zoomWrap.getBoundingClientRect();
     let dotX, dotY;
@@ -1140,6 +1210,7 @@ export class OverviewBoard {
       ${info.image ? `<img class="info-popup-image" src="${info.image}" alt="" loading="lazy" />` : ''}
       <div class="info-popup-body">
         <h3 class="info-popup-title">${itemName(source.data)}</h3>
+        ${kind === 'airport' ? `<p class="info-popup-meta">${this._airportMeta(source.data)}</p>` : ''}
         <p class="info-popup-text">${info.extract}</p>
         <a class="info-popup-link" href="${info.wikiUrl}" target="_blank" rel="noopener">${t('readOnWikipedia')}</a>
       </div>
@@ -1560,6 +1631,7 @@ export class OverviewBoard {
     if (tab === 'places') return this.level.places.length;
     if (tab === 'lakes') return (this.level.lakes || []).length;
     if (tab === 'highways') return this._highwayItems().length;
+    if (tab === 'airports') return (this.level.airports || []).length;
     return 0;
   }
 
@@ -1590,7 +1662,8 @@ export class OverviewBoard {
            <button type="button" class="overview-tab" data-tab="cities">${this._tabLabel('cities', 'overviewTabCities')}</button>
            <button type="button" class="overview-tab" data-tab="places">${this._tabLabel('places', 'overviewTabPlaces')}</button>
            <button type="button" class="overview-tab" data-tab="lakes">${this._tabLabel('lakes', 'overviewTabLakes')}</button>
-           ${this.level.highways?.length ? `<button type="button" class="overview-tab" data-tab="highways">${this._tabLabel('highways', 'overviewTabHighways')}</button>` : ''}`;
+           ${this.level.highways?.length ? `<button type="button" class="overview-tab" data-tab="highways">${this._tabLabel('highways', 'overviewTabHighways')}</button>` : ''}
+           ${this.level.airports?.length ? `<button type="button" class="overview-tab" data-tab="airports">${this._tabLabel('airports', 'overviewTabAirports')}</button>` : ''}`;
     panel.innerHTML = `
       <div class="overview-tabs">
         ${tabsHtml}
@@ -1706,6 +1779,9 @@ export class OverviewBoard {
     if (this.activeTab === 'states' && this.level.id === 'usa') {
       return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${name}</span></span>`;
     }
+    if (this.activeTab === 'airports') {
+      return `<span class="overview-item-main"><span class="overview-item-abbr">${it.iata}</span><span class="overview-item-name">${name}</span></span>`;
+    }
     if (this.activeTab === 'cities') {
       return `<span class="overview-item-main"><span class="overview-item-name">${name}${cityMarkersHtml(it)}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
     }
@@ -1738,6 +1814,14 @@ export class OverviewBoard {
     return `${bilingualLabel(l)} — ${areaStr} ${t('areaUnit')}`;
   }
 
+  _airportMeta(a) {
+    return `${t('airportCode')} ${a.iata} · ${t('airportRunways')}: ${a.runwayCount} · ${t('airportLongest')}: ${a.longestM.toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU')} ${t('meterUnit')}`;
+  }
+
+  _airportHoverTitle(a) {
+    return `${bilingualLabel(a)} (${a.iata})`;
+  }
+
   _renderList() {
     const items =
       this.activeTab === 'states'
@@ -1750,7 +1834,9 @@ export class OverviewBoard {
               ? this.level.lakes || []
               : this.activeTab === 'highways'
                 ? this._highwayItems()
-                : this.level.cities;
+                : this.activeTab === 'airports'
+                  ? this.level.airports || []
+                  : this.level.cities;
     const q = this.searchQuery;
     const filtered = q
       ? items.filter((it) => it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q))
@@ -1759,7 +1845,7 @@ export class OverviewBoard {
     // Places carry only a nominal radiusKm (identical for every place), so
     // sorting/showing "Площадь" for them would be a meaningless tie —
     // hide that column entirely on this tab instead of displaying it.
-    const showArea = this.activeTab !== 'places' && this.activeTab !== 'highways';
+    const showArea = this.activeTab !== 'places' && this.activeTab !== 'highways' && this.activeTab !== 'airports';
     this.sortBtnEl.hidden = !showArea;
 
     let sorted;
@@ -1800,6 +1886,7 @@ export class OverviewBoard {
         else if (this.activeTab === 'places') this._focusPlace(it.id);
         else if (this.activeTab === 'lakes') this._focusLake(it.id);
         else if (this.activeTab === 'highways') this._focusHighway(it);
+        else if (this.activeTab === 'airports') this._focusAirport(it);
         else this._focusCity(it.id);
       });
       this.itemListEl.appendChild(row);
@@ -1902,6 +1989,15 @@ export class OverviewBoard {
     this.focusGlowEl?.classList.add('overview-focus-glow-line');
   }
 
+  // Zoom to the airport (at least AIRPORT_FOCUS_MIN_UNITS across, so some
+  // surroundings show) and light up its runways with the same stroked glow
+  // highways use.
+  _focusAirport(a) {
+    const half = Math.max(a.bbox[2] - a.bbox[0], a.bbox[3] - a.bbox[1], AIRPORT_FOCUS_MIN_UNITS) / 2;
+    this._focusShape({ cx: a.cx, cy: a.cy, d: a.d, bbox: [a.cx - half, a.cy - half, a.cx + half, a.cy + half] });
+    this.focusGlowEl?.classList.add('overview-focus-glow-line');
+  }
+
   // Shared by states and by the handful of cities with a real boundary
   // shape: zoom to fit the shape's bbox, then drop a glowing copy of it on
   // top of everything else in paint order (see the comment below).
@@ -1982,6 +2078,13 @@ export class OverviewBoard {
       // screen-px marker like the label text/leader-line around it.
       entry.dot.setAttribute('r', (PLACE_DOT_R_PX / effScale).toFixed(2));
       entry.dot.style.strokeWidth = `${(PLACE_DOT_STROKE_PX / effScale).toFixed(2)}px`;
+    }
+    // Plane icons: constant screen size; the runways themselves are plain
+    // native-unit paths (true length) with a non-scaling stroke, no work here.
+    for (const entry of this.airportEntries) {
+      this._layoutCityLeader(entry, effScale);
+      const k = AIRPORT_ICON_PX / 24 / effScale;
+      entry.icon.setAttribute('transform', `translate(${entry.cx} ${entry.cy}) scale(${k.toFixed(5)}) rotate(45) translate(-12 -12)`);
     }
     // Keeps whichever shields are already showing at a constant screen
     // size DURING a zoom gesture — _updateHighwayShields itself only runs
@@ -2493,6 +2596,17 @@ export class OverviewBoard {
     for (const entry of this.placeEntries) {
       entry.dot.style.display = visible ? '' : 'none';
       entry.pointMark.style.display = visible ? '' : 'none';
+      entry.leaderPath.style.display = visible ? '' : 'none';
+      entry.leaderLabel.style.display = visible ? '' : 'none';
+    }
+  }
+
+  // Its own layer toggle, separate from "Места".
+  setAirportsVisible(visible) {
+    this.airportsVisible = visible;
+    for (const entry of this.airportEntries) {
+      entry.icon.style.display = visible ? '' : 'none';
+      entry.runway.style.display = visible ? '' : 'none';
       entry.leaderPath.style.display = visible ? '' : 'none';
       entry.leaderLabel.style.display = visible ? '' : 'none';
     }

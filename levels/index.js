@@ -8,6 +8,7 @@ import usaHighways from './usaHighways.js';
 import usaHawaiiHighways from './usaHawaiiHighways.js';
 import usaRouteGraph from './usaRouteGraph.js';
 import usaLakes from './usaLakes.js';
+import usaAirports from './usaAirports.js';
 import world from './world.js';
 import countries from './countries.js';
 
@@ -24,7 +25,7 @@ import countries from './countries.js';
 // Hawaii entry has `name`/`ru` instead (text label along the line, real
 // road names not being part of the Interstate numbering scheme at all).
 export const levels = {
-  usa: { ...usa, cities: usaCities, places: usaPlaces, highways: [...usaHighways, ...usaHawaiiHighways], routeGraph: usaRouteGraph, lakes: usaLakes },
+  usa: { ...usa, cities: usaCities, places: usaPlaces, highways: [...usaHighways, ...usaHawaiiHighways], routeGraph: usaRouteGraph, lakes: usaLakes, airports: usaAirports },
   world,
   countries,
 };
