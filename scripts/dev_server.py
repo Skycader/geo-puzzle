@@ -15,7 +15,7 @@ Usage: python scripts/dev_server.py [port]  (default 5720, matches
 .claude/launch.json)
 """
 import sys
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
 
@@ -32,6 +32,8 @@ if __name__ == "__main__":
     root = Path(__file__).resolve().parent.parent
     import os
     os.chdir(root)
-    server = HTTPServer(("", port), NoCacheHandler)
+    # Threading: a single-threaded server stalls on a browser's idle
+    # speculative connection and then hangs every module request behind it.
+    server = ThreadingHTTPServer(("", port), NoCacheHandler)
     print(f"Serving {root} at http://localhost:{port} (caching disabled)")
     server.serve_forever()

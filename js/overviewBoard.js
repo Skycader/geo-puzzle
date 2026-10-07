@@ -1544,7 +1544,7 @@ export class OverviewBoard {
   // subtitle (js/game.js's levelText) — found worth doing once the world
   // level's tab counts stopped being small, easily-eyeballed numbers.
   _tabLabel(tab, key) {
-    return `${t(key)} (${this._tabCount(tab)})`;
+    return `${t(key)}<span class="overview-tab-count">(${this._tabCount(tab)})</span>`;
   }
 
   _buildSidePanel() {

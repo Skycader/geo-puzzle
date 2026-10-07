@@ -2060,30 +2060,45 @@ body {
 #board-container.panel-collapsed .overview-panel-toggle { right: 0; }
 .overview-tabs {
   display: flex;
-  gap: 6px;
+  gap: 0;
+  border-bottom: 1px solid var(--base01);
+  /* Never crush a tab's label to fit — if the row ever runs out of room
+     (longer English names), it scrolls sideways instead of wrapping or
+     clipping, scrollbar hidden. */
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.overview-tabs::-webkit-scrollbar { display: none; }
+/* Underline-style tabs (like Google's) rather than boxed buttons — the
+   active one is marked by a colored bar under its label, which also takes
+   far less width than a bordered box, so all five USA tabs fit. The
+   count sits on its own line under the name. */
 .overview-tab {
-  flex: 1;
+  flex: 1 0 auto;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  line-height: 1.25;
   text-align: center;
   cursor: pointer;
-  border: 1px solid var(--base01);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
   border-radius: 0;
   background: transparent;
   color: var(--base0);
-  padding: 8px 6px;
-  transition: all 0.15s ease;
+  padding: 6px 4px 7px;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
-.overview-tab:hover { border-color: var(--neon-cyan); color: var(--base2); }
+.overview-tab .overview-tab-count {
+  display: block;
+  font-weight: 400;
+  opacity: 0.75;
+}
+.overview-tab:hover { color: var(--base2); background: rgba(var(--neon-cyan-rgb), 0.06); }
 .overview-tab.active {
-  border-color: var(--neon-cyan);
-  color: var(--base3);
-  background: rgba(var(--neon-cyan-rgb), 0.1);
-  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.25) inset;
+  border-bottom-color: var(--neon-cyan);
+  color: var(--neon-cyan);
 }
 .overview-search {
   width: 100%;
