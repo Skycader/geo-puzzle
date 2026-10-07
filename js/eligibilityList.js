@@ -1,4 +1,5 @@
 import { getLang, t, itemName } from './i18n.js';
+import { cityMarkersHtml, searchBoxHtml, bindSearchClear } from './listWidgets.js';
 
 // A searchable, sortable checklist for picking which states/cities are
 // allowed to appear in a quiz round pool — same look and search/sort
@@ -54,7 +55,7 @@ export class EligibilityList {
       return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${name}</span></span>`;
     }
     if (this.kind === 'cities') {
-      return `<span class="overview-item-main"><span class="overview-item-name">${name}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
+      return `<span class="overview-item-main"><span class="overview-item-name">${name}${cityMarkersHtml(it)}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
     }
     return `<span class="overview-item-main"><span class="overview-item-name">${name}</span></span>`;
   }
@@ -102,7 +103,7 @@ export class EligibilityList {
           <button type="button" class="elig-bulk-btn" data-bulk="none">${t('eligNone')}</button>
         </div>
       </div>
-      <input type="text" class="overview-search" placeholder="${t('eligSearch')}" autocomplete="off" />
+      ${searchBoxHtml()}
       <div class="overview-list-header${this.getStat ? ' overview-list-header-with-stat' : ''}">
         <span class="overview-col-name">${t('eligColName')}</span>
         <button type="button" class="overview-col-sort" data-sort="area">${t('eligColArea')}<span class="overview-sort-arrow" data-arrow="area"></span></button>
@@ -111,6 +112,7 @@ export class EligibilityList {
       <div class="overview-list-scroll"><div class="overview-item-list"></div></div>
     `;
     this.searchInput = this.container.querySelector('.overview-search');
+    bindSearchClear(this.container);
     this.itemListEl = this.container.querySelector('.overview-item-list');
     this.arrowEls = this.container.querySelectorAll('.overview-sort-arrow');
     this.countEl = this.container.querySelector('.elig-count');

@@ -5,6 +5,7 @@ import { buildStateBackground } from './mapBackground.js';
 import { nativeToLonLat, formatLonLat, findInset } from './geoCoords.js';
 import { loadSuccessStats, setSuccessCount } from './successStats.js';
 import { getLang, t, itemName, terrainDescription, terrainLabel, bilingualLabel, hiIslandName } from './i18n.js';
+import { cityMarkersHtml, searchBoxHtml, bindSearchClear } from './listWidgets.js';
 
 // Hawaii's own piece is one <path> with 8 real, physically separate
 // island rings (see scripts/build_usa_level.js's Hawaii-splice comment) —
@@ -1594,7 +1595,7 @@ export class OverviewBoard {
       <div class="overview-tabs">
         ${tabsHtml}
       </div>
-      <input type="text" class="overview-search" placeholder="${t('eligSearch')}" autocomplete="off" />
+      ${searchBoxHtml()}
       <div class="overview-list-header">
         <span class="overview-col-name">${t('eligColName')}</span>
         <button type="button" class="overview-col-sort" data-sort="area">${t('eligColArea')}<span class="overview-sort-arrow"></span></button>
@@ -1603,6 +1604,7 @@ export class OverviewBoard {
     `;
 
     this.searchInput = panel.querySelector('.overview-search');
+    bindSearchClear(panel);
     this.itemListEl = panel.querySelector('.overview-item-list');
     this.sortArrowEl = panel.querySelector('.overview-sort-arrow');
     this.sortBtnEl = panel.querySelector('.overview-col-sort');
@@ -1705,7 +1707,7 @@ export class OverviewBoard {
       return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${name}</span></span>`;
     }
     if (this.activeTab === 'cities') {
-      return `<span class="overview-item-main"><span class="overview-item-name">${name}${it.capital ? ' ★' : ''}${it.d ? ' ◆' : ''}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
+      return `<span class="overview-item-main"><span class="overview-item-name">${name}${cityMarkersHtml(it)}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
     }
     return `<span class="overview-item-main"><span class="overview-item-name">${name}</span></span>`;
   }
