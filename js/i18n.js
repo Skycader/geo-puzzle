@@ -183,6 +183,7 @@ const STRINGS = {
   overviewTabCities: { ru: 'Города', en: 'Cities' },
   overviewTabPlaces: { ru: 'Места', en: 'Places' },
   overviewTabLakes: { ru: 'Водоёмы', en: 'Water Bodies' },
+  overviewTabHighways: { ru: 'Шоссе', en: 'Highways' },
   collapseExpandList: { ru: 'Свернуть/развернуть список', en: 'Collapse/expand list' },
   layerSwitcherTitle: { ru: 'Слой карты', en: 'Map layer' },
   layerSvgOffline: { ru: 'оффлайн', en: 'offline' },

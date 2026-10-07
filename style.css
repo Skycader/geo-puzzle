@@ -1840,6 +1840,12 @@ body {
   pointer-events: none;
   animation: overview-focus-pulse 1.3s ease-in-out infinite;
 }
+.overview-focus-glow.overview-focus-glow-line {
+  fill: none;
+  stroke-width: 5px;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+}
 .overview-city-dot.overview-focused,
 .overview-place-dot.overview-focused {
   fill: var(--neon-yellow) !important;

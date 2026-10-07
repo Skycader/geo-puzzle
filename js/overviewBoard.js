@@ -1534,6 +1534,7 @@ export class OverviewBoard {
     if (tab === 'cities') return this.level.cities.length;
     if (tab === 'places') return this.level.places.length;
     if (tab === 'lakes') return (this.level.lakes || []).length;
+    if (tab === 'highways') return this._highwayItems().length;
     return 0;
   }
 
@@ -1563,7 +1564,8 @@ export class OverviewBoard {
           : `<button type="button" class="overview-tab active" data-tab="states">${this._tabLabel('states', 'overviewTabStates')}</button>
            <button type="button" class="overview-tab" data-tab="cities">${this._tabLabel('cities', 'overviewTabCities')}</button>
            <button type="button" class="overview-tab" data-tab="places">${this._tabLabel('places', 'overviewTabPlaces')}</button>
-           <button type="button" class="overview-tab" data-tab="lakes">${this._tabLabel('lakes', 'overviewTabLakes')}</button>`;
+           <button type="button" class="overview-tab" data-tab="lakes">${this._tabLabel('lakes', 'overviewTabLakes')}</button>
+           ${this.level.highways?.length ? `<button type="button" class="overview-tab" data-tab="highways">${this._tabLabel('highways', 'overviewTabHighways')}</button>` : ''}`;
     panel.innerHTML = `
       <div class="overview-tabs">
         ${tabsHtml}
@@ -1720,7 +1722,9 @@ export class OverviewBoard {
             ? this.level.places
             : this.activeTab === 'lakes'
               ? this.level.lakes || []
-              : this.level.cities;
+              : this.activeTab === 'highways'
+                ? this._highwayItems()
+                : this.level.cities;
     const q = this.searchQuery;
     const filtered = q
       ? items.filter((it) => it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q))
@@ -1729,13 +1733,24 @@ export class OverviewBoard {
     // Places carry only a nominal radiusKm (identical for every place), so
     // sorting/showing "Площадь" for them would be a meaningless tie —
     // hide that column entirely on this tab instead of displaying it.
-    const showArea = this.activeTab !== 'places';
+    const showArea = this.activeTab !== 'places' && this.activeTab !== 'highways';
     this.sortBtnEl.hidden = !showArea;
 
     let sorted;
     if (this.sortBy === 'area' && showArea) {
       const dir = this.sortDir === 'asc' ? 1 : -1;
       sorted = [...filtered].sort((a, b) => (this._areaOf(a) - this._areaOf(b)) * dir);
+    } else if (this.activeTab === 'highways') {
+      // Numbered Interstates first in numeric order (I-5 before I-10, which
+      // a plain alphabetical sort gets backwards), then Hawaii's named
+      // routes alphabetically.
+      const locale = getLang() === 'en' ? 'en' : 'ru';
+      sorted = [...filtered].sort((a, b) => {
+        if (a.number && b.number) return Number(a.number) - Number(b.number);
+        if (a.number) return -1;
+        if (b.number) return 1;
+        return itemName(a).localeCompare(itemName(b), locale);
+      });
     } else {
       const locale = getLang() === 'en' ? 'en' : 'ru';
       sorted = [...filtered].sort((a, b) => itemName(a).localeCompare(itemName(b), locale));
@@ -1758,6 +1773,7 @@ export class OverviewBoard {
         if (this._isPieceTab()) this._focusState(it.id);
         else if (this.activeTab === 'places') this._focusPlace(it.id);
         else if (this.activeTab === 'lakes') this._focusLake(it.id);
+        else if (this.activeTab === 'highways') this._focusHighway(it);
         else this._focusCity(it.id);
       });
       this.itemListEl.appendChild(row);
@@ -1833,6 +1849,31 @@ export class OverviewBoard {
     const entry = this.lakesById.get(id);
     if (!entry) return;
     this._focusShape(entry.data);
+  }
+
+  // Side-panel rows for the "Шоссе" tab: level.highways entries reshaped to
+  // what _renderList/itemName/search expect (`name`/`ru` — "I-5" for a
+  // numbered Interstate, so typing a bare number finds it via `id` too,
+  // e.g. "5" matches id "i5"), plus the center point _focusShape wants.
+  // Built once — the underlying array never changes size.
+  _highwayItems() {
+    if (!this._hwItems) {
+      this._hwItems = (this.level.highways || []).map((hw) => {
+        const label = hw.number ? `I-${hw.number}` : null;
+        const [x0, y0, x1, y1] = hw.bbox;
+        return { id: hw.id, number: hw.number, name: label || hw.name, ru: label || hw.ru, d: hw.d, bbox: hw.bbox, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
+      });
+    }
+    return this._hwItems;
+  }
+
+  // Same zoom-to-bbox + glowing-copy highlight as states, but the copy is a
+  // stroked line (see .overview-focus-glow-line) — filling an open route
+  // would paint a bogus area between its endpoints. Works even while the
+  // highways layer itself is toggled off, since the glow is its own element.
+  _focusHighway(it) {
+    this._focusShape(it);
+    this.focusGlowEl?.classList.add('overview-focus-glow-line');
   }
 
   // Shared by states and by the handful of cities with a real boundary

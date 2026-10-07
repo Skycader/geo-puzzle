@@ -137,6 +137,10 @@ const PLACES = [
   ['appalachians', 'Appalachian Mountains', 'Аппалачи', 40, -78],
   // MediaWiki API coordinates for "Пентагон" (Arlington, VA).
   ['pentagon', 'The Pentagon', 'Пентагон', 38.8709889, -77.0559611],
+  // A 3940 km road has no single point — pinned at Adrian, TX (Wikipedia's
+  // coordinates), whose Midpoint Café is the road's famous geographic halfway
+  // mark between Chicago and Santa Monica (1139 mi to each end).
+  ['route_66', 'Route 66', 'Шоссе 66 (Route 66)', 35.27416667, -102.66722222],
   // Major lakes used to live here as point placeholders (kind: 'lake') —
   // moved to their own real-polygon layer instead (level.lakes, see
   // scripts/build_usa_lakes.js) once a plain dot's nominal 2km radius
