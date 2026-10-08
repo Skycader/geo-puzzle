@@ -148,6 +148,14 @@ const NAMES = {
   ANC: ['Анкоридж (Тед Стивенс)', 'Anchorage (Ted Stevens)'],
   OGG: ['Кахулуи (Мауи)', 'Kahului (Maui)'],
   ABQ: ['Альбукерке Санпорт', 'Albuquerque Sunport'],
+  KOA: ['Кона (Кайлуа-Кона)', 'Kona (Kailua-Kona)'],
+  ITO: ['Хило', 'Hilo'],
+  LIH: ['Лихуэ (Кауаи)', 'Lihue (Kauai)'],
+  MKK: ['Молокаи', 'Molokai'],
+  LNY: ['Ланаи', 'Lanai'],
+  JHM: ['Капалуа (Мауи)', 'Kapalua (Maui)'],
+  HNM: ['Хана (Мауи)', 'Hana (Maui)'],
+  LUP: ['Калаупапа (Молокаи)', 'Kalaupapa (Molokai)'],
 };
 
 const FT_TO_M = 0.3048;

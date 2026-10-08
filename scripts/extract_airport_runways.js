@@ -18,7 +18,7 @@ function parseCSV(text) {
     else if (c === '\n') { row.push(f); rows.push(row); row = []; f = ''; } else if (c !== '\r') f += c; }
   if (f || row.length) { row.push(f); rows.push(row); } return rows; }
 const toObjs = (rows) => { const h = rows[0]; return rows.slice(1).filter(r => r.length === h.length).map(r => Object.fromEntries(h.map((k, i) => [k, r[i]]))); };
-const IATA = 'ATL LAX ORD DFW DEN JFK SFO SEA LAS MCO EWR CLT PHX MIA IAH BOS MSP FLL DTW PHL LGA BWI SLC SAN DCA IAD TPA BNA AUS MDW HNL DAL PDX STL RDU MCI SMF SJC OAK MSY SAT CLE PIT CVG CMH IND MKE ANC OGG ABQ'.split(' ');
+const IATA = 'ATL LAX ORD DFW DEN JFK SFO SEA LAS MCO EWR CLT PHX MIA IAH BOS MSP FLL DTW PHL LGA BWI SLC SAN DCA IAD TPA BNA AUS MDW HNL DAL PDX STL RDU MCI SMF SJC OAK MSY SAT CLE PIT CVG CMH IND MKE ANC OGG ABQ KOA ITO LIH MKK LNY JHM HNM LUP'.split(' ');
 const airports = toObjs(parseCSV(fs.readFileSync(path.join(D, '_airports.csv'), 'utf8')));
 const runways = toObjs(parseCSV(fs.readFileSync(path.join(D, '_runways.csv'), 'utf8')));
 const out = {}; const problems = [];

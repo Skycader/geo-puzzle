@@ -298,5 +298,53 @@
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Raleigh_Durham_International_airport_satellite_view.png/330px-Raleigh_Durham_International_airport_satellite_view.png",
     "wikiUrl": "https://en.wikipedia.org/wiki/Raleigh%E2%80%93Durham_International_Airport",
     "lang": "en"
+  },
+  "koa": {
+    "extract": "Аэропорт Кона в Кеахоле — международный коммерческий аэропорт, расположенный на западе Острова Гавайи, и обслуживающий пассажирские авиаперевозки туристического города Каилуа-Кона и соседних курортных зон.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/KOA.Terminal.2009.jpg/330px-KOA.Terminal.2009.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%BE%D0%BD%D0%B0_(%D0%B0%D1%8D%D1%80%D0%BE%D0%BF%D0%BE%D1%80%D1%82)",
+    "lang": "ru"
+  },
+  "ito": {
+    "extract": "Hilo International Airport, formerly General Lyman Field, is a regional airport located in Hilo, Hawaii, United States. Owned and operated by the Hawaii Department of Transportation, the airport serves windward (eastern) Hawaiʻi island including the districts of Hilo, Hāmākua and Kaʻū, and Puna. It is one of two international airports serving Hawaiʻi island, the other being Kona International Airport on the leeward (western) side.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Departing_Hilo_Airport.jpg/330px-Departing_Hilo_Airport.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Hilo_International_Airport",
+    "lang": "en"
+  },
+  "lih": {
+    "extract": "Аэропорт Лихуэ — основной аэропорт острова Кауаи, расположен в двух километрах восточнее от города Лихуэ, штат Гавайи, США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Lihue_Airport_overview.jpg/330px-Lihue_Airport_overview.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%B8%D1%85%D1%83%D1%8D_(%D0%B0%D1%8D%D1%80%D0%BE%D0%BF%D0%BE%D1%80%D1%82)",
+    "lang": "ru"
+  },
+  "mkk": {
+    "extract": "Molokai Airport, also known as Hoolehua Airport is a state-owned, public use airport located six nautical miles northwest of Kaunakakai, on the island of Molokai in Maui County, Hawaii, United States. It is the principal airport of the island. The largest plane to ever fly here regularly was a Boeing 737-200 jet, which seats 127 passengers.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Molokai_airport.jpg/330px-Molokai_airport.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Molokai_Airport",
+    "lang": "en"
+  },
+  "jhm": {
+    "extract": "Kapalua Airport, also known as Kapalua–West Maui Airport, is a regional airport in the district of Mahinahina, on the west side of Maui island in the state of Hawaii. It is located five nautical miles north of Lahaina, in Maui County. Most flights to Kapalua Airport originate from commuter airports on the other Hawaiian islands by commercial commuter services, unscheduled air taxis, and general aviation.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Starr-110412-5113-Digitaria_insularis-habit_view_Kapalua_Airport-Kahana_West_Maui-Maui_%2824989436711%29.jpg/330px-Starr-110412-5113-Digitaria_insularis-habit_view_Kapalua_Airport-Kahana_West_Maui-Maui_%2824989436711%29.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Kapalua_Airport",
+    "lang": "en"
+  },
+  "hnm": {
+    "extract": "Аэропорт Хана — аэропорт, расположенный на северо-восточной стороне острова Мауи, в пяти километрах от города Хана, штат Гавайи, США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Hana_Airport_-_Sign.jpg/330px-Hana_Airport_-_Sign.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D0%B0%D0%BD%D0%B0_(%D0%B0%D1%8D%D1%80%D0%BE%D0%BF%D0%BE%D1%80%D1%82)",
+    "lang": "ru"
+  },
+  "lup": {
+    "extract": "Kalaupapa Airport is a regional public use airport of the U.S. state of Hawaii, located on the northern peninsula of the island of Molokaʻi, two nautical miles north of Kalaupapa Settlement, in Kalawao County. Most flights to Kalaupapa originate from Molokai Airport or from airports on the other Hawaiian islands by unscheduled air taxis and general aviation. It is also used as a cargo facility carrying goods for Kalaupapa, which has no road access from the rest of Molokai.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Kalaupapa_Airport_terminal.jpg/330px-Kalaupapa_Airport_terminal.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Kalaupapa_Airport",
+    "lang": "en"
+  },
+  "lny": {
+    "extract": "Lanai Airport, also written as Lānaʻi Airport, is a state-owned public-use airport located three nautical miles or about 3.4 miles (6 km) southwest of the central business district of Lanai City, in Maui County, Hawaii. The airport began regular operations in 1930. It is the only airport serving the island of Lanai (Lānaʻi).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Lanai_airport_tarmac.jpg/330px-Lanai_airport_tarmac.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Lanai_Airport",
+    "lang": "en"
   }
 }
