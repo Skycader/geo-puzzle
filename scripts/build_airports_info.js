@@ -20,11 +20,14 @@ async function getJson(url) {
 const clip = (s, n = 700) => { if (s.length <= n) return s; const cut = s.slice(0, n); const i = cut.lastIndexOf('. '); return (i > 200 ? cut.slice(0, i + 1) : cut).trim(); };
 const thumb = (u) => (u ? u.replace('https://thumb.wikimedia.org/', 'https://upload.wikimedia.org/').split('?')[0] : null);
 (async () => {
+  const only = process.argv.slice(2).map((x) => x.toUpperCase());
   const outPath = path.join(__dirname, '..', 'levels', 'usa', 'airports-info.json');
   // Resumable: Wikipedia rate-limits bursts, so keep what's already fetched in Russian.
   const out = fs.existsSync(outPath) ? JSON.parse(fs.readFileSync(outPath, 'utf8')) : {}; const fallback = [];
   for (const [iata, a] of Object.entries(data)) {
     if (out[iata.toLowerCase()]?.lang === 'ru') continue;
+    if (only.length && !only.includes(iata)) continue; // optional: node scripts/build_airports_info.js OME DJT
+
     try {
     const enTitle = decodeURIComponent((a.wiki || '').replace('https://en.wikipedia.org/wiki/', ''));
     const ll = await getJson(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(enTitle)}&prop=langlinks&lllang=ru&format=json&redirects=1`);

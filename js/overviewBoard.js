@@ -86,7 +86,15 @@ const PLACE_FOCUS_RADIUS_KM = 30;
 // Airports: a constant-screen-px plane icon (Material "flight" glyph, 24x24
 // box, nose up — rotated 45° at render) over the airport's runways, which
 // are drawn at their TRUE length/bearing (see levels/usaAirports.js).
-const AIRPORT_ICON_PX = 18;
+const AIRPORT_ICON_PX = 22;
+// Regional/state airports (data flag `minor`) — ~85 of them — would bury the
+// map: slightly smaller icons, and their IATA codes only appear once zoomed in.
+const AIRPORT_MINOR_ICON_PX = 17;
+// Regional airports get a helicopter glyph (not literally true, but reads at
+// a glance as "the small kind"); all in the same 24x24 box as the plane.
+const AIRPORT_HELI_FILL_D = 'M5 13.5a5.5 4.5 0 0 1 5.5-4.5h2.5a4.5 4.5 0 0 1 4.5 4.5V15H5z';
+const AIRPORT_HELI_LINE_D = 'M3 4.5h18M12 4.5V9M17.5 12H22M22 9.5v5M6 18.5h11M8.5 15.5v3M14.5 15.5v3';
+const AIRPORT_MINOR_LABEL_ZOOM = 4;
 const AIRPORT_PLANE_D = 'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z';
 // Focusing an airport frames at least this many canvas units (~12 km) so
 // the player sees the runways with some surroundings, not a bare line.
@@ -864,11 +872,36 @@ export class OverviewBoard {
       runway.setAttribute('class', 'airport-runway');
       this.pointsLayer.appendChild(runway);
 
-      const icon = document.createElementNS(SVG_NS, 'path');
-      icon.setAttribute('d', AIRPORT_PLANE_D);
+      // One <g> per airport: an invisible disc (so a thin plane is still easy
+      // to hit) and the glyph (plane / helicopter). The
+      // whole group is the tap target (see _onMapTap's closest()).
+      const iconPx = a.minor ? AIRPORT_MINOR_ICON_PX : AIRPORT_ICON_PX;
+      const icon = document.createElementNS(SVG_NS, 'g');
       icon.setAttribute('class', 'overview-airport-plane');
       icon.dataset.id = a.id;
       icon.dataset.kind = 'airport';
+      const hit = document.createElementNS(SVG_NS, 'circle');
+      hit.setAttribute('cx', 12);
+      hit.setAttribute('cy', 12);
+      hit.setAttribute('r', 12);
+      hit.setAttribute('fill', 'transparent');
+      icon.appendChild(hit);
+      if (a.minor) {
+        const body = document.createElementNS(SVG_NS, 'path');
+        body.setAttribute('d', AIRPORT_HELI_FILL_D);
+        body.setAttribute('class', 'airport-glyph-fill');
+        const lines = document.createElementNS(SVG_NS, 'path');
+        lines.setAttribute('d', AIRPORT_HELI_LINE_D);
+        lines.setAttribute('class', 'airport-glyph-line');
+        icon.appendChild(body);
+        icon.appendChild(lines);
+      } else {
+        const plane = document.createElementNS(SVG_NS, 'path');
+        plane.setAttribute('d', AIRPORT_PLANE_D);
+        plane.setAttribute('class', 'airport-glyph-fill');
+        plane.setAttribute('transform', 'rotate(45 12 12)');
+        icon.appendChild(plane);
+      }
       const title = document.createElementNS(SVG_NS, 'title');
       title.textContent = this._airportHoverTitle(a);
       icon.appendChild(title);
@@ -886,7 +919,7 @@ export class OverviewBoard {
       leaderLabel.textContent = a.iata;
       this.allLabelEls.push(leaderLabel);
 
-      this.airportEntries.push({ id: a.id, cx: a.cx, cy: a.cy, icon, runway, pointMark, leaderPath, leaderLabel });
+      this.airportEntries.push({ id: a.id, cx: a.cx, cy: a.cy, minor: !!a.minor, icon, runway, pointMark, leaderPath, leaderLabel });
       this.airportsById.set(a.id, { data: a, dotEl: icon });
 
       this.pointsLayer.appendChild(icon);
@@ -1141,8 +1174,10 @@ export class OverviewBoard {
   }
 
   _onMapTap(ev) {
-    const kind = ev.target?.dataset?.kind;
-    const id = ev.target?.dataset?.id;
+    // closest(): an airport icon is a <g> of several shapes, so the click lands on a child.
+    const host = ev.target?.closest?.('[data-kind]') ?? ev.target;
+    const kind = host?.dataset?.kind;
+    const id = host?.dataset?.id;
     // While the progress heatmap is on, a state tap corrects its count
     // instead of the normal city/place info popup (states never have one
     // anyway — see the else branch's own comment).
@@ -1814,12 +1849,19 @@ export class OverviewBoard {
     return `${bilingualLabel(l)} — ${areaStr} ${t('areaUnit')}`;
   }
 
+  // "Национальный аэропорт — связывает страну и мир…" / "Региональный
+  // аэропорт — связывает регионы и штаты" — our own two-tier split, see
+  // levels/usaAirports.js's `minor` flag (not an official FAA role).
+  _airportRole(a) {
+    return a.minor ? `${t('airportRegional')} — ${t('airportRegionalDesc')}` : `${t('airportNational')} — ${t('airportNationalDesc')}`;
+  }
+
   _airportMeta(a) {
-    return `${t('airportCode')} ${a.iata} · ${t('airportRunways')}: ${a.runwayCount} · ${t('airportLongest')}: ${a.longestM.toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU')} ${t('meterUnit')}`;
+    return `${this._airportRole(a)}<br>${t('airportCode')} ${a.iata} · ${t('airportRunways')}: ${a.runwayCount} · ${t('airportLongest')}: ${a.longestM.toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU')} ${t('meterUnit')}`;
   }
 
   _airportHoverTitle(a) {
-    return `${bilingualLabel(a)} (${a.iata})`;
+    return `${bilingualLabel(a)} (${a.iata})\n${this._airportRole(a)}`;
   }
 
   _renderList() {
@@ -2083,8 +2125,12 @@ export class OverviewBoard {
     // native-unit paths (true length) with a non-scaling stroke, no work here.
     for (const entry of this.airportEntries) {
       this._layoutCityLeader(entry, effScale);
-      const k = AIRPORT_ICON_PX / 24 / effScale;
-      entry.icon.setAttribute('transform', `translate(${entry.cx} ${entry.cy}) scale(${k.toFixed(5)}) rotate(45) translate(-12 -12)`);
+      const k = (entry.minor ? AIRPORT_MINOR_ICON_PX : AIRPORT_ICON_PX) / 24 / effScale;
+      // Same opacity property setLabelsVisible writes, so honor that toggle too.
+      const labelOn = this.labelsVisible && (!entry.minor || zoom >= AIRPORT_MINOR_LABEL_ZOOM);
+      entry.leaderLabel.style.opacity = labelOn ? '' : '0';
+      entry.leaderPath.style.opacity = labelOn ? '' : '0';
+      entry.icon.setAttribute('transform', `translate(${entry.cx} ${entry.cy}) scale(${k.toFixed(5)}) translate(-12 -12)`);
     }
     // Keeps whichever shields are already showing at a constant screen
     // size DURING a zoom gesture — _updateHighwayShields itself only runs

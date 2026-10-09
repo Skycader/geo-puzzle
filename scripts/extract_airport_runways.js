@@ -18,7 +18,7 @@ function parseCSV(text) {
     else if (c === '\n') { row.push(f); rows.push(row); row = []; f = ''; } else if (c !== '\r') f += c; }
   if (f || row.length) { row.push(f); rows.push(row); } return rows; }
 const toObjs = (rows) => { const h = rows[0]; return rows.slice(1).filter(r => r.length === h.length).map(r => Object.fromEntries(h.map((k, i) => [k, r[i]]))); };
-const IATA = 'ATL LAX ORD DFW DEN JFK SFO SEA LAS MCO EWR CLT PHX MIA IAH BOS MSP FLL DTW PHL LGA BWI SLC SAN DCA IAD TPA BNA AUS MDW HNL DAL PDX STL RDU MCI SMF SJC OAK MSY SAT CLE PIT CVG CMH IND MKE ANC OGG ABQ KOA ITO LIH MKK LNY JHM HNM LUP'.split(' ');
+const IATA = 'ATL LAX ORD DFW DEN JFK SFO SEA LAS MCO EWR CLT PHX MIA IAH BOS MSP FLL DTW PHL LGA BWI SLC SAN DCA IAD TPA BNA AUS MDW HNL DAL PDX STL RDU MCI SMF SJC OAK MSY SAT CLE PIT CVG CMH IND MKE ANC OGG ABQ KOA ITO LIH MKK LNY JHM HNM LUP BHM HSV FAI JNU KTN BET OME ADQ TUS LIT XNA ONT SNA BUR FAT PSP COS ASE BDL ILG JAX RSW DJT SRQ PNS EYW TLH SAV BOI DSM CID ICT SDF LEX BTR SHV PWM BGR GRR JAN SGF BIL BZN MSO GTF HLN OMA RNO MHT BUF ROC SYR ALB AVL FAR BIS GFK MOT DAY OKC TUL EUG MDT PVD CHS GSP MYR FSD RAP MEM TYS HOU ELP LBB AMA CRP MAF BTV RIC ORF GEG CRW MSN GRB JAC CPR'.split(' ');
 const airports = toObjs(parseCSV(fs.readFileSync(path.join(D, '_airports.csv'), 'utf8')));
 const runways = toObjs(parseCSV(fs.readFileSync(path.join(D, '_runways.csv'), 'utf8')));
 const out = {}; const problems = [];
@@ -33,6 +33,8 @@ for (const code of IATA) {
     leHdg: r.le_heading_degT ? +r.le_heading_degT : null,
   }));
   const noCoords = rws.filter(r => !r.le || !r.he).length;
+  // Runways without both endpoints (planned/under construction, water lanes) can't be drawn.
+  rws.splice(0, rws.length, ...rws.filter(r => r.le && r.he));
   if (noCoords) problems.push(`${code}: ${noCoords}/${rws.length} runways lack endpoint coords`);
   out[code] = { id: a.id, ident: a.ident, name: a.name, city: a.municipality, region: a.iso_region, lat: +a.latitude_deg, lon: +a.longitude_deg, wiki: a.wikipedia_link, runways: rws };
 }

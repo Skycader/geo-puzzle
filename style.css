@@ -1864,14 +1864,21 @@ body {
    two are still easy to tell apart at a glance when both are visible.
    Unlike a city dot, r/stroke-width are rescaled every zoom step (js) since
    there's no true physical radius to stay fixed to. */
-.overview-airport-plane {
+.overview-airport-plane { cursor: default; }
+.airport-glyph-fill {
   fill: #8fd0ff;
   stroke: rgba(var(--ink-rgb), 0.95);
-  stroke-width: 1.5px;
-  vector-effect: non-scaling-stroke;
-  cursor: default;
+  stroke-width: 1.2px;
+  stroke-linejoin: round;
 }
-.overview-airport-plane.overview-focused { fill: var(--neon-yellow) !important; }
+.airport-glyph-line {
+  fill: none;
+  stroke: #8fd0ff;
+  stroke-width: 1.7px;
+  stroke-linecap: round;
+}
+/* Question-mark cursor marks an airport that has an article to open. */
+.overview-airport-plane.overview-has-info { cursor: help; }
 /* Real runways: true length and bearing, constant-width blue strokes. */
 .airport-runway {
   fill: none;
