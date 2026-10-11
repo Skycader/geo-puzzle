@@ -58,6 +58,18 @@ export const SOURCES = {
       { label: L('Википедия', 'Wikipedia'), url: 'https://ru.wikipedia.org/' },
     ],
   },
+  currents: {
+    name: L('NOAA / ERD — OSCAR', 'NOAA / ERD — OSCAR'),
+    desc: L(
+      'Пути течений проведены по реальному полю скорости течений на поверхности океана (OSCAR, сетка 1/3°, средние за 2012–2013 годы): линия тока от выбранной начальной точки. Названия и тёплые/холодные — по справочникам.',
+      'Current paths follow the real ocean surface current field (OSCAR, 1/3° grid, 2012–2013 mean): a streamline from a chosen start point. Names and warm/cold labels come from reference works.'
+    ),
+    license: L('Данные можно свободно использовать и распространять (NOAA CoastWatch)', 'Free to use and redistribute (NOAA CoastWatch)'),
+    links: [
+      { label: L('OSCAR на NOAA CoastWatch', 'OSCAR at NOAA CoastWatch'), url: 'https://coastwatch.pfeg.noaa.gov/erddap/griddap/jplOscar.html' },
+      { label: L('OSCAR на NASA PO.DAAC', 'OSCAR at NASA PO.DAAC'), url: 'https://podaac.jpl.nasa.gov/dataset/OSCAR_L4_OC_third-deg' },
+    ],
+  },
   terrain: {
     name: L('EPA / CEC — Level I Ecoregions', 'EPA / CEC — Level I Ecoregions'),
     desc: L(

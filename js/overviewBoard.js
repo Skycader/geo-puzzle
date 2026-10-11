@@ -86,6 +86,13 @@ const PLACE_FOCUS_RADIUS_KM = 30;
 // Airports: a constant-screen-px plane icon (Material "flight" glyph, 24x24
 // box, nose up — rotated 45° at render) over the airport's runways, which
 // are drawn at their TRUE length/bearing (see levels/usaAirports.js).
+// Ocean currents: schematic arrows over real paths (levels/worldCurrents.js).
+// Sizes grow with zoom between a thin min (whole-world view) and a max reached
+// at ~4x, instead of staying one fixed size that looks huge when zoomed out.
+const CURRENT_LINE_PX = [1, 4]; // [min, max] stroke width
+const CURRENT_HEAD_PX = [2.5, 7]; // [min, max] arrowhead half-width
+const CURRENT_FULL_SIZE_ZOOM = 4;
+const CURRENT_HEAD_D = 'M -1.7 -1 L 0 0 L -1.7 1 Z';
 const AIRPORT_ICON_PX = 22;
 // Regional/state airports (data flag `minor`) — ~85 of them — would bury the
 // map: slightly smaller icons, and their IATA codes only appear once zoomed in.
@@ -324,7 +331,8 @@ function loadInfo() {
       fetchJson('./levels/usa/lakes-info.json'),
       fetchJson('./levels/usa/contextland-info.json'),
       fetchJson('./levels/usa/airports-info.json'),
-    ]).then(([cities, places, lakes, contextland, airports]) => ({ cities, places, lakes, contextland, airports }));
+      fetchJson('./levels/world/currents-info.json'),
+    ]).then(([cities, places, lakes, contextland, airports, currents]) => ({ cities, places, lakes, contextland, airports, currents }));
   }
   return _infoLoadPromise;
 }
@@ -413,6 +421,10 @@ export class OverviewBoard {
     // USA only (levels/usaAirports.js): a plane icon + the airport's real runways.
     this.airportEntries = []; // { id, cx, cy, icon, runway, pointMark, leaderPath, leaderLabel }
     this.airportsById = new Map(); // id -> { data, dotEl }
+    // World only (levels/worldCurrents.js): ocean currents as thick arrows.
+    this.currentEntries = []; // { id, line, hit, head, label }
+    this.currentsById = new Map(); // id -> { data, dotEl }
+    this.currentsVisible = opts.currentsVisible !== false;
     this.lakesById = new Map(); // id -> { data, pathEl }
     this.lakeEls = []; // { pathEl, labelEl } — see setLakesVisible
     this.contextLandById = new Map(); // id -> { data } — Canada, see build_usa_level.js's contextLand
@@ -429,7 +441,7 @@ export class OverviewBoard {
     this._revealQueue = [];
     this._revealScheduled = false;
     this._destroyed = false;
-    this.info = { cities: {}, places: {}, lakes: {}, contextland: {}, airports: {} }; // populated async — see loadInfo()
+    this.info = { cities: {}, places: {}, lakes: {}, contextland: {}, airports: {}, currents: {} }; // populated async — see loadInfo()
     this._openPopupId = null;
     this._infoPopupEl = null;
     this._infoConnectorEl = null;
@@ -514,6 +526,15 @@ export class OverviewBoard {
     this.zonesLayer = document.createElementNS(SVG_NS, 'g');
     this.zonesLayer.setAttribute('class', 'zones-layer');
     this.svg.appendChild(this.zonesLayer);
+    // Ocean currents sit above the territory shapes but BELOW every name label,
+    // so no label is ever covered by an arrow; labels have their own layer
+    // (above currents, below points) instead of being interleaved with shapes.
+    this.currentsLayer = document.createElementNS(SVG_NS, 'g');
+    this.currentsLayer.setAttribute('class', 'currents-layer');
+    this.svg.appendChild(this.currentsLayer);
+    this.labelsLayer = document.createElementNS(SVG_NS, 'g');
+    this.labelsLayer.setAttribute('class', 'labels-layer');
+    this.svg.appendChild(this.labelsLayer);
     this.pointsLayer = document.createElementNS(SVG_NS, 'g');
     this.pointsLayer.setAttribute('class', 'points-layer');
     this.svg.appendChild(this.pointsLayer);
@@ -642,7 +663,7 @@ export class OverviewBoard {
         const baseName = this.level.id === 'usa' ? p.id : itemName(p);
         const suffix = p.labelSuffixes?.[i];
         label.textContent = suffix ? `${baseName} - ${suffix}` : baseName;
-        this.zonesLayer.appendChild(label);
+        this.labelsLayer.appendChild(label);
         this.allLabelEls.push(label);
         this.stateLabels.push({ el: label });
       });
@@ -674,7 +695,7 @@ export class OverviewBoard {
       label.setAttribute('y', lake.cy);
       label.setAttribute('class', 'piece-label overview-lake-label');
       label.textContent = itemName(lake);
-      this.zonesLayer.appendChild(label);
+      this.labelsLayer.appendChild(label);
       this.allLabelEls.push(label);
       this.stateLabels.push({ el: label }); // reuses the same "Подписи" toggle + zoom rescale as state labels
       this.lakeEls.push({ pathEl: path, labelEl: label }); // see setLakesVisible
@@ -693,7 +714,7 @@ export class OverviewBoard {
       label.setAttribute('y', land.cy);
       label.setAttribute('class', 'piece-label overview-contextland-label');
       label.textContent = itemName(land);
-      this.zonesLayer.appendChild(label);
+      this.labelsLayer.appendChild(label);
       this.allLabelEls.push(label);
       this.stateLabels.push({ el: label });
       this.contextLandById.set(land.id, { data: land });
@@ -928,6 +949,39 @@ export class OverviewBoard {
       this.pointsLayer.appendChild(leaderLabel);
     }
 
+    // Ocean currents (world level): a wide invisible hit line, the visible
+    // thick line, an arrowhead, and a name label (shown when zoomed in, like
+    // other territory labels). Warm = red, cold = blue.
+    for (const c of this.level.currents || []) {
+      const hit = document.createElementNS(SVG_NS, 'path');
+      hit.setAttribute('d', c.d);
+      hit.setAttribute('class', 'overview-current-hit');
+      hit.dataset.id = c.id;
+      hit.dataset.kind = 'current';
+      const title = document.createElementNS(SVG_NS, 'title');
+      title.textContent = this._currentHoverTitle(c);
+      hit.appendChild(title);
+      const line = document.createElementNS(SVG_NS, 'path');
+      line.setAttribute('d', c.d);
+      line.setAttribute('class', `overview-current-line ${c.temp}`);
+      const head = document.createElementNS(SVG_NS, 'path');
+      head.setAttribute('d', CURRENT_HEAD_D);
+      head.setAttribute('class', `overview-current-head ${c.temp}`);
+      const label = document.createElementNS(SVG_NS, 'text');
+      label.setAttribute('x', c.mid.x);
+      label.setAttribute('y', c.mid.y);
+      label.setAttribute('class', 'piece-label');
+      label.textContent = itemName(c);
+      this.allLabelEls.push(label);
+      this.stateLabels.push({ el: label });
+      this.currentsLayer.appendChild(line);
+      this.currentsLayer.appendChild(head);
+      this.currentsLayer.appendChild(hit);
+      this.labelsLayer.appendChild(label);
+      this.currentEntries.push({ id: c.id, pts: c.pts, head, line, hit, label });
+      this.currentsById.set(c.id, { data: c, dotEl: hit });
+    }
+
     // Ruler layer — kept as its own <g> so _renderRuler can cheaply
     // rebuild just its contents (innerHTML='') without touching anything
     // else, and so it can be re-appended (moved) to the end of this.svg's
@@ -1013,6 +1067,7 @@ export class OverviewBoard {
     this.setLabelsVisible(this.labelsVisible);
     this.setPlacesVisible(this.placesVisible);
     this.setAirportsVisible(this.airportsVisible);
+    this.setCurrentsVisible(this.currentsVisible);
     this.setLakesVisible(this.lakesVisible);
     this.setHighwaysVisible(this.highwaysVisible);
     this.setProgressVisible(this.progressVisible);
@@ -1112,7 +1167,7 @@ export class OverviewBoard {
   }
   _showShapeEntry(entry) {
     this.zonesLayer.appendChild(entry.path);
-    this.zonesLayer.appendChild(entry.label);
+    this.labelsLayer.appendChild(entry.label);
     entry.appended = true;
     entry.label.style.opacity = this.labelsVisible ? '' : '0';
   }
@@ -1171,6 +1226,9 @@ export class OverviewBoard {
     for (const entry of this.airportEntries) {
       if (this.info.airports[entry.id]) entry.icon.classList.add('overview-has-info');
     }
+    for (const entry of this.currentEntries) {
+      if (this.info.currents[entry.id]) entry.hit.classList.add('overview-has-info');
+    }
   }
 
   _onMapTap(ev) {
@@ -1194,7 +1252,9 @@ export class OverviewBoard {
             ? this.info.lakes[id]
             : kind === 'airport'
               ? this.info.airports[id]
-              : null;
+              : kind === 'current'
+                ? this.info.currents[id]
+                : null;
     if (entry) {
       if (this._openPopupId === id) {
         this._closeInfoPopup(); // tapping the same dot again toggles it closed
@@ -1224,7 +1284,9 @@ export class OverviewBoard {
             ? this.contextLandById.get(id)
             : kind === 'airport'
               ? this.airportsById.get(id)
-              : this.placesById.get(id);
+              : kind === 'current'
+                ? this.currentsById.get(id)
+                : this.placesById.get(id);
     if (!source) return;
     const wrapRect = this.zoomWrap.getBoundingClientRect();
     let dotX, dotY;
@@ -1667,6 +1729,7 @@ export class OverviewBoard {
     if (tab === 'lakes') return (this.level.lakes || []).length;
     if (tab === 'highways') return this._highwayItems().length;
     if (tab === 'airports') return (this.level.airports || []).length;
+    if (tab === 'currents') return (this.level.currents || []).length;
     return 0;
   }
 
@@ -1686,7 +1749,8 @@ export class OverviewBoard {
       this.level.id === 'world'
         ? `<button type="button" class="overview-tab active" data-tab="oceans">${this._tabLabel('oceans', 'overviewTabOceans')}</button>
            <button type="button" class="overview-tab" data-tab="seas">${this._tabLabel('seas', 'overviewTabSeas')}</button>
-           <button type="button" class="overview-tab" data-tab="other">${this._tabLabel('other', 'overviewTabOther')}</button>`
+           <button type="button" class="overview-tab" data-tab="other">${this._tabLabel('other', 'overviewTabOther')}</button>
+           ${this.level.currents?.length ? `<button type="button" class="overview-tab" data-tab="currents">${this._tabLabel('currents', 'overviewTabCurrents')}</button>` : ''}`
         : this.level.id === 'countries'
           ? // Countries has no cities/places (levels/countries.js: cities: [],
             // places: []) — a single tab, same reasoning as world's
@@ -1856,6 +1920,40 @@ export class OverviewBoard {
     return a.minor ? `${t('airportRegional')} — ${t('airportRegionalDesc')}` : `${t('airportNational')} — ${t('airportNationalDesc')}`;
   }
 
+  // The line stops where the arrowhead (a constant-px triangle) begins, and the
+  // head points along the chord base->tip, so the two always meet cleanly at
+  // any zoom — a head placed independently of the line looked detached.
+  _layoutCurrent(e, effScale, zoom) {
+    const f = Math.min(1, Math.max(0, zoom / CURRENT_FULL_SIZE_ZOOM));
+    const lerp = ([lo, hi]) => lo + (hi - lo) * f;
+    const headPx = lerp(CURRENT_HEAD_PX);
+    e.line.style.strokeWidth = `${lerp(CURRENT_LINE_PX).toFixed(2)}px`;
+    const pts = e.pts;
+    const tip = pts[pts.length - 1];
+    let rem = (headPx * 1.7) / effScale;
+    let i = pts.length - 1;
+    let base = pts[0];
+    while (i > 0) {
+      const a = pts[i - 1], b = pts[i];
+      const seg = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (seg >= rem) {
+        const t = 1 - rem / seg;
+        base = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+        break;
+      }
+      rem -= seg;
+      i--;
+    }
+    const kept = pts.slice(0, i);
+    e.line.setAttribute('d', `${kept.map((p, k) => `${k ? 'L' : 'M'} ${p[0]},${p[1]}`).join(' ')} ${kept.length ? 'L' : 'M'} ${base[0].toFixed(3)},${base[1].toFixed(3)}`);
+    const angle = (Math.atan2(tip[1] - base[1], tip[0] - base[0]) * 180) / Math.PI;
+    e.head.setAttribute('transform', `translate(${tip[0]} ${tip[1]}) rotate(${angle.toFixed(2)}) scale(${(headPx / effScale).toFixed(5)})`);
+  }
+
+  _currentHoverTitle(c) {
+    return `${bilingualLabel(c)} — ${t(c.temp === 'warm' ? 'currentWarm' : 'currentCold')}`;
+  }
+
   _airportMeta(a) {
     return `${this._airportRole(a)}<br>${t('airportCode')} ${a.iata} · ${t('airportRunways')}: ${a.runwayCount} · ${t('airportLongest')}: ${a.longestM.toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU')} ${t('meterUnit')}`;
   }
@@ -1878,7 +1976,9 @@ export class OverviewBoard {
                 ? this._highwayItems()
                 : this.activeTab === 'airports'
                   ? this.level.airports || []
-                  : this.level.cities;
+                  : this.activeTab === 'currents'
+                    ? this.level.currents || []
+                    : this.level.cities;
     const q = this.searchQuery;
     const filtered = q
       ? items.filter((it) => it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q))
@@ -1887,7 +1987,7 @@ export class OverviewBoard {
     // Places carry only a nominal radiusKm (identical for every place), so
     // sorting/showing "Площадь" for them would be a meaningless tie —
     // hide that column entirely on this tab instead of displaying it.
-    const showArea = this.activeTab !== 'places' && this.activeTab !== 'highways' && this.activeTab !== 'airports';
+    const showArea = this.activeTab !== 'places' && this.activeTab !== 'highways' && this.activeTab !== 'airports' && this.activeTab !== 'currents';
     this.sortBtnEl.hidden = !showArea;
 
     let sorted;
@@ -1929,6 +2029,7 @@ export class OverviewBoard {
         else if (this.activeTab === 'lakes') this._focusLake(it.id);
         else if (this.activeTab === 'highways') this._focusHighway(it);
         else if (this.activeTab === 'airports') this._focusAirport(it);
+        else if (this.activeTab === 'currents') this._focusCurrent(it);
         else this._focusCity(it.id);
       });
       this.itemListEl.appendChild(row);
@@ -2031,6 +2132,12 @@ export class OverviewBoard {
     this.focusGlowEl?.classList.add('overview-focus-glow-line');
   }
 
+  // Zoom to the whole current and light up its path (stroked glow, like highways).
+  _focusCurrent(c) {
+    this._focusShape({ cx: c.cx, cy: c.cy, d: c.d, bbox: c.bbox });
+    this.focusGlowEl?.classList.add('overview-focus-glow-line');
+  }
+
   // Zoom to the airport (at least AIRPORT_FOCUS_MIN_UNITS across, so some
   // surroundings show) and light up its runways with the same stroked glow
   // highways use.
@@ -2121,6 +2228,7 @@ export class OverviewBoard {
       entry.dot.setAttribute('r', (PLACE_DOT_R_PX / effScale).toFixed(2));
       entry.dot.style.strokeWidth = `${(PLACE_DOT_STROKE_PX / effScale).toFixed(2)}px`;
     }
+    for (const e of this.currentEntries) this._layoutCurrent(e, effScale, zoom);
     // Plane icons: constant screen size; the runways themselves are plain
     // native-unit paths (true length) with a non-scaling stroke, no work here.
     for (const entry of this.airportEntries) {
@@ -2644,6 +2752,13 @@ export class OverviewBoard {
       entry.pointMark.style.display = visible ? '' : 'none';
       entry.leaderPath.style.display = visible ? '' : 'none';
       entry.leaderLabel.style.display = visible ? '' : 'none';
+    }
+  }
+
+  setCurrentsVisible(visible) {
+    this.currentsVisible = visible;
+    for (const e of this.currentEntries) {
+      for (const el of [e.line, e.head, e.hit, e.label]) el.style.display = visible ? '' : 'none';
     }
   }
 

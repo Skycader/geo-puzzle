@@ -1879,6 +1879,29 @@ body {
 }
 /* Question-mark cursor marks an airport that has an article to open. */
 .overview-airport-plane.overview-has-info { cursor: help; }
+/* Ocean currents: schematic thick arrows over real paths. */
+.overview-current-line {
+  fill: none;
+  stroke-linecap: butt;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+  opacity: 0.95;
+}
+.overview-current-line.warm { stroke: #e8333c; }
+.overview-current-line.cold { stroke: #3f64c8; }
+.overview-current-head { pointer-events: none; opacity: 0.95; }
+.overview-current-head.warm { fill: #e8333c; }
+.overview-current-head.cold { fill: #3f64c8; }
+.overview-current-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 16px;
+  vector-effect: non-scaling-stroke;
+  pointer-events: stroke;
+  cursor: default;
+}
+.overview-current-hit.overview-has-info { cursor: help; }
 /* Real runways: true length and bearing, constant-width blue strokes. */
 .airport-runway {
   fill: none;

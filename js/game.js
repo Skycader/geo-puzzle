@@ -438,6 +438,9 @@ export class Game {
       toggleAirportsWrap: document.getElementById('toggle-airports-wrap'),
       toggleAirports: document.getElementById('toggle-airports'),
       toggleAirportsText: document.getElementById('toggle-airports-text'),
+      toggleCurrentsWrap: document.getElementById('toggle-currents-wrap'),
+      toggleCurrents: document.getElementById('toggle-currents'),
+      toggleCurrentsText: document.getElementById('toggle-currents-text'),
       toggleProgressWrap: document.getElementById('toggle-progress-wrap'),
       toggleProgress: document.getElementById('toggle-progress'),
       toggleProgressText: document.getElementById('toggle-progress-text'),
@@ -675,6 +678,8 @@ export class Game {
     this.el.toggleHighwaysText.textContent = t('highwaysToggleText');
     this.el.toggleAirportsWrap.title = t('airportsTitle');
     this.el.toggleAirportsText.textContent = t('airportsToggleText');
+    this.el.toggleCurrentsWrap.title = t('currentsTitle');
+    this.el.toggleCurrentsText.textContent = t('currentsToggleText');
     for (const b of this.el.settingsFlyoutMenu.querySelectorAll('.source-btn')) {
       b.title = t('sourceBtnTitle');
       b.setAttribute('aria-label', t('sourceBtnTitle'));
@@ -1457,6 +1462,10 @@ export class Game {
       this.airportsVisible = ev.target.checked;
       if (this.board?.setAirportsVisible) this.board.setAirportsVisible(this.airportsVisible);
     });
+    this.el.toggleCurrents.addEventListener('change', (ev) => {
+      this.currentsVisible = ev.target.checked;
+      if (this.board?.setCurrentsVisible) this.board.setCurrentsVisible(this.currentsVisible);
+    });
     this.el.toggleProgress.addEventListener('change', (ev) => {
       this.progressVisible = ev.target.checked;
       this.el.progressScopeWrap.hidden = !this.progressVisible;
@@ -1561,6 +1570,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = !preset.showToggles;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.toggleHintsText.textContent = t('hints');
@@ -1625,6 +1635,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
@@ -1653,6 +1664,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    // No text prompt here — the "question" is the pulsing highlight on the
@@ -1685,6 +1697,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    // No text prompt — the "question" is entirely on the map (highlighted
@@ -1720,6 +1733,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
@@ -1751,6 +1765,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
@@ -1782,6 +1797,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;
@@ -1820,6 +1836,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
@@ -1853,6 +1870,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
@@ -1900,6 +1918,7 @@ export class Game {
     this.el.toggleLabelsWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;
@@ -1951,6 +1970,7 @@ export class Game {
     this.lakesVisible = isFull;
     this.highwaysVisible = isFull;
     this.airportsVisible = isFull;
+    this.currentsVisible = isFull;
     // USA-only, same as the toggle itself being hidden for world/countries
     // below. "Full" defaults to the richest look ('pattern'), same spirit
     // as every other *Visible flag above defaulting fully on.
@@ -1975,6 +1995,8 @@ export class Game {
     this.el.toggleHighways.checked = this.highwaysVisible;
     this.el.toggleAirportsWrap.hidden = !level.airports?.length;
     this.el.toggleAirports.checked = this.airportsVisible;
+    this.el.toggleCurrentsWrap.hidden = !level.currents?.length;
+    this.el.toggleCurrents.checked = this.currentsVisible;
     // States only for now (per the feature's own scope) — every adaptive-
     // mode success scope this drives (ADAPTIVE_SUCCESS_SCOPE_BY_MODE) is
     // state-keyed, so there's nothing meaningful to show on world/countries.
@@ -1991,6 +2013,7 @@ export class Game {
         level.lakes?.length && 'lakes',
         level.highways?.length && 'highways',
         level.airports?.length && 'airports',
+        level.currents?.length && 'currents',
         level.id === 'usa' && 'terrain',
       ].filter(Boolean)
     );
@@ -2022,6 +2045,7 @@ export class Game {
       lakesVisible: this.lakesVisible,
       highwaysVisible: this.highwaysVisible,
       airportsVisible: this.airportsVisible,
+      currentsVisible: this.currentsVisible,
       progressVisible: level.id === 'usa' && this.progressVisible,
       progressScope: this.progressScope,
       terrainMode: level.id === 'usa' ? this.terrainMode : 'off',
@@ -2040,6 +2064,7 @@ export class Game {
     this.el.togglePlacesWrap.hidden = true;
     this.el.toggleHighwaysWrap.hidden = true;
     this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;
