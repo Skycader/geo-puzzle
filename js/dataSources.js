@@ -73,8 +73,8 @@ export const SOURCES = {
   terrain: {
     name: L('EPA / CEC — Level I Ecoregions', 'EPA / CEC — Level I Ecoregions'),
     desc: L(
-      'Экорегионы I уровня Северной Америки, сгруппированы в 8 категорий: горы, леса, равнины, пустыни и др.',
-      'Level I Ecoregions of North America, grouped into 8 categories: mountains, forests, plains, deserts, etc.'
+      'Экорегионы I уровня Северной Америки, сгруппированы в 9 категорий: горы, леса, равнины, пустыни и др.',
+      'Level I Ecoregions of North America, grouped into 9 categories: mountains, forests, plains, deserts, etc.'
     ),
     license: L('Открытые данные EPA и Комиссии по сотрудничеству в области охраны окружающей среды (CEC)', 'Open data from the EPA and the Commission for Environmental Cooperation (CEC)'),
     links: [{ label: L('Ecoregions of North America (EPA)', 'Ecoregions of North America (EPA)'), url: 'https://www.epa.gov/eco-research/ecoregions-north-america' }],
