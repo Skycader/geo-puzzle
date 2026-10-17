@@ -72,8 +72,14 @@ python scripts/dev_server.py 5720        # http://localhost:5720/
 - Remote'ы: `origin` → GitHub `Skycader/geo-puzzle`; `origin-gitlab` → GitLab
   `daniil.ustimencko/geo-puzzle`. На GitLab у `HEAD` ветка `main` — один коммит «Initial commit»,
   общей истории с `master` нет; её не трогаем.
-- **Коммитить и пушить только по просьбе** («commit and push», «cap»). «Push» =
+- **Коммитить и пушить только по просьбе** («commit and push» или «cap» — это одно и то же). «Push» =
   в оба remote'а: `git push origin master` и `git push origin-gitlab master`.
+- **Страховочная копия (запускает владелец, не ассистент):** `bash scripts/backup_to_obsidian.sh` кладёт zip
+  последнего коммита (`GeoPuzzle_<дата>_<время>_<хэш>.zip`, без `.git`) в папку «12. Projects»
+  хранилища Obsidian на этой машине (оно синхронизируется по облакам, дискам и телефону —
+  копия, не зависящая от аккаунтов GitHub/GitLab). Для того же коммита второй раз не создаётся.
+  В архив попадает только закоммиченное (`git archive HEAD`), поэтому запускать после коммита.
+  После каждого `cap` ассистент лишь **напоминает** про этот скрипт и сам его не вызывает.
 - Коммит: `git add <конкретные файлы>` (не `-A`), заголовок по-английски — что и зачем,
   в конце строка `Co-Authored-By: <модель> <noreply@anthropic.com>`. Не amend,
   не force-push, не `--no-verify`.

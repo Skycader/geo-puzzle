@@ -50,8 +50,10 @@ python scripts/dev_server.py 5720     # порт по умолчанию 5720
 Взяты из практики проекта и сохранённых заметок. Нарушать только по прямой
 просьбе владельца.
 
-1. **Не коммить и не пушь без просьбы.** Только когда сказано «commit and push»
-   (или «cap»). Remote'ов два: `origin` (GitHub) и `origin-gitlab` (GitLab); при
+1. **Не коммить и не пушь без просьбы.** Только когда сказано «commit and push» или «cap»
+   (`cap` = commit and push). **После `cap` напомни владельцу про скрипт синхронизации
+   `scripts/backup_to_obsidian.sh`** (zip-копия в Obsidian) — **сам его не запускай**: владелец
+   делает это сам (так безопаснее). Remote'ов два: `origin` (GitHub) и `origin-gitlab` (GitLab); при
    «push» пушат в **оба**, ветка `master`. Подробнее в [workflow.md](workflow.md).
 2. **Сообщение коммита** заканчивается строкой `Co-Authored-By: <модель> <noreply@anthropic.com>`
    (модель — как указано в системной подсказке Claude Code); сообщения
