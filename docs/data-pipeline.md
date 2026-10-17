@@ -29,6 +29,7 @@
 | `build_airports_info.js` | сеть (Википедия) | `levels/usa/airports-info.json` | через langlink на русскую статью, иначе английская (`lang`); **возобновляемый**; `node scripts/build_airports_info.js ATL JFK` — только перечисленные коды; Википедия лимитирует частоту → при `FAILED` перезапустить |
 | `extract_world_cities.js` | `_ne_populated_places.geojson` (Natural Earth 10m, ~19 МБ: качать вручную, **затем удалить**) | `scripts/data/world-cities-source.json` | все столицы (`Admin-0 capital`) + города от `MIN_BIG_POP` (4 млн); ручные поправки в начале скрипта (не-столицы, пригороды, переименования) |
 | `build_world_cities.js` | `world-cities-source.json`, `levels/countries.js` (русские названия стран) | `levels/worldCities.js`, `levels/worldPlaces.js` | список мест `PLACES` — в скрипте |
+| `build_zones_info.js` | сеть (Википедия) | `levels/world/zones-info.json` | карточки зон (`land` уровня countries); id → заголовок статьи в `ZONES` |
 | `build_world_cities_info.js` | сеть (Wikidata + Википедия) | `levels/world/cities-info.json` | возобновляемый; `node scripts/build_world_cities_info.js moscow paris` — только перечисленные id |
 | `build_world_currents.js` | сеть (NOAA ERDDAP, OSCAR) | `levels/worldCurrents.js` | массив `CURRENTS` (id, имя, `temp`, `box`, `seed`, `cutAtEastmost`); усредняет срезы, ведёт линию тока, сглаживает |
 

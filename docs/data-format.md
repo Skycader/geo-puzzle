@@ -100,6 +100,7 @@
 | `levels/usa/places-info.en.json` | места | английские; **в коде не подключён** |
 | `levels/usa/lakes-info.json` | озёра | русские |
 | `levels/usa/contextland-info.json` | `canada` | открывается из контекстного меню по правому клику |
+| `levels/world/zones-info.json` | зоны уровня countries (`esh`, `esh_east`) | правый клик → «Что здесь?»; собирается `scripts/build_zones_info.js` (заголовки статей — в нём) |
 | `levels/usa/airports-info.json` | аэропорты (~144) | + поле `lang` (`ru`/`en`); больше половины только на английском — русской статьи нет |
 | `levels/world/currents-info.json` | течения | русские |
 | `levels/world/cities-info.json` | города мира | поле `lang`; русская статья, иначе английская; грузится для всех уровней, кроме США (США берёт `usa/cities-info.json`); используется на уровне countries |

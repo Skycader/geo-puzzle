@@ -10,11 +10,17 @@ export function buildStateBackground(pieces, opts = {}) {
   const g = document.createElementNS(SVG_NS, 'g');
   // `opts.title(piece) -> string` makes the layer hoverable: each shape gets a native
   // <title> tooltip (used by Overview to name the countries on the world map).
+  // `opts.kind` additionally tags each shape with data-kind/data-id so Overview's
+  // right-click handler can tell which one was hit.
   g.setAttribute('class', 'state-bg-layer' + (opts.title ? ' state-bg-layer-interactive' : ''));
   for (const p of pieces) {
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', p.d);
     path.setAttribute('class', pathClass + (p.inset ? ' state-bg-inset' : ''));
+    if (opts.kind) {
+      path.dataset.kind = opts.kind;
+      path.dataset.id = p.id;
+    }
     if (opts.title) {
       const title = document.createElementNS(SVG_NS, 'title');
       title.textContent = opts.title(p);

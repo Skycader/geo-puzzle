@@ -107,6 +107,12 @@ const CURRENT_LINE_PX = [1, 4]; // [min, max] stroke width
 const CURRENT_HEAD_PX = [2.5, 7]; // [min, max] arrowhead half-width
 const CURRENT_FULL_SIZE_ZOOM = 4;
 const CURRENT_HEAD_D = 'M -1.7 -1 L 0 0 L -1.7 1 Z';
+// Round "?" marker on map-only zones that have a card (Western Sahara…): a click opens it,
+// like the right-click "Что здесь?". Constant screen size; only drawn once zoomed in so the
+// markers don't clutter the map. It sits INFO_MARKER_LIFT_PX above the zone's label point.
+const INFO_MARKER_PX = 18;
+const INFO_MARKER_MIN_ZOOM = 3;
+const INFO_MARKER_LIFT_PX = 16;
 const AIRPORT_ICON_PX = 22;
 // Regional/state airports (data flag `minor`) — ~85 of them — would bury the
 // map: slightly smaller icons, and their IATA codes only appear once zoomed in.
@@ -348,7 +354,8 @@ function loadInfo() {
       fetchJson('./levels/world/currents-info.json'),
       fetchJson('./levels/world/cities-info.json'),
       fetchJson('./levels/world/places-info.json'),
-    ]).then(([cities, places, lakes, contextland, airports, currents, worldCities, worldPlaces]) => ({ cities, places, lakes, contextland, airports, currents, worldCities, worldPlaces }));
+      fetchJson('./levels/world/zones-info.json'),
+    ]).then(([cities, places, lakes, contextland, airports, currents, worldCities, worldPlaces, zones]) => ({ cities, places, lakes, contextland, airports, currents, worldCities, worldPlaces, zones }));
   }
   return _infoLoadPromise;
 }
@@ -438,12 +445,14 @@ export class OverviewBoard {
     this.airportEntries = []; // { id, cx, cy, icon, runway, pointMark, leaderPath, leaderLabel }
     this.airportsById = new Map(); // id -> { data, dotEl }
     // World only (levels/worldCurrents.js): ocean currents as thick arrows.
+    this.infoMarkerEntries = []; // { id, cx, cy, el } — built once the zones' cards have loaded
     this.currentEntries = []; // { id, line, hit, head, label }
     this.currentsById = new Map(); // id -> { data, dotEl }
     this.currentsVisible = opts.currentsVisible !== false;
     this.lakesById = new Map(); // id -> { data, pathEl }
     this.lakeEls = []; // { pathEl, labelEl } — see setLakesVisible
     this.contextLandById = new Map(); // id -> { data } — Canada, see build_usa_level.js's contextLand
+    this.landById = new Map(); // id -> { data } — level.land shapes (world countries / countries-level zones), for right-click "Что здесь?"
     // World's side panel splits level.pieces into three tabs by name
     // instead of USA's states/cities/places (world has no cities/places at
     // all — see _pieceCategory) — 'oceans' first since that's the smallest,
@@ -457,7 +466,7 @@ export class OverviewBoard {
     this._revealQueue = [];
     this._revealScheduled = false;
     this._destroyed = false;
-    this.info = { cities: {}, places: {}, lakes: {}, contextland: {}, airports: {}, currents: {} }; // populated async — see loadInfo()
+    this.info = { cities: {}, places: {}, lakes: {}, contextland: {}, airports: {}, currents: {}, zones: {} }; // populated async — see loadInfo()
     this._openPopupId = null;
     this._infoPopupEl = null;
     this._infoConnectorEl = null;
@@ -575,8 +584,9 @@ export class OverviewBoard {
     if (this.level.land) {
       // Hover names every country; the ones with label points (levels/index.js) also get a
       // permanent name label like any other territory (shown from LABEL_MIN_ZOOM).
-      this.zonesLayer.appendChild(buildStateBackground(this.level.land, { pathClass: 'world-bg-path', title: (p) => bilingualLabel(p) }));
+      this.zonesLayer.appendChild(buildStateBackground(this.level.land, { pathClass: 'world-bg-path', kind: 'land', title: (p) => bilingualLabel(p) }));
       for (const l of this.level.land) {
+        this.landById.set(l.id, { data: l });
         for (const [lx, ly] of l.labelPoints || []) {
           const label = document.createElementNS(SVG_NS, 'text');
           label.setAttribute('x', lx);
@@ -1270,6 +1280,40 @@ export class OverviewBoard {
     for (const entry of this.currentEntries) {
       if (this.info.currents[entry.id]) entry.hit.classList.add('overview-has-info');
     }
+    this._buildInfoMarkers();
+  }
+
+  // "?" markers for the level's `land` shapes that have a card in zones-info.json (see
+  // INFO_MARKER_PX). Built here, not in _build(), because which shapes qualify is only
+  // known once the cards have loaded. Positioned/shown by _rescaleForZoom.
+  _buildInfoMarkers() {
+    if (this.infoMarkerEntries.length) return;
+    for (const l of this.level.land || []) {
+      const at = l.labelPoints?.[0];
+      if (!at || !this.info.zones[l.id]) continue;
+      const el = document.createElementNS(SVG_NS, 'g');
+      el.setAttribute('class', 'overview-info-marker overview-has-info');
+      el.dataset.kind = 'zone';
+      el.dataset.id = l.id;
+      el.style.display = 'none';
+      const disc = document.createElementNS(SVG_NS, 'circle');
+      disc.setAttribute('cx', 12);
+      disc.setAttribute('cy', 12);
+      disc.setAttribute('r', 11);
+      disc.setAttribute('class', 'overview-info-marker-disc');
+      const mark = document.createElementNS(SVG_NS, 'text');
+      mark.setAttribute('x', 12);
+      mark.setAttribute('y', 12);
+      mark.setAttribute('class', 'overview-info-marker-mark');
+      mark.textContent = '?';
+      const title = document.createElementNS(SVG_NS, 'title');
+      title.textContent = t('whatsHereMenuItem');
+      el.append(disc, mark, title);
+      this.pointsLayer.appendChild(el);
+      this.infoMarkerEntries.push({ id: l.id, cx: at[0], cy: at[1], el });
+      this.landById.get(l.id).dotEl = el; // the popup's anchor
+    }
+    this._rescaleForZoom(this.zoomCtl?.getZoom() ?? 1);
   }
 
   _onMapTap(ev) {
@@ -1295,7 +1339,9 @@ export class OverviewBoard {
               ? this.info.airports[id]
               : kind === 'current'
                 ? this.info.currents[id]
-                : null;
+                : kind === 'zone'
+                  ? this.info.zones[id]
+                  : null;
     if (entry) {
       if (this._openPopupId === id) {
         this._closeInfoPopup(); // tapping the same dot again toggles it closed
@@ -1323,11 +1369,13 @@ export class OverviewBoard {
           ? this.lakesById.get(id)
           : kind === 'contextland'
             ? this.contextLandById.get(id)
-            : kind === 'airport'
-              ? this.airportsById.get(id)
-              : kind === 'current'
-                ? this.currentsById.get(id)
-                : this.placesById.get(id);
+            : kind === 'zone'
+              ? this.landById.get(id)
+              : kind === 'airport'
+                ? this.airportsById.get(id)
+                : kind === 'current'
+                  ? this.currentsById.get(id)
+                  : this.placesById.get(id);
     if (!source) return;
     const wrapRect = this.zoomWrap.getBoundingClientRect();
     let dotX, dotY;
@@ -1535,13 +1583,26 @@ export class OverviewBoard {
     // "Канада" menu item below instead of the coords-only label.
     const contextLandId = ev.target?.dataset?.kind === 'contextland' ? ev.target.dataset.id : null;
     const contextLand = contextLandId ? this.contextLandById.get(contextLandId) : null;
+    // Map-only zones (countries level's `land`, e.g. Western Sahara) — "Что здесь?" opens
+    // their card. Only shapes with an entry in zones-info.json get the item.
+    const landId = ev.target?.dataset?.kind === 'land' ? ev.target.dataset.id : null;
+    const land = landId && this.info.zones[landId] ? this.landById.get(landId) : null;
     const category = this._terrainCategoryAt(pt);
     const label = state
       ? itemName(state.data) + (category ? ` — ${this.terrainLabelsByCategory.get(category)}` : '')
       : contextLand
         ? itemName(contextLand.data)
+        : land
+          ? itemName(land.data)
+          : null;
+    // What the menu's info item opens: { kind, id, data, info, text } — the item's text is
+    // the shape's own name for Canada, "Что здесь?" for zones.
+    const infoTarget = contextLand
+      ? { kind: 'contextland', id: contextLand.data.id, data: contextLand.data, info: this.info.contextland[contextLand.data.id], text: itemName(contextLand.data) }
+      : land
+        ? { kind: 'zone', id: land.data.id, data: land.data, info: this.info.zones[land.data.id], text: t('whatsHereMenuItem') }
         : null;
-    this._openContextMenu(ev.clientX, ev.clientY, pt, label, contextLand);
+    this._openContextMenu(ev.clientX, ev.clientY, pt, label, infoTarget);
   }
 
   // Coordinates come from js/geoCoords.js — a different inverse-projection
@@ -1550,20 +1611,20 @@ export class OverviewBoard {
   // asks for whatever nativeToLonLat can figure out; null (a future level
   // with no known projection) degrades to "Добавить точку" still working,
   // with the coordinate-dependent actions disabled rather than crashing.
-  _openContextMenu(clientX, clientY, nativePt, label, contextLand) {
+  _openContextMenu(clientX, clientY, nativePt, label, infoTarget) {
     this._closeContextMenu();
     const coords = nativeToLonLat(this.level, nativePt.x, nativePt.y);
     // Only offer the info item once its wiki entry has actually loaded —
     // same "only clickable things with real content" rule places/cities/
     // lakes already follow (see _applyInfoAvailability).
-    const contextLandInfo = contextLand ? this.info.contextland[contextLand.data.id] : null;
+    const infoItem = infoTarget?.info ? infoTarget : null;
 
     const menu = document.createElement('div');
     menu.className = 'map-context-menu';
     menu.innerHTML = `
       ${label ? `<div class="map-context-menu-label">${label}</div>` : ''}
       <div class="map-context-menu-coords">${coords ? formatLonLat(coords) : t('coordsUnavailable')}</div>
-      ${contextLandInfo ? `<button type="button" class="map-context-menu-item" data-action="info">${itemName(contextLand.data)}</button>` : ''}
+      ${infoItem ? `<button type="button" class="map-context-menu-item" data-action="info">${infoItem.text}</button>` : ''}
       <button type="button" class="map-context-menu-item" data-action="add-point">${t('addPointMenuItem')}</button>
       <button type="button" class="map-context-menu-item" data-action="open-maps"${coords ? '' : ' disabled'}>${t('openInGoogleMaps')}</button>
       <button type="button" class="map-context-menu-item" data-action="copy"${coords ? '' : ' disabled'}>${t('copyCoords')}</button>
@@ -1579,9 +1640,9 @@ export class OverviewBoard {
     menu.style.left = `${Math.min(Math.max(clientX - wrapRect.left, vb.left + 8), maxLeft)}px`;
     menu.style.top = `${Math.min(Math.max(clientY - wrapRect.top, vb.top + 8), maxTop)}px`;
 
-    if (contextLandInfo) {
+    if (infoItem) {
       menu.querySelector('[data-action="info"]').addEventListener('click', () => {
-        this._openInfoPopup('contextland', contextLand.data.id, contextLandInfo, { x: clientX, y: clientY });
+        this._openInfoPopup(infoItem.kind, infoItem.id, infoItem.info, { x: clientX, y: clientY });
         this._closeContextMenu();
       });
     }
@@ -2290,6 +2351,17 @@ export class OverviewBoard {
       entry.leaderPath.style.opacity = labelOn ? '' : '0';
       entry.icon.setAttribute('transform', `translate(${entry.cx} ${entry.cy}) scale(${k.toFixed(5)}) translate(-12 -12)`);
     }
+    // "?" markers: constant screen size, hidden until INFO_MARKER_MIN_ZOOM.
+    for (const m of this.infoMarkerEntries) {
+      if (zoom < INFO_MARKER_MIN_ZOOM) {
+        m.el.style.display = 'none';
+        continue;
+      }
+      m.el.style.display = '';
+      const k = INFO_MARKER_PX / 24 / effScale;
+      const cy = m.cy - INFO_MARKER_LIFT_PX / effScale;
+      m.el.setAttribute('transform', `translate(${m.cx} ${cy.toFixed(3)}) scale(${k.toFixed(5)}) translate(-12 -12)`);
+    }
     // Keeps whichever shields are already showing at a constant screen
     // size DURING a zoom gesture — _updateHighwayShields itself only runs
     // after pan/zoom settles (debounced), so without this they'd stay the
@@ -2344,7 +2416,9 @@ export class OverviewBoard {
     const fontSizeNative = CITY_LABEL_PX / effScale;
     leaderLabel.style.fontSize = `${fontSizeNative.toFixed(2)}px`;
     leaderLabel.style.strokeWidth = `${(CITY_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
-    const textLen = leaderLabel.textContent.length * this._charWidthRatio * fontSizeNative;
+    // The early _rescaleForZoom(1) in _build runs before _calibrateCharWidth: fall back to a
+    // typical monospace ratio for that one pass (the next rescale uses the measured one).
+    const textLen = leaderLabel.textContent.length * (this._charWidthRatio || 0.6) * fontSizeNative;
     const pad = LEADER_PAD_PX / effScale;
     const lineEndX = bendX - textLen - pad * 2;
 

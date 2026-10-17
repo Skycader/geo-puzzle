@@ -1878,6 +1878,22 @@ body {
   stroke-width: 1.7px;
   stroke-linecap: round;
 }
+/* Round "?" marker on map-only zones with a card — theme accent (--neon-cyan follows the
+   colour scheme), drawn in a 24-unit box and scaled to a constant screen size by js. */
+.overview-info-marker { cursor: help; }
+.overview-info-marker-disc {
+  fill: rgba(var(--ink-rgb), 0.85);
+  stroke: var(--neon-cyan);
+  stroke-width: 1.6px;
+}
+.overview-info-marker-mark {
+  fill: var(--neon-cyan);
+  font: 700 15px 'JetBrains Mono', monospace;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+.overview-info-marker:hover .overview-info-marker-disc { fill: rgba(var(--neon-cyan-rgb), 0.25); }
 /* Question-mark cursor marks an airport that has an article to open. */
 .overview-airport-plane.overview-has-info { cursor: help; }
 /* Ocean currents: schematic thick arrows over real paths. */

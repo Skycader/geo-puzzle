@@ -182,6 +182,7 @@ const STRINGS = {
   rulerDistance: { ru: 'Расстояние', en: 'Distance' },
   rulerArea: { ru: 'Площадь', en: 'Area' },
   coordsUnavailable: { ru: 'Координаты недоступны', en: 'Coordinates unavailable' },
+  whatsHereMenuItem: { ru: 'Что здесь?', en: "What's here?" },
   addPointMenuItem: { ru: 'Добавить точку', en: 'Add a point' },
   openInGoogleMaps: { ru: 'Открыть в Google Maps', en: 'Open in Google Maps' },
   copyCoords: { ru: 'Скопировать координаты', en: 'Copy coordinates' },
