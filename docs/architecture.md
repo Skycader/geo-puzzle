@@ -48,6 +48,7 @@
 | `modes.js`, `presets.js`, `constants.js` | реестр режимов и сложностей, пресеты пазла, награды |
 | `i18n.js` | RU/EN: `STRINGS` + `t()`, `LEVEL_EN`/`MODE_EN`…, `itemName()`/`bilingualLabel()` |
 | `*Board.js` (13 шт.) | по одному на режим (см. выше); `overviewBoard.js` — самый большой, см. [overview-mode.md](overview-mode.md) |
+| `viewUrl.js` | камера Overview ↔ хэш URL (`#overview?level=…&z=…&x=…&y=…`): чтение, запись, очистка; см. [overview-mode.md](overview-mode.md) |
 | `zoomPan.js` | зум/панорама: двигает `viewBox` SVG (без CSS-масштабирования), `createZoomWrap`, кнопки зума, масштабная линейка |
 | `mapBackground.js`, `pieceShape.js`, `utils.js`, `geoCoords.js` | фоновый контур, сдвиг путей, общие функции, координаты холста → широта/долгота |
 | `eligibilityList.js`, `listWidgets.js` | чек-лист допустимых объектов; общие виджеты списков (маркеры ★/◆, поиск с крестиком) |

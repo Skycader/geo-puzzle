@@ -21,6 +21,12 @@
       } catch (e) {}
     })();
   </script>
+  <!-- A reload on an Overview link (#overview?…, see js/viewUrl.js) would paint the menu
+       until js/game.js restores the map — this class keeps the menu hidden meanwhile;
+       Game._restoreOverviewFromUrl removes it again (also when the link turns out invalid). -->
+  <script>
+    if (location.hash.indexOf('#overview?') === 0) document.documentElement.classList.add('restoring-view');
+  </script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>

@@ -33,6 +33,7 @@ import {
   JOURNEY_DIFFICULTIES,
 } from './modes.js';
 import { playClick } from './audio.js';
+import { readOverviewView, writeOverviewView, clearOverviewView } from './viewUrl.js';
 import { loadSuccessStats } from './successStats.js';
 import { downloadProgressExport, importProgressFile } from './dataPortability.js';
 import {
@@ -256,6 +257,26 @@ export class Game {
     // choice on first paint, not just RU.
     this._applyMenuTranslations();
     this._bindEvents();
+    this._restoreOverviewFromUrl();
+  }
+
+  // A hash like #overview?level=countries&z=3.3&x=345&y=210 (js/viewUrl.js) reopens that
+  // Overview view directly, skipping the menu; the board applies the camera itself.
+  _restoreOverviewFromUrl() {
+    const view = readOverviewView(this.levels);
+    if (!view) {
+      document.documentElement.classList.remove('restoring-view'); // see index.html
+      return;
+    }
+    this.levelId = view.levelId;
+    this.modeId = 'overview';
+    this._pendingOverviewView = view;
+    this._applyMenuTranslations(); // re-render the cards so the menu matches when the player goes back
+    try {
+      this.startGame();
+    } finally {
+      document.documentElement.classList.remove('restoring-view'); // startGame hides the menu itself
+    }
   }
 
   // Reads the persisted global color-scheme choice ('blue' default — the
@@ -1531,6 +1552,7 @@ export class Game {
     this.el.winBar.hidden = true;
     this.el.hud.hidden = false;
     this._showSourceButtons([]); // only Overview offers layer sources — it re-enables its own
+    if (this.modeId !== 'overview') clearOverviewView(); // only Overview keeps its camera in the URL
 
     if (this.board) this.board.destroy();
 
@@ -2042,8 +2064,12 @@ export class Game {
     // map's own scale no longer needs to account for it — same calculation
     // as every other mode.
     const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
+    const initialView = this._pendingOverviewView;
+    this._pendingOverviewView = null;
     this.board = new OverviewBoard(this.el.boardContainer, level, {
       scale,
+      initialView,
+      onViewChange: (view) => writeOverviewView(level.id, view),
       labelsVisible: this.labelsVisible,
       citiesVisible: this.citiesVisible,
       placesVisible: this.placesVisible,
@@ -2263,6 +2289,7 @@ export class Game {
   }
 
   _goMenu() {
+    clearOverviewView();
     clearInterval(this.timerHandle);
     if (this.board) {
       this.board.destroy();

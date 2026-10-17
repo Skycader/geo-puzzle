@@ -256,6 +256,8 @@
    [hidden]{display:none}, so without !important here they'd stay visible
    even while hidden. */
 [hidden] { display: none !important; }
+/* Set by an inline script in index.html while an Overview link is being restored. */
+.restoring-view #screen-menu { display: none; }
 
 html, body {
   margin: 0;

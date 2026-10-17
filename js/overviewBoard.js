@@ -393,6 +393,11 @@ export class OverviewBoard {
     this.scale = opts.scale || 1;
     this.labelsVisible = opts.labelsVisible !== false;
     this.citiesVisible = opts.citiesVisible !== false;
+    // Camera <-> URL (js/viewUrl.js): `initialView` {zoom, x, y} is applied once the zoom
+    // controller exists; `onViewChange` gets the same shape whenever the view settles.
+    this.initialView = opts.initialView || null;
+    this.onViewChange = opts.onViewChange || null;
+    this._viewTracking = false;
     this.allLabelEls = [];
     this.stateLabels = []; // { el }
     // Cities are virtualized — only ones within the visible map area (plus
@@ -1070,8 +1075,22 @@ export class OverviewBoard {
       onVisibleRectChange: (rect) => {
         this._updateVisibleCities(rect);
         this._updateHighwayShields(rect);
+        this._notifyView(rect);
       },
     });
+    // Restore the camera from the URL (if any), then start reporting it. The first
+    // onVisibleRectChange above fires inside attachZoomPan, before this.zoomCtl exists —
+    // hence the _viewTracking gate — so the starting view is reported here explicitly.
+    if (this.initialView) {
+      const { zoom, x, y } = this.initialView;
+      this.zoomCtl.focusOn(x, y, zoom);
+      this._viewTracking = true;
+      this._notifyView({ x0: x, y0: y, x1: x, y1: y });
+    } else {
+      const [hx, hy, hw, hh] = this.svg.getAttribute('viewBox').trim().split(/\s+/).map(Number);
+      this._viewTracking = true;
+      this._notifyView({ x0: hx, y0: hy, x1: hx + hw, y1: hy + hh });
+    }
     // Appended to this.container (#board-container), not this.zoomWrap —
     // .zoom-wrap is deliberately oversized by "cover" fit and gets
     // clipped, so a position:absolute child anchored to ITS edges can
@@ -1252,6 +1271,11 @@ export class OverviewBoard {
     } else {
       this._revealScheduled = false;
     }
+  }
+
+  _notifyView(rect) {
+    if (!this._viewTracking || !this.onViewChange) return;
+    this.onViewChange({ zoom: this.zoomCtl.getZoom(), x: (rect.x0 + rect.x1) / 2, y: (rect.y0 + rect.y1) / 2 });
   }
 
   // ---------------- click-to-info popup (cities/places only, states excluded) ----------------
