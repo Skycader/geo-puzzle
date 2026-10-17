@@ -765,8 +765,7 @@ const pieces = [
       ]
     ],
     "neighbors": [
-      "dza",
-      "esh"
+      "dza"
     ]
   },
   {
@@ -3578,8 +3577,7 @@ const pieces = [
       "tun",
       "mli",
       "ner",
-      "mrt",
-      "esh"
+      "mrt"
     ]
   },
   {
@@ -4710,8 +4708,7 @@ const pieces = [
     "neighbors": [
       "mli",
       "sen",
-      "dza",
-      "esh"
+      "dza"
     ]
   },
   {
@@ -5975,7 +5972,10 @@ const pieces = [
       "ukr",
       "mda"
     ]
-  },
+  }
+];
+
+const zones = [
   {
     "id": "esh",
     "name": "Western Sahara",
@@ -5995,11 +5995,27 @@ const pieces = [
         535.2,
         211.7
       ]
+    ]
+  },
+  {
+    "id": "esh_east",
+    "name": "Free Zone",
+    "ru": "Свободная зона",
+    "cx": 546.5,
+    "cy": 203.2,
+    "bbox": [
+      543.3,
+      199.5,
+      548.2,
+      204.8
     ],
-    "neighbors": [
-      "mar",
-      "dza",
-      "mrt"
+    "area": 14601,
+    "d": "M 546.54,201.32 L 543.33,204.80 L 543.32,204.82 L 543.35,204.82 L 546.25,204.82 L 548.14,204.82 L 548.22,204.76 L 548.22,200.69 L 548.22,199.50 L 547.87,199.87 L 547.93,200.13 L 547.83,200.45 L 547.99,200.99 L 547.86,201.22 L 547.20,201.31 Z",
+    "labelPoints": [
+      [
+        546.5,
+        203.2
+      ]
     ]
   }
 ];
@@ -6007,11 +6023,11 @@ const pieces = [
 export default {
   id: 'countries',
   title: 'Страны мира',
-  subtitle: '211 стран',
+  subtitle: '210 стран',
   canvas: { width: 1152, height: 576 },
   kmPerUnit: 34.787499999999994,
   pieces,
-  land: [],
+  land: zones,
   cities: [],
   places: [],
 };

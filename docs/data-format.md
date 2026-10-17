@@ -16,7 +16,7 @@
 | `projection` | usa | Альберс (`phi1Deg 29.5`, `phi2Deg 45.5`, `phi0Deg 23`, `lambda0Deg -96`, `scale`, `minX/minY`, `marginPx`) — по нему `geoCoords.js` возвращает широту/долготу; Аляска считается тем же Альберсом, Гавайи — локальной проекцией в истинном положении и масштабе |
 | `contextLand` | usa | массив из одной фигуры Канады (только контекст, не `piece`) |
 | `pieces` | все | основные объекты уровня: штаты / акватории / страны |
-| `land` | world | страны как фон (`~258`); у `countries` поле пустое |
+| `land` | world, countries | world: страны как фон (~258); countries: «зоны» — территории, которые рисуются и подписываются, но не страны (Западная Сахара, Свободная зона; список `ZONE_IDS` в `build_countries_level.js`), в играх, списках и счётчиках не участвуют |
 | `cities`, `places`, `lakes`, `highways`, `airports`, `routeGraph` | usa | см. ниже |
 | `currents` | world | см. ниже |
 | `cities`, `places` | countries | города мира (~247) и места (~1) — только на «Страны мира»; подключаются в `levels/index.js` из `worldCities.js` / `worldPlaces.js`; см. «Города мира» ниже |

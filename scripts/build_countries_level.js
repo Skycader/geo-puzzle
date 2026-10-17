@@ -17,9 +17,11 @@
 //   TYPE=='Sovereign country' in the base file; Kosovo/Palestine are
 //   TYPE=='Disputed'/'Indeterminate' there and need explicit promotion).
 //   Merged into the controlling country: Crimea -> Russia, N. Cyprus ->
-//   Turkey, the Moroccan-controlled ~85% of Western Sahara -> Morocco (the
-//   remainder is left out entirely, no piece — see the Sahara section
-//   below). Left untouched (matches the base data already, no separate
+//   Turkey. Western Sahara is NOT a country piece: its two halves (west of
+//   the Moroccan wall, and the "Free Zone" east of it) are map-only ZONES
+//   (`land` in the output — drawn, named on hover and labelled in Overview,
+//   but not part of any game, list or country count; see ZONE_IDS and the
+//   Sahara section below). Left untouched (matches the base data already, no separate
 //   piece): Nagorno-Karabakh, Kurdish regions, tribal/rebel zones.
 //
 // Western Sahara: no dataset traces the Moroccan Berm/Wall as a line, so
@@ -33,6 +35,16 @@
 // — deliberate, per direction). Regenerating it means re-picking that clip
 // polygon, not re-running this script.
 //
+// Both halves are zones, not countries: the west half (the clip) is "Западная
+// Сахара" (esh), the east half "Свободная зона" (esh_east).
+// The part of Western Sahara east of that wall is the clip's complement:
+// scripts/data/world-w-sahara-east.geojson, from
+//   npx mapshaper w-sahara-only.geojson -erase sahara-morocco-clip.geojson -o w-sahara-east.geojson
+// (the zero-area slivers the erase leaves along the clip edge were dropped by
+// hand, keeping the one real ring). Without it that strip was a hole that
+// read as water on the map. It is small (~1.2 sq. degrees) because the rough
+// clip puts most of the territory on the Moroccan side.
+//
 // Regenerate: node scripts/build_countries_level.js
 const fs = require('fs');
 const path = require('path');
@@ -40,9 +52,11 @@ const path = require('path');
 const LAND_SRC = path.join(__dirname, 'data', 'world-countries-simplified.geojson');
 const EXTRA_SRC = path.join(__dirname, 'data', 'world-countries-extra.geojson');
 const SAHARA_SRC = path.join(__dirname, 'data', 'world-w-sahara-morocco.geojson');
+const SAHARA_EAST_SRC = path.join(__dirname, 'data', 'world-w-sahara-east.geojson');
 const land = JSON.parse(fs.readFileSync(LAND_SRC, 'utf8'));
 const extra = JSON.parse(fs.readFileSync(EXTRA_SRC, 'utf8'));
 const sahara = JSON.parse(fs.readFileSync(SAHARA_SRC, 'utf8'));
+const saharaEast = JSON.parse(fs.readFileSync(SAHARA_EAST_SRC, 'utf8'));
 
 // ---- projection + geometry helpers (copied verbatim from
 // build_world_seas.js — same equirectangular projection/antimeridian/pole
@@ -433,7 +447,14 @@ const ENTITY_OVERRIDE = {
   Abkhazia: { id: 'abkhazia', name: 'Abkhazia', ru: 'Абхазия' },
   'South Ossetia': { id: 'south_ossetia', name: 'South Ossetia', ru: 'Южная Осетия' },
   Transnistria: { id: 'transnistria', name: 'Transnistria', ru: 'Приднестровье' },
+  // Zones, not countries — see ZONE_IDS.
+  'W. Sahara (Morocco)': { id: 'esh', name: 'Western Sahara', ru: 'Западная Сахара' },
+  'W. Sahara (East)': { id: 'esh_east', name: 'Free Zone', ru: 'Свободная зона' },
 };
+// Ids that are drawn on the map but are NOT countries: split out of `pieces` into the
+// level's `land` background (rendered by Overview with hover name + label, ignored by
+// every game, list and counter). Add a territory here to demote it.
+const ZONE_IDS = new Set(['esh', 'esh_east']);
 // Explicitly promoted from the base file's Disputed/Indeterminate bucket
 // (everything else in that bucket — Antarctica, ice fields, buffer zones,
 // military leases, disputed reefs — is left out entirely).
@@ -501,11 +522,7 @@ function addFeature(f, key) {
 for (const f of included) addFeature(f, f.properties.NAME);
 for (const f of extra.features) addFeature(f, f.properties.BRK_NAME);
 for (const f of sahara.features) addFeature(f, 'W. Sahara (Morocco)');
-// The Moroccan Sahara clip has no ENTITY_OVERRIDE entry above (it's keyed
-// by a synthetic string no real feature ever has) — route it into
-// Morocco's own entry explicitly, same merge-by-id trick, without adding
-// a fourth lookup key that could accidentally collide with a real NAME.
-ENTITY_OVERRIDE['W. Sahara (Morocco)'] = { id: 'mar', name: 'Morocco', ru: 'Марокко' };
+for (const f of saharaEast.features) addFeature(f, 'W. Sahara (East)');
 
 // The area-weighted AVERAGE across every part (initially used here) still
 // has the exact same failure mode as a bbox midpoint for archipelago
@@ -521,7 +538,7 @@ function dominantPartCentroid(parts) {
   return parts.reduce((a, b) => (b.area > a.area ? b : a));
 }
 
-const pieces = [...merged.values()].map((e) => {
+const allPieces = [...merged.values()].map((e) => {
   const centroid = dominantPartCentroid(e.parts);
   const labelPoints = computeLabelPoints(e.rawPoints, e.parts, centroid);
   const labelSuffixes = attachExclaveSuffixes(e, centroid, labelPoints);
@@ -546,6 +563,8 @@ const pieces = [...merged.values()].map((e) => {
   if (labelSuffixes.some((s) => s)) piece.labelSuffixes = labelSuffixes;
   return piece;
 });
+const pieces = allPieces.filter((p) => !ZONE_IDS.has(p.id));
+const zones = allPieces.filter((p) => ZONE_IDS.has(p.id));
 
 // ---- neighbor adjacency: same sampled-point proximity test as
 // scripts/build_usa_level.js, run against this level's own pieces.
@@ -682,6 +701,10 @@ for (const p of pieces) {
   delete p._rawPoints;
   delete p._parts;
 }
+for (const z of zones) {
+  delete z._rawPoints;
+  delete z._parts;
+}
 
 const exclaveLines = [];
 for (const p of pieces) {
@@ -691,7 +714,7 @@ for (const p of pieces) {
 console.error(`exclave labels found (${exclaveLines.length}):`);
 console.error(exclaveLines.join('\n'));
 
-console.error('countries:', pieces.length);
+console.error('countries:', pieces.length, '| zones:', zones.map((z) => z.ru).join(', '));
 console.error('no-neighbor pieces (islands — fine, excluded from "Назови соседа" automatically):', pieces.filter((p) => !p.neighbors.length).map((p) => p.ru).join(', '));
 // Looked up by .ru rather than a guessed id — several countries (France,
 // Somaliland, N. Cyprus…) have ISO_A3 === '-99' in this dataset and fall
@@ -716,6 +739,7 @@ out += `// build script's own comments for the territory ruling and projection\n
 out += `// tradeoffs (kmPerUnit is an equator-based approximation).\n`;
 out += `// Regenerate: node scripts/build_countries_level.js\n`;
 out += `const pieces = ${JSON.stringify(pieces, null, 2)};\n\n`;
+out += `const zones = ${JSON.stringify(zones, null, 2)};\n\n`;
 out += `export default {\n`;
 out += `  id: 'countries',\n`;
 out += `  title: 'Страны мира',\n`;
@@ -723,7 +747,7 @@ out += `  subtitle: '${pieces.length} стран',\n`;
 out += `  canvas: { width: ${CANVAS_W}, height: ${CANVAS_H} },\n`;
 out += `  kmPerUnit: ${KM_PER_UNIT},\n`;
 out += `  pieces,\n`;
-out += `  land: [],\n`;
+out += `  land: zones,\n`;
 out += `  cities: [],\n`;
 out += `  places: [],\n`;
 out += `};\n`;

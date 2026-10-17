@@ -34,7 +34,7 @@ import countries from './countries.js';
 // fields, tiny territories) stay tooltip-only so the map isn't buried. Antarctica and
 // Israel (absent from the countries level) are labelled at their own centers.
 const countryMatch = new Map();
-for (const p of countries.pieces) {
+for (const p of [...countries.pieces, ...countries.land]) {
   countryMatch.set(p.id, p);
   countryMatch.set('ru:' + p.ru, p);
 }
