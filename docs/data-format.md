@@ -101,6 +101,13 @@
 | `levels/usa/lakes-info.json` | озёра | русские |
 | `levels/usa/contextland-info.json` | `canada` | открывается из контекстного меню по правому клику |
 | `levels/world/zones-info.json` | зоны уровня countries (`esh`, `esh_east`) | правый клик → «Что здесь?»; собирается `scripts/build_zones_info.js` (заголовки статей — в нём) |
+
+**Картинки карточек.** Поле `image` в `*-info.json` — обычно прямая ссылка на `upload.wikimedia.org`
+(миниатюра статьи, грузится из сети). Свои файлы лежат в `assets/` и указываются путём `assets/<имя>`:
+`assets/kapa'a.jpg` (карточка Капаа) и `assets/western_sahara_landscape.jpg` — «Western sahara landscape»,
+автор bob rayner, **CC BY 2.0**, Wikimedia Commons (карточка Западной Сахары; в `build_zones_info.js`
+закреплена полем `image`, чтобы пересборка её не затёрла). CC BY требует указания автора — в самой
+карточке подписи нет, только здесь.
 | `levels/usa/airports-info.json` | аэропорты (~144) | + поле `lang` (`ru`/`en`); больше половины только на английском — русской статьи нет |
 | `levels/world/currents-info.json` | течения | русские |
 | `levels/world/cities-info.json` | города мира | поле `lang`; русская статья, иначе английская; грузится для всех уровней, кроме США (США берёт `usa/cities-info.json`); используется на уровне countries |

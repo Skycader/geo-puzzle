@@ -6,8 +6,12 @@
 const fs = require('fs');
 const path = require('path');
 
+// id -> Russian Wikipedia article title, or { title, image } to use a local picture (a path
+// under assets/) instead of the article's thumbnail.
 const ZONES = {
-  esh: 'Западная Сахара',
+  // assets/western_sahara_landscape.jpg: "Western sahara landscape.jpg" by bob rayner (CC BY 2.0),
+  // Wikimedia Commons — a landscape instead of the article's map thumbnail.
+  esh: { title: 'Западная Сахара', image: 'assets/western_sahara_landscape.jpg' },
   esh_east: 'Свободная зона (Западная Сахара)',
 };
 
@@ -32,7 +36,8 @@ const thumb = (u) => (u ? u.replace('https://thumb.wikimedia.org/', 'https://upl
 (async () => {
   const outPath = path.join(__dirname, '..', 'levels', 'world', 'zones-info.json');
   const out = {};
-  for (const [id, title] of Object.entries(ZONES)) {
+  for (const [id, zone] of Object.entries(ZONES)) {
+    const { title, image } = typeof zone === 'string' ? { title: zone } : zone;
     // Plain-text lead section (the REST summary of a short article is a single sentence)
     // plus the REST summary for the thumbnail and canonical URL.
     const q = await getJson(
@@ -44,7 +49,7 @@ const thumb = (u) => (u ? u.replace('https://thumb.wikimedia.org/', 'https://upl
       .replace(/\s*\n+\s*/g, ' ')
       .trim();
     const s = await getJson(`https://ru.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, '_'))}`);
-    out[id] = { extract: clip(extract), image: thumb(s.thumbnail?.source) || thumb(s.originalimage?.source), wikiUrl: s.content_urls.desktop.page };
+    out[id] = { extract: clip(extract), image: image || thumb(s.thumbnail?.source) || thumb(s.originalimage?.source), wikiUrl: s.content_urls.desktop.page };
     console.error(id, '-', out[id].extract.length, 'chars');
     await sleep(400);
   }
