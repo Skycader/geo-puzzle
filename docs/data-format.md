@@ -19,7 +19,7 @@
 | `land` | world, countries | world: страны как фон (~258); countries: «зоны» — территории, которые рисуются и подписываются, но не страны (Западная Сахара, Свободная зона; список `ZONE_IDS` в `build_countries_level.js`), в играх, списках и счётчиках не участвуют |
 | `cities`, `places`, `lakes`, `highways`, `airports`, `routeGraph` | usa | см. ниже |
 | `currents` | world | см. ниже |
-| `cities`, `places` | countries | города мира (~247) и места (~1) — только на «Страны мира»; подключаются в `levels/index.js` из `worldCities.js` / `worldPlaces.js`; см. «Города мира» ниже |
+| `cities`, `places` | countries | города мира (~247) и места (~3) — только на «Страны мира»; подключаются в `levels/index.js` из `worldCities.js` / `worldPlaces.js`; см. «Города мира» ниже |
 
 ### `pieces[]`
 

@@ -20,6 +20,11 @@ const PLACES = [
   // Settlement on the Russia–North Korea border (Tumen River), the southernmost
   // settlement of the Russian Far East; coordinates from Wikipedia's own record.
   ['khasan', 'Khasan', 'Хасан', 42.42833, 130.64556],
+  // Joint Security Area in the Korean DMZ, where the two Koreas hold talks; Wikipedia's coordinates.
+  ['panmunjom', 'Panmunjom', 'Пханмунджом', 37.956, 126.677],
+  // Unification observatory at the confluence of the Han and Imjin rivers, looking over the DMZ at
+  // North Korea; coordinates from the Korean Wikipedia article (the only language that has one).
+  ['odusan', 'Odusan Unification Observatory', 'Обзорная вышка Одусан', 37.773139, 126.67725],
 ];
 
 // Natural Earth gives these countries an ISO code of -99 / a code that doesn't match

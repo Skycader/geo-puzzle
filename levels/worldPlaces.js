@@ -2,4 +2,6 @@
 // Regenerate: node scripts/build_world_cities.js
 export default [
   { id: 'khasan', name: 'Khasan', ru: 'Хасан', cx: 994.1, cy: 152.2, radiusKm: 2 },
+  { id: 'panmunjom', name: 'Panmunjom', ru: 'Пханмунджом', cx: 981.4, cy: 166.5, radiusKm: 2 },
+  { id: 'odusan', name: 'Odusan Unification Observatory', ru: 'Обзорная вышка Одусан', cx: 981.4, cy: 167.1, radiusKm: 2 },
 ];
