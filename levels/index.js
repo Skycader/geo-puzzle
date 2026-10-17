@@ -11,6 +11,8 @@ import usaLakes from './usaLakes.js';
 import usaAirports from './usaAirports.js';
 import world from './world.js';
 import worldCurrents from './worldCurrents.js';
+import worldCities from './worldCities.js';
+import worldPlaces from './worldPlaces.js';
 import countries from './countries.js';
 
 // usaCities.js/usaPlaces.js/usaHighways.js/usaHawaiiHighways.js/
@@ -27,8 +29,8 @@ import countries from './countries.js';
 // road names not being part of the Interstate numbering scheme at all).
 export const levels = {
   usa: { ...usa, cities: usaCities, places: usaPlaces, highways: [...usaHighways, ...usaHawaiiHighways], routeGraph: usaRouteGraph, lakes: usaLakes, airports: usaAirports },
-  world: { ...world, currents: worldCurrents },
-  countries,
+  world: { ...world, currents: worldCurrents, cities: worldCities, places: worldPlaces },
+  countries: { ...countries, cities: worldCities, places: worldPlaces },
 };
 
 export default levels;

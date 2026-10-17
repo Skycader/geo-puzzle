@@ -27,6 +27,9 @@
 | `extract_airport_runways.js` | `_airports.csv`, `_runways.csv` (качать вручную, **затем удалить**, ~16 МБ) | `scripts/data/airport-runways.generated.json` | список IATA — константа `IATA` в скрипте; ВПП без обоих концов отбрасываются |
 | `build_usa_airports.js` | `airport-runways.generated.json` | `levels/usaAirports.js` | таблица `NAMES` (RU/EN), множество `MINOR` (регион./вертолёт) — в скрипте |
 | `build_airports_info.js` | сеть (Википедия) | `levels/usa/airports-info.json` | через langlink на русскую статью, иначе английская (`lang`); **возобновляемый**; `node scripts/build_airports_info.js ATL JFK` — только перечисленные коды; Википедия лимитирует частоту → при `FAILED` перезапустить |
+| `extract_world_cities.js` | `_ne_populated_places.geojson` (Natural Earth 10m, ~19 МБ: качать вручную, **затем удалить**) | `scripts/data/world-cities-source.json` | все столицы (`Admin-0 capital`) + города от `MIN_BIG_POP` (4 млн); ручные поправки в начале скрипта (не-столицы, пригороды, переименования) |
+| `build_world_cities.js` | `world-cities-source.json`, `levels/countries.js` (русские названия стран) | `levels/worldCities.js`, `levels/worldPlaces.js` | список мест `PLACES` — в скрипте |
+| `build_world_cities_info.js` | сеть (Wikidata + Википедия) | `levels/world/cities-info.json` | возобновляемый; `node scripts/build_world_cities_info.js moscow paris` — только перечисленные id |
 | `build_world_currents.js` | сеть (NOAA ERDDAP, OSCAR) | `levels/worldCurrents.js` | массив `CURRENTS` (id, имя, `temp`, `box`, `seed`, `cutAtEastmost`); усредняет срезы, ведёт линию тока, сглаживает |
 
 Все `levels/*.js`-выходы начинаются с комментария «Auto-generated … Regenerate:».
@@ -56,6 +59,7 @@
 | Города (площади, силуэты) | US Census Bureau: Gazetteer Files 2024, Cartographic Boundary Files | общественное достояние |
 | Шоссе | US Census Bureau TIGER/Line 2023 (Primary Roads; Hawaii — Primary & Secondary Roads) | общественное достояние |
 | Озёра, моря, океаны, страны | Natural Earth (`ne_10m_lakes`, marine polys 110m/10m, admin-0 10m, disputed areas) | общественное достояние |
+| Города мира | Natural Earth «Populated places» 10m (названия RU/EN, координаты, население `POP_MAX`) | общественное достояние |
 | Рельеф | EPA/CEC «Level I Ecoregions of North America» | открытые данные |
 | Аэропорты и ВПП | OurAirports (`airports.csv`, `runways.csv`) | общественное достояние |
 | Деление аэропортов (для справки; в данные не вшито) | FAA, таблица enplanements CY2025 и NPIAS 2025–2029 | открытые данные FAA |

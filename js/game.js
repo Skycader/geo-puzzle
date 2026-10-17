@@ -791,10 +791,14 @@ export class Game {
 
   // Shows the source icon only on rows whose layer is actually on offer for
   // the current level (called from _startOverview), and drops any open note.
-  _showSourceButtons(keys) {
+  _showSourceButtons(keys, remap = {}) {
     for (const note of this.el.settingsFlyoutMenu.querySelectorAll('.source-note')) note.remove();
     for (const btn of this.el.settingsFlyoutMenu.querySelectorAll('.source-btn')) {
-      btn.hidden = !keys.includes(btn.dataset.source);
+      // `keys` use the row's own (base) key; `remap` points a row at a different
+      // source for this level (e.g. world cities vs USA cities).
+      const base = btn.dataset.base || (btn.dataset.base = btn.dataset.source);
+      btn.dataset.source = remap[base] || base;
+      btn.hidden = !keys.includes(base);
       btn.classList.remove('active');
     }
   }
@@ -2015,7 +2019,8 @@ export class Game {
         level.airports?.length && 'airports',
         level.currents?.length && 'currents',
         level.id === 'usa' && 'terrain',
-      ].filter(Boolean)
+      ].filter(Boolean),
+      level.id === 'usa' ? {} : { cities: 'worldCities', places: 'worldPlaces' }
     );
     this.el.quizPrompt.hidden = true;
 

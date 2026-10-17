@@ -57,6 +57,8 @@ const STRINGS = {
   markerShape: { ru: 'Показан по реальной границе города, а не точкой', en: 'Drawn with its real city boundary, not as a dot' },
   eligColName: { ru: 'Название', en: 'Name' },
   eligColArea: { ru: 'Площадь', en: 'Area' },
+  eligColPop: { ru: 'Население', en: 'Population' },
+  popUnit: { ru: 'чел.', en: 'people' },
   eligNothingFound: { ru: 'Ничего не найдено', en: 'Nothing found' },
   eligFamiliarity: { ru: 'Знакомство с картой', en: 'Map familiarity' },
   eligSuccesses: { ru: 'Успехов', en: 'Successes' },

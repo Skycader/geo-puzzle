@@ -19,6 +19,21 @@ export const SOURCES = {
       { label: L('Cartographic Boundary Files', 'Cartographic Boundary Files'), url: 'https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html' },
     ],
   },
+  worldCities: {
+    name: L('Natural Earth', 'Natural Earth'),
+    desc: L(
+      'Столицы всех государств и крупнейшие города мира (от ~4 млн жителей) — слой Natural Earth «Populated places» (10m). Население — оценка Natural Earth (максимальная из оценок, примерно). Русские названия — оттуда же, часть исправлена вручную; описания — из Википедии.',
+      'Capitals of all states and the world\'s biggest cities (about 4 million people and up) — the Natural Earth "Populated places" layer (10m). Population is Natural Earth\'s estimate (the largest of its figures, approximate). Names come from it too, some fixed by hand; descriptions from Wikipedia.'
+    ),
+    license: L('Natural Earth — общественное достояние; тексты Википедии — CC BY-SA 4.0', 'Natural Earth is public domain; Wikipedia text is CC BY-SA 4.0'),
+    links: [{ label: L('Natural Earth — Populated Places', 'Natural Earth — Populated Places'), url: 'https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-populated-places/' }],
+  },
+  worldPlaces: {
+    name: L('Википедия', 'Wikipedia'),
+    desc: L('Координаты и описание — из статьи Википедии.', 'Coordinates and description come from the Wikipedia article.'),
+    license: L('Тексты — CC BY-SA 4.0, изображения — лицензии Wikimedia Commons', 'Text is CC BY-SA 4.0; images carry their Wikimedia Commons licenses'),
+    links: [{ label: L('Википедия', 'Wikipedia'), url: 'https://ru.wikipedia.org/' }],
+  },
   places: {
     name: L('Википедия', 'Wikipedia'),
     desc: L(

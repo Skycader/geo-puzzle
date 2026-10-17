@@ -125,6 +125,7 @@ python scripts/dev_server.py 5720     # порт по умолчанию 5720
 |---|---|
 | добавить город / место | `scripts/build_usa_cities.js` (список `CITIES` + `RADIUS_KM`) или `build_usa_places.js` (`PLACES`), текст карточки в `levels/usa/cities-info.json` / `places-info.json`, затем перегенерировать |
 | добавить аэропорт | `scripts/extract_airport_runways.js` (список IATA) → `build_usa_airports.js` (`NAMES`) → `build_airports_info.js`; см. [data-pipeline.md](data-pipeline.md) |
+| добавить город мира / место на мировой карте | `scripts/extract_world_cities.js` (правила отбора) и `scripts/build_world_cities.js` (список `PLACES`), затем `build_world_cities_info.js`; см. [data-pipeline.md](data-pipeline.md) |
 | добавить течение | `scripts/build_world_currents.js` (массив `CURRENTS`), карточка в `levels/world/currents-info.json` |
 | добавить новый слой/вкладку в «Обзор» | рецепт в [overview-mode.md](overview-mode.md) |
 | добавить новый режим | `js/modes.js` (запись + `MENU_ORDER`), новый `js/<имя>Board.js`, `_start<Имя>` и ветка в `startGame()` в `js/game.js` |

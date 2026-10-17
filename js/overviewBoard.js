@@ -57,6 +57,15 @@ const LABEL_MIN_ZOOM = 3;
 const CITY_LABEL_PX = 10;
 const CITY_LABEL_STROKE_PX = 2.5;
 const CITY_DOT_STROKE_PX = 1;
+// World-map cities (levels/worldCities.js) have a population but no real land
+// area, so instead of a true-to-scale circle they get a constant-size dot, and
+// the less populous the city the later (higher zoom) its name appears.
+const WORLD_CITY_DOT_PX = 3.5;
+const CITY_FOCUS_RADIUS_KM = 250; // close-up radius for a city that has no area
+function cityMinLabelZoom(c) {
+  const z = c.pop >= 5e6 ? 0 : c.pop >= 1.5e6 ? 2 : 3.5;
+  return c.capital ? Math.min(z, 2.5) : z;
+}
 
 // City name labels hang off a leader line from the dot's exact center
 // (point-mark -> diagonal -> horizontal, text above the horizontal run) —
@@ -332,7 +341,9 @@ function loadInfo() {
       fetchJson('./levels/usa/contextland-info.json'),
       fetchJson('./levels/usa/airports-info.json'),
       fetchJson('./levels/world/currents-info.json'),
-    ]).then(([cities, places, lakes, contextland, airports, currents]) => ({ cities, places, lakes, contextland, airports, currents }));
+      fetchJson('./levels/world/cities-info.json'),
+      fetchJson('./levels/world/places-info.json'),
+    ]).then(([cities, places, lakes, contextland, airports, currents, worldCities, worldPlaces]) => ({ cities, places, lakes, contextland, airports, currents, worldCities, worldPlaces }));
   }
   return _infoLoadPromise;
 }
@@ -458,7 +469,8 @@ export class OverviewBoard {
     this._build();
     loadInfo().then((info) => {
       if (this._destroyed) return;
-      this.info = info;
+      // The world and countries levels use the world cities/places cards, not the USA ones.
+      this.info = this.level.id === 'usa' ? info : { ...info, cities: info.worldCities, places: info.worldPlaces };
       this._applyInfoAvailability();
     });
   }
@@ -810,7 +822,8 @@ export class OverviewBoard {
       // see scripts/build_usa_cities.js) — fixed in native units so it
       // grows/shrinks with zoom exactly like the state borders do, instead
       // of the artificial constant-screen-px sizing used for labels/etc.
-      const radiusNative = c.radiusKm / this.level.kmPerUnit;
+      const fixedDot = c.radiusKm == null; // world city: no area, constant-size dot (set in _styleCityEntry)
+      const radiusNative = fixedDot ? 0 : c.radiusKm / this.level.kmPerUnit;
 
       const dot = document.createElementNS(SVG_NS, 'circle');
       dot.setAttribute('cx', c.cx);
@@ -839,7 +852,7 @@ export class OverviewBoard {
       leaderLabel.textContent = itemName(c);
       this.allLabelEls.push(leaderLabel);
 
-      const entry = { id: c.id, cx: c.cx, cy: c.cy, dot, pointMark, leaderPath, leaderLabel, appended: false };
+      const entry = { id: c.id, cx: c.cx, cy: c.cy, dot, pointMark, leaderPath, leaderLabel, appended: false, fixedDot, minLabelZoom: fixedDot ? cityMinLabelZoom(c) : 0 };
       this.cityDotEntries.push(entry);
       this.citiesById.set(c.id, { data: c, dotEl: dot });
     }
@@ -1161,9 +1174,18 @@ export class OverviewBoard {
     // stored geometry could be stale (from whenever it was last visible),
     // and getComputedTextLength() only works once attached.
     this._layoutCityLeader(entry, effScale);
-    entry.leaderLabel.style.opacity = this.labelsVisible ? '' : '0';
+    this._styleCityEntry(entry, effScale, this.zoomCtl?.getZoom() ?? 1);
+  }
+
+  // Per-zoom styling of a revealed city: world cities' constant-size dot, and
+  // the zoom threshold below which a lesser city's name/leader line stay hidden
+  // (USA cities have minLabelZoom 0, so for them this is just the "Подписи" toggle).
+  _styleCityEntry(entry, effScale, zoom) {
+    if (entry.fixedDot) entry.dot.setAttribute('r', (WORLD_CITY_DOT_PX / effScale).toFixed(4));
+    const labelOn = this.labelsVisible && zoom >= entry.minLabelZoom;
+    entry.leaderLabel.style.opacity = labelOn ? '' : '0';
+    entry.leaderPath.style.opacity = labelOn ? '' : '0';
     entry.pointMark.style.opacity = this.labelsVisible ? '' : '0';
-    entry.leaderPath.style.opacity = this.labelsVisible ? '' : '0';
   }
   _showShapeEntry(entry) {
     this.zonesLayer.appendChild(entry.path);
@@ -1750,13 +1772,15 @@ export class OverviewBoard {
         ? `<button type="button" class="overview-tab active" data-tab="oceans">${this._tabLabel('oceans', 'overviewTabOceans')}</button>
            <button type="button" class="overview-tab" data-tab="seas">${this._tabLabel('seas', 'overviewTabSeas')}</button>
            <button type="button" class="overview-tab" data-tab="other">${this._tabLabel('other', 'overviewTabOther')}</button>
-           ${this.level.currents?.length ? `<button type="button" class="overview-tab" data-tab="currents">${this._tabLabel('currents', 'overviewTabCurrents')}</button>` : ''}`
+           ${this.level.currents?.length ? `<button type="button" class="overview-tab" data-tab="currents">${this._tabLabel('currents', 'overviewTabCurrents')}</button>` : ''}
+           ${this.level.cities?.length ? `<button type="button" class="overview-tab" data-tab="cities">${this._tabLabel('cities', 'overviewTabCities')}</button>` : ''}
+           ${this.level.places?.length ? `<button type="button" class="overview-tab" data-tab="places">${this._tabLabel('places', 'overviewTabPlaces')}</button>` : ''}`
         : this.level.id === 'countries'
-          ? // Countries has no cities/places (levels/countries.js: cities: [],
-            // places: []) — a single tab, same reasoning as world's
-            // Океаны/Моря/Остальное replacing Штаты/Города/Места instead of
-            // showing two permanently-empty tabs.
-            `<button type="button" class="overview-tab active" data-tab="states">${this._tabLabel('states', 'overviewTabCountries')}</button>`
+          ? // Countries: the country tab plus the world cities/places (attached in
+            // levels/index.js) — no Штаты/Водоёмы/Шоссе/Аэропорты, those are USA-only.
+            `<button type="button" class="overview-tab active" data-tab="states">${this._tabLabel('states', 'overviewTabCountries')}</button>
+           ${this.level.cities?.length ? `<button type="button" class="overview-tab" data-tab="cities">${this._tabLabel('cities', 'overviewTabCities')}</button>` : ''}
+           ${this.level.places?.length ? `<button type="button" class="overview-tab" data-tab="places">${this._tabLabel('places', 'overviewTabPlaces')}</button>` : ''}`
           : `<button type="button" class="overview-tab active" data-tab="states">${this._tabLabel('states', 'overviewTabStates')}</button>
            <button type="button" class="overview-tab" data-tab="cities">${this._tabLabel('cities', 'overviewTabCities')}</button>
            <button type="button" class="overview-tab" data-tab="places">${this._tabLabel('places', 'overviewTabPlaces')}</button>
@@ -1857,7 +1881,9 @@ export class OverviewBoard {
   // geometry, not derived); cities only store a radius, so their area is
   // derived (they're rendered as a circle of that radius to begin with).
   _areaOf(it) {
-    return this._isPieceTab() || this.activeTab === 'lakes' ? it.area : Math.PI * it.radiusKm * it.radiusKm;
+    if (this._isPieceTab() || this.activeTab === 'lakes') return it.area;
+    if (it.pop != null) return it.pop; // world city: the list's number column shows population
+    return Math.PI * it.radiusKm * it.radiusKm;
   }
 
   // 'states': short `.id` codes (AL, CA…) fit a dedicated abbreviation
@@ -1882,7 +1908,7 @@ export class OverviewBoard {
       return `<span class="overview-item-main"><span class="overview-item-abbr">${it.iata}</span><span class="overview-item-name">${name}</span></span>`;
     }
     if (this.activeTab === 'cities') {
-      return `<span class="overview-item-main"><span class="overview-item-name">${name}${cityMarkersHtml(it)}</span><span class="overview-item-sub">${it.state || ''}</span></span>`;
+      return `<span class="overview-item-main"><span class="overview-item-name">${name}${cityMarkersHtml(it)}</span><span class="overview-item-sub">${getLang() === 'en' ? it.stateEn || it.state || '' : it.state || ''}</span></span>`;
     }
     return `<span class="overview-item-main"><span class="overview-item-name">${name}</span></span>`;
   }
@@ -1893,6 +1919,7 @@ export class OverviewBoard {
   // tab to decide states-vs-cities and would misfire if a city is hovered
   // on the map while that panel happens to be showing the states tab).
   _cityHoverTitle(c) {
+    if (c.radiusKm == null) return `${bilingualLabel(c)} — ${c.pop.toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU')} ${t('popUnit')}`;
     const areaKm2 = Math.PI * c.radiusKm * c.radiusKm;
     const areaStr = Math.round(areaKm2).toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU');
     return `${bilingualLabel(c)} — R ${c.radiusKm.toFixed(1)} ${t('kmUnit')} (${areaStr} ${t('areaUnit')})`;
@@ -1989,6 +2016,8 @@ export class OverviewBoard {
     // hide that column entirely on this tab instead of displaying it.
     const showArea = this.activeTab !== 'places' && this.activeTab !== 'highways' && this.activeTab !== 'airports' && this.activeTab !== 'currents';
     this.sortBtnEl.hidden = !showArea;
+    const popMode = this.activeTab === 'cities' && items.length > 0 && items[0].pop != null;
+    this.sortBtnEl.firstChild.nodeValue = t(popMode ? 'eligColPop' : 'eligColArea');
 
     let sorted;
     if (this.sortBy === 'area' && showArea) {
@@ -2021,7 +2050,7 @@ export class OverviewBoard {
       const row = document.createElement('button');
       row.type = 'button';
       row.className = 'overview-item';
-      const areaStr = showArea ? Math.round(this._areaOf(it)).toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU') + ' ' + t('areaUnit') : '';
+      const areaStr = showArea ? Math.round(this._areaOf(it)).toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU') + (it.pop != null ? '' : ' ' + t('areaUnit')) : '';
       row.innerHTML = this._mainColumnHtml(it) + `<span class="overview-item-area">${areaStr}</span>`;
       row.addEventListener('click', () => {
         if (this._isPieceTab()) this._focusState(it.id);
@@ -2060,7 +2089,7 @@ export class OverviewBoard {
     // max zoom — now that zoom has no ceiling at all (by design), Infinity
     // stays Infinity and breaks the view entirely, so this needs its own
     // finite target instead of leaning on a cap that no longer exists.
-    const radiusNative = data.radiusKm / this.level.kmPerUnit;
+    const radiusNative = (data.radiusKm ?? CITY_FOCUS_RADIUS_KM) / this.level.kmPerUnit;
     const diameterNative = Math.max(radiusNative * 2, 1);
     const vw = this.zoomViewport.clientWidth;
     const vh = this.zoomViewport.clientHeight;
@@ -2216,6 +2245,7 @@ export class OverviewBoard {
     for (const entry of this.cityDotEntries) {
       if (!entry.appended) continue;
       this._layoutCityLeader(entry, effScale);
+      this._styleCityEntry(entry, effScale, zoom);
       // dot radius is NOT rescaled here — it's fixed in native units (true
       // geographic size), only the outline stroke stays a constant screen px.
       entry.dot.style.strokeWidth = `${(CITY_DOT_STROKE_PX / effScale).toFixed(2)}px`;
