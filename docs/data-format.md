@@ -19,7 +19,7 @@
 | `land` | world | страны как фон (`~258`); у `countries` поле пустое |
 | `cities`, `places`, `lakes`, `highways`, `airports`, `routeGraph` | usa | см. ниже |
 | `currents` | world | см. ниже |
-| `cities`, `places` | world, countries | города мира (~247) и места (~1), общие для обоих уровней — подключаются в `levels/index.js` из `worldCities.js` / `worldPlaces.js`; см. «Города мира» ниже |
+| `cities`, `places` | countries | города мира (~247) и места (~1) — только на «Страны мира»; подключаются в `levels/index.js` из `worldCities.js` / `worldPlaces.js`; см. «Города мира» ниже |
 
 ### `pieces[]`
 
@@ -66,7 +66,7 @@
 концы), `minor: true` — «региональный» (значок-вертолёт); флаг есть только у
 `minor`. Всего ~144 (58 основных + 86 `minor`).
 
-### Города мира (`worldCities.js`, уровни world и countries)
+### Города мира (`worldCities.js`, только уровень countries)
 
 `id` (транслит имени, при совпадении — с суффиксом ISO), `name`, `ru`, `state` (страна по-русски),
 `stateEn`, `capital` (bool; столица по Natural Earth, не все «alt»-столицы), `cx, cy`, **`pop`**
@@ -102,7 +102,7 @@
 | `levels/usa/contextland-info.json` | `canada` | открывается из контекстного меню по правому клику |
 | `levels/usa/airports-info.json` | аэропорты (~144) | + поле `lang` (`ru`/`en`); больше половины только на английском — русской статьи нет |
 | `levels/world/currents-info.json` | течения | русские |
-| `levels/world/cities-info.json` | города мира | поле `lang`; русская статья, иначе английская; грузится только для уровней world/countries (США берёт `usa/cities-info.json`) |
+| `levels/world/cities-info.json` | города мира | поле `lang`; русская статья, иначе английская; грузится для всех уровней, кроме США (США берёт `usa/cities-info.json`); используется на уровне countries |
 | `levels/world/places-info.json` | места мира | русские |
 
 Шероховатости: `extract` у части карточек содержит знаки ударения (Википедия);

@@ -27,9 +27,27 @@ import countries from './countries.js';
 // apart by shape: a mainland entry has `number` (numbered shield), a
 // Hawaii entry has `name`/`ru` instead (text label along the line, real
 // road names not being part of the Interstate numbering scheme at all).
+// The world level's background countries (`land`) carry no label points of their own;
+// borrow them from the matching entry of the countries level (same projection), by id
+// or, where Natural Earth's ids differ (Israel, France…), by Russian name. Only these
+// matches get a name label in Overview — the rest (disputed zones, military bases, ice
+// fields, tiny territories) stay tooltip-only so the map isn't buried. Antarctica and
+// Israel (absent from the countries level) are labelled at their own centers.
+const countryMatch = new Map();
+for (const p of countries.pieces) {
+  countryMatch.set(p.id, p);
+  countryMatch.set('ru:' + p.ru, p);
+}
+const worldLand = world.land.map((l) => {
+  const m = countryMatch.get(l.id) || countryMatch.get('ru:' + l.ru);
+  if (m?.labelPoints) return { ...l, labelPoints: m.labelPoints };
+  if (l.id === 'ata' || l.id === 'isr') return { ...l, labelPoints: [[l.cx, l.cy]] }; // no match in countries.js
+  return l;
+});
+
 export const levels = {
   usa: { ...usa, cities: usaCities, places: usaPlaces, highways: [...usaHighways, ...usaHawaiiHighways], routeGraph: usaRouteGraph, lakes: usaLakes, airports: usaAirports },
-  world: { ...world, currents: worldCurrents, cities: worldCities, places: worldPlaces },
+  world: { ...world, land: worldLand, currents: worldCurrents },
   countries: { ...countries, cities: worldCities, places: worldPlaces },
 };
 

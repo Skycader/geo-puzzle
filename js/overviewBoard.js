@@ -62,6 +62,11 @@ const CITY_DOT_STROKE_PX = 1;
 // the less populous the city the later (higher zoom) its name appears.
 const WORLD_CITY_DOT_PX = 3.5;
 const CITY_FOCUS_RADIUS_KM = 250; // close-up radius for a city that has no area
+// World-map country name labels: the bigger the country, the lower the zoom its name
+// appears at (the big ones are readable on the whole-world view; the rest as you zoom in).
+function countryLabelMinZoom(areaKm2) {
+  return areaKm2 >= 1.2e6 ? 0 : areaKm2 >= 3e5 ? 1.8 : areaKm2 >= 6e4 ? LABEL_MIN_ZOOM : 4.5;
+}
 function cityMinLabelZoom(c) {
   const z = c.pop >= 5e6 ? 0 : c.pop >= 1.5e6 ? 2 : 3.5;
   return c.capital ? Math.min(z, 2.5) : z;
@@ -568,7 +573,21 @@ export class OverviewBoard {
     // layer). The USA level has no `land` field at all (its `pieces`
     // already cover the whole map), so this is a no-op there.
     if (this.level.land) {
-      this.zonesLayer.appendChild(buildStateBackground(this.level.land, { pathClass: 'world-bg-path' }));
+      // Hover names every country; the ones with label points (levels/index.js) also get a
+      // permanent name label like any other territory (shown from LABEL_MIN_ZOOM).
+      this.zonesLayer.appendChild(buildStateBackground(this.level.land, { pathClass: 'world-bg-path', title: (p) => bilingualLabel(p) }));
+      for (const l of this.level.land) {
+        for (const [lx, ly] of l.labelPoints || []) {
+          const label = document.createElementNS(SVG_NS, 'text');
+          label.setAttribute('x', lx);
+          label.setAttribute('y', ly);
+          label.setAttribute('class', 'piece-label');
+          label.textContent = itemName(l);
+          this.labelsLayer.appendChild(label);
+          this.allLabelEls.push(label);
+          this.stateLabels.push({ el: label, minZoom: countryLabelMinZoom(l.area || 0) });
+        }
+      }
     }
 
     // Canada — non-interactive geographic context only (USA level), real
@@ -2232,8 +2251,9 @@ export class OverviewBoard {
     // them back on (see setLabelsVisible, which calls back into this for
     // the opposite reason: to re-apply the zoom threshold after its own
     // blanket toggle).
-    const showLabels = this.labelsVisible && (!SPACE_VIEW_LABEL_HIDE_ENABLED || zoom >= LABEL_MIN_ZOOM);
-    for (const { el } of this.stateLabels) {
+    for (const { el, minZoom } of this.stateLabels) {
+      // Per-label threshold (`minZoom`, world-map countries) falls back to the global one.
+      const showLabels = this.labelsVisible && (!SPACE_VIEW_LABEL_HIDE_ENABLED || zoom >= (minZoom ?? LABEL_MIN_ZOOM));
       if (!showLabels) {
         el.style.opacity = '0';
         continue;

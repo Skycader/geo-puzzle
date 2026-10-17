@@ -1596,6 +1596,7 @@ body {
 /* ---------------- state outline context (city boards) ---------------- */
 
 .state-bg-layer { pointer-events: none; }
+.state-bg-layer.state-bg-layer-interactive { pointer-events: auto; }
 .state-bg-path {
   fill: var(--land-fill-faint);
   stroke: var(--land-stroke-faint);

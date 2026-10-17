@@ -8,11 +8,18 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 export function buildStateBackground(pieces, opts = {}) {
   const pathClass = opts.pathClass || 'state-bg-path';
   const g = document.createElementNS(SVG_NS, 'g');
-  g.setAttribute('class', 'state-bg-layer');
+  // `opts.title(piece) -> string` makes the layer hoverable: each shape gets a native
+  // <title> tooltip (used by Overview to name the countries on the world map).
+  g.setAttribute('class', 'state-bg-layer' + (opts.title ? ' state-bg-layer-interactive' : ''));
   for (const p of pieces) {
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', p.d);
     path.setAttribute('class', pathClass + (p.inset ? ' state-bg-inset' : ''));
+    if (opts.title) {
+      const title = document.createElementNS(SVG_NS, 'title');
+      title.textContent = opts.title(p);
+      path.appendChild(title);
+    }
     g.appendChild(path);
   }
   return g;

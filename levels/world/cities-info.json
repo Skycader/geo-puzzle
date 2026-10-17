@@ -1,0 +1,1484 @@
+{
+  "tokyo": {
+    "extract": "То́кио — столица и крупнейший город Японии, её административный, финансовый, промышленный и политический центр. Крупнейшая городская экономика мира.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Tokyo_Montage_2015.jpg/330px-Tokyo_Montage_2015.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%BE%D0%BA%D0%B8%D0%BE",
+    "lang": "ru"
+  },
+  "new_york": {
+    "extract": "Нью-Йо́рк — крупнейший город США, входящий в одну из крупнейших агломераций мира. Население города составляет 8 467 513 человек, агломерации — 19,77 млн. Нью-Йорк расположен на берегу Атлантического океана в юго-восточной части штата Нью-Йорк. Город был основан в начале XVII века голландскими колонистами и до 1664 года назывался Новый Амстердам.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu_%28cropped%29.jpg/330px-View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu_%28cropped%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D1%8C%D1%8E-%D0%99%D0%BE%D1%80%D0%BA",
+    "lang": "ru"
+  },
+  "mexico_city": {
+    "extract": "Ме́хико — столица Мексики, крупнейший политический, экономический и культурный центр страны, относится к глобальным городам «альфа» и ведущим финансовым центрам Северной Америки.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Montaje_de_CDMX.jpg/330px-Montaje_de_CDMX.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B5%D1%85%D0%B8%D0%BA%D0%BE",
+    "lang": "ru"
+  },
+  "mumbai": {
+    "extract": "Мумба́и, также Мумба́й, до 1995 года — Бомбе́й — город на западе Индии, на побережье Аравийского моря. Столица штата Махараштра. Население — 12 422 373 человека по состоянию на 2011 год. Крупнейший город Индии по численности населения.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Marine_Lines_Mumbai_2021.jpg/330px-Marine_Lines_Mumbai_2021.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D1%83%D0%BC%D0%B1%D0%B0%D0%B8",
+    "lang": "ru"
+  },
+  "sao_paulo": {
+    "extract": "Сан-Па́улу — город на юго-востоке Бразилии, столица одноимённого штата. Самый населённый город в пределах страны, континента, португалоязычного сообщества и всего Южного полушария. Расположен в долине реки Тиете, в 70 км от побережья Атлантического океана.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Montagem_SP.png/330px-Montagem_SP.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD-%D0%9F%D0%B0%D1%83%D0%BB%D1%83",
+    "lang": "ru"
+  },
+  "delhi": {
+    "extract": "Де́ли, официальное название — Национальная столичная территория Дели — союзная территория в Индии, включающая мегаполис Дели и официальную столицу страны Нью-Дели. Расположен на севере Индии на берегу реки Джамна.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Lotus_Temple_in_New_Delhi_03-2016.jpg/330px-Lotus_Temple_in_New_Delhi_03-2016.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B5%D0%BB%D0%B8",
+    "lang": "ru"
+  },
+  "shanghai": {
+    "extract": "Шанха́й — один из четырёх городов центрального подчинения КНР; расположен на востоке страны, в дельте реки Янцзы. Важный культурный центр страны, а также крупнейший в мире морской порт. Кроме того, Шанхай является крупнейшим финансовым центром Китая, и одним из ведущих — в Восточной Азии и мире.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Pudong_Shanghai_November_2017_HDR_panorama.jpg/330px-Pudong_Shanghai_November_2017_HDR_panorama.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A8%D0%B0%D0%BD%D1%85%D0%B0%D0%B9",
+    "lang": "ru"
+  },
+  "kolkata": {
+    "extract": "Кальку́тта — город в дельте Ганга на востоке Индии, столица штата Западная Бенгалия, второй по площади город в Индии после Мумбаи и четвёртый по населению город в Индии после Мумбаи, Дели и Бангалора. По состоянию на 2011 год, население города составляет 4 486 679 человек, городской агломерации — 14 112 536.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/St_Cathedral_Church_2.jpg/330px-St_Cathedral_Church_2.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D0%BB%D1%8C%D0%BA%D1%83%D1%82%D1%82%D0%B0",
+    "lang": "ru"
+  },
+  "dhaka": {
+    "extract": "Да́кка (бенг. ঢাকা) — столица и крупнейший город Бангладеш. Город основан в VII веке. Дакка — столица исторического государства Бенгалии (1608—1717), столица Бангладеш с 1971 года. Население города — 9 724 976 жителей (2005), а с пригородами — 16,6 млн человек (2008).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Dhaka_Montage_2019.jpg/330px-Dhaka_Montage_2019.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B0%D0%BA%D0%BA%D0%B0",
+    "lang": "ru"
+  },
+  "buenos_aires": {
+    "extract": "Буэ́нос-А́йрес — столица и крупнейший город Аргентины, административный, культурный и экономический центр страны и один из крупнейших городов Южной Америки. Буэнос-Айрес расположен в центрально-восточной части страны, на западном берегу крупнейшего залива-эстуария Рио-де-ла-Плата, являющегося продолжением устья второй по длине реки Южной Америки — Параны́. Своё современное укороченное название — «Буэнос-Айрес» город носит с XVII века. До этого город официально именовался следующим полным именем: исп. Ciudad de la Santísima Trinidad y Puerto de Nuestra Señora de Santa María de los Buenos Aires, букв. «Город Пресвятой Троицы и Порт Богородицы Святой Марии Добрых Ветров».",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Montaje_de_la_Ciudad_de_Buenos_Aires.png/330px-Montaje_de_la_Ciudad_de_Buenos_Aires.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D1%83%D1%8D%D0%BD%D0%BE%D1%81-%D0%90%D0%B9%D1%80%D0%B5%D1%81",
+    "lang": "ru"
+  },
+  "los_angeles": {
+    "extract": "Лос-А́нджелес — город на юге штата Калифорния, США. Крупнейший по численности населения в штате и второй в стране. Город является административным центром одноимённого округа, а также центром Большого Лос-Анджелеса — агломерации с населением порядка 13 млн человек. Жителей Лос-Анджелеса называют «Angelenos».",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Hollywood_sign_%288485145044%29.jpg/330px-Hollywood_sign_%288485145044%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%BE%D1%81-%D0%90%D0%BD%D0%B4%D0%B6%D0%B5%D0%BB%D0%B5%D1%81",
+    "lang": "ru"
+  },
+  "karachi": {
+    "extract": "Кара́чи — портовый город на юге Пакистана, административный центр провинции Синд, крупнейший город страны и один из крупнейших городов мира.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Karachi_Montage_02.PNG/330px-Karachi_Montage_02.PNG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D1%80%D0%B0%D1%87%D0%B8",
+    "lang": "ru"
+  },
+  "cairo": {
+    "extract": "Каи́р — столица и крупнейший город Египта. Первый по величине город Ближнего Востока и Арабского мира, а также третий в Африке, после Лагоса и Киншасы. Площадь Каира — 3085 км²; население на 2023 год — 9 801 536 человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Cairo_Opera_House%2C_Al_Hurriyah_Park_and_the_Nile_river_%2814797782354%29.jpg/330px-Cairo_Opera_House%2C_Al_Hurriyah_Park_and_the_Nile_river_%2814797782354%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D0%B8%D1%80",
+    "lang": "ru"
+  },
+  "rio_de_janeiro": {
+    "extract": "Ри́о-де-Жане́йро , в просторечии Рио — город в Бразилии. Административный центр одноимённого штата.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Redentor_Over_Clouds_1.jpg/330px-Redentor_Over_Clouds_1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A0%D0%B8%D0%BE-%D0%B4%D0%B5-%D0%96%D0%B0%D0%BD%D0%B5%D0%B9%D1%80%D0%BE",
+    "lang": "ru"
+  },
+  "osaka": {
+    "extract": "О́сака (яп. 大阪市 ) — третий по населению город Японии, который находится в южной части острова Хонсю, близ устья реки Йодо в заливе Осака. Центр одноимённой префектуры. С 1956 года имеет статус города, определённого указом правительства.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Osaka_montage.jpg/330px-Osaka_montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9E%D1%81%D0%B0%D0%BA%D0%B0",
+    "lang": "ru"
+  },
+  "manila": {
+    "extract": "Мани́ла — столица государства Филиппины, один из 16 городов, формирующих Столичный регион страны (Метро-Манила). Граничит с городами Навотас и Калоокан, Кесон-Сити, Сан-Хуан и Мандалуйонг, Макати и Пасай. На западе омывается водами Манильского залива. С населением 1 660 714 человек по данным переписи 2007 года, Манила — второй крупнейший город страны после Кесона.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Manila_Infobox_Pic_Montage.jpg/330px-Manila_Infobox_Pic_Montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D0%BD%D0%B8%D0%BB%D0%B0",
+    "lang": "ru"
+  },
+  "moscow": {
+    "extract": "Москва́ — столица России, город федерального значения, административный центр Центрального федерального округа и центр Московской области, в состав которой не входит. Мегаполис; крупнейший по численности населения город России и её субъект — 13 274 285 человек (2025), что делает Москву 18-й среди городов мира по численности населения. Центр Московской городской агломерации. Самый крупный город Европы по площади и населению. По данным ООН, является лучшим городом мира по качеству жизни и развитию инфраструктуры.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Moscow_July_2011-16.jpg/330px-Moscow_July_2011-16.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0",
+    "lang": "ru"
+  },
+  "istanbul": {
+    "extract": "Стамбу́л — крупнейший город Турции, экономический, исторический и культурный центр страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Istanbul_University.png/330px-Istanbul_University.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D1%82%D0%B0%D0%BC%D0%B1%D1%83%D0%BB",
+    "lang": "ru"
+  },
+  "paris": {
+    "extract": "Пари́ж — столица и крупнейший город Франции. Находится на севере государства, в центральной части Парижского бассейна, на реке Сене. Население — 2 103 778 человек (2023). Центр метрополии Большой Париж, ядро исторического региона Иль-де-Франс. Образует коммуну и департамент, разделённый на 20 округов.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/La_Tour_Eiffel_vue_de_la_Tour_Saint-Jacques%2C_Paris_ao%C3%BBt_2014_%282%29.jpg/330px-La_Tour_Eiffel_vue_de_la_Tour_Saint-Jacques%2C_Paris_ao%C3%BBt_2014_%282%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%B0%D1%80%D0%B8%D0%B6",
+    "lang": "ru"
+  },
+  "seoul": {
+    "extract": "Сеу́л — столица и крупнейший город Республики Корея. Расположен на северо-западе страны вблизи Жёлтого моря, на равнине в окружении гор, в 24 км от границы с КНДР. Через Сеул протекает река Ханган.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/%EC%88%AD%EB%A1%80%EB%AC%B8_2_%28%ED%95%9C%EA%B5%AD%EA%B4%80%EA%B4%91%EA%B3%B5%EC%82%AC%29.jpg/330px-%EC%88%AD%EB%A1%80%EB%AC%B8_2_%28%ED%95%9C%EA%B5%AD%EA%B4%80%EA%B4%91%EA%B3%B5%EC%82%AC%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B5%D1%83%D0%BB",
+    "lang": "ru"
+  },
+  "lagos": {
+    "extract": "Ла́гос — портовый город на юго-западе Нигерии. Имея население более 13 миллионов человек и около 21 млн в агломерации, Лагос является крупнейшим городом страны и Африки.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/2014_Tinubu_Square_Lagos_Nigeria_14640600637.jpg/330px-2014_Tinubu_Square_Lagos_Nigeria_14640600637.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%B0%D0%B3%D0%BE%D1%81",
+    "lang": "ru"
+  },
+  "jakarta": {
+    "extract": "Джака́рта (индон. и яв. Jakarta, бетави Jakarté; до 1527 года — Су́нда Кела́па, до 1619 года — Джаяка́рта, до 1942 года и в январе-ноябре 1946 года — Бата́вия — столица и крупнейший город Индонезии. В административном плане выделена в особый столичный округ, по статусу равный провинции.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Jakarta.jpg/330px-Jakarta.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B6%D0%B0%D0%BA%D0%B0%D1%80%D1%82%D0%B0",
+    "lang": "ru"
+  },
+  "chicago": {
+    "extract": "Чика́го, официально Город Чикаго — самый населённый город штата Иллинойс и третий по населению город в Соединённых Штатах. С оценочным населением в 2 747 000 человек в 2022 году, это также самый крупный город на Среднем Западе. Чикаго — окружной центр округа Кук, второго по населению округа США, с маленькой частью города в округе Ду-Пейдж. Чикаго является главным городом агломерации Чикаго, иногда называемой «Чикаголэнд». С населением в почти 10 миллионов, эта агломерация является третьей по населению в США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Chicago_from_North_Avenue_Beach_June_2015_panorama_1.jpg/330px-Chicago_from_North_Avenue_Beach_June_2015_panorama_1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A7%D0%B8%D0%BA%D0%B0%D0%B3%D0%BE",
+    "lang": "ru"
+  },
+  "guangzhou": {
+    "extract": "Гуанчжо́у — город субпровинциального значения Китайской Народной Республики, столица провинции Гуандун.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Guangzhou_montage.jpg/330px-Guangzhou_montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%93%D1%83%D0%B0%D0%BD%D1%87%D0%B6%D0%BE%D1%83",
+    "lang": "ru"
+  },
+  "london": {
+    "extract": "Ло́ндон — столица и крупнейший город Англии и Великобритании. Административно образует регион Англии Большой Лондон, разделённый на 33 самоуправляемых территории. Население города в 2023 году составляло 9 648 110 человек. Образует агломерацию Большой Лондон и более обширный метрополитенский район. Расположен на юго-востоке острова Великобритания, на равнине в устье Темзы, вблизи Северного моря. Главный политический, экономический и культурный центр Соединённого Королевства.",
+    "image": null,
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%BE%D0%BD%D0%B4%D0%BE%D0%BD",
+    "lang": "ru"
+  },
+  "lima": {
+    "extract": "Ли́ма — город на тихоокеанском побережье Южной Америки, столица Республики Перу. Административный центр автономной провинции Лима региона Лима. Главный политический, экономический и культурный центр страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/PRESIDENTE_HUMALA_PRESIDIO_CEREMONIA_DEL_PRIMER_ANIVERSARIO_DEL_FALLO_DE_LA_CORTE_DE_LA_HAYA_%2815760323114%29.jpg/330px-PRESIDENTE_HUMALA_PRESIDIO_CEREMONIA_DEL_PRIMER_ANIVERSARIO_DEL_FALLO_DE_LA_CORTE_DE_LA_HAYA_%2815760323114%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%B8%D0%BC%D0%B0",
+    "lang": "ru"
+  },
+  "tehran": {
+    "extract": "Тегера́н — столица и крупнейший город Ирана и один из крупнейших городов Южной Азии. Административный центр одноимённого остана, политический, экономический, транспортный, торгово-финансовый и культурный центр страны. Город расположен на севере страны у подножья горного хребта Эльбурс, в 90 км к югу от побережья Каспийского моря.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Azadi_Tower_%2829358497718%29.jpg/330px-Azadi_Tower_%2829358497718%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%B5%D0%B3%D0%B5%D1%80%D0%B0%D0%BD",
+    "lang": "ru"
+  },
+  "kinshasa": {
+    "extract": "Кинша́са — столица и наиболее крупный город Демократической Республики Конго. Расположен на левом берегу реки Конго, напротив города Браззавиль, столицы Республики Конго.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Boulevard_du_30_juin%2C_Kinshasa.jpg/330px-Boulevard_du_30_juin%2C_Kinshasa.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B8%D0%BD%D1%88%D0%B0%D1%81%D0%B0",
+    "lang": "ru"
+  },
+  "bogota": {
+    "extract": "Богота́ — столица и крупнейший город Колумбии, административный центр департамента Кундинамарка. Образует самостоятельную административную единицу страны — столичный округ, разделённый на 20 районов.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Centro-Internacional-Bogot%C3%A1.jpg/330px-Centro-Internacional-Bogot%C3%A1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%BE%D0%B3%D0%BE%D1%82%D0%B0",
+    "lang": "ru"
+  },
+  "shenzhen": {
+    "extract": "Шэньчжэ́нь — город субпровинциального значения в провинции Гуандун на юге Китайской Народной Республики, граничит с Гонконгом. Население по переписи 2000 года составляло 7 008 831 человек, а согласно переписи 2010 года — 10 357 938 человек. Благодаря масштабным иностранным и государственным инвестициям за довольно короткий период времени город превратился в крупный промышленный, финансовый и транспортный центр экономического региона дельты Жемчужной реки и всей страны в целом.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Shenzhen_montage_%282019%29.png/330px-Shenzhen_montage_%282019%29.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A8%D1%8D%D0%BD%D1%8C%D1%87%D0%B6%D1%8D%D0%BD%D1%8C",
+    "lang": "ru"
+  },
+  "wuhan": {
+    "extract": "Уха́нь — город субпровинциального значения в провинции Хубэй КНР, административный центр этой провинции. Самый густонаселённый город центрального Китая с населением около 12 млн человек, расположенный в месте слияния рек Янцзы и Ханьшуй. В 2020 году город приобрёл известность за пределами Китая как точка начала пандемии коронавирусной инфекции COVID-19.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/5/56/Wuhan_montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A3%D1%85%D0%B0%D0%BD%D1%8C",
+    "lang": "ru"
+  },
+  "hong_kong": {
+    "extract": "Гонко́нг, полное официальное название — Специа́льный администрати́вный райо́н Гонко́нг — специальный административный район Китайской Народной Республики, один из ведущих глобальных городов и финансовых центров мира. Гонконг занимает первое место по ожидаемой продолжительности жизни и первое место среди городов мира по количеству самых высоких небоскрёбов.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Flag_of_Hong_Kong.svg/langru-330px-Flag_of_Hong_Kong.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%93%D0%BE%D0%BD%D0%BA%D0%BE%D0%BD%D0%B3",
+    "lang": "ru"
+  },
+  "tianjin": {
+    "extract": "Тяньцзи́нь — один из четырёх муниципалитетов центрального подчинения Китайской Народной Республики. Городская зона Тяньцзиня является третьей по величине в континентальном Китае. Население — 13,866 млн человек, площадь — 11 946 км², ВВП — 1,4 трлн юаней (2020).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Tianjin_montage.jpg/330px-Tianjin_montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D1%8F%D0%BD%D1%8C%D1%86%D0%B7%D0%B8%D0%BD%D1%8C",
+    "lang": "ru"
+  },
+  "chennai": {
+    "extract": "Ченна́и, также Ченна́й — город на юге Индии, столица и крупнейший город штата Тамилнад. Шестой по величине город страны, 41-я по величине в мире городская агломерация.\nОснован в 1639 году на Коромандельском берегу.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Ripon_Building_aerial_view.jpg/330px-Ripon_Building_aerial_view.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A7%D0%B5%D0%BD%D0%BD%D0%B0%D0%B8",
+    "lang": "ru"
+  },
+  "taipei": {
+    "extract": "Тайбэ́й — столица Китайской Республики. Согласно точке зрения руководства КНР Тайбэй — столица провинции Тайвань в составе КНР.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Taipei_MRT_Jiantan_Station.jpg/330px-Taipei_MRT_Jiantan_Station.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%B0%D0%B9%D0%B1%D1%8D%D0%B9",
+    "lang": "ru"
+  },
+  "bengaluru": {
+    "extract": "Бангало́р, также Бенгалу́ру — крупный город и административный центр на юге Индии, расположенный на плоскогорье Декан, в юго-восточной части штата Карнатака, столицей которого он является. По численности населения — третий по величине город и пятая агломерация в Индии.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Lalbag_Glass_House_DSC_6297.jpg/330px-Lalbag_Glass_House_DSC_6297.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%BD%D0%B3%D0%B0%D0%BB%D0%BE%D1%80",
+    "lang": "ru"
+  },
+  "bangkok": {
+    "extract": "Бангко́к, в Таиланде используется название Крунгте́п — столица и самый крупный город Таиланда с населением 5,4 млн чел. (2022). Название, данное городу при основании, попало в Книгу рекордов Гиннесса как самое длинное на планете. Бангкок раскинулся на восточном берегу реки Чаупхраи, недалеко от её впадения в Сиамский залив.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/4Y1A1150_Bangkok_%2833536339665%29.jpg/330px-4Y1A1150_Bangkok_%2833536339665%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%BD%D0%B3%D0%BA%D0%BE%D0%BA",
+    "lang": "ru"
+  },
+  "lahore": {
+    "extract": "Лахо́р — второй по величине город Пакистана после Карачи. По оценкам на 2009 год, в городской агломерации проживало более 10 миллионов человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Lahore_collage.jpg/330px-Lahore_collage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%B0%D1%85%D0%BE%D1%80",
+    "lang": "ru"
+  },
+  "chongqing": {
+    "extract": "Чунци́н — муниципалитет центрального подчинения в центральной части Китая, крупнейший по площади из четырёх китайских административных единиц этой категории. Согласно переписи 2020 года, в Чунцине проживало 32,05 млн человек; при этом значительная часть проживает в сельской местности за пределами городского центра.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/September_2025_in_Chongqing_05.jpg/330px-September_2025_in_Chongqing_05.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A7%D1%83%D0%BD%D1%86%D0%B8%D0%BD",
+    "lang": "ru"
+  },
+  "hyderabad": {
+    "extract": "Хайдараба́д — город в Южной Индии, административный центр штата Телингана. Расположен на Деканском плоскогорье вдоль берегов реки Муси. Численность населения — 6,8 млн чел. — четвертый по численности населения город Индии, плотность населения — 16 990 чел./км², площадь — 2 053 км².",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Charminar_close_up.jpg/330px-Charminar_close_up.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D0%B0%D0%B9%D0%B4%D0%B0%D1%80%D0%B0%D0%B1%D0%B0%D0%B4_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%2C_%D0%98%D0%BD%D0%B4%D0%B8%D1%8F)",
+    "lang": "ru"
+  },
+  "santiago": {
+    "extract": "Сантья́го — столица и крупнейший город Чили. Административный центр Столичной области и провинции Сантьяго, представляющий собой конгломерат из 37 разрозненных коммун без единого органа управления.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Santiago_de_chile_collage.png/330px-Santiago_de_chile_collage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD%D1%82%D1%8C%D1%8F%D0%B3%D0%BE",
+    "lang": "ru"
+  },
+  "miami": {
+    "extract": "Майа́ми — город в США, расположенный на побережье Атлантического океана на юго-востоке Флориды в округе Майами-Дейд.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/PortMiami_main_channel_with_city_skyline_in_the_background_%28March_11%2C_2024%29.jpg/330px-PortMiami_main_channel_with_city_skyline_in_the_background_%28March_11%2C_2024%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D0%B9%D0%B0%D0%BC%D0%B8",
+    "lang": "ru"
+  },
+  "belo_horizonte": {
+    "extract": "Бе́лу-Оризо́нти — город и муниципалитет на юго-востоке Бразилии, столица штата Минас-Жерайс. Название переводится с португальского как «красивый горизонт». Второй бразильский город, построенный по плану.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Belo_Horizonte_%282%29.jpg/330px-Belo_Horizonte_%282%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B5%D0%BB%D1%83-%D0%9E%D1%80%D0%B8%D0%B7%D0%BE%D0%BD%D1%82%D0%B8",
+    "lang": "ru"
+  },
+  "madrid": {
+    "extract": "Мадри́д — столица и крупнейший город Испании, а также административный центр одноимённых провинции и автономного сообщества. Муниципалитет находится в составе района (комарки) Ареа-Метрополитана. Крупнейший экономический, политический и культурный центр страны. Население города — 3,266 млн жителей (2019).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Palacio_de_Comunicaciones_-_46.jpg/330px-Palacio_de_Comunicaciones_-_46.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D0%B4%D1%80%D0%B8%D0%B4",
+    "lang": "ru"
+  },
+  "philadelphia": {
+    "extract": "Филаде́льфия — город в США, шестой по населению город страны и самый населённый город штата Пенсильвания. Население агломерации составляет 6 096 120 жителей. Расположен на реке Делавэр у побережья Атлантического океана.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Liberty_Bell_on_display_%282022%29.jpg/330px-Liberty_Bell_on_display_%282022%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A4%D0%B8%D0%BB%D0%B0%D0%B4%D0%B5%D0%BB%D1%8C%D1%84%D0%B8%D1%8F",
+    "lang": "ru"
+  },
+  "ahmedabad": {
+    "extract": "Ахмадаба́д — город на западе Индии, самый большой город штата Гуджарат, один из пяти крупнейших в Индии с населением в 5,8 миллионов жителей, образующий седьмую по величине городскую агломерацию с населением 6,3 миллиона человек. Расположен на берегах реки Сабармати в 30 км от столицы штата — города Гандинагар. Является административным центром округа Ахмадабад.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Sabarmati-Ashram-8.jpg/330px-Sabarmati-Ashram-8.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D1%85%D0%BC%D0%B0%D0%B4%D0%B0%D0%B1%D0%B0%D0%B4",
+    "lang": "ru"
+  },
+  "ho_chi_minh_city": {
+    "extract": "Хошими́н — город на юге Вьетнама; крупнейший город страны. Известен также под аббревиатурой HCMC и под названием Сайго́н, которое было официальным до 1976 года. Современное название было дано в честь Хо Ши Мина.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/THE_STATE-OF-THE-ART_HELIPAD.jpg/330px-THE_STATE-OF-THE-ART_HELIPAD.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D0%BE%D1%88%D0%B8%D0%BC%D0%B8%D0%BD",
+    "lang": "ru"
+  },
+  "toronto": {
+    "extract": "Торо́нто — крупнейший город Канады, административный центр провинции Онтарио. Население — 4 653 828 человек. (2025); вместе с городами Миссиссога, Брамптон, Маркем и другими образует агломерацию Большой Торонто с населением 6 202 225.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/CC_2022-06-18_193-Pano_%28cropped_lossless%29.jpg/330px-CC_2022-06-18_193-Pano_%28cropped_lossless%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%BE%D1%80%D0%BE%D0%BD%D1%82%D0%BE",
+    "lang": "ru"
+  },
+  "luanda": {
+    "extract": "Луа́нда — столица Анголы, крупнейший политический, культурный и финансово-промышленный центр государства. Один из старейших колониальных городов Африки. Луанда была основным городом, принимающим матчи Кубка африканских наций 2010 года.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Luanda_Collage.png/330px-Luanda_Collage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D1%83%D0%B0%D0%BD%D0%B4%D0%B0",
+    "lang": "ru"
+  },
+  "baghdad": {
+    "extract": "Багда́д — столица Ирака, административный центр мухафазы Багдад.",
+    "image": null,
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%B3%D0%B4%D0%B0%D0%B4",
+    "lang": "ru"
+  },
+  "barcelona": {
+    "extract": "Барсело́на — город в Испании, столица автономной области Каталония и провинции Барселона. Порт на Балеарском море в 120 км от границы Франции и в 504 км восточнее Мадрида. Крупнейший промышленный и торговый центр Испании. Один из важнейших туристических пунктов в европейских маршрутах.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/SF_maig_2026.jpg/330px-SF_maig_2026.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D1%80%D1%81%D0%B5%D0%BB%D0%BE%D0%BD%D0%B0",
+    "lang": "ru"
+  },
+  "dallas": {
+    "extract": "Да́ллас — город в США, расположенный в северо-восточной части штата Техас на реке Тринити. Административный центр округа Даллас. Вместе с Форт-Уэртом и другими городами агломерации Даллас составляет конурбацию «Даллас — Форт-Уэрт». Даллас является третьим по численности городом Техаса и 9-м по США ; сама конурбация «Даллас — Форт-Уэрт» является 4-й по численности среди агломераций США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/21-12-064-road.jpg/330px-21-12-064-road.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B0%D0%BB%D0%BB%D0%B0%D1%81",
+    "lang": "ru"
+  },
+  "shenyang": {
+    "extract": "Шэнья́н — один из крупнейших городов в северо-восточной части Китая, административный центр провинции Ляонин, город субпровинциального значения.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Skyline_of_Shenyang_3.jpg/330px-Skyline_of_Shenyang_3.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A8%D1%8D%D0%BD%D1%8C%D1%8F%D0%BD",
+    "lang": "ru"
+  },
+  "khartoum": {
+    "extract": "Харту́м — столица Судана. Расположен в месте слияния рек Белый Нил и Голубой Нил. Отсюда река Нил течёт на север к Египту и Средиземному морю.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Elmek_Nimir_Bridge.jpg/330px-Elmek_Nimir_Bridge.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D0%B0%D1%80%D1%82%D1%83%D0%BC",
+    "lang": "ru"
+  },
+  "pune": {
+    "extract": "Пу́на — город в Индии, расположен в 150 км к юго-востоку от Мумбаи. Население Пуны составляет около 3,1 млн чел. (2011). Пуна — девятый по численности населения город Индии и второй в штате Махараштра.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Shaniwar_Wada_Main_Gate_01.jpg/330px-Shaniwar_Wada_Main_Gate_01.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D1%83%D0%BD%D0%B0",
+    "lang": "ru"
+  },
+  "sydney": {
+    "extract": "Си́дне́й — старейший, наибольший по населению и второй по площади город Австралии площадью 12 144,6 км², население которого по переписи 2020 года составляло 5 367 206 человек. Сидней является столицей штата Новый Южный Уэльс. Город был основан в 1788 году Артуром Филлипом, который прибыл сюда во главе Первого флота, и являлся местом первого колониального европейского поселения в Австралии. Город был назван колонистами в честь лорда Сиднея, бывшего на тот момент министром колоний Великобритании.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/City_of_Sydney_Flag.svg/langru-330px-City_of_Sydney_Flag.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B8%D0%B4%D0%BD%D0%B5%D0%B9",
+    "lang": "ru"
+  },
+  "saint_petersburg": {
+    "extract": "Санкт-Петербу́рг — второй по численности населения город России. Город федерального значения. Административный центр Северо-Западного федерального округа. Основан 16 (27) мая 1703 года царём Петром I. В 1714—1728 и 1732—1918 годах был столицей Российского государства.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Palace_Bridge_SPB_%28img2%29_Crop.jpg/330px-Palace_Bridge_SPB_%28img2%29_Crop.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD%D0%BA%D1%82-%D0%9F%D0%B5%D1%82%D0%B5%D1%80%D0%B1%D1%83%D1%80%D0%B3",
+    "lang": "ru"
+  },
+  "chattogram": {
+    "extract": "Читтагонг (бенг. চট্টগ্রাম) — город на юго-востоке Бангладеш; административный центр одноимённого округа и области страны. Второй по населению город страны и важнейший порт Бангладеш. Расположен на берегу Бенгальского залива в 211 км от столицы Дакки.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Chittagong_collage.png/330px-Chittagong_collage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A7%D0%B8%D1%82%D1%82%D0%B0%D0%B3%D0%BE%D0%BD%D0%B3",
+    "lang": "ru"
+  },
+  "dongguan": {
+    "extract": "Дунгуа́нь — городской округ в Китае в центре провинции Гуандун. По итогам 2021 года вошёл в престижный Клуб городов-триллионников.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Dongguan_montage.jpg/330px-Dongguan_montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D1%83%D0%BD%D0%B3%D1%83%D0%B0%D0%BD%D1%8C",
+    "lang": "ru"
+  },
+  "atlanta": {
+    "extract": "Атла́нта — город в США, административный центр (столица) и крупнейший город штата Джорджия, административный центр округа Фултон. Отдельные части города расположены в округе Де-Калб.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Georgia_State_Capitol%2C_Atlanta%2C_GA_%2847421890312%29.jpg/330px-Georgia_State_Capitol%2C_Atlanta%2C_GA_%2847421890312%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D1%82%D0%BB%D0%B0%D0%BD%D1%82%D0%B0",
+    "lang": "ru"
+  },
+  "boston": {
+    "extract": "Бо́стон — столица и крупнейший город штата Массачусетс в США. Бостон также является крупнейшим городом региона, известного под названием Новая Англия, а также одним из старейших и богатейших городов США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Massachusetts_State_House_-_panoramio_%281%29.jpg/330px-Massachusetts_State_House_-_panoramio_%281%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%BE%D1%81%D1%82%D0%BE%D0%BD",
+    "lang": "ru"
+  },
+  "riyadh": {
+    "extract": "Эр-Рия́д — столица и крупнейший город Саудовской Аравии. Административный центр округа Эр-Рияд, в составе которого образует одноимённую мухафазу Эр-Рияд. Население — 7 676 655 человек (2017 год).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Riyadh_Skyline.jpg/330px-Riyadh_Skyline.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%AD%D1%80-%D0%A0%D0%B8%D1%8F%D0%B4",
+    "lang": "ru"
+  },
+  "houston": {
+    "extract": " Хью́стон — четвёртый по количеству жителей город в Соединённых Штатах Америки и крупнейший город в штате Техас с населением 2 314 157 человек в 2023 году по оценке Бюро переписи населения США. Хьюстон является административным центром округа Харрис, а также главным экономическим центром агломерации Большого Хьюстона, занимающего пятое место среди агломераций по населению с общей численностью 7 510 523 человек по оценке за 2023 год. Город располагается в 50 километрах от Мексиканского залива на прибрежной равнине.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Houston_Images.jpg/330px-Houston_Images.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D1%8C%D1%8E%D1%81%D1%82%D0%BE%D0%BD",
+    "lang": "ru"
+  },
+  "hanoi": {
+    "extract": "Хано́й (вьет. Hà Nội, тьы-ном 河內, дословно: «город между реками» или « окружённое рекой») — столица Вьетнама и второй по численности населения город страны. Главный политический, образовательный и культурный центр страны, а также второй по значению промышленный центр. Один из 6 городов центрального подчинения Социалистической Республики Вьетнам.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/04489-Hanoi_%2832954159775%29.jpg/330px-04489-Hanoi_%2832954159775%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D0%B0%D0%BD%D0%BE%D0%B9",
+    "lang": "ru"
+  },
+  "washington_d_c": {
+    "extract": "Вашингто́н — столица Соединённых Штатов Америки, федеральная территория. Официальное название — округ Колумбия. Чтобы не путать город с одноимённым штатом на северо-западе страны, американцы в разговорной речи обычно называют город «Ди-Си» или «Вашингтон, Ди-Си».",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Washington_260424_US_Capitol_02.jpg/330px-Washington_260424_US_Capitol_02.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B0%D1%88%D0%B8%D0%BD%D0%B3%D1%82%D0%BE%D0%BD",
+    "lang": "ru"
+  },
+  "guadalajara": {
+    "extract": "Гвадалаха́ра — город в Мексике, столица штата Халиско, входит в состав одноимённого муниципалитета и является его административным центром. Численность населения, по данным переписи 2020 года, составила 1 385 621 человек. Город образовывает и входит в метрополитенский ареал Гвадалахары, который является вторым в Мексике по численности населения после Мехико.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Guadalajara%2C_PH.jpg/330px-Guadalajara%2C_PH.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%93%D0%B2%D0%B0%D0%B4%D0%B0%D0%BB%D0%B0%D1%85%D0%B0%D1%80%D0%B0",
+    "lang": "ru"
+  },
+  "melbourne": {
+    "extract": "Ме́льбурн — второй по величине город Австралии после Сиднея, столица штата Виктория, расположившаяся вокруг залива Порт-Филлип. Численность населения с пригородами составляет около 5 159 211 человек .\nМельбурн — самый южный город-миллионер в мире.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Flag_of_Melbourne.svg/langru-330px-Flag_of_Melbourne.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B5%D0%BB%D1%8C%D0%B1%D1%83%D1%80%D0%BD",
+    "lang": "ru"
+  },
+  "alexandria": {
+    "extract": "Александри́я — город в дельте Нила, главный морской порт и второй по величине город Египта. Простирается на 32 км вдоль побережья Средиземного моря. Административный центр мухафазы Александрия.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Alexandria_-_Egypt.jpg/330px-Alexandria_-_Egypt.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BB%D0%B5%D0%BA%D1%81%D0%B0%D0%BD%D0%B4%D1%80%D0%B8%D1%8F",
+    "lang": "ru"
+  },
+  "chengdu": {
+    "extract": "Чэнду́ — город субпровинциального значения в юго-западном Китае, в долине реки Миньцзян, место пребывания властей провинции Сычуань.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Chengdu_montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A7%D1%8D%D0%BD%D0%B4%D1%83",
+    "lang": "ru"
+  },
+  "detroit": {
+    "extract": "Детро́йт — город на севере США, в штате Мичиган. Расположен в юго-восточном углу штата, на реке Детройт, на границе с Канадой. Население города — 639 111 человек (2020), детройтской агломерации — 4 292 060 человек (2013).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Detroit_Skyline_%28123143197%29.jpeg/330px-Detroit_Skyline_%28123143197%29.jpeg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B5%D1%82%D1%80%D0%BE%D0%B9%D1%82",
+    "lang": "ru"
+  },
+  "yangon": {
+    "extract": "Янго́н, ранее — Рангу́н — крупнейший город и столица Мьянмы до 2005 года. До переименования в 1989 году был известен под названием Рангун и являлся столицей Бирмы с момента обретения страной независимости в 1948 году. Население — около 7 млн человек. Важнейший экономический, культурный и образовательный центр страны. Крупный транспортный узел. 6 ноября 2005 года резиденция правительства перенесена в Нейпьидо.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Flag_of_Yangon_Region.svg/langru-330px-Flag_of_Yangon_Region.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%AF%D0%BD%D0%B3%D0%BE%D0%BD",
+    "lang": "ru"
+  },
+  "abidjan": {
+    "extract": "Абиджа́н — крупнейший город западноафриканской страны Кот-д’Ивуар, экономический и культурный центр страны; второй по численности населения франкоязычный город в мире и второй по числу носителей языка. Административный центр департамента Абиджан, входящего в состав области Лагюн.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Abidjan_City_Collage.jpg/330px-Abidjan_City_Collage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%B1%D0%B8%D0%B4%D0%B6%D0%B0%D0%BD",
+    "lang": "ru"
+  },
+  "brasilia": {
+    "extract": "Брази́лиа, или Брази́лия , — столица Федеративной Республики Бразилии и резиденция правительства Федерального округа. Согласно данным переписи населения, проведённой Бразильским институтом географии и статистики в 2010 году, население города составило 2 562 963 человека, согласно этому показателю Бразилиа является третьим крупнейшим городом страны. По размеру ВВП на душу населения Бразилиа находится на втором месте, уступая только Витории. Вместе с Анаполисом и Гоянией, составляет ось «Бразилиа — Анаполис — Гояния», которая является наиболее развитой областью Центрально-западного региона.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/National_Congress_of_Brazil.jpg/330px-National_Congress_of_Brazil.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D1%80%D0%B0%D0%B7%D0%B8%D0%BB%D0%B8%D0%B0",
+    "lang": "ru"
+  },
+  "ankara": {
+    "extract": "Анкара́ — столица Турции. Население ила на 2024 год составило 5 864 049 человек; население самого города — 5 290 822 человека. Это второй город в стране по населению после Стамбула.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Ankara_Montage_2020.jpg/330px-Ankara_Montage_2020.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BD%D0%BA%D0%B0%D1%80%D0%B0",
+    "lang": "ru"
+  },
+  "berlin": {
+    "extract": "Берли́н — столица и крупнейший город Германии, первый по населению и второй по площади город Евросоюза. Город также является одной из земель Германии, занимая третье место с конца по площади в стране. Берлин окружён землёй Бранденбург и граничит на юго-западе с её столицей Потсдамом. В Берлинской городской агломерации проживает более 5 миллионов человек, что делает её самой населённой в Германии. Столичный регион Берлин — Бранденбург насчитывает около 6 миллионов жителей и является вторым по величине метропольным ареалом Германии после Рейнско-Рурского региона,а также пятым по величине ВВП метропольным регионом в Европейском союзе.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Berlin_Mitte_June_2023_01.jpg/330px-Berlin_Mitte_June_2023_01.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B5%D1%80%D0%BB%D0%B8%D0%BD",
+    "lang": "ru"
+  },
+  "algiers": {
+    "extract": "Алжи́р — столица и крупнейший город государства Алжир. Название города происходит от «аль-Джазаир», что в переводе с арабского обозначает «острова», так как раньше рядом с городом находились 4 острова, которые стали частью материка в 1525 году. Административный центр вилайета Алжир. Население 2,9 млн чел., а агломерации — около 3,35 млн жителей. Географические координаты: 36°47′ с. ш. 3°04′ в. д.. Стоит на Средиземном море. В 2011 году открылись Алжирский метрополитен и Алжирский трамвай.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Algiers_Montage.png/330px-Algiers_Montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BB%D0%B6%D0%B8%D1%80_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)",
+    "lang": "ru"
+  },
+  "rome": {
+    "extract": "Рим — столица и крупнейший город Италии. Административный центр области Лацио и одноимённой территориальной единицы Рим, приравненной к провинции. Расположен на реке Тибр. Часть территории Рима относится к городу-государству Ватикан.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Piazza_Venezia_-_Il_Vittoriano_%28cropped%29.jpg/330px-Piazza_Venezia_-_Il_Vittoriano_%28cropped%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A0%D0%B8%D0%BC",
+    "lang": "ru"
+  },
+  "pyongyang": {
+    "extract": "Пхенья́н — столица и крупнейший город КНДР. Является административным, культурным и историческим центром страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Pyongyang_montage.png/330px-Pyongyang_montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D1%85%D0%B5%D0%BD%D1%8C%D1%8F%D0%BD",
+    "lang": "ru"
+  },
+  "kabul": {
+    "extract": "Кабу́л — столица и самый крупный город Афганистана. Единственный город-миллионник страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Mountains_of_Kabul.jpg/330px-Mountains_of_Kabul.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D0%B1%D1%83%D0%BB",
+    "lang": "ru"
+  },
+  "athens": {
+    "extract": "Афи́ны — столица Греции. Располагается в исторической области Аттика и является экономическим, культурным и административным центром страны. Город назван в честь богини войны и мудрости Афины, которая была покровителем древнего полиса. Это один из самых древних городов мира.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Athens_Acropolis_at_Daybreak.jpg/330px-Athens_Acropolis_at_Daybreak.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D1%84%D0%B8%D0%BD%D1%8B",
+    "lang": "ru"
+  },
+  "cape_town": {
+    "extract": "Кейпта́ун — второй по численности населения после Йоханнесбурга город Южно-Африканской Республики. Расположен на юго-западе страны, на побережье Атлантического океана, недалеко от Мыса Доброй Надежды. Столица Западно-Капской провинции, законодательная столица ЮАР. Входит в городской округ Кейптаун.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Cape_Town_Montage.png/330px-Cape_Town_Montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B5%D0%B9%D0%BF%D1%82%D0%B0%D1%83%D0%BD",
+    "lang": "ru"
+  },
+  "addis_ababa": {
+    "extract": "Адди́с-Абе́ба — столица Эфиопии. Является крупнейшим в мире городом, расположенным в стране, не имеющей выхода к морю. Население 5 461 000 человек (2023). Имеет статус отдельного региона Эфиопии. В Аддис-Абебе находится штаб-квартира Африканского союза, а также его предшественника Организации африканского единства.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Addis_in_night.jpg/330px-Addis_in_night.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%B4%D0%B4%D0%B8%D1%81-%D0%90%D0%B1%D0%B5%D0%B1%D0%B0",
+    "lang": "ru"
+  },
+  "nairobi": {
+    "extract": "Найро́би — столица Кении, город вблизи экватора, самый большой город в Восточной Африке. Население Найроби по переписи 2019 года составляло 4,39 млн человек. В Найроби находится один из дополнительных офисов ООН.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Nairobi_Montage.jpg/330px-Nairobi_Montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D0%B0%D0%B9%D1%80%D0%BE%D0%B1%D0%B8",
+    "lang": "ru"
+  },
+  "caracas": {
+    "extract": "Кара́кас — столица и крупнейший город Венесуэлы. Город вместе с прилегающей к нему территорией выделен в федеральный столичный округ площадью 1900 км².",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Edificios_de_Oficinas_Conjunto_Parque_Central_alt.jpg/330px-Edificios_de_Oficinas_Conjunto_Parque_Central_alt.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D1%80%D0%B0%D0%BA%D0%B0%D1%81",
+    "lang": "ru"
+  },
+  "dar_es_salaam": {
+    "extract": "Дар-эс-Сала́м — крупнейший город Танзании. Самый богатый город страны и важный экономический центр. Административный центр области Дар-эс-Салам. По данным на 2016 год, численность населения города Дар-эс-Салам составляет 4 715 000 человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/View_of_Panton_and_Dar_es_salaam_City_%28City_center%29.jpg/330px-View_of_Panton_and_Dar_es_salaam_City_%28City_center%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B0%D1%80-%D1%8D%D1%81-%D0%A1%D0%B0%D0%BB%D0%B0%D0%BC",
+    "lang": "ru"
+  },
+  "lisbon": {
+    "extract": "Лиссабо́н — столица, крупнейший город и главный порт Португалии с населением 544 851 человек (2021). Самая западная столица материковой Европы и единственная на Атлантическом побережье. Лиссабон расположен в западной части Пиренейского полуострова на берегу Атлантического океана и реки Тежу. Наиболее западные районы региональной агломерации города, именуемые Португальской Ривьерой, образуют крайнюю западную точку континентальной Европы и всей Евразии в мысе Рока.",
+    "image": null,
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%B8%D1%81%D1%81%D0%B0%D0%B1%D0%BE%D0%BD",
+    "lang": "ru"
+  },
+  "kyiv": {
+    "extract": "Ки́ев — столица и крупнейший по населению город Украины, город со специальным статусом. Расположен на севере Украины, на реке Днепр, является центром Киевской агломерации. Отдельная административно-территориальная единица Украины; культурный, политический, социально-экономический, транспортный, научный и религиозный центр страны. Киев также является административным центром Киевской области, хотя и не входит в её состав, имея особый правовой статус. В 2010—2021 годах был седьмым по населению городом Европы после Стамбула, Москвы, Лондона, Санкт-Петербурга, Берлина и Мадрида.",
+    "image": "https://upload.wikimedia.org/wikipedia/ru/thumb/d/d9/VCH_%D0%92%D0%B5%D1%80%D1%85_%D0%A0%D0%B0%D0%B4%D0%B0_CHUPRINA_%C2%A9.JPG/330px-VCH_%D0%92%D0%B5%D1%80%D1%85_%D0%A0%D0%B0%D0%B4%D0%B0_CHUPRINA_%C2%A9.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B8%D0%B5%D0%B2",
+    "lang": "ru"
+  },
+  "dakar": {
+    "extract": "Дака́р  — столица, крупный морской порт и крупнейший город Сенегала, расположенный на полуострове Кап-Вер, на побережье Атлантического океана. Дакар является самым западным городом материковой Африки.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Dakar-Ind%C3%A9pendance.jpg/330px-Dakar-Ind%C3%A9pendance.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B0%D0%BA%D0%B0%D1%80",
+    "lang": "ru"
+  },
+  "damascus": {
+    "extract": "Дама́ск — столица и второй по величине город в Сирии. Расположен в юго-западной Сирии рядом с восточным предгорьем Восточно-ливанской горной гряды на Восточном плато в нижнем течении реки Ба́рада, где она разделяется на семь рукавов. Дамаск территориально расположен в субтропическом поясе; тем не менее, несмотря на близость Средиземного моря, климат города жаркий и засушливый.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Damascus%2C_Syria%2C_Panoramic_view_of_Damascus.jpg/330px-Damascus%2C_Syria%2C_Panoramic_view_of_Damascus.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B0%D0%BC%D0%B0%D1%81%D0%BA",
+    "lang": "ru"
+  },
+  "tunis": {
+    "extract": "Туни́с — столица и крупнейший город Туниса. Административный центр одноимённого вилайета Тунис.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Montage_ville_de_tunis.png/330px-Montage_ville_de_tunis.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D1%83%D0%BD%D0%B8%D1%81_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)",
+    "lang": "ru"
+  },
+  "vienna": {
+    "extract": "Ве́на — федеральная столица Австрии и одновременно одна из девяти федеральных земель Австрии, расположенная внутри другой земли, Нижней Австрии. Расположена в восточной части страны. Население Вены составляет 1,98 млн чел. (2023); вместе с пригородами — около 2,8 млн ; таким образом, Вена является самым крупным по населению городом Австрии, занимая шестое место среди самых крупных городов Европейского союза и второе место среди немецкоязычных городов после Берлина. Культурный, экономический и политический центр Австрии.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Flag_of_Salzburg%2C_Vienna%2C_Vorarlberg.svg/langru-330px-Flag_of_Salzburg%2C_Vienna%2C_Vorarlberg.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B5%D0%BD%D0%B0",
+    "lang": "ru"
+  },
+  "tripoli": {
+    "extract": "Три́поли — столица Ливии, административный центр одноимённого муниципалитета. Город расположен на северо-западе страны, на берегу бухты Средиземного моря.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/%D8%B7%D8%B1%D8%A7%D8%A8%D9%84%D8%B3_%D9%84%D9%8A%D8%A8%D9%8A%D8%A7_%D9%83%D9%86%D9%8A%D8%B3%D8%A9_%D9%85%D8%B1%D9%8A%D9%85_%D8%A7%D9%84%D8%B9%D8%B0%D8%B1%D8%A7%D8%A1.jpg/330px-%D8%B7%D8%B1%D8%A7%D8%A8%D9%84%D8%B3_%D9%84%D9%8A%D8%A8%D9%8A%D8%A7_%D9%83%D9%86%D9%8A%D8%B3%D8%A9_%D9%85%D8%B1%D9%8A%D9%85_%D8%A7%D9%84%D8%B9%D8%B0%D8%B1%D8%A7%D8%A1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D1%80%D0%B8%D0%BF%D0%BE%D0%BB%D0%B8",
+    "lang": "ru"
+  },
+  "tashkent": {
+    "extract": "Ташке́нт — столица и крупнейший город Узбекистана, город республиканского подчинения. Крупнейший по численности населения город Центральной Азии, центр Ташкентской городской агломерации, важный политический, экономический, культурный и научный центр страны, а также авиационный, железнодорожный и автомобильный узел. Расположен на северо-востоке страны, недалеко от границы с Казахстаном.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tashkentatnight.jpg/330px-Tashkentatnight.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%B0%D1%88%D0%BA%D0%B5%D0%BD%D1%82",
+    "lang": "ru"
+  },
+  "havana": {
+    "extract": "Гава́на — столица и крупнейший город Кубы. Политический, экономический и культурный центр государства, составляющий также одну из 16 его провинций.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Habana_01_2014_7619.JPG/330px-Habana_01_2014_7619.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%93%D0%B0%D0%B2%D0%B0%D0%BD%D0%B0",
+    "lang": "ru"
+  },
+  "santo_domingo": {
+    "extract": "Са́нто-Доми́нго Са́нто-Доми́нго-де-Гусма́н — столица Доминиканской Республики, её культурный и экономический центр. Город с 1936 по 1961 годы носил название Сьюда́д-Трухи́льо.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Santo_Domingo_montage.JPG/330px-Santo_Domingo_montage.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD%D1%82%D0%BE-%D0%94%D0%BE%D0%BC%D0%B8%D0%BD%D0%B3%D0%BE",
+    "lang": "ru"
+  },
+  "baku": {
+    "extract": "Баку́ — столица и крупнейший город Азербайджанской Республики. Важный промышленный, экономический и научно-технический центр Закавказья, а также самый большой порт на Каспийском море и крупнейший по численности населения город на Кавказе. До июля 2021 года территория города Баку входила в Абшеронский экономический район, а иногда числилась отдельно. По указу президента Азербайджана от 7 июля 2021 года «О новом разделении экономических районов в Азербайджанской Республике», был создан Бакинский экономический район, куда и входит город Баку. Первое упоминание о городе относится к V веку.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Baku_city_at_night.jpg/330px-Baku_city_at_night.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%BA%D1%83",
+    "lang": "ru"
+  },
+  "accra": {
+    "extract": "А́ккра, вариант ударения Аккра́ — столица Республики Ганы и центр округа Аккра, крупнейший город страны, являющийся также её культурным и промышленным центром. Слово Аккра является производным от слова Nkran — муравьи.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Accra_montage.jpg/330px-Accra_montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BA%D0%BA%D1%80%D0%B0",
+    "lang": "ru"
+  },
+  "kuwait_city": {
+    "extract": "Эль-Куве́йт, Куве́йт — столица государства Кувейт.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Kuwait_montage.png/330px-Kuwait_montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%AD%D0%BB%D1%8C-%D0%9A%D1%83%D0%B2%D0%B5%D0%B9%D1%82",
+    "lang": "ru"
+  },
+  "sanaa": {
+    "extract": "Сана — столица и крупнейший город Йемена. Сана является одним из старейших постоянно населённых городов и одной из самых высоко расположенных столиц в мире. Население — 2 575 347 человек (2012).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Sanaa_HDR_%2816482367935%29.jpg/330px-Sanaa_HDR_%2816482367935%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD%D0%B0",
+    "lang": "ru"
+  },
+  "port_au_prince": {
+    "extract": "Порт-о-Пре́нс — столица и главный внешнеторговый порт Гаити.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Port-au-Prince_Montage.jpg/330px-Port-au-Prince_Montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%BE%D1%80%D1%82-%D0%BE-%D0%9F%D1%80%D0%B5%D0%BD%D1%81",
+    "lang": "ru"
+  },
+  "bucharest": {
+    "extract": "Бухаре́ст — столица и крупнейший город Румынии, важнейший экономический и культурный центр страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/ru/thumb/1/1d/Palace_of_the_Parliament_Bucharest.JPG/330px-Palace_of_the_Parliament_Bucharest.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D1%83%D1%85%D0%B0%D1%80%D0%B5%D1%81%D1%82",
+    "lang": "ru"
+  },
+  "asuncion": {
+    "extract": "Асунсьо́н — столица и крупнейший город Парагвая, политический, экономический и культурный центр страны. Расположена на левом берегу реки Парагвай, напротив устья её крупного правого притока Пилькомайо. Ниже устья Пилькомайо на правом берегу начинается территория соседнего государства Аргентина, поэтому Асунсьон также является приграничным городом государства Парагвай.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Asuncion_Montage.jpg/330px-Asuncion_Montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D1%81%D1%83%D0%BD%D1%81%D1%8C%D0%BE%D0%BD",
+    "lang": "ru"
+  },
+  "beirut": {
+    "extract": "Бейру́т — столица и крупнейший город Ливана. Расположенный на полуострове, в середине ливанского побережья Средиземного моря, он является крупнейшим и главным морским портом страны. Район Бейрута состоит из столичного города и его пригородов.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Beirut_Central_District_Collage.jpg/330px-Beirut_Central_District_Collage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B5%D0%B9%D1%80%D1%83%D1%82",
+    "lang": "ru"
+  },
+  "minsk": {
+    "extract": "Минск — столица и крупнейший город Беларуси, административный центр Минской области и Минского района, в состав которых не входит, поскольку является самостоятельной административно-территориальной единицей с особым (столичным) статусом. Крупнейший транспортный узел, политический, экономический, культурный и научный центр страны. Является ядром Минской агломерации. Десятый по численности населения город в Европе, седьмой — после Москвы, Санкт-Петербурга, Ташкента, Киева, Баку и Алма-Аты на территории бывшего СССР. Город расположен недалеко от географического центра страны и стоит на реке Свислочь. Площадь составляет 353,6 км², население — 1 995 091 человек. Город-герой (1974).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Church_of_Saints_Simon_and_Helena_%28Minsk%29.jpg/330px-Church_of_Saints_Simon_and_Helena_%28Minsk%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B8%D0%BD%D1%81%D0%BA",
+    "lang": "ru"
+  },
+  "brussels": {
+    "extract": "Брюссе́ль — столица Бельгии и Брюссельского столичного региона. В Брюсселе разместились учреждения Французского и Фламандского сообществ и Фландрии, штаб-квартира Евросоюза, офис НАТО, секретариат стран Бенилюкса.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Brussels_view_from_Mont_des_Arts%2C_Brussels%2C_Belgium_%28cropped%29.jpg/330px-Brussels_view_from_Mont_des_Arts%2C_Brussels%2C_Belgium_%28cropped%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D1%80%D1%8E%D1%81%D1%81%D0%B5%D0%BB%D1%8C",
+    "lang": "ru"
+  },
+  "rabat": {
+    "extract": "Раба́т — столица Марокко, её культурный и индустриальный центр. Непосредственно к Рабату примыкает город Сале, отделённый от него рекой Бу-Регрег и составляющий вместе с ним столичную агломерацию.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Kasbah_des_Oudaias_P1060348.JPG/330px-Kasbah_des_Oudaias_P1060348.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A0%D0%B0%D0%B1%D0%B0%D1%82",
+    "lang": "ru"
+  },
+  "quito": {
+    "extract": "Ки́то или Сан-Франси́ско-де-Ки́то — столица, политический, экономический и культурный центр Эквадора, второй по численности населения город страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/FACHADA_ASAMBLEA_NACIONAL._QUITO%2C_20_DE_FEBRERO_2020._01.jpg/330px-FACHADA_ASAMBLEA_NACIONAL._QUITO%2C_20_DE_FEBRERO_2020._01.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B8%D1%82%D0%BE",
+    "lang": "ru"
+  },
+  "antananarivo": {
+    "extract": "Антананари́ву — столица Мадагаскара и административный центр одноимённой провинции. Город расположен в центральной части острова Мадагаскара, на Высоком плато, на высоте 1240—1470 метров над уровнем моря.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Lake_Anosy%2C_Central_Antananarivo%2C_Capital_of_Madagascar%2C_Photo_by_Sascha_Grabow.jpg/330px-Lake_Anosy%2C_Central_Antananarivo%2C_Capital_of_Madagascar%2C_Photo_by_Sascha_Grabow.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BD%D1%82%D0%B0%D0%BD%D0%B0%D0%BD%D0%B0%D1%80%D0%B8%D0%B2%D1%83",
+    "lang": "ru"
+  },
+  "budapest": {
+    "extract": "Будапе́шт — столица и крупнейший город Венгрии. Расположен в северной части страны по обоим берегам Дуная.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Budapest_Hungarian_Parliament_%2831363963556%29.jpg/330px-Budapest_Hungarian_Parliament_%2831363963556%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D1%83%D0%B4%D0%B0%D0%BF%D0%B5%D1%88%D1%82",
+    "lang": "ru"
+  },
+  "yaounde": {
+    "extract": "Я́унде — столица Камеруна, административный центр Центрального региона и департамента Мфунди.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Cameroon-Yaounde01.jpg/330px-Cameroon-Yaounde01.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%AF%D1%83%D0%BD%D0%B4%D0%B5",
+    "lang": "ru"
+  },
+  "la_paz": {
+    "extract": "Ла-Па́с, полное название Нуэ́стра-Сеньо́ра-де-Ла-Пас — город в Боливии, фактически выполняющий функцию столицы государства, а также административный центр департамента Ла-Пас.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Amaneciendo_en_La_Paz_con_el_Illimani_de_fondo.jpg/330px-Amaneciendo_en_La_Paz_con_el_Illimani_de_fondo.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%B0-%D0%9F%D0%B0%D1%81_(%D0%91%D0%BE%D0%BB%D0%B8%D0%B2%D0%B8%D1%8F)",
+    "lang": "ru"
+  },
+  "abuja": {
+    "extract": "Абу́джа — столица Нигерии с 12 декабря 1991 года. До этого столицей был город Лагос. Абуджа расположена в 700 км к северо-востоку от прежней столицы. Население города 1 693 400 жителей (2022), население агломерации — приблизительно 3,7 млн человек (2022).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Abuja_Collage.jpg/330px-Abuja_Collage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%B1%D1%83%D0%B4%D0%B6%D0%B0",
+    "lang": "ru"
+  },
+  "harare": {
+    "extract": "Хара́ре — город, столица Зимбабве и административный центр одноимённой провинции, включающей в себя город Хараре и муниципалитеты Читунгвиза и Эпуэрт. Является крупнейшим городом страны, а также её культурным и индустриальным центром. Расположен на плато на высоте 1483 метра над уровнем моря, а его климат попадает в категорию субтропических горных районов",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Harare_montage.png/330px-Harare_montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D0%B0%D1%80%D0%B0%D1%80%D0%B5",
+    "lang": "ru"
+  },
+  "montevideo": {
+    "extract": "Монтевиде́о — столица и крупнейший город Уругвая, а также административный центр одноимённого департамента.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Montevideo_collage.JPG/330px-Montevideo_collage.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D0%BD%D1%82%D0%B5%D0%B2%D0%B8%D0%B4%D0%B5%D0%BE",
+    "lang": "ru"
+  },
+  "bamako": {
+    "extract": "Бамако́ — столица Мали. Население составляет 1 809 106 человек (2009). Город расположен на берегах реки Нигер, в юго-западной части страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Bamako_037.jpg/330px-Bamako_037.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%BC%D0%B0%D0%BA%D0%BE",
+    "lang": "ru"
+  },
+  "conakry": {
+    "extract": "Конакри́ или Ко́накри — столица Гвинеи с 1958 года и административный центр одноимённого административного региона. Порт на побережье Атлантического океана. Население города по данным на 2012 год составляет 2 164 182 человека; по данным переписи 1996 года оно насчитывало 1 092 936 человек. В административном отношении подразделяется на пять коммун и 97 кварталов.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Conakry_collage.jpg/330px-Conakry_collage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%BE%D0%BD%D0%B0%D0%BA%D1%80%D0%B8",
+    "lang": "ru"
+  },
+  "phnom_penh": {
+    "extract": "Пномпе́нь — столица Камбоджи, город центрального подчинения, располагается на реке Тонлесап.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Phnom_Penh_Montage.png/330px-Phnom_Penh_Montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%BD%D0%BE%D0%BC%D0%BF%D0%B5%D0%BD%D1%8C",
+    "lang": "ru"
+  },
+  "lome": {
+    "extract": "Ломе́ — столица Того, административный и промышленный центр и главный порт страны. В городе имеется народный дом, основанный в конце XVIII века, конференц-зал.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Photos_de_Lom%C3%A9.jpg/330px-Photos_de_Lom%C3%A9.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%BE%D0%BC%D0%B5",
+    "lang": "ru"
+  },
+  "doha": {
+    "extract": "До́ха — столица и крупнейший город арабского государства Катар, расположенный у побережья Персидского залива. Административный центр муниципалитета Ад-Доха.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/City_montage_of_Doha2.png/330px-City_montage_of_Doha2.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%BE%D1%85%D0%B0",
+    "lang": "ru"
+  },
+  "kuala_lumpur": {
+    "extract": "Куа́ла-Лу́мпур, также встречается вариант ударения Куа́ла-Лумпу́р — столица и самый крупный город Малайзии.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Dataran_Merdeka_1.jpg/330px-Dataran_Merdeka_1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D1%83%D0%B0%D0%BB%D0%B0-%D0%9B%D1%83%D0%BC%D0%BF%D1%83%D1%80",
+    "lang": "ru"
+  },
+  "maputo": {
+    "extract": "Мапу́ту — столица и крупнейший город Мозамбика, расположен на юге страны. Крупный порт на берегу Индийского океана, экономическая жизнь сконцентрирована в районе гавани. Официально население составляет около 1,3 миллиона человек, но в реальности оно значительно превосходит указанное число из-за большого количества неучтённых жителей, проживающих в трущобах и иных нелегальных строениях.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Maputo_montage.png/330px-Maputo_montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D0%BF%D1%83%D1%82%D1%83",
+    "lang": "ru"
+  },
+  "san_salvador": {
+    "extract": "Сан-Сальвадо́р — столица и крупнейший город государства Сальвадор.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Bandera_de_San_Salvador_%282021%29.svg/langru-330px-Bandera_de_San_Salvador_%282021%29.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD-%D0%A1%D0%B0%D0%BB%D1%8C%D0%B2%D0%B0%D0%B4%D0%BE%D1%80",
+    "lang": "ru"
+  },
+  "kampala": {
+    "extract": "Кампа́ла — столица Уганды, близ северного побережья озера Виктория, административный центр Центральной области и одноимённого себе округа.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/b8/KampalaSkyln.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D0%BC%D0%BF%D0%B0%D0%BB%D0%B0",
+    "lang": "ru"
+  },
+  "brazzaville": {
+    "extract": "Браззави́ль — столица и самый густонаселённый город Республики Конго. Расположен на правом берегу реки Конго, напротив Киншасы. Население на 2023 год составляло 2 145 783 человек. В Браззавиле проживает треть населения Республики Конго и работает около 40 % человек, занятых не в сельском хозяйстве.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Brazzaville_bird_eye_view.jpg/330px-Brazzaville_bird_eye_view.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D1%80%D0%B0%D0%B7%D0%B7%D0%B0%D0%B2%D0%B8%D0%BB%D1%8C",
+    "lang": "ru"
+  },
+  "pretoria": {
+    "extract": "Прето́рия — город в Южно-Африканской Республике, административная столица ЮАР (одна из «трёх столиц» ЮАР, наряду с Кейптауном и Блумфонтейном, де-факто является национальной столицей страны. Один из самых современных городов Африки.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Montage_of_Pretoria.jpg/330px-Montage_of_Pretoria.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D1%80%D0%B5%D1%82%D0%BE%D1%80%D0%B8%D1%8F",
+    "lang": "ru"
+  },
+  "lusaka": {
+    "extract": "Луса́ка — столица Замбии, её политический, индустриальный и культурный центр.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Downtown_Lusaka.JPG/330px-Downtown_Lusaka.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D1%83%D1%81%D0%B0%D0%BA%D0%B0",
+    "lang": "ru"
+  },
+  "panama_city": {
+    "extract": "Пана́ма, официально Нуэстра-Сеньора-де-ла-Асунсьон-де-Панама — столица Республики Панама с населением 1,3 млн человек с пригородами (2010), расположена у входа Панамского канала в Тихий океан. Панама — политический, административный и культурный центр страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Montage_Panama_City.jpg/330px-Montage_Panama_City.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%B0%D0%BD%D0%B0%D0%BC%D0%B0_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)",
+    "lang": "ru"
+  },
+  "stockholm": {
+    "extract": "Стокго́льм — столица и крупнейший город Швеции. Расположен на протоках, соединяющих озеро Меларен с Балтийским морем. В черте города находится 14 островов.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Stockholms_slott_%28Stockholm_Palace%29_%2824831039126%29.jpg/330px-Stockholms_slott_%28Stockholm_Palace%29_%2824831039126%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D1%82%D0%BE%D0%BA%D0%B3%D0%BE%D0%BB%D1%8C%D0%BC",
+    "lang": "ru"
+  },
+  "sofia": {
+    "extract": "Софи́я — столица и крупнейший город Болгарии. Административный центр городской области София и его единственной общины Столична. Город находится на 13-м месте по количеству жителей в Европейском союзе.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Sofia_Largo.jpg/330px-Sofia_Largo.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%BE%D1%84%D0%B8%D1%8F",
+    "lang": "ru"
+  },
+  "prague": {
+    "extract": "Пра́га — статутный город и столица Чешской Республики, административный центр Среднечешского края и двух его районов: Прага-Восток и Прага-Запад. Образует самостоятельную административно-территориальную единицу страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Prague_Collage_2017.png/330px-Prague_Collage_2017.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D1%80%D0%B0%D0%B3%D0%B0",
+    "lang": "ru"
+  },
+  "ouagadougou": {
+    "extract": "Уагаду́гу — столица Буркина-Фасо, в междуречье Красной и Белой Вольты, является административным, экономическим, транспортным и культурным центром страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Monument_aux_h%C3%A9ros_nationaux_-_Ouagadougou_-_2024.jpg/330px-Monument_aux_h%C3%A9ros_nationaux_-_Ouagadougou_-_2024.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A3%D0%B0%D0%B3%D0%B0%D0%B4%D1%83%D0%B3%D1%83",
+    "lang": "ru"
+  },
+  "ottawa": {
+    "extract": "Отта́ва — столица Канады. Расположена в восточной части провинции Онтарио на берегу реки Оттавы, по которой проходит граница между провинциями Онтарио и Квебек. Оттава — четвёртый по величине город страны и второй по величине город Онтарио. Вместе с расположенным с квебекской стороны реки городом Гатино и рядом других муниципалитетов Оттава входит в Национальную столичную область.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Flag_of_Ottawa%2C_Ontario.svg/langru-330px-Flag_of_Ottawa%2C_Ontario.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9E%D1%82%D1%82%D0%B0%D0%B2%D0%B0",
+    "lang": "ru"
+  },
+  "helsinki": {
+    "extract": "Хе́льсинки — столица и крупнейший город Финляндии, административный центр провинции Уусимаа (Нюланд).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Helsinki%27s_Cathedral.jpg/330px-Helsinki%27s_Cathedral.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D0%B5%D0%BB%D1%8C%D1%81%D0%B8%D0%BD%D0%BA%D0%B8",
+    "lang": "ru"
+  },
+  "yerevan": {
+    "extract": "Ерева́н — столица и крупнейший город Республики Армения, крупнейший промышленный и экономический центр государства. Один из древнейших городов мира.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Mount_Ararat_and_the_Yerevan_skyline_%28June_2018%29.jpg/330px-Mount_Ararat_and_the_Yerevan_skyline_%28June_2018%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%95%D1%80%D0%B5%D0%B2%D0%B0%D0%BD",
+    "lang": "ru"
+  },
+  "mogadishu": {
+    "extract": "Могади́шо — столица, крупнейший город и главный порт Сомали, являющийся также её культурным, финансовым и индустриальным центром.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Lido_beach_from_the_sea_in_Mogadishu.jpg/330px-Lido_beach_from_the_sea_in_Mogadishu.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D0%B3%D0%B0%D0%B4%D0%B8%D1%88%D0%BE",
+    "lang": "ru"
+  },
+  "tbilisi": {
+    "extract": "Тбили́си — столица и крупнейший город Грузии, расположенный в восточной части страны, на берегах реки Куры (Мтквари). Город является политическим, экономическим, транспортным и культурным центром страны. По оценке Национальной статистической службы Грузии, на 1 января 2026 года в городских поселениях муниципалитета Тбилиси проживало 1 309 028 человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Tbilisi_collage.png/330px-Tbilisi_collage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%B1%D0%B8%D0%BB%D0%B8%D1%81%D0%B8",
+    "lang": "ru"
+  },
+  "belgrade": {
+    "extract": "Белгра́д — столица и крупнейший город Республики Сербии. Согласно результатам переписи населения 2022 года, 1 197 714 человек проживают в центральной части города, а 1 681 485 человек — в административных границах города Белграда.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Belgrade_Waterfront_1.jpg/330px-Belgrade_Waterfront_1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B5%D0%BB%D0%B3%D1%80%D0%B0%D0%B4",
+    "lang": "ru"
+  },
+  "dushanbe": {
+    "extract": "Душанбе́ — столица Таджикистана, город республиканского значения, самый крупный научно-культурный, политический, экономический, промышленный и административный центр страны. В Душанбе расположены высшие органы государственной власти страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/ru/thumb/5/5b/Dushanbe_Presidential_Palace_01.JPG/330px-Dushanbe_Presidential_Palace_01.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D1%83%D1%88%D0%B0%D0%BD%D0%B1%D0%B5",
+    "lang": "ru"
+  },
+  "k_benhavn": {
+    "extract": "Копенга́ген — столица и крупнейший город Датского королевства (Дании). Располагается на островах Зеландия, Слотсхольмен и Амагер. Население исторического города составляет чуть более 600 тысяч человек, с пригородами — более 1,3 миллиона жителей.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Christiansborg_fra_Nikolaj_Kirken.jpg/330px-Christiansborg_fra_Nikolaj_Kirken.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%BE%D0%BF%D0%B5%D0%BD%D0%B3%D0%B0%D0%B3%D0%B5%D0%BD",
+    "lang": "ru"
+  },
+  "amman": {
+    "extract": "Амма́н — столица и крупнейший город Иордании. В древности назывался Раббат-Аммон, в эллинистическо-римскую эпоху — Филадельфия. В VII—IX веках входил в состав Арабского Халифата. С 1516 года и до конца Первой мировой войны — в составе Османской империи.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/AMMAN_2.jpg/330px-AMMAN_2.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BC%D0%BC%D0%B0%D0%BD",
+    "lang": "ru"
+  },
+  "dublin": {
+    "extract": "Ду́блин — город-графство в Республике Ирландия, столица страны. Главный порт страны, расположенный у побережья Ирландского моря.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Samuel_Beckett_Bridge_At_Sunset_Dublin_Ireland_%2897037639%29_%28cropped%29.jpeg/330px-Samuel_Beckett_Bridge_At_Sunset_Dublin_Ireland_%2897037639%29_%28cropped%29.jpeg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D1%83%D0%B1%D0%BB%D0%B8%D0%BD",
+    "lang": "ru"
+  },
+  "monrovia": {
+    "extract": "Монро́вия — столица Либерии. Находится на территории округа Монтсеррадо, порт на побережье Атлантического океана, расположен в искусственной бухте в устье реки Сент-Пол. Население 1 010 970 чел. (2008).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Liberia%2C_Africa_-_panoramio_%28256%29.jpg/330px-Liberia%2C_Africa_-_panoramio_%28256%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D0%BD%D1%80%D0%BE%D0%B2%D0%B8%D1%8F",
+    "lang": "ru"
+  },
+  "amsterdam": {
+    "extract": "Амстерда́м — столица и крупнейший город Нидерландов. Согласно конституции Нидерландов, с 1814 года является столицей королевства, при этом правительство, парламент и верховный суд располагаются в Гааге. Расположен в провинции Северная Голландия на западе страны в устье реки Амстел, у бухты Эй. Амстердам соединён Нордзе-каналом с Северным морем.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Museo_Nacional%2C_%C3%81msterdam%2C_Pa%C3%ADses_Bajos%2C_2016-05-30%2C_DD_16-18_HDR.jpg/330px-Museo_Nacional%2C_%C3%81msterdam%2C_Pa%C3%ADses_Bajos%2C_2016-05-30%2C_DD_16-18_HDR.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BC%D1%81%D1%82%D0%B5%D1%80%D0%B4%D0%B0%D0%BC",
+    "lang": "ru"
+  },
+  "jerusalem": {
+    "extract": "Иерусали́м — город на Ближнем Востоке, столица Израиля и де-юре столица Государства Палестина. Вопрос о принадлежности Восточного Иерусалима остаётся спорным и оспаривается многими международными организациями. Расположен на плато в Иудейских горах на водоразделе между Средиземным и Мёртвым морями, на высоте 650—840 метров над уровнем моря. Климат средиземноморский, с жарким, сухим летом и мягкой, влажной зимой. Город является священным для трёх крупнейших авраамических религий — иудаизма, христианства и ислама. Населён представителями множества национальных и этнических групп, и религиозных деноминаций. Численность населения Иерусалима на начало 2020 года — 936 425 жителей.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Jerusalem_Chords_Bridge_6.jpg/330px-Jerusalem_Chords_Bridge_6.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%98%D0%B5%D1%80%D1%83%D1%81%D0%B0%D0%BB%D0%B8%D0%BC",
+    "lang": "ru"
+  },
+  "guatemala_city": {
+    "extract": "Гватема́ла — столица Республики Гватемала, а также самый крупный город Центральной Америки.\nВ 6 километрах к югу от центра города расположен Международный аэропорт Ла-Аурора, реконструкция которого закончена в марте 2010 года.\nСтолица связана также развитым автобусным сообщением со всеми департаментами и районами Гватемалы, а также с городами Мехико, Пуэбла, Тапачула, Канкун и др. в Мексике; Сан-Сальвадор в Сальвадоре; Сан-Педро-Сула и Тегусигальпа в Гондурасе; Манагуа в Никарагуа; Сан Хосе в Коста-Рике; Панамой и городами Белиза.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Ciudad_de_Guatemala_-_Collage_CDGT_2.jpg/330px-Ciudad_de_Guatemala_-_Collage_CDGT_2.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%93%D0%B2%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D0%BB%D0%B0_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)",
+    "lang": "ru"
+  },
+  "n_djamena": {
+    "extract": "Нджаме́на, до 1973 года Форт-Лами́ — столица Чада, административный центр префектуры Шари-Багирми. Город Нджамена также является одним из 22 регионов Чада и административно как регион подразделяется на 10 городских районов.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Building_of_National_Assembly_DJAMENA.jpg/330px-Building_of_National_Assembly_DJAMENA.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D0%B4%D0%B6%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0",
+    "lang": "ru"
+  },
+  "tegucigalpa": {
+    "extract": "Тегусига́льпа — столица и крупнейший город Гондураса. Население — 1 157 509 жителей ; прогноз на 2023 год — 1 326 460 жителей. Город расположен среди гор центральной части страны, в долине реки Чолутека на высоте около 1000 м над уровнем моря. Тегусигальпа также является столицей департамента Франсиско Морасан.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Centro_historico_de_Tegucigalpa_y_Comayag%C3%BCela.jpg/330px-Centro_historico_de_Tegucigalpa_y_Comayag%C3%BCela.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%B5%D0%B3%D1%83%D1%81%D0%B8%D0%B3%D0%B0%D0%BB%D1%8C%D0%BF%D0%B0",
+    "lang": "ru"
+  },
+  "kingston": {
+    "extract": "Ки́нгстон — столица и крупнейший город Ямайки. Расположен на Карибском море; городская агломерация 580 тысяч жителей. Находится в естественной гавани, защищён длинной и узкой косой Палисадос, соединяющей Порт-Ройял и международный аэропорт с остальными частями острова.\nКингстон самый большой англоязычный город во всем карибском регионе. Кингстон — не только столица Ямайки, но и оживлённый порт, центр швейной и пищевой промышленности. Город основан в 1693 году Великобританией. В 1872 в городе располагалась администрация Ямайки. Город получил статус столицы, когда остров получил независимость в 1962 году.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/View_of_Kingston.jpg/330px-View_of_Kingston.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B8%D0%BD%D0%B3%D1%81%D1%82%D0%BE%D0%BD_(%D0%AF%D0%BC%D0%B0%D0%B9%D0%BA%D0%B0)",
+    "lang": "ru"
+  },
+  "naypyidaw": {
+    "extract": "Нейпьидо́ — столица Мьянмы. Находится в 320 км к северу от бывшей столицы Янгона. Построен город на месте деревни Чепьи в 17 километрах к западу от города Пьинмана в округе Мандалай. В настоящее время входит в состав союзной территории Нейпьидо.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Naypyidaw_--_Water_Fountain_Garden.JPG/330px-Naypyidaw_--_Water_Fountain_Garden.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D0%B5%D0%B9%D0%BF%D1%8C%D0%B8%D0%B4%D0%BE",
+    "lang": "ru"
+  },
+  "djibouti": {
+    "extract": "Джибу́ти — столица государства Джибути. Является самостоятельной административной единицей наряду с регионами Джибути. Население — 475 332 жителя.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Djibcapital.jpg/330px-Djibcapital.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B6%D0%B8%D0%B1%D1%83%D1%82%D0%B8_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)",
+    "lang": "ru"
+  },
+  "managua": {
+    "extract": "Мана́гуа — столица и крупнейший город Никарагуа; является также административным центром одноимённого департамента страны. Расположен на юго-западном берегу озера Манагуа в департаменте Манагуа. Численность населения в 2016 году оценивалась в 1 042 641 человек в административных пределах города, и 1 401 687 человек в столичном районе, в который также входят муниципалитеты Сьюдад-Сандино, Эль-Крусеро, Ниндири, Тикуантепе и Типитапа.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/ManaguaNicCollage.jpg/330px-ManaguaNicCollage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D0%BD%D0%B0%D0%B3%D1%83%D0%B0",
+    "lang": "ru"
+  },
+  "niamey": {
+    "extract": "Ниаме́й — столица Нигера, административный центр департамента Ниамей. В 1926—1960 являлся административным центром французского владения Нигер, с 1960 — столица Нигера.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Niamey_from_grand_mosque_theatre_2006.jpg/330px-Niamey_from_grand_mosque_theatre_2006.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D0%B8%D0%B0%D0%BC%D0%B5%D0%B9",
+    "lang": "ru"
+  },
+  "tirana": {
+    "extract": "Тира́на — столица и крупнейший город Албании; главный политический, экономический и культурный центр страны. Образует самостоятельную административную единицу город Тирана, а также является административным центром одноимённых области и округа, в состав которых входит.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Skanderbeg_square_tirana_2016.jpg/330px-Skanderbeg_square_tirana_2016.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%B8%D1%80%D0%B0%D0%BD%D0%B0",
+    "lang": "ru"
+  },
+  "kathmandu": {
+    "extract": "Катманду́ — столица и крупнейший город Непала, его исторический, экономический, политический и культурный центр. Население города составляет более 1 млн человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Kathmandu_montage.jpg/330px-Kathmandu_montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D1%82%D0%BC%D0%B0%D0%BD%D0%B4%D1%83",
+    "lang": "ru"
+  },
+  "ulaanbaatar": {
+    "extract": "Ула́н-Ба́тор — столица Монголии и крупнейший по численности населения город страны — 1 405 000 человек, выделенный в самостоятельную административную единицу.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Chingisiin_Talbai_2014-7-11.jpg/330px-Chingisiin_Talbai_2014-7-11.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A3%D0%BB%D0%B0%D0%BD-%D0%91%D0%B0%D1%82%D0%BE%D1%80",
+    "lang": "ru"
+  },
+  "kigali": {
+    "extract": "Кига́ли (руанда , англ. , фр. и суахили Kigali; ранее также Кига́ри — столица и крупнейший город Руанды. Население городской территории — 1 745 555 человек по переписи на 2022 год.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Kigali2018Cropped.jpg/330px-Kigali2018Cropped.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B8%D0%B3%D0%B0%D0%BB%D0%B8",
+    "lang": "ru"
+  },
+  "bishkek": {
+    "extract": "Бишке́к — столица и крупнейший город Кыргызстана, город республиканского значения, административный центр Чуйской области. Главный транспортный узел, промышленный и административный центр страны. Современный культурный, политический и экономический центр республики.",
+    "image": "https://upload.wikimedia.org/wikipedia/ru/thumb/b/b5/Bishkek-capital-of-Kyrgyzstan.JPG/330px-Bishkek-capital-of-Kyrgyzstan.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B8%D1%88%D0%BA%D0%B5%D0%BA",
+    "lang": "ru"
+  },
+  "oslo": {
+    "extract": "О́сло — столица и самый крупный город Норвегии. С 1624 по 1877 год город назывался Христиа́ния, с 1877 по 1925 год — Кристиа́ния.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Oslo_Nationaltheatret.JPG/330px-Oslo_Nationaltheatret.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9E%D1%81%D0%BB%D0%BE",
+    "lang": "ru"
+  },
+  "freetown": {
+    "extract": "Фри́таун — столица и крупнейший город Сьерра-Леоне, расположенный в западной части страны. Является крупным портовым городом на Атлантическом океане. Фритаун — экономический, финансовый, культурный, образовательный и политический центром Сьерра-Леоне. По данным переписи 2024 года, население Фритауна составляет 1 347 559 человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Freetown-aerialview.jpg/330px-Freetown-aerialview.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A4%D1%80%D0%B8%D1%82%D0%B0%D1%83%D0%BD",
+    "lang": "ru"
+  },
+  "islamabad": {
+    "extract": "Исламаба́д — столица Исламской Республики Пакистан. Построен в 1960-х годах как плановый город, чтобы заменить Карачи в качестве столицы Пакистана. Культурный, политический и экономический центр страны. Исламабад известен своим высоким уровнем жизни, безопасностью и обильной растительностью.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Blue_Hour_at_Pakistan_Monument.jpg/330px-Blue_Hour_at_Pakistan_Monument.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%98%D1%81%D0%BB%D0%B0%D0%BC%D0%B0%D0%B1%D0%B0%D0%B4",
+    "lang": "ru"
+  },
+  "cotonou": {
+    "extract": "Котону́ — финансовая столица и крупнейший город Бенина. По официальным данным, на 2013 год население насчитывало 679 012 жителей, однако, некоторые предварительные подсчёты показывают, что численность горожан может достигать 1,2 миллиона. Населённость в 1960 году составляла 70 000 человек. Городская территория продолжает расширяться, в особенности, в сторону запада. Город находится на юго-востоке страны, между Атлантическим океаном и озером Нокуэ.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Vue_panoramique_quartier_cadj%C3%A9houn-Cotonou_au_B%C3%A9nin_1.jpg/330px-Vue_panoramique_quartier_cadj%C3%A9houn-Cotonou_au_B%C3%A9nin_1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%BE%D1%82%D0%BE%D0%BD%D1%83",
+    "lang": "ru"
+  },
+  "vientiane": {
+    "extract": "Вьентья́н — столица и крупнейший город Лаоса, расположенный на реке Меконг близ границы с Таиландом, крупнейший экономический центр страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/20171118_Vientiane_3220_DxO.jpg/330px-20171118_Vientiane_3220_DxO.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D1%8C%D0%B5%D0%BD%D1%82%D1%8C%D1%8F%D0%BD",
+    "lang": "ru"
+  },
+  "riga": {
+    "extract": "Ри́га — столица Латвии, её политический, экономический и культурный центр. Второй по числу жителей город в странах Балтии после Вильнюса. В начале 2024 года численность жителей города составляла 605 273 человека.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Riga_%2833844464828%29.jpg/330px-Riga_%2833844464828%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A0%D0%B8%D0%B3%D0%B0",
+    "lang": "ru"
+  },
+  "nouakchott": {
+    "extract": "Нуакшо́т — столица Мавритании. Население — 1,3 млн. чел., тогда как в конце 1960-х население было около 20 тыс. человек. Название города в переводе с берберского языка означает «место, где дует ветер».",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Nouakchott.jpg/330px-Nouakchott.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D1%83%D0%B0%D0%BA%D1%88%D0%BE%D1%82",
+    "lang": "ru"
+  },
+  "muscat": {
+    "extract": "Маска́т — столица и крупнейший мегаполис Омана, также место расположения правительства и крупнейший город одноимённого губернаторства. В состав мегаполиса, площадь которого составляет почти 3500 км², входят 6 вилайетов. По данным Национального центра статистики и информации, общая численность населения губернаторства в сентябре 2015 года составила 1,56 млн человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Mascate_collage.png/330px-Mascate_collage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D1%81%D0%BA%D0%B0%D1%82",
+    "lang": "ru"
+  },
+  "ashgabat": {
+    "extract": "Ашхаба́д, или Ашгаба́т — столица и крупнейший город Туркменистана; административно-политический, промышленный, научный и культурный центр государства. Является отдельной административно-территориальной единицей Туркменистана — городом с правами велаята (области).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Neutrality-Road-Ashgabat-2015.JPG/330px-Neutrality-Road-Ashgabat-2015.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D1%88%D1%85%D0%B0%D0%B1%D0%B0%D0%B4",
+    "lang": "ru"
+  },
+  "zagreb": {
+    "extract": "За́греб — столица и крупнейший город Хорватии. Население — 767 131 человек (2021), площадь — 641,29 км². Город расположен на реке Саве, притоке Дуная, на высоте 104 метров над уровнем моря рядом с горным массивом Медведница.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Zagreb_%2829255640143%29.jpg/330px-Zagreb_%2829255640143%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D1%80%D0%B5%D0%B1",
+    "lang": "ru"
+  },
+  "sarajevo": {
+    "extract": "Сара́ево — крупнейший город и столица Боснии и Герцеговины. Административный центр Сараевского кантона. Образует муниципальное образование «город Сараево», разделённое на четыре самоуправляемых района.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Sarajevo_City_Panorama.JPG/330px-Sarajevo_City_Panorama.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D1%80%D0%B0%D0%B5%D0%B2%D0%BE",
+    "lang": "ru"
+  },
+  "chisinau": {
+    "extract": "Кишинёв — столица и крупнейший город Республики Молдова. Экономический и культурный центр, расположенный в центре страны на реке Бык. Кишинёв обладает особым статусом в административном делении Молдовы — он является муниципалитетом. Кроме самого города Кишинёва, в состав одноимённого муниципалитета входят шесть окрестных городов и двадцать пять сёл, объединённых в тринадцать коммун.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Endava_Tower%2C_%D0%9A%D0%B8%D1%88%D0%B8%D0%BD%D0%B5%D0%B2%2C_%D0%A0%D0%B5%D1%81%D0%BF%D1%83%D0%B1%D0%BB%D0%B8%D0%BA%D0%B0_%D0%9C%D0%BE%D0%BB%D0%B4%D0%BE%D0%B2%D0%B0_Endava_Tower%2C_Chisinau%2C_Republic_Moldova_Endava_Tower%2C_Chisinau%2C_Republic_of_Moldova_%2851191814936%29.jpg/330px-thumbnail.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B8%D1%88%D0%B8%D0%BD%D1%91%D0%B2",
+    "lang": "ru"
+  },
+  "lilongwe": {
+    "extract": "Лило́нгве — столица Малави и административный центр Центральной провинции Малави.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/K.a.r-.clocktower-in-lilongwe.jpg/330px-K.a.r-.clocktower-in-lilongwe.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%B8%D0%BB%D0%BE%D0%BD%D0%B3%D0%B2%D0%B5",
+    "lang": "ru"
+  },
+  "asmara": {
+    "extract": "Асмэ́ра, также Асма́ра — столица и крупнейший город Эритреи. В городе развиты текстильная, швейная, обувная, пищевая, керамическая промышленность. Есть университет (1967), общественная библиотека (1955), аэропорт, железнодорожный вокзал.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/AsmaraCollage.jpg/330px-AsmaraCollage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D1%81%D0%BC%D1%8D%D1%80%D0%B0",
+    "lang": "ru"
+  },
+  "abu_dhabi": {
+    "extract": "А́бу-Да́би, вариант ударения Абу́-Да́би, также — А́бу-За́би — столица Объединённых Арабских Эмиратов и эмирата Абу-Даби. Политический, промышленный, торговый и культурный центр страны, его вклад в ВВП ОАЭ превышает 56 % (2008). Население города 1 483 000 жителей (2020).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Abu_dhabi_skylines_2014.jpg/330px-Abu_dhabi_skylines_2014.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%B1%D1%83-%D0%94%D0%B0%D0%B1%D0%B8",
+    "lang": "ru"
+  },
+  "port_louis": {
+    "extract": "Порт-Луи́ — крупнейший город, основной порт и столица Маврикия. Расположен на берегу Индийского океана. Важный перегрузочный порт на линиях океанских перевозок, крупный банковский и офшорный финансовый центр Африки.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Evening_Port_Louis.jpg/330px-Evening_Port_Louis.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%BE%D1%80%D1%82-%D0%9B%D1%83%D0%B8",
+    "lang": "ru"
+  },
+  "libreville": {
+    "extract": "Либреви́ль — столица Габона, административный центр провинции Эстуарий и одноимённого департамента. Город расположен на северном берегу реки Мбе — от её португальского названия Gabão происходят названия государства Габон и образующейся в устье Габонской бухты. Население — 703 939 жителей (2013).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Libreville1.jpg/330px-Libreville1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D0%B8%D0%B1%D1%80%D0%B5%D0%B2%D0%B8%D0%BB%D1%8C",
+    "lang": "ru"
+  },
+  "manama": {
+    "extract": "Мана́ма — столица и главный экономический центр королевства Бахрейн. В его агломерации проживает около 635 тыс. человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Manama_Bahrain_Bay_01.jpg/330px-Manama_Bahrain_Bay_01.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D0%BD%D0%B0%D0%BC%D0%B0",
+    "lang": "ru"
+  },
+  "vilnius": {
+    "extract": "Ви́льнюс — столица и крупнейший город Литвы и Прибалтики в целом. Административный центр Вильнюсского уезда, Вильнюсского городского самоуправления и Вильнюсского районного самоуправления, в состав которого не входит.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Logo_of_Vilnius.svg/langru-330px-Logo_of_Vilnius.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B8%D0%BB%D1%8C%D0%BD%D1%8E%D1%81",
+    "lang": "ru"
+  },
+  "skopje": {
+    "extract": "Ско́пье — столица Северной Македонии, образующая самостоятельную административную единицу страны из десяти общин, население которой — около 540 тыс. человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Vista_de_Skopie%2C_Macedonia%2C_2014-04-16%2C_DD_82.JPG/330px-Vista_de_Skopie%2C_Macedonia%2C_2014-04-16%2C_DD_82.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%BA%D0%BE%D0%BF%D1%8C%D0%B5",
+    "lang": "ru"
+  },
+  "hargeisa": {
+    "extract": "Харге́йса — город в Сомали, крупнейший город и столица частично признанного государства Сомалиленд, второй по численности город Сомали после Могадишо.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/HargeisaDrone.jpg/330px-HargeisaDrone.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D0%B0%D1%80%D0%B3%D0%B5%D0%B9%D1%81%D0%B0",
+    "lang": "ru"
+  },
+  "bloemfontein": {
+    "extract": "Блу́мфонтейн — город в ЮАР, центр провинции Фри-Стейт, судебная столица страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bloemfontein%2C_Free_State%2C_South_Africa_%2820349855518%29.jpg/330px-Bloemfontein%2C_Free_State%2C_South_Africa_%2820349855518%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%BB%D1%83%D0%BC%D1%84%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD",
+    "lang": "ru"
+  },
+  "bratislava": {
+    "extract": "Братисла́ва, до 27 марта 1919 года — Прешпорок или Пре́шпорек, Пре́сбург, Пожо́нь, в Средние века — Истрополис — столица и крупнейший город Словакии.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Hlavn%C3%A9_Namestie_%2835096533142%29.jpg/330px-Hlavn%C3%A9_Namestie_%2835096533142%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D1%80%D0%B0%D1%82%D0%B8%D1%81%D0%BB%D0%B0%D0%B2%D0%B0",
+    "lang": "ru"
+  },
+  "bissau": {
+    "extract": "Биса́у — столица Республики Гвинеи-Бисау, административный центр автономного сектора Бисау. Население — 492 004 жителей (2015).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Bissau-Stroossenzeen--w.jpg/330px-Bissau-Stroossenzeen--w.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B8%D1%81%D0%B0%D1%83",
+    "lang": "ru"
+  },
+  "tallinn": {
+    "extract": "Та́ллин — столица Эстонской Республики, городской муниципалитет. Политический, научный, экономический и культурный центр страны. В городе расположены все её центральные государственные учреждения и сосредоточено большинство высших и средних профессиональных учебных заведений. В административных границах города расположены 16 морских портов, а также крупнейший аэропорт страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Freedom_Square_in_Tallinn_during_Coronavirus_time.jpg/330px-Freedom_Square_in_Tallinn_during_Coronavirus_time.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%B0%D0%BB%D0%BB%D0%B8%D0%BD",
+    "lang": "ru"
+  },
+  "wellington": {
+    "extract": "Ве́ллингтон — столица Новой Зеландии, расположенная на юго-западной оконечности острова Северный, у пролива Кука.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Wellington_photo_montage.jpg/330px-Wellington_photo_montage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B5%D0%BB%D0%BB%D0%B8%D0%BD%D0%B3%D1%82%D0%BE%D0%BD",
+    "lang": "ru"
+  },
+  "valletta": {
+    "extract": "Валле́тта — столица Республики Мальта, экономический и политический центр государства. Собственно город Валлетта имеет население 6444 человека, в то время как в пригородах проживает почти 394 тысячи человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/St_Sebastian_Curtain_%28cropped%29.jpg/330px-St_Sebastian_Curtain_%28cropped%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B0%D0%BB%D0%BB%D0%B5%D1%82%D1%82%D0%B0",
+    "lang": "ru"
+  },
+  "maseru": {
+    "extract": "Ма́серу — столица государства Лесото, административный центр одноимённого района. Расположен на берегу реки Каледон, на границе с ЮАР. Это единственный крупный город Лесото, население которого составляет 227 880 человек по данным на 2006 год. С 1869 года — столица британского протектората, а с 1966 года, когда страна объявила независимость — столица государства Лесото.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Maseru_City_CBD.jpg/330px-Maseru_City_CBD.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D1%81%D0%B5%D1%80%D1%83",
+    "lang": "ru"
+  },
+  "astana": {
+    "extract": "Астана́ — столица Республики Казахстан с 10 декабря 1997 года. Город расположен на севере страны, на берегах реки Ишим. Административно разделён на шесть районов. Астана является анклавом, окружённым территорией Акмолинской области, административно не входя в её состав.",
+    "image": "https://upload.wikimedia.org/wikipedia/ru/thumb/d/dd/Astana%2C_capital_of_Kazakhstan_01.JPG/330px-Astana%2C_capital_of_Kazakhstan_01.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D1%81%D1%82%D0%B0%D0%BD%D0%B0",
+    "lang": "ru"
+  },
+  "bujumbura": {
+    "extract": "Бужумбу́ра — самый большой город, экономическая и бывшая политическая столица Бурунди. Население по оценочным данным составляет более 500 тысяч человек. Город прилегает к озеру Танганьика с северо-востока, является главным портом страны на озере.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/BujumburaFromCathedral.jpg/330px-BujumburaFromCathedral.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D1%83%D0%B6%D1%83%D0%BC%D0%B1%D1%83%D1%80%D0%B0",
+    "lang": "ru"
+  },
+  "canberra": {
+    "extract": "Канбе́рра — столица Австралии, один из крупнейших городов страны. Население Канберры составляет 410 301 человек (2024), а с городом-спутником Куинбиан как городской агломерации Канберра — Куинбиан достигает 462 213 человек (2021). Город является административным центром Австралийской столичной территории, которая включает в себя также небольшую сельскохозяйственную зону и национальный парк Намаджи. В 250 км к северо-востоку от Канберры находится Сидней, а в 450 км к юго-западу — Мельбурн.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Canberra_montage_2.jpg/330px-Canberra_montage_2.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D0%BD%D0%B1%D0%B5%D1%80%D1%80%D0%B0",
+    "lang": "ru"
+  },
+  "new_delhi": {
+    "extract": "Нью-Де́ли, Но́вый Де́ли — столица Индии, район города Дели. Занимает территорию 42,7 км². Нью-Дели находится в метрополии Дели и является местонахождением правительства Индии и правительства Дели.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Forecourt%2C_Rashtrapati_Bhavan_-_1.jpg/330px-Forecourt%2C_Rashtrapati_Bhavan_-_1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D1%8C%D1%8E-%D0%94%D0%B5%D0%BB%D0%B8",
+    "lang": "ru"
+  },
+  "ljubljana": {
+    "extract": "Любля́на — столица и крупнейший город Словении. Образует городскую общину Любляна, разделённую на семнадцать районов.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Ljubljana_Montage.png/330px-Ljubljana_Montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D1%8E%D0%B1%D0%BB%D1%8F%D0%BD%D0%B0",
+    "lang": "ru"
+  },
+  "bandar_seri_begawan": {
+    "extract": "Ба́ндар-Сери́-Бега́ван — столица и крупнейший город султаната Бруней. Административный центр округа Бруней-Муара.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/BSB_Composite.jpg/330px-BSB_Composite.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%BD%D0%B4%D0%B0%D1%80-%D0%A1%D0%B5%D1%80%D0%B8-%D0%91%D0%B5%D0%B3%D0%B0%D0%B2%D0%B0%D0%BD",
+    "lang": "ru"
+  },
+  "port_of_spain": {
+    "extract": "Порт-оф-Спейн — столица Республики Тринидад и Тобаго, её политический, экономический и культурный центр. Ранее — столица Федерации Вест-Индии.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/POS_SKYLINE_2024_BEAUTIFUL_EVAN-P_2024_10-8.jpg/330px-POS_SKYLINE_2024_BEAUTIFUL_EVAN-P_2024_10-8.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%BE%D1%80%D1%82-%D0%BE%D1%84-%D0%A1%D0%BF%D0%B5%D0%B9%D0%BD",
+    "lang": "ru"
+  },
+  "port_moresby": {
+    "extract": "Порт-Мо́рсби — столица Папуа — Новой Гвинеи.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Port_Moresby_Town2_Mschlauch.jpg/330px-Port_Moresby_Town2_Mschlauch.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%BE%D1%80%D1%82-%D0%9C%D0%BE%D1%80%D1%81%D0%B1%D0%B8",
+    "lang": "ru"
+  },
+  "bern": {
+    "extract": "Берн — город федерального значения, де-факто столица Швейцарии и её второго по численности населения кантона Берн. Административный центр округа Берн-Миттельланд, официально именуемый «федеральным городом».",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Bern_Federal_Palace_Central_Dome_with_Eiger_2019-10-16_18-28_%28cropped%29.jpg/330px-Bern_Federal_Palace_Central_Dome_with_Eiger_2019-10-16_18-28_%28cropped%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B5%D1%80%D0%BD",
+    "lang": "ru"
+  },
+  "windhoek": {
+    "extract": "Ви́ндхук — столица и крупнейший город Республики Намибия. Население — 334 580 человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Windhoek-Skyline.jpg/330px-Windhoek-Skyline.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B8%D0%BD%D0%B4%D1%85%D1%83%D0%BA",
+    "lang": "ru"
+  },
+  "georgetown": {
+    "extract": "Джо́рджтаун — столица Гайаны, её крупнейший экономический и транспортный центр. Население — 125 683 человек (2022).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Starboek_Market_%2823132264799%29.jpg/330px-Starboek_Market_%2823132264799%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B6%D0%BE%D1%80%D0%B4%D0%B6%D1%82%D0%B0%D1%83%D0%BD",
+    "lang": "ru"
+  },
+  "paramaribo": {
+    "extract": "Парамарибо — столица и самый крупный город, административный центр и главный порт Суринама. В Парамарибо живёт почти половина всего населения Суринама. Исторический центр является объектом всемирного наследия ЮНЕСКО с 2002 года, а также одним из двух объектов всемирного наследия на территории Суринама наряду с природоохранной территорией Центрального Суринама.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Waterkant_Paramaribo_with_the_Unesco_Heritage_Buildings.jpg/330px-Waterkant_Paramaribo_with_the_Unesco_Heritage_Buildings.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%B0%D1%80%D0%B0%D0%BC%D0%B0%D1%80%D0%B8%D0%B1%D0%BE",
+    "lang": "ru"
+  },
+  "dili": {
+    "extract": "Ди́ли — столица и крупнейший город Восточного Тимора. Расположен на северном побережье острова Тимор, самого восточного из Малых Зондских островов. Дили — главный порт и коммерческий центр Восточного Тимора, его население — 193 563 человека. Здесь находится международный аэропорт, названный в честь национального героя Восточного Тимора Николау Лобату. Город является также столицей административного района Дили, в который входят прилежащие территории.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Dili_and_Atauro_Island.jpg/330px-Dili_and_Atauro_Island.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B8%D0%BB%D0%B8",
+    "lang": "ru"
+  },
+  "nassau": {
+    "extract": "На́ссау — столица Багамских Островов, торговый и культурный центр, а также самый крупный город страны. Население Нассау составляет 274 400 человек (2016).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Nassau%2C_Bahamas_aerial_view_%28cropped%29.jpg/330px-Nassau%2C_Bahamas_aerial_view_%28cropped%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D0%B0%D1%81%D1%81%D0%B0%D1%83_(%D0%91%D0%B0%D0%B3%D0%B0%D0%BC%D1%81%D0%BA%D0%B8%D0%B5_%D0%9E%D1%81%D1%82%D1%80%D0%BE%D0%B2%D0%B0)",
+    "lang": "ru"
+  },
+  "sucre": {
+    "extract": "Су́кре — столица Боливии, место пребывания Верховного Суда. Несмотря на такой статус этого города, большинство правительственных учреждений страны находятся в Ла-Пасе. Назван в честь Антонио Хосе Сукре.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Sucre_capital_de_Bolivia.jpg/330px-Sucre_capital_de_Bolivia.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D1%83%D0%BA%D1%80%D0%B5_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)",
+    "lang": "ru"
+  },
+  "nicosia": {
+    "extract": "Никоси́я — столица Республики Кипр и столица частично признанной Турецкой Республики Северного Кипра.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Flag_of_Nicosia.svg/langru-330px-Flag_of_Nicosia.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D0%B8%D0%BA%D0%BE%D1%81%D0%B8%D1%8F",
+    "lang": "ru"
+  },
+  "colombo": {
+    "extract": "Коло́мбо — крупнейший город Шри-Ланки, часто неофициально называемый её столицей. Расположен в Западной провинции, в округе Коломбо. Население — 752 993 жителя (2011), население Большого Коломбо — 5 648 000 человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Colombo_skyline_2024.jpg/330px-Colombo_skyline_2024.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%BE%D0%BB%D0%BE%D0%BC%D0%B1%D0%BE",
+    "lang": "ru"
+  },
+  "gaborone": {
+    "extract": "Габоро́не — столица и крупнейший город Ботсваны. По данным переписи 2011 года, население города составляет 231 626 человек, что составляет около 10 % от общей численности населения Ботсваны. Население агломерации Габороне составляет 421 907 жителей по переписи 2011 года.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Botswana%2C_Gaborone_Central_Business_District.jpg/330px-Botswana%2C_Gaborone_Central_Business_District.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%93%D0%B0%D0%B1%D0%BE%D1%80%D0%BE%D0%BD%D0%B5",
+    "lang": "ru"
+  },
+  "yamoussoukro": {
+    "extract": "Ямусу́кро — административная столица Кот-д’Ивуара. На 2014 год население оценивается как 355 573 жителя.\nГород расположен в 240 километрах к северу от крупнейшего города страны Абиджана на автостраде, ведущей от Абиджана в Буркина-Фасо.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Yamoussoukro_panorama.jpg/330px-Yamoussoukro_panorama.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%AF%D0%BC%D1%83%D1%81%D1%83%D0%BA%D1%80%D0%BE",
+    "lang": "ru"
+  },
+  "bridgetown": {
+    "extract": "Бри́джтаун — город в юго-западной части острова Барбадос, столица государства Барбадос.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Bridgetown2.jpg/330px-Bridgetown2.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D1%80%D0%B8%D0%B4%D0%B6%D1%82%D0%B0%D1%83%D0%BD",
+    "lang": "ru"
+  },
+  "suva": {
+    "extract": "Су́ва — столица Фиджи. Является административным центром Центрального округа. Образует столичную агломерацию с населением около 180 тыс. человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Suva%2C_Fiji_52.jpg/330px-Suva%2C_Fiji_52.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D1%83%D0%B2%D0%B0",
+    "lang": "ru"
+  },
+  "reykjavik": {
+    "extract": "Рейкья́вик — столица и крупнейший город, а также община Исландии.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Reykjavik_Main_Image.jpg/330px-Reykjavik_Main_Image.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A0%D0%B5%D0%B9%D0%BA%D1%8C%D1%8F%D0%B2%D0%B8%D0%BA",
+    "lang": "ru"
+  },
+  "malabo": {
+    "extract": "Мала́бо — бывшая столица Экваториальной Гвинеи, самый старый город страны. Расположена в северной части острова Биоко у подножья вулкана. Это главный коммерческий и финансовый центр республики. В нём расположен один из самых глубоководных портов в регионе, а также международный аэропорт, обслуживающий рейсы в континентальный Бату, а также в страны Африки, Европы и в США.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Malabo_a_13-oct-01.jpg/330px-Malabo_a_13-oct-01.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D0%BB%D0%B0%D0%B1%D0%BE",
+    "lang": "ru"
+  },
+  "podgorica": {
+    "extract": "Подго́рица — столица Черногории. Административный центр столичной общины Подгорица.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Titograd.jpg/330px-Titograd.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%BE%D0%B4%D0%B3%D0%BE%D1%80%D0%B8%D1%86%D0%B0",
+    "lang": "ru"
+  },
+  "moroni": {
+    "extract": "Моро́ни — самый большой город, столица и место расположения правительства Союза Коморских островов, суверенного островного государства, расположенного в Индийском океане. Морони — административный центр полунезависимого острова Нгазиджа (Гранд-Комор), крупнейшего из основных островов республики. По переписи 2003 года численность населения города составляет 41 557 человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Moroni-Harbour.jpg/330px-Moroni-Harbour.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D1%80%D0%BE%D0%BD%D0%B8",
+    "lang": "ru"
+  },
+  "praia": {
+    "extract": "Пра́я — столица и самый крупный город островного государства Кабо-Верде, расположенного в Атлантическом океане вблизи побережья Сенегала, на острове Сантьягу.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Praia_-_Stadt_vom_Plateau.JPG/330px-Praia_-_Stadt_vom_Plateau.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D1%80%D0%B0%D1%8F",
+    "lang": "ru"
+  },
+  "male": {
+    "extract": "Ма́ле — столица Мальдивской Республики, крупнейший населённый пункт архипелага. Входит в число наиболее густонаселённых городов мира. Площадь Мале составляет 6,8 км². Численность населения в 2022 году оценивалась в 212 138 человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Mal%C3%A9.jpg/330px-Mal%C3%A9.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D0%BB%D0%B5",
+    "lang": "ru"
+  },
+  "juba": {
+    "extract": "Джу́ба — столица Южного Судана, административный центр округа Джуба и Центральной Экваториальной провинции. Город расположен на холме на западном берегу Белого Нила, примерно в 125 километрах к северу от границы с Угандой. Население Джубы оценивается в 500 000 человек. Город является экономическим и административным центром страны. В Джубе тропический климат с высокими температурами круглый год. Город является крупнейшим поселением Южного Судана. В нём располагаются лучшие здравоохранительные и учебные заведения страны.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Juba_City.jpg/330px-Juba_City.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B6%D1%83%D0%B1%D0%B0",
+    "lang": "ru"
+  },
+  "thimphu": {
+    "extract": "Тхимпху́ — нынешняя столица Королевства Бутан, которая с давних времён являлась столицей исторической провинции Тхимпху. Город Тхимпху также является административным центром одноимённого административного района (дзонгхага) Тхимпху. Он входит в гевог Чанг.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Tashich%C3%B6dzong_Thimphu-2008-01-23.jpg/330px-Tashich%C3%B6dzong_Thimphu-2008-01-23.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D1%85%D0%B8%D0%BC%D0%BF%D1%85%D1%83",
+    "lang": "ru"
+  },
+  "mbabane": {
+    "extract": "Мбаба́не — столица Королевства Эсватини. Административный центр округа Хохо.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Mbabane_%286035476964%29.jpg/330px-Mbabane_%286035476964%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B1%D0%B0%D0%B1%D0%B0%D0%BD%D0%B5",
+    "lang": "ru"
+  },
+  "sao_tome": {
+    "extract": "Сан-Томе́ — столица и крупнейший город государства Сан-Томе и Принсипи. Сан-Томе является столицей государства Сан-Томе и Принсипи, столицей провинции Сан-Томе и центром округа Агуа-Гранде.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Org_4cd8129a56d8fa1d_1582100284000.jpg/330px-Org_4cd8129a56d8fa1d_1582100284000.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD-%D0%A2%D0%BE%D0%BC%D0%B5_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)",
+    "lang": "ru"
+  },
+  "honiara": {
+    "extract": "Хониа́ра — столица и главный порт государства Соломоновы Острова. В административном отношении территория города выделена в отдельную Столичную территорию государства со статусом провинции. В то же время Хониара остаётся административным центром провинции Гуадалканал. По состоянию на 2021 год его население составляло 92 344 человека. Город обслуживается международным аэропортом Хониара.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Honiara_aerial_crop.jpg/330px-Honiara_aerial_crop.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A5%D0%BE%D0%BD%D0%B8%D0%B0%D1%80%D0%B0",
+    "lang": "ru"
+  },
+  "apia": {
+    "extract": "А́пиа — столица, единственный город и порт Независимого государства Самоа.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Samoa_-_Apia_Govt_buildings.jpg/330px-Samoa_-_Apia_Govt_buildings.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BF%D0%B8%D0%B0",
+    "lang": "ru"
+  },
+  "andorra": {
+    "extract": "Андорра-ла-Велья, также Андорра-ла-Вьеха, Андорр-ла-Вьей и Андо́рра — столица и самый крупный город Андорры; одна из семи паррокий, на которые разделена страна.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Andorra_la_Vieja_%281%29_06.jpg/330px-Andorra_la_Vieja_%281%29_06.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BD%D0%B4%D0%BE%D1%80%D1%80%D0%B0-%D0%BB%D0%B0-%D0%92%D0%B5%D0%BB%D1%8C%D1%8F",
+    "lang": "ru"
+  },
+  "kingstown": {
+    "extract": "Ки́нгстаун — крупнейший город и порт острова Сент-Винсент, столица государства Сент-Винсент и Гренадины, его коммерческий и политический центр. С населением 16 500 человек (2010 год) Кингстаун является самым густонаселённым поселением в стране. Он является центром сельскохозяйственной промышленности острова и туризма. Город находится в округе Святого Георгия в юго-западной части Сент-Винсента.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Kingstown.jpg/330px-Kingstown.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B8%D0%BD%D0%B3%D1%81%D1%82%D0%B0%D1%83%D0%BD",
+    "lang": "ru"
+  },
+  "port_vila": {
+    "extract": "Порт-Ви́ла — крупнейший город и столица Республики Вануату, расположенной в юго-западной части Тихого океана. Порт-Вила расположена на пляже Меле на юго-западном побережье острова Эфате.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Port_Vila_aerial.jpg/330px-Port_Vila_aerial.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%BE%D1%80%D1%82-%D0%92%D0%B8%D0%BB%D0%B0",
+    "lang": "ru"
+  },
+  "banjul": {
+    "extract": "Банжу́л, Банджул, ранее Батерст — столица Гамбии. Население — 34 тыс. чел, с пригородами 523 589. Банжул расположен на острове Святой Марии, где река Гамбия впадает в Атлантический океан. С севера остров Святой Марии соединяется с большой землёй посредством грузовых и пассажирских паромов, а с юга — посредством мостов. В 24 километрах к югу от столицы Банжул в районе западного побережья вблизи города Комбо находится аэропорт Банжул Юндум.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Gambia%2C_Banjul%2C_Arch_22.jpg/330px-Gambia%2C_Banjul%2C_Arch_22.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%BD%D0%B6%D1%83%D0%BB",
+    "lang": "ru"
+  },
+  "nuku_alofa": {
+    "extract": "Нукуало́фа — столица королевства Тонга. Население — 24 310 человек (2010). Находится на острове Тонгатапу. В Нукуалофе расположен морской порт.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Royal_Palace%2C_Nuku%27alofa%2C_Nov_18.jpg/330px-Royal_Palace%2C_Nuku%27alofa%2C_Nov_18.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9D%D1%83%D0%BA%D1%83%D0%B0%D0%BB%D0%BE%D1%84%D0%B0",
+    "lang": "ru"
+  },
+  "castries": {
+    "extract": "Кастри́, Кастри́с — столица государства Сент-Люсия. Располагается на северо-западном побережье острова, на границе залива Порт-Кастри и полуострова Вижи. Туристический и образовательный центр, транспортный узел.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/View_of_Castries_Saint_Lucia_Day248bdriveb.jpg/330px-View_of_Castries_Saint_Lucia_Day248bdriveb.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D1%81%D1%82%D1%80%D0%B8",
+    "lang": "ru"
+  },
+  "monaco": {
+    "extract": "Мона́ко, официальное название — Кня́жество Мона́ко — карликовое государство, ассоциированное с Францией, расположенное на юге Европы на берегу Лигурийского моря; на суше граничит с Францией. Является одной из самых маленьких и наиболее густонаселённых стран мира. Княжество широко известно благодаря казино в Монте-Карло и проводимому здесь этапу чемпионата Формулы-1 — «Гран-при Монако».",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Flag_of_Monaco.svg/langru-330px-Flag_of_Monaco.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D0%BD%D0%B0%D0%BA%D0%BE",
+    "lang": "ru"
+  },
+  "vaduz": {
+    "extract": "Ваду́ц — столица княжества Лихтенштейн и место расположения национального парламента. В городе, расположившемся в верховье Рейна, проживает 5741 человек, большинство из которых являются католиками. Кафедральный собор города является резиденцией архиепископа Римско-католической церкви. Площадь — 17,3 км². Официальный код — 7001. Почтовый индекс — 9490.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/View_of_Vaduz.jpg/330px-View_of_Vaduz.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B0%D0%B4%D1%83%D1%86",
+    "lang": "ru"
+  },
+  "saint_john_s": {
+    "extract": "Сент-Джонс — столица, самый большой город и главный порт государства Антигуа и Барбуда, административный центр округа Сент-Джон.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/St_Johns_Antigua_2012.jpg/330px-St_Johns_Antigua_2012.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B5%D0%BD%D1%82-%D0%94%D0%B6%D0%BE%D0%BD%D1%81",
+    "lang": "ru"
+  },
+  "saint_george_s": {
+    "extract": "Се́нт-Джо́рджес — столица Гренады, её политический и экономический центр. Население — 2982 человека (2011). Находится на юго-западном побережье острова Гренада. Является важным транспортным узлом. Действует морской порт, международный аэропорт. Развита пищевкусовая промышленность. Город был основан в 1650 году. В 1885—1958 — столица британской колонии Наветренных островов, с 1974 года — столица независимой Гренады. Название получил от церкви Сент-Джорджес.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/StGeorgesGrenada2000.jpg/330px-StGeorgesGrenada2000.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B5%D0%BD%D1%82-%D0%94%D0%B6%D0%BE%D1%80%D0%B4%D0%B6%D0%B5%D1%81",
+    "lang": "ru"
+  },
+  "victoria": {
+    "extract": "Викто́рия — столица, единственный город и порт Республики Сейшельские Острова. Расположен на северо-восточном побережье острова Маэ. В Виктории проживает примерно 1⁄3 населения острова.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Victoria_Clock_Tower_1.jpg/330px-Victoria_Clock_Tower_1.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B8%D0%BA%D1%82%D0%BE%D1%80%D0%B8%D1%8F_(%D0%A1%D0%B5%D0%B9%D1%88%D0%B5%D0%BB%D1%8C%D1%81%D0%BA%D0%B8%D0%B5_%D0%9E%D1%81%D1%82%D1%80%D0%BE%D0%B2%D0%B0)",
+    "lang": "ru"
+  },
+  "san_marino": {
+    "extract": "Сан-Мари́но — столица государства Сан-Марино, расположенного на Апеннинском полуострове недалеко от Адриатического моря. Население города — 4106 человек (2010). Город расположен на террасах возвышенности Монте-Титано. Город основан в 301 году каменщиком Марином, который собрал в пещере Монте-Титано общину вольных каменщиков.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Collage_San_Marino.jpg/330px-Collage_San_Marino.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD-%D0%9C%D0%B0%D1%80%D0%B8%D0%BD%D0%BE_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)",
+    "lang": "ru"
+  },
+  "tarawa": {
+    "extract": "Ю́жная Тара́ва или Городской совет Теинаина́но — официальная столица микронезийского государства Кирибати, расположенная на атолле Тарава. Численность населения — 50 182 человек (2010 год). Плотность населения — 3184,14 чел. на км². Площадь — 15,76 км².",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/South_Tarawa_from_the_air.jpg/330px-South_Tarawa_from_the_air.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%AE%D0%B6%D0%BD%D0%B0%D1%8F_%D0%A2%D0%B0%D1%80%D0%B0%D0%B2%D0%B0",
+    "lang": "ru"
+  },
+  "majuro": {
+    "extract": "Маджу́ро — столица островного государства Маршалловы Острова в Тихом океане.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Majuro_main_road.jpg/330px-Majuro_main_road.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D0%B4%D0%B6%D1%83%D1%80%D0%BE",
+    "lang": "ru"
+  },
+  "roseau": {
+    "extract": "Розо́ — столица Доминики, население — 14 847 человек (2001). Это небольшое компактное городское поселение, окружённое Карибским морем, рекой Розо и покрытой лесом горой Морн Брюс.",
+    "image": null,
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A0%D0%BE%D0%B7%D0%BE",
+    "lang": "ru"
+  },
+  "belmopan": {
+    "extract": "Бельмопа́н — столица центральноамериканского государства Белиз. Население — 26 906 человек (2021).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Aerials_Belize_WHwy_02.jpg/330px-Aerials_Belize_WHwy_02.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B5%D0%BB%D1%8C%D0%BC%D0%BE%D0%BF%D0%B0%D0%BD",
+    "lang": "ru"
+  },
+  "melekeok": {
+    "extract": "Мелекеок — населённый пункт в Палау, административный центр штата Мелекеок. Расположен на восточном побережье крупнейшего острова страны — Бабелтуап. Является самым восточным населённым пунктом в Палау.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Melekeok_State_Office.jpg/330px-Melekeok_State_Office.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9C%D0%B5%D0%BB%D0%B5%D0%BA%D0%B5%D0%BE%D0%BA_(%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BD%D1%8F)",
+    "lang": "ru"
+  },
+  "funafuti": {
+    "extract": "Фунафу́ти — атолл-столица небольшого островного государства Тувалу, в Тихом океане.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Maneapa_and_airport_in_Funafuti_atoll%2C_Tuvalu.jpg/330px-Maneapa_and_airport_in_Funafuti_atoll%2C_Tuvalu.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A4%D1%83%D0%BD%D0%B0%D1%84%D1%83%D1%82%D0%B8",
+    "lang": "ru"
+  },
+  "palikir": {
+    "extract": "Палики́р — столица Федеративных Штатов Микронезии. Находится в штате Понпеи. Расположен в западной части Тихого океана, на острове вулканического происхождения Понпеи, который окружен коралловыми рифами. Город с населением чуть менее 5000 жителей, является частью более крупного муниципалитета Сокеш, в котором по состоянию на 2010 год проживало 6 647 человек, из общей численности населения страны, составлявшей 106 487 человек. Расположен на северо-западной стороне острова Понпеи. Недалеко к северо-востоку находится крупнейшее поселение острова, прибрежный город Колониа.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Palikir_Government_Buildings.jpg/330px-Palikir_Government_Buildings.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%B0%D0%BB%D0%B8%D0%BA%D0%B8%D1%80",
+    "lang": "ru"
+  },
+  "vatican_city": {
+    "extract": "Ватика́н — карликовое государство-анклав внутри территории Рима, ассоциированное с Италией. Статус Ватикана в международном праве — вспомогательная суверенная территория Святого Престола, резиденции высшего духовного руководства Римско-католической церкви.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Flag_of_Vatican_City_%282023%E2%80%93present%29.svg/langru-330px-Flag_of_Vatican_City_%282023%E2%80%93present%29.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B0%D1%82%D0%B8%D0%BA%D0%B0%D0%BD",
+    "lang": "ru"
+  },
+  "beijing": {
+    "extract": "Пеки́н — столица и один из городов центрального подчинения Китайской Народной Республики. Пекин с трёх сторон окружён провинцией Хэбэй и граничит с Тяньцзинем на юго-востоке. Основанный в 1045 году до н. э., входит в число четырёх древних столиц Китая и является одним из древнейших городов мира.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/The_skyline_of_Chaoyang_District2018_Beijing.jpg/330px-The_skyline_of_Chaoyang_District2018_Beijing.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D0%B5%D0%BA%D0%B8%D0%BD",
+    "lang": "ru"
+  },
+  "singapore": {
+    "extract": "Сингапу́р, официальное название — Респу́блика Сингапу́р — город-государство, расположенный на островах в Юго-Восточной Азии, отделённых от южной оконечности Малаккского полуострова узким Джохорским проливом. Граничит со штатом Малайзии Джохор и с провинцией Индонезии Острова Риау. Площадь Сингапура составляет 745,1 км², и она постепенно увеличивается благодаря программе намыва территории, действующей с 1960-х годов. В настоящее время государство Сингапур состоит из 63 островов. Самые крупные из них — Сингапур, Убин, Сентоса и другие. Высшая точка — холм Букит-Тимах.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Flag_of_Singapore.svg/langru-330px-Flag_of_Singapore.svg.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B8%D0%BD%D0%B3%D0%B0%D0%BF%D1%83%D1%80",
+    "lang": "ru"
+  },
+  "xi_an": {
+    "extract": "Сиа́нь — город субпровинциального значения в провинции Шэньси (КНР), место пребывания правительства провинции.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Xi%27an_montage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B8%D0%B0%D0%BD%D1%8C",
+    "lang": "ru"
+  },
+  "warsaw": {
+    "extract": "Варша́ва — столица и крупнейший по численности населения город Польши. Расположен на реке Висла в восточно-центральной части страны. Официально население города оценивается в 1,86 миллиона жителей и около 3,2 миллиона в агломерации, что делает Варшаву 7-м по величине городом в Европейском союзе. Она является крупным политическим, экономическим и культурным центром мирового значения, а также местом заседания правительства и столицей Мазовецкого воеводства.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/WarsawVarso2026.jpg/330px-WarsawVarso2026.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%92%D0%B0%D1%80%D1%88%D0%B0%D0%B2%D0%B0",
+    "lang": "ru"
+  },
+  "san_jose": {
+    "extract": "Сан-Хосе́ — столица и крупнейший город Коста-Рики. Административный центр провинции Сан-Хосе. Сан-Хосе расположен в центре страны, на горном плато, называемом Центральной долиной, возвышающимся на высоте около 1170 м над уровнем моря. Население кантона Сан-Хосе 350 тыс. жителей (2008): во второй половине XX века население города быстро росло; ещё в 1950 г. население города насчитывало всего 86 900 человек. Агломерация Сан-Хосе выходит за пределы кантона, её население более 1 миллиона человек.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Ciudad_de_San_Jos%C3%A9.png/330px-Ciudad_de_San_Jos%C3%A9.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D0%BD-%D0%A5%D0%BE%D1%81%D0%B5_(%D0%9A%D0%BE%D1%81%D1%82%D0%B0-%D0%A0%D0%B8%D0%BA%D0%B0)",
+    "lang": "ru"
+  },
+  "bangui": {
+    "extract": "Банги́ — столица и крупнейший город Центральноафриканской Республики. Большинство населения страны проживает в западных районах республики вблизи Банги.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Bangui_collage.png/330px-Bangui_collage.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%BD%D0%B3%D0%B8",
+    "lang": "ru"
+  },
+  "pristina": {
+    "extract": "При́штина — город на Балканском полуострове. С 2008 года является предметом территориального спора между частично признанной Республикой Косово, фактически контролирующей город, и Сербией, в признанных некоторыми странами пределах которой расположен город. Население составляет 198 000 жителей, преимущественно албанцы.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Prishtina_Collage.jpg/330px-Prishtina_Collage.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9F%D1%80%D0%B8%D1%88%D1%82%D0%B8%D0%BD%D0%B0",
+    "lang": "ru"
+  },
+  "luxembourg": {
+    "extract": "Люксембу́рг — столица и крупнейший город Люксембурга.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Luxembourg_Grand_Ducal_Palace_01.jpg/330px-Luxembourg_Grand_Ducal_Palace_01.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9B%D1%8E%D0%BA%D1%81%D0%B5%D0%BC%D0%B1%D1%83%D1%80%D0%B3_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)",
+    "lang": "ru"
+  },
+  "basseterre": {
+    "extract": "Басте́р — город на южном побережье острова Сент-Китс, столица государства Сент-Китс и Невис. Является одним из самых старых городов Вест-Индии, основан в 1627 году. Население — 16,6 тыс. жителей (2024).",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Basseterre.jpeg/330px-Basseterre.jpeg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D1%81%D1%82%D0%B5%D1%80",
+    "lang": "ru"
+  }
+}
