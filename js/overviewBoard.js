@@ -113,6 +113,11 @@ const CURRENT_HEAD_D = 'M -1.7 -1 L 0 0 L -1.7 1 Z';
 const INFO_MARKER_PX = 18;
 const INFO_MARKER_MIN_ZOOM = 3;
 const INFO_MARKER_LIFT_PX = 16;
+// Time-zone labels: constant screen size; "UTC+3" from FULL_LABEL_ZOOM, else just "+3";
+// half-hour/45-minute zones only from FRACTIONAL_LABEL_ZOOM (they'd crowd their neighbours).
+const TIMEZONE_LABEL_PX = 12;
+const TIMEZONE_FULL_LABEL_ZOOM = 2;
+const TIMEZONE_FRACTIONAL_LABEL_ZOOM = 3;
 const AIRPORT_ICON_PX = 22;
 // Regional/state airports (data flag `minor`) — ~85 of them — would bury the
 // map: slightly smaller icons, and their IATA codes only appear once zoomed in.
@@ -454,6 +459,8 @@ export class OverviewBoard {
     this.currentEntries = []; // { id, line, hit, head, label }
     this.currentsById = new Map(); // id -> { data, dotEl }
     this.currentsVisible = opts.currentsVisible !== false;
+    this.timezonesVisible = opts.timezonesVisible === true; // opt-in colour overlay (countries level)
+    this.timezoneEntries = []; // { zone, path, label, whole }
     this.lakesById = new Map(); // id -> { data, pathEl }
     this.lakeEls = []; // { pathEl, labelEl } — see setLakesVisible
     this.contextLandById = new Map(); // id -> { data } — Canada, see build_usa_level.js's contextLand
@@ -557,6 +564,11 @@ export class OverviewBoard {
     this.zonesLayer = document.createElementNS(SVG_NS, 'g');
     this.zonesLayer.setAttribute('class', 'zones-layer');
     this.svg.appendChild(this.zonesLayer);
+    // Time zones (countries level) are a translucent colour overlay: above the countries,
+    // below the currents and every label; it never takes clicks.
+    this.timezonesLayer = document.createElementNS(SVG_NS, 'g');
+    this.timezonesLayer.setAttribute('class', 'timezones-layer');
+    this.svg.appendChild(this.timezonesLayer);
     // Ocean currents sit above the territory shapes but BELOW every name label,
     // so no label is ever covered by an arrow; labels have their own layer
     // (above currents, below points) instead of being interleaved with shapes.
@@ -604,6 +616,23 @@ export class OverviewBoard {
         }
       }
     }
+
+    // Time-zone bands + their UTC labels. Colour classes cycle through the three theme accents
+    // by offset (so neighbouring zones differ); labels are short ("+3") when zoomed out and
+    // "UTC+3" closer in, and half-hour zones wait for TIMEZONE_FRACTIONAL_LABEL_ZOOM.
+    (this.level.timezones || []).forEach((zone, i) => {
+      const path = document.createElementNS(SVG_NS, 'path');
+      path.setAttribute('d', zone.d);
+      path.setAttribute('class', `timezone-band timezone-c${i % 3}`);
+      this.timezonesLayer.appendChild(path);
+      const label = document.createElementNS(SVG_NS, 'text');
+      label.setAttribute('x', zone.cx);
+      label.setAttribute('y', zone.cy);
+      label.setAttribute('class', `piece-label timezone-label timezone-c${i % 3}`);
+      this.labelsLayer.appendChild(label);
+      this.allLabelEls.push(label);
+      this.timezoneEntries.push({ zone, path, label, whole: Number.isInteger(zone.utc), colorClass: `timezone-c${i % 3}` });
+    });
 
     // Canada — non-interactive geographic context only (USA level), real
     // position/scale (see scripts/build_usa_level.js's own comment on why
@@ -1122,13 +1151,17 @@ export class OverviewBoard {
     // otherwise; that avoids adding/removing the listener every time the
     // toggle flips.
     this.svg.addEventListener('mousemove', (ev) => this._onMapMouseMove(ev));
-    this.svg.addEventListener('mouseleave', () => this._hideTerrainHoverTip());
+    this.svg.addEventListener('mouseleave', () => {
+      this._hideTerrainHoverTip();
+      this._hideTimezoneTip();
+    });
 
     this._rescaleForZoom(1);
     this.setLabelsVisible(this.labelsVisible);
     this.setPlacesVisible(this.placesVisible);
     this.setAirportsVisible(this.airportsVisible);
     this.setCurrentsVisible(this.currentsVisible);
+    this.setTimezonesVisible(this.timezonesVisible);
     this.setLakesVisible(this.lakesVisible);
     this.setHighwaysVisible(this.highwaysVisible);
     this.setProgressVisible(this.progressVisible);
@@ -2364,6 +2397,14 @@ export class OverviewBoard {
       entry.dot.style.strokeWidth = `${(PLACE_DOT_STROKE_PX / effScale).toFixed(2)}px`;
     }
     for (const e of this.currentEntries) this._layoutCurrent(e, effScale, zoom);
+    for (const e of this.timezoneEntries) {
+      const shown = this.timezonesVisible && this.labelsVisible && (e.whole || zoom >= TIMEZONE_FRACTIONAL_LABEL_ZOOM);
+      e.label.style.opacity = shown ? '' : '0';
+      if (!shown) continue;
+      e.label.textContent = zoom >= TIMEZONE_FULL_LABEL_ZOOM ? e.zone.name : e.zone.name.slice(3);
+      e.label.style.fontSize = `${(TIMEZONE_LABEL_PX / effScale).toFixed(2)}px`;
+      e.label.style.strokeWidth = `${(STATE_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
+    }
     // Plane icons: constant screen size; the runways themselves are plain
     // native-unit paths (true length) with a non-scaling stroke, no work here.
     for (const entry of this.airportEntries) {
@@ -2760,6 +2801,7 @@ export class OverviewBoard {
   // (terrainMode 'off', not hovering a state) keep this from doing any
   // point-in-fill work on every ordinary mousemove.
   _onMapMouseMove(ev) {
+    this._updateTimezoneTip(ev);
     if (this.terrainMode === 'off') return this._hideTerrainHoverTip();
     const kind = ev.target?.dataset?.kind;
     const id = ev.target?.dataset?.id;
@@ -2794,6 +2836,53 @@ export class OverviewBoard {
     this.terrainHoverTipEl.style.left = `${clientX - wrapRect.left + 14}px`;
     this.terrainHoverTipEl.style.top = `${clientY - wrapRect.top + 18}px`;
     setElementHidden(this.terrainHoverTipEl, false);
+  }
+
+  // Floating "+3  14:05:07" readout next to the cursor while the time-zone layer is on: the zone
+  // under the cursor (isPointInFill on its band, bbox pre-check first) and the current time in it.
+  // Time is UTC + the zone's standard offset — daylight saving time is not modelled.
+  _updateTimezoneTip(ev) {
+    if (!this.timezonesVisible || !this.timezoneEntries.length) return this._hideTimezoneTip();
+    const pt = this._clientToNative(ev.clientX, ev.clientY);
+    const hit = this.timezoneEntries.find(({ zone, path }) => {
+      const [x0, y0, x1, y1] = zone.bbox;
+      return pt.x >= x0 && pt.x <= x1 && pt.y >= y0 && pt.y <= y1 && path.isPointInFill(new DOMPoint(pt.x, pt.y));
+    });
+    if (!hit) return this._hideTimezoneTip();
+    if (!this.timezoneTipEl) {
+      const el = document.createElement('div');
+      el.className = 'timezone-tip';
+      el.innerHTML = '<span class="timezone-tip-offset"></span><span class="timezone-tip-time"></span>';
+      // Sibling of zoomWrap (see _showTerrainHoverTip): it tracks the raw client cursor.
+      this.container.appendChild(el);
+      this.timezoneTipEl = el;
+    }
+    const el = this.timezoneTipEl;
+    el.classList.remove('timezone-c0', 'timezone-c1', 'timezone-c2');
+    el.classList.add(hit.colorClass);
+    el.querySelector('.timezone-tip-offset').textContent = hit.zone.name.slice(3);
+    this._timezoneTipZone = hit.zone;
+    this._tickTimezoneTip();
+    const wrapRect = this.container.getBoundingClientRect();
+    el.style.left = `${ev.clientX - wrapRect.left + 14}px`;
+    el.style.top = `${ev.clientY - wrapRect.top + 18}px`;
+    setElementHidden(el, false);
+    // Keep the seconds running while the cursor rests on the zone.
+    if (!this._timezoneClock) this._timezoneClock = setInterval(() => this._tickTimezoneTip(), 1000);
+  }
+
+  _tickTimezoneTip() {
+    if (!this.timezoneTipEl || !this._timezoneTipZone) return;
+    const d = new Date(Date.now() + this._timezoneTipZone.utc * 3600 * 1000);
+    const p = (n) => String(n).padStart(2, '0');
+    this.timezoneTipEl.querySelector('.timezone-tip-time').textContent = `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`;
+  }
+
+  _hideTimezoneTip() {
+    if (this.timezoneTipEl) setElementHidden(this.timezoneTipEl, true);
+    this._timezoneTipZone = null;
+    clearInterval(this._timezoneClock);
+    this._timezoneClock = null;
   }
 
   _hideTerrainHoverTip() {
@@ -2908,6 +2997,14 @@ export class OverviewBoard {
     for (const e of this.currentEntries) {
       for (const el of [e.line, e.head, e.hit, e.label]) el.style.display = visible ? '' : 'none';
     }
+  }
+
+  setTimezonesVisible(visible) {
+    this.timezonesVisible = visible;
+    this.timezonesLayer.style.display = visible ? '' : 'none';
+    if (!visible) this._hideTimezoneTip();
+    // The labels' opacity is also driven by _rescaleForZoom (zoom thresholds), so re-run it.
+    this._rescaleForZoom(this.zoomCtl?.getZoom() ?? 1);
   }
 
   // Its own layer toggle, separate from "Места".

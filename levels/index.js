@@ -14,6 +14,7 @@ import worldCurrents from './worldCurrents.js';
 import worldCities from './worldCities.js';
 import worldPlaces from './worldPlaces.js';
 import countries from './countries.js';
+import worldTimezones from './worldTimezones.js';
 
 // usaCities.js/usaPlaces.js/usaHighways.js/usaHawaiiHighways.js/
 // usaRouteGraph.js/usaLakes.js are generated independently
@@ -48,7 +49,7 @@ const worldLand = world.land.map((l) => {
 export const levels = {
   usa: { ...usa, cities: usaCities, places: usaPlaces, highways: [...usaHighways, ...usaHawaiiHighways], routeGraph: usaRouteGraph, lakes: usaLakes, airports: usaAirports },
   world: { ...world, land: worldLand, currents: worldCurrents },
-  countries: { ...countries, cities: worldCities, places: worldPlaces },
+  countries: { ...countries, cities: worldCities, places: worldPlaces, timezones: worldTimezones },
 };
 
 export default levels;

@@ -1898,6 +1898,44 @@ body {
 .overview-info-marker:hover .overview-info-marker-disc { fill: rgba(var(--neon-cyan-rgb), 0.25); }
 /* Question-mark cursor marks an airport that has an article to open. */
 .overview-airport-plane.overview-has-info { cursor: help; }
+/* Time zones (countries level): translucent bands + labels in the three theme accents
+   (--neon-*-rgb follow the colour scheme), cycling by offset so neighbours differ. */
+.timezones-layer { pointer-events: none; }
+.timezone-band {
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.timezone-band.timezone-c0 { fill: rgba(var(--neon-cyan-rgb), 0.16); stroke: rgba(var(--neon-cyan-rgb), 0.6); }
+.timezone-band.timezone-c1 { fill: rgba(var(--neon-pink-rgb), 0.16); stroke: rgba(var(--neon-pink-rgb), 0.6); }
+.timezone-band.timezone-c2 { fill: rgba(var(--neon-violet-rgb), 0.18); stroke: rgba(var(--neon-violet-rgb), 0.6); }
+.timezone-label { stroke: rgba(var(--ink-rgb), 0.85); }
+.timezone-label.timezone-c0 { fill: var(--neon-cyan); }
+.timezone-label.timezone-c1 { fill: var(--neon-pink); }
+.timezone-label.timezone-c2 { fill: var(--neon-violet); }
+/* Floating readout next to the cursor ("+3  14:05:07"), bordered in the hovered zone's accent. */
+.timezone-tip {
+  position: absolute;
+  z-index: 26;
+  pointer-events: none;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 3px 8px;
+  background: rgba(var(--ink-rgb), 0.88);
+  backdrop-filter: blur(4px);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.timezone-tip-offset { font-weight: 700; }
+.timezone-tip-time { font-variant-numeric: tabular-nums; color: var(--base2); }
+.timezone-tip.timezone-c0 { border: 1px solid var(--neon-cyan); box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.35); }
+.timezone-tip.timezone-c0 .timezone-tip-offset { color: var(--neon-cyan); }
+.timezone-tip.timezone-c1 { border: 1px solid var(--neon-pink); box-shadow: 0 0 8px rgba(var(--neon-pink-rgb), 0.35); }
+.timezone-tip.timezone-c1 .timezone-tip-offset { color: var(--neon-pink); }
+.timezone-tip.timezone-c2 { border: 1px solid var(--neon-violet); box-shadow: 0 0 8px rgba(var(--neon-violet-rgb), 0.35); }
+.timezone-tip.timezone-c2 .timezone-tip-offset { color: var(--neon-violet); }
 /* Ocean currents: schematic thick arrows over real paths. */
 .overview-current-line {
   fill: none;

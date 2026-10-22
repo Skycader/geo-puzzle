@@ -28,6 +28,15 @@ export const SOURCES = {
     license: L('Natural Earth — общественное достояние; тексты Википедии — CC BY-SA 4.0', 'Natural Earth is public domain; Wikipedia text is CC BY-SA 4.0'),
     links: [{ label: L('Natural Earth — Populated Places', 'Natural Earth — Populated Places'), url: 'https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-populated-places/' }],
   },
+  timezones: {
+    name: L('Natural Earth', 'Natural Earth'),
+    desc: L(
+      'Часовые пояса — слой Natural Earth «Time zones» (10m): реальные политические границы поясов (а не полосы по 15° меридианам), упрощённые для карты. Объединены по смещению от UTC; подпись — у крупнейшего куска каждого смещения. Летнее время не учитывается.',
+      'Time zones — the Natural Earth "Time zones" layer (10m): real political zone borders (not 15° meridian strips), simplified for the map. Merged per UTC offset; the label sits on the biggest piece of each offset. Daylight saving time is not shown.'
+    ),
+    license: L('Natural Earth — общественное достояние', 'Natural Earth is public domain'),
+    links: [{ label: L('Natural Earth — Time Zones', 'Natural Earth — Time Zones'), url: 'https://www.naturalearthdata.com/downloads/10m-cultural-vectors/timezones/' }],
+  },
   worldPlaces: {
     name: L('Википедия', 'Wikipedia'),
     desc: L('Координаты и описание — из статьи Википедии.', 'Coordinates and description come from the Wikipedia article.'),

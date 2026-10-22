@@ -75,6 +75,12 @@
 население вместо площади, подпись появляется с зума, зависящего от `pop` (≥5 млн — всегда,
 иначе позже; столицы не позже зума 2,5). Места мира (`worldPlaces.js`) — как `places` США.
 
+### `timezones[]` (countries)
+
+`{ id ('utc+3'), utc (часы со знаком), name ('UTC+3'), ru, cx, cy, bbox, d }` — одна запись на смещение UTC,
+`bbox` — рамка всех кусков (быстрая предпроверка при наведении), `d` объединяет все куски (включая океанские части поясов Natural Earth). Собирается
+`scripts/build_world_timezones.js` из `scripts/data/world-timezones-simplified.geojson`.
+
 ### `currents[]` (world)
 
 `id`, `name`, `ru`, `temp` (`warm`/`cold`), `lengthKm`, `cx, cy`, `bbox`, `d`
