@@ -33,6 +33,8 @@ import {
   JOURNEY_DIFFICULTIES,
 } from './modes.js';
 import { playClick } from './audio.js';
+import { APP_VERSION } from './version.js';
+import { openChangelog } from './changelogModal.js';
 import { readOverviewView, writeOverviewView, clearOverviewView } from './viewUrl.js';
 import { loadSuccessStats } from './successStats.js';
 import { downloadProgressExport, importProgressFile } from './dataPortability.js';
@@ -418,6 +420,7 @@ export class Game {
       btnStart: document.getElementById('btn-start'),
       langSwitcherWrap: document.getElementById('lang-switcher-wrap'),
       langSwitcherBtn: document.getElementById('lang-switcher-btn'),
+      versionBtn: document.getElementById('version-btn'),
       langSwitcherMenu: document.getElementById('lang-switcher-menu'),
       langSwitcherFlag: document.getElementById('lang-switcher-flag'),
       menuSubtitle: document.getElementById('menu-subtitle'),
@@ -690,6 +693,8 @@ export class Game {
   // the level/mode-dependent pieces.
   _applyStaticUiTranslations() {
     this.el.btnBrand.title = t('brandTitle');
+    this.el.versionBtn.textContent = `v${APP_VERSION}`;
+    this.el.versionBtn.title = t('versionBtnTitle');
     this.el.toggleHintsWrap.title = t('hintsTitle');
     this.el.toggleLabelsWrap.title = t('lettersTitle');
     this.el.togglePlacesWrap.title = t('placesTitle');
@@ -1411,6 +1416,10 @@ export class Game {
       replay();
     });
     this.el.btnBrand.addEventListener('click', () => this._goMenu());
+    this.el.versionBtn.addEventListener('click', () => {
+      playClick();
+      openChangelog();
+    });
     this.el.btnBackMenu.addEventListener('click', () => {
       playClick();
       this._goMenu();

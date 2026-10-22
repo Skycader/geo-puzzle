@@ -154,6 +154,10 @@ const STRINGS = {
   // Tooltips (title=/aria-label=) — lower visual priority than the text
   // above (only shown on hover), but still real UI a player can see.
   brandTitle: { ru: 'В главное меню', en: 'Back to main menu' },
+  versionBtnTitle: { ru: 'Версия приложения — журнал изменений', en: 'App version — changelog' },
+  changelogTitle: { ru: 'CHANGELOG', en: 'CHANGELOG' },
+  changelogClose: { ru: 'Закрыть', en: 'Close' },
+  changelogMissing: { ru: 'Нет заметок о выпуске {v} (changelog/{v}.md не удалось загрузить).', en: 'No release notes for {v} (changelog/{v}.md could not be loaded).' },
   hintsTitle: { ru: 'Показать/скрыть фоновый контур карты-подсказки', en: 'Show/hide the background hint outline' },
   lettersTitle: { ru: 'Показать/скрыть буквы-подписи на кусочках', en: 'Show/hide letter labels on pieces' },
   placesTitle: { ru: 'Показать/скрыть места на карте', en: 'Show/hide places on the map' },
