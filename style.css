@@ -2428,16 +2428,7 @@ body {
      a shorter list (e.g. switching states<->cities) crosses the threshold
      where a scrollbar is or isn't needed. */
   scrollbar-gutter: stable;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(var(--neon-cyan-rgb), 0.35) transparent;
 }
-.overview-list-scroll::-webkit-scrollbar { width: 8px; }
-.overview-list-scroll::-webkit-scrollbar-thumb {
-  background: rgba(var(--neon-cyan-rgb), 0.3);
-  border-radius: 0;
-}
-.overview-list-scroll::-webkit-scrollbar-thumb:hover { background: rgba(var(--neon-cyan-rgb), 0.5); }
-.overview-list-scroll::-webkit-scrollbar-track { background: transparent; }
 .overview-list-header {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -3581,27 +3572,50 @@ path.piece-shape[data-id='HI'] {
   50% { opacity: 1; }
 }
 /* ---------------- scrollbars ---------------- */
-
-.tray-pieces,
-.screen-menu {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: rgba(var(--neon-cyan-rgb), 0.35) transparent;
+/* One app-wide custom scrollbar (every scrollable box: menu, side lists, popups, the changelog
+   modal…) in the app's own look: a thin dark rail with a hairline accent edge, and a square
+   thumb with the brand cyan→violet gradient inside an accent frame. Colours come from the
+   --neon-*-rgb variables, so the grey scheme re-skins it like the rest of the UI. The thumb
+   brightens + glows on hover and turns pink while dragged. Chrome/Edge/Safari use the
+   ::-webkit-scrollbar pieces; Firefox (no such selector) falls back to the standard
+   scrollbar-width/-color pair — set ONLY there, because Chrome would otherwise prefer those
+   and ignore the styled pieces. The overview tab strip hides its own bar (.overview-tabs). */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
 }
-.tray-pieces::-webkit-scrollbar,
-.screen-menu::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+*::-webkit-scrollbar-track {
+  background: rgba(var(--ink-rgb), 0.55);
 }
-.tray-pieces::-webkit-scrollbar-thumb,
-.screen-menu::-webkit-scrollbar-thumb {
-  background: rgba(var(--neon-cyan-rgb), 0.3);
+*::-webkit-scrollbar-track:vertical { border-left: 1px solid rgba(var(--neon-cyan-rgb), 0.18); }
+*::-webkit-scrollbar-track:horizontal { border-top: 1px solid rgba(var(--neon-cyan-rgb), 0.18); }
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
   border-radius: 0;
+  background: linear-gradient(180deg, rgba(var(--neon-cyan-rgb), 0.7), rgba(var(--neon-violet-rgb), 0.7)) padding-box;
+  box-shadow: inset 0 0 0 1px rgba(var(--neon-cyan-rgb), 0.9);
+  min-height: 36px;
+  min-width: 36px;
 }
-.tray-pieces::-webkit-scrollbar-thumb:hover,
-.screen-menu::-webkit-scrollbar-thumb:hover {
-  background: rgba(var(--neon-cyan-rgb), 0.5);
+*::-webkit-scrollbar-thumb:horizontal {
+  background: linear-gradient(90deg, rgba(var(--neon-cyan-rgb), 0.7), rgba(var(--neon-violet-rgb), 0.7)) padding-box;
 }
-.tray-pieces::-webkit-scrollbar-track,
-.screen-menu::-webkit-scrollbar-track {
-  background: transparent;
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(var(--neon-cyan-rgb), 0.95), rgba(var(--neon-violet-rgb), 0.95)) padding-box;
+  box-shadow: inset 0 0 0 1px var(--neon-cyan), 0 0 8px rgba(var(--neon-cyan-rgb), 0.6);
+}
+*::-webkit-scrollbar-thumb:horizontal:hover {
+  background: linear-gradient(90deg, rgba(var(--neon-cyan-rgb), 0.95), rgba(var(--neon-violet-rgb), 0.95)) padding-box;
+}
+*::-webkit-scrollbar-thumb:active {
+  background: rgba(var(--neon-pink-rgb), 0.85) padding-box;
+  box-shadow: inset 0 0 0 1px var(--neon-pink), 0 0 8px rgba(var(--neon-pink-rgb), 0.6);
+}
+*::-webkit-scrollbar-corner { background: transparent; }
+*::-webkit-scrollbar-button { display: none; }
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--neon-cyan-rgb), 0.7) rgba(var(--ink-rgb), 0.55);
+  }
 }
