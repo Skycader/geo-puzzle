@@ -29,13 +29,16 @@ export const SOURCES = {
     links: [{ label: L('Natural Earth — Populated Places', 'Natural Earth — Populated Places'), url: 'https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-populated-places/' }],
   },
   timezones: {
-    name: L('Natural Earth', 'Natural Earth'),
+    name: L('timezone-boundary-builder', 'timezone-boundary-builder'),
     desc: L(
-      'Часовые пояса — слой Natural Earth «Time zones» (10m): реальные политические границы поясов (а не полосы по 15° меридианам), упрощённые для карты. Объединены по смещению от UTC; подпись — у крупнейшего куска каждого смещения. Летнее время не учитывается.',
-      'Time zones — the Natural Earth "Time zones" layer (10m): real political zone borders (not 15° meridian strips), simplified for the map. Merged per UTC offset; the label sits on the biggest piece of each offset. Daylight saving time is not shown.'
+      'Границы часовых поясов по базе IANA (выпуск 2026e, «now»: области объединены там, где пояса ведут себя одинаково), упрощённые для карты. Смещение от UTC и летнее время определяются в браузере по актуальной базе, поэтому подписи и время у курсора — настоящие на сегодня. Известное исключение: Марокко (UTC+1) в данных слито с поясом UTC+0.',
+      'Time-zone borders from the IANA tz database (release 2026e, "now": areas merged wherever zones behave identically), simplified for the map. The UTC offset and daylight saving are resolved in the browser from the current tz database, so the labels and the time at the cursor are the real ones for today. Known exception: Morocco (UTC+1) is merged into the UTC+0 area in the data.'
     ),
-    license: L('Natural Earth — общественное достояние', 'Natural Earth is public domain'),
-    links: [{ label: L('Natural Earth — Time Zones', 'Natural Earth — Time Zones'), url: 'https://www.naturalearthdata.com/downloads/10m-cultural-vectors/timezones/' }],
+    license: L('© участники OpenStreetMap, лицензия ODbL; код проекта — MIT', '© OpenStreetMap contributors, ODbL; the project code is MIT'),
+    links: [
+      { label: L('timezone-boundary-builder на GitHub', 'timezone-boundary-builder on GitHub'), url: 'https://github.com/evansiroky/timezone-boundary-builder' },
+      { label: L('Лицензия ODbL', 'ODbL licence'), url: 'https://www.openstreetmap.org/copyright' },
+    ],
   },
   worldPlaces: {
     name: L('Википедия', 'Wikipedia'),

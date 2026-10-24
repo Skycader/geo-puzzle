@@ -31,7 +31,7 @@
 | `build_world_cities.js` | `world-cities-source.json`, `levels/countries.js` (русские названия стран) | `levels/worldCities.js`, `levels/worldPlaces.js` | список мест `PLACES` — в скрипте |
 | `build_zones_info.js` | сеть (Википедия) | `levels/world/zones-info.json` | карточки зон (`land` уровня countries); id → заголовок статьи в `ZONES` |
 | `build_world_cities_info.js` | сеть (Wikidata + Википедия) | `levels/world/cities-info.json` | возобновляемый; `node scripts/build_world_cities_info.js moscow paris` — только перечисленные id |
-| `build_world_timezones.js` | `scripts/data/world-timezones-simplified.geojson` (Natural Earth 10m «Time zones», mapshaper `-simplify 12%`; сырой файл ~3,5 МБ не хранится, команды — в шапке скрипта) | `levels/worldTimezones.js` | объединяет куски по смещению, проецирует, считает точку подписи |
+| `build_world_timezones.js` | `scripts/data/world-timezones-simplified.geojson` (timezone-boundary-builder 2026e `timezones-with-oceans-now`, ~87 МБ, mapshaper `-simplify 0.5%`; сырой файл не хранится, команды — в шапке скрипта) | `levels/worldTimezones.js` | проецирует, считает точку подписи и рамку; обновление — скачать свежий выпуск и повторить |
 | `build_world_currents.js` | сеть (NOAA ERDDAP, OSCAR) | `levels/worldCurrents.js` | массив `CURRENTS` (id, имя, `temp`, `box`, `seed`, `cutAtEastmost`); усредняет срезы, ведёт линию тока, сглаживает |
 
 Все `levels/*.js`-выходы начинаются с комментария «Auto-generated … Regenerate:».
@@ -65,7 +65,7 @@
 | Рельеф | EPA/CEC «Level I Ecoregions of North America» | открытые данные |
 | Аэропорты и ВПП | OurAirports (`airports.csv`, `runways.csv`) | общественное достояние |
 | Деление аэропортов (для справки; в данные не вшито) | FAA, таблица enplanements CY2025 и NPIAS 2025–2029 | открытые данные FAA |
-| Часовые пояса | Natural Earth «Time zones» 10m | общественное достояние |
+| Часовые пояса | timezone-boundary-builder (границы по базе IANA, выпуск 2026e) | © участники OpenStreetMap, ODbL |
 | Течения | NOAA/ERD «OSCAR» (CoastWatch ERDDAP `jplOscar`, 2011-12 … 2014-09) | «free to use and redistribute» |
 | Тексты, фото, координаты мест | Википедия (MediaWiki API, REST summary), изображения — Wikimedia Commons | CC BY-SA 4.0 / лицензии Commons |
 | Подложки | OpenStreetMap (iframe), Tracestrack (топо-тайлы) | ODbL (OSM) / условия Tracestrack |

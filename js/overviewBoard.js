@@ -116,6 +116,23 @@ const INFO_MARKER_LIFT_PX = 16;
 // Time-zone labels: constant screen size; "UTC+3" from FULL_LABEL_ZOOM, else just "+3";
 // half-hour/45-minute zones only from FRACTIONAL_LABEL_ZOOM (they'd crowd their neighbours).
 const TIMEZONE_LABEL_PX = 12;
+// Current UTC offset (hours, daylight saving included) of an IANA zone, from Intl's "GMT+05:30"-style
+// longOffset; formatters are cached because building one is the slow part.
+const tzFormatters = new Map();
+function timezoneOffsetHours(tz, date = new Date()) {
+  let f = tzFormatters.get(tz);
+  if (!f) {
+    f = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'longOffset' });
+    tzFormatters.set(tz, f);
+  }
+  const m = /GMT([+-])(\d{2}):(\d{2})/.exec(f.formatToParts(date).find((p) => p.type === 'timeZoneName')?.value ?? '');
+  return m ? (m[1] === '-' ? -1 : 1) * (+m[2] + +m[3] / 60) : 0; // plain "GMT" = UTC+0
+}
+const timezoneOffsetLabel = (h) => {
+  const abs = Math.abs(h);
+  const min = Math.round((abs - Math.trunc(abs)) * 60);
+  return `UTC${h < 0 ? '-' : '+'}${Math.trunc(abs)}${min ? ':' + String(min).padStart(2, '0') : ''}`;
+};
 const TIMEZONE_FULL_LABEL_ZOOM = 2;
 const TIMEZONE_FRACTIONAL_LABEL_ZOOM = 3;
 const AIRPORT_ICON_PX = 22;
@@ -460,7 +477,7 @@ export class OverviewBoard {
     this.currentsById = new Map(); // id -> { data, dotEl }
     this.currentsVisible = opts.currentsVisible !== false;
     this.timezonesVisible = opts.timezonesVisible === true; // opt-in colour overlay (countries level)
-    this.timezoneEntries = []; // { zone, path, label, whole }
+    this.timezoneEntries = []; // { zone, path, label, offset, name, whole, colorClass } — offset fields: _refreshTimezoneOffsets
     this.lakesById = new Map(); // id -> { data, pathEl }
     this.lakeEls = []; // { pathEl, labelEl } — see setLakesVisible
     this.contextLandById = new Map(); // id -> { data } — Canada, see build_usa_level.js's contextLand
@@ -617,22 +634,23 @@ export class OverviewBoard {
       }
     }
 
-    // Time-zone bands + their UTC labels. Colour classes cycle through the three theme accents
-    // by offset (so neighbouring zones differ); labels are short ("+3") when zoomed out and
-    // "UTC+3" closer in, and half-hour zones wait for TIMEZONE_FRACTIONAL_LABEL_ZOOM.
-    (this.level.timezones || []).forEach((zone, i) => {
+    // Time-zone bands + their UTC labels. Each area (levels/worldTimezones.js) is an IANA zone;
+    // its CURRENT offset (daylight saving included) is looked up with Intl, which sets the label
+    // text and the colour class (accents cycle by offset rank, so neighbouring offsets differ) —
+    // see _refreshTimezoneOffsets. Labels are short ("+3") when zoomed out and "UTC+3" closer in,
+    // and half-hour zones wait for TIMEZONE_FRACTIONAL_LABEL_ZOOM.
+    for (const zone of this.level.timezones || []) {
       const path = document.createElementNS(SVG_NS, 'path');
       path.setAttribute('d', zone.d);
-      path.setAttribute('class', `timezone-band timezone-c${i % 3}`);
       this.timezonesLayer.appendChild(path);
       const label = document.createElementNS(SVG_NS, 'text');
       label.setAttribute('x', zone.cx);
       label.setAttribute('y', zone.cy);
-      label.setAttribute('class', `piece-label timezone-label timezone-c${i % 3}`);
       this.labelsLayer.appendChild(label);
       this.allLabelEls.push(label);
-      this.timezoneEntries.push({ zone, path, label, whole: Number.isInteger(zone.utc), colorClass: `timezone-c${i % 3}` });
-    });
+      this.timezoneEntries.push({ zone, path, label, offset: 0, name: '', whole: true, colorClass: '' });
+    }
+    this._refreshTimezoneOffsets();
 
     // Canada — non-interactive geographic context only (USA level), real
     // position/scale (see scripts/build_usa_level.js's own comment on why
@@ -2401,7 +2419,7 @@ export class OverviewBoard {
       const shown = this.timezonesVisible && this.labelsVisible && (e.whole || zoom >= TIMEZONE_FRACTIONAL_LABEL_ZOOM);
       e.label.style.opacity = shown ? '' : '0';
       if (!shown) continue;
-      e.label.textContent = zoom >= TIMEZONE_FULL_LABEL_ZOOM ? e.zone.name : e.zone.name.slice(3);
+      e.label.textContent = zoom >= TIMEZONE_FULL_LABEL_ZOOM ? e.name : e.name.slice(3);
       e.label.style.fontSize = `${(TIMEZONE_LABEL_PX / effScale).toFixed(2)}px`;
       e.label.style.strokeWidth = `${(STATE_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
     }
@@ -2838,9 +2856,29 @@ export class OverviewBoard {
     setElementHidden(this.terrainHoverTipEl, false);
   }
 
-  // Floating "+3  14:05:07" readout next to the cursor while the time-zone layer is on: the zone
-  // under the cursor (isPointInFill on its band, bbox pre-check first) and the current time in it.
-  // Time is UTC + the zone's standard offset — daylight saving time is not modelled.
+  // (Re)computes each area's current offset (daylight saving included, via Intl) and with it the
+  // label text, the "whole hour" flag and the colour class: accents cycle by the offset's rank
+  // among all offsets in use, so areas with the same offset share a colour and neighbours with
+  // different offsets differ. Cheap (one cached formatter per zone); redone at most once a minute.
+  _refreshTimezoneOffsets() {
+    const now = new Date();
+    for (const e of this.timezoneEntries) {
+      e.offset = timezoneOffsetHours(e.zone.tz, now);
+      e.name = timezoneOffsetLabel(e.offset);
+      e.whole = Number.isInteger(e.offset);
+    }
+    const rank = new Map([...new Set(this.timezoneEntries.map((e) => e.offset))].sort((a, b) => a - b).map((h, i) => [h, i]));
+    for (const e of this.timezoneEntries) {
+      e.colorClass = `timezone-c${rank.get(e.offset) % 3}`;
+      e.path.setAttribute('class', `timezone-band ${e.colorClass}`);
+      e.label.setAttribute('class', `piece-label timezone-label ${e.colorClass}`);
+    }
+    this._timezoneOffsetsAt = now.getTime();
+  }
+
+  // Floating "+3  14:05:07" readout next to the cursor while the time-zone layer is on: the area
+  // under the cursor (isPointInFill on its band, bbox pre-check first) and the current local
+  // time there — the real one, daylight saving included (offset looked up with Intl every tick).
   _updateTimezoneTip(ev) {
     if (!this.timezonesVisible || !this.timezoneEntries.length) return this._hideTimezoneTip();
     const pt = this._clientToNative(ev.clientX, ev.clientY);
@@ -2860,8 +2898,7 @@ export class OverviewBoard {
     const el = this.timezoneTipEl;
     el.classList.remove('timezone-c0', 'timezone-c1', 'timezone-c2');
     el.classList.add(hit.colorClass);
-    el.querySelector('.timezone-tip-offset').textContent = hit.zone.name.slice(3);
-    this._timezoneTipZone = hit.zone;
+    this._timezoneTipEntry = hit;
     this._tickTimezoneTip();
     const wrapRect = this.container.getBoundingClientRect();
     el.style.left = `${ev.clientX - wrapRect.left + 14}px`;
@@ -2872,15 +2909,19 @@ export class OverviewBoard {
   }
 
   _tickTimezoneTip() {
-    if (!this.timezoneTipEl || !this._timezoneTipZone) return;
-    const d = new Date(Date.now() + this._timezoneTipZone.utc * 3600 * 1000);
+    if (!this.timezoneTipEl || !this._timezoneTipEntry) return;
+    const now = Date.now();
+    if (now - this._timezoneOffsetsAt > 60000) this._refreshTimezoneOffsets(); // a DST switch may have happened
+    const offset = timezoneOffsetHours(this._timezoneTipEntry.zone.tz, new Date(now));
+    const d = new Date(now + offset * 3600 * 1000);
     const p = (n) => String(n).padStart(2, '0');
+    this.timezoneTipEl.querySelector('.timezone-tip-offset').textContent = timezoneOffsetLabel(offset).slice(3);
     this.timezoneTipEl.querySelector('.timezone-tip-time').textContent = `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`;
   }
 
   _hideTimezoneTip() {
     if (this.timezoneTipEl) setElementHidden(this.timezoneTipEl, true);
-    this._timezoneTipZone = null;
+    this._timezoneTipEntry = null;
     clearInterval(this._timezoneClock);
     this._timezoneClock = null;
   }
@@ -3002,6 +3043,7 @@ export class OverviewBoard {
   setTimezonesVisible(visible) {
     this.timezonesVisible = visible;
     this.timezonesLayer.style.display = visible ? '' : 'none';
+    if (visible) this._refreshTimezoneOffsets();
     if (!visible) this._hideTimezoneTip();
     // The labels' opacity is also driven by _rescaleForZoom (zoom thresholds), so re-run it.
     this._rescaleForZoom(this.zoomCtl?.getZoom() ?? 1);

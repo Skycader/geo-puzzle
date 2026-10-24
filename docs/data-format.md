@@ -77,9 +77,10 @@
 
 ### `timezones[]` (countries)
 
-`{ id ('utc+3'), utc (часы со знаком), name ('UTC+3'), ru, cx, cy, bbox, d }` — одна запись на смещение UTC,
-`bbox` — рамка всех кусков (быстрая предпроверка при наведении), `d` объединяет все куски (включая океанские части поясов Natural Earth). Собирается
-`scripts/build_world_timezones.js` из `scripts/data/world-timezones-simplified.geojson`.
+`{ id, tz (идентификатор IANA), cx, cy, bbox, d }` — одна запись на область часового пояса (без
+смещения: его даёт `Intl` на лету, см. [overview-mode.md](overview-mode.md)); `bbox` — рамка всех кусков
+(предпроверка при наведении), `d` — все куски. Собирается `scripts/build_world_timezones.js` из
+`scripts/data/world-timezones-simplified.geojson`.
 
 ### `currents[]` (world)
 

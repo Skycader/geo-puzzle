@@ -1,18 +1,26 @@
-// Builds levels/worldTimezones.js — the "Часовые пояса" layer of the countries level: Natural
-// Earth's public-domain time-zone polygons (real political zones, not 15° meridian strips),
-// merged per UTC offset, projected onto the same equirectangular canvas as the rest of the
-// world map (x = (lon + 180) * 3.2, y = (90 - lat) * 3.2; see build_world_seas.js).
+// Builds levels/worldTimezones.js — the "Часовые пояса" layer of the countries level: current
+// time-zone boundaries from timezone-boundary-builder (https://github.com/evansiroky/timezone-boundary-builder,
+// release 2026e, "timezones-with-oceans-now": areas merged wherever the zones behave identically
+// from now on), projected onto the same equirectangular canvas as the rest of the world map
+// (x = (lon + 180) * 3.2, y = (90 - lat) * 3.2; see build_world_seas.js).
 //
-// Source: scripts/data/world-timezones-simplified.geojson, made from Natural Earth 10m "Time
-// zones" with
-//   curl -sL -o ne_10m_time_zones.geojson https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_time_zones.geojson
-//   npx mapshaper ne_10m_time_zones.geojson -filter-fields zone,utc_format,map_color6 -simplify 12% keep-shapes -o simple.geojson precision=0.01
-// (the raw file is ~3.5 MB and isn't kept; one tiny UTC-9 sliver collapses to a null geometry
-// when simplified and was dropped — that offset is still covered by other features).
+// Why not Natural Earth's "Time zones" layer (used by the first version of this layer): it dates
+// from about 2012 — Russia is a whole hour off (it was on "permanent summer" time then), and
+// Turkey, Kazakhstan, Venezuela and Morocco changed since too. This data follows the IANA tz
+// database, so offsets and daylight saving are looked up at runtime with Intl instead of being
+// baked in here (see OverviewBoard._refreshTimezoneOffsets).
 //
-// Each entry: { id, utc, name, ru, cx, cy, bbox, d } — `utc` is the offset in hours (5.75 = +5:45),
-// (cx, cy) the label point (centroid of the offset's biggest piece), `bbox` [x0, y0, x1, y1] of all
-// its pieces (a cheap pre-check for the hover readout), `d` all its pieces.
+// Source: scripts/data/world-timezones-simplified.geojson, made with
+//   curl -sL -o tz.zip https://github.com/evansiroky/timezone-boundary-builder/releases/download/2026e/timezones-with-oceans-now.geojson.zip
+//   unzip tz.zip      # -> combined-with-oceans-now.json, ~87 MB, not kept in the repo
+//   npx mapshaper combined-with-oceans-now.json -simplify 0.5% keep-shapes -o simple.geojson precision=0.01
+// (data © OpenStreetMap contributors, ODbL — see js/dataSources.js). To refresh after tz rule
+// changes, download the newest release and repeat.
+//
+// Each entry: { id, tz, cx, cy, bbox, d } — `tz` is a representative IANA id of the area (all of
+// its places share the same current offset and DST rules), (cx, cy) the label point (centroid of
+// the biggest piece), `bbox` [x0, y0, x1, y1] of all its pieces (a cheap pre-check for the hover
+// readout), `d` all its pieces.
 // Regenerate: node scripts/build_world_timezones.js
 const fs = require('fs');
 const path = require('path');
@@ -38,41 +46,27 @@ const ringCentroid = (r) => {
   }
   return [cx / (3 * a), cy / (3 * a)];
 };
-const label = (h) => {
-  const sign = h < 0 ? '-' : '+';
-  const abs = Math.abs(h);
-  const hh = Math.trunc(abs);
-  const mm = Math.round((abs - hh) * 60);
-  return `UTC${sign}${hh}${mm ? ':' + String(mm).padStart(2, '0') : ''}`;
-};
 
-const byOffset = new Map(); // utc -> { dParts, best: { area, ring }, bbox }
-for (const f of src.features) {
+const zones = src.features.map((f) => {
   const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
-  const e = byOffset.get(f.properties.zone) || { dParts: [], best: { area: 0, ring: null }, bbox: [Infinity, Infinity, -Infinity, -Infinity] };
-  byOffset.set(f.properties.zone, e);
+  const dParts = [];
+  let bbox = [Infinity, Infinity, -Infinity, -Infinity];
+  let best = { area: 0, ring: null };
   for (const poly of polys) {
     const rings = poly.map((r) => r.map(([lon, lat]) => [x(lon), y(lat)]));
-    e.dParts.push(rings.map((r) => 'M ' + r.map(([px, py]) => `${px.toFixed(1)},${py.toFixed(1)}`).join(' L ') + ' Z').join(' '));
-    for (const [px, py] of rings[0]) {
-      e.bbox = [Math.min(e.bbox[0], px), Math.min(e.bbox[1], py), Math.max(e.bbox[2], px), Math.max(e.bbox[3], py)];
-    }
+    dParts.push(rings.map((r) => 'M ' + r.map(([px, py]) => `${px.toFixed(1)},${py.toFixed(1)}`).join(' L ') + ' Z').join(' '));
+    for (const [px, py] of rings[0]) bbox = [Math.min(bbox[0], px), Math.min(bbox[1], py), Math.max(bbox[2], px), Math.max(bbox[3], py)];
     const area = Math.abs(ringArea(rings[0]));
-    if (area > e.best.area) e.best = { area, ring: rings[0] };
+    if (area > best.area) best = { area, ring: rings[0] };
   }
-}
+  const [cx, cy] = ringCentroid(best.ring);
+  const tz = f.properties.tzid;
+  return { id: tz.toLowerCase().replace(/[^a-z0-9]+/g, '_'), tz, cx: +cx.toFixed(1), cy: +cy.toFixed(1), bbox: bbox.map((n) => +n.toFixed(1)), d: dParts.join(' ') };
+});
 
-const zones = [...byOffset.entries()]
-  .sort((a, b) => a[0] - b[0])
-  .map(([utc, e]) => {
-    const [cx, cy] = ringCentroid(e.best.ring);
-    const name = label(utc);
-    return { id: name.toLowerCase(), utc, name, ru: name, cx: +cx.toFixed(1), cy: +cy.toFixed(1), bbox: e.bbox.map((n) => +n.toFixed(1)), d: e.dParts.join(' ') };
-  });
-
-let out = `// Auto-generated by scripts/build_world_timezones.js from Natural Earth's public-domain\n`;
-out += `// 10m time zones — see that script for the source and the projection.\n`;
+let out = `// Auto-generated by scripts/build_world_timezones.js from timezone-boundary-builder 2026e\n`;
+out += `// (© OpenStreetMap contributors, ODbL) — see that script for the source and the projection.\n`;
 out += `// Regenerate: node scripts/build_world_timezones.js\n`;
 out += `export default ${JSON.stringify(zones, null, 2)};\n`;
 fs.writeFileSync(path.join(__dirname, '..', 'levels', 'worldTimezones.js'), out, 'utf8');
-console.error(`wrote levels/worldTimezones.js: ${zones.length} offsets (${zones.map((z) => z.name).join(' ')})`);
+console.error(`wrote levels/worldTimezones.js: ${zones.length} areas, ${(out.length / 1024).toFixed(0)} KB`);
