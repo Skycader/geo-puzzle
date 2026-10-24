@@ -1856,20 +1856,6 @@ body {
    other cursor-tracking overlay in this file. pointer-events:none so it
    can never itself become ev.target and block the very hover it's
    reporting on. */
-.terrain-hover-tip {
-  position: absolute;
-  z-index: 25;
-  pointer-events: none;
-  padding: 4px 8px;
-  border-radius: 0;
-  border: 1px solid var(--neon-cyan);
-  background: rgba(var(--ink-rgb), 0.85);
-  backdrop-filter: blur(4px);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--base1);
-  white-space: nowrap;
-}
 
 /* World-map country context (js/seaQuizBoard.js, js/seaIdentifyBoard.js) —
    deliberately more solid than the .state-bg-path default above so
@@ -2032,29 +2018,41 @@ body {
 .timezone-label.timezone-c0 { fill: var(--neon-cyan); }
 .timezone-label.timezone-c1 { fill: var(--neon-pink); }
 .timezone-label.timezone-c2 { fill: var(--neon-violet); }
-/* Floating readout next to the cursor ("+3  14:05:07"), bordered in the hovered zone's accent. */
-.timezone-tip {
-  position: absolute;
-  z-index: 26;
+/* The app's tooltip stack (js/tooltips.js): replaces the browser's native title tooltips. One row
+   per source (the element's own tip, terrain category, time-zone clock…), bordered in the theme
+   accent — a time-zone row takes that zone's colour via .timezone-c0/1/2. */
+.tip-stack {
+  position: fixed;
+  z-index: 10000;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: min(360px, calc(100vw - 16px));
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.tip-row {
   display: flex;
   gap: 8px;
   align-items: baseline;
   padding: 3px 8px;
-  background: rgba(var(--ink-rgb), 0.88);
+  border: 1px solid var(--neon-cyan);
+  background: rgba(var(--ink-rgb), 0.92);
   backdrop-filter: blur(4px);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  white-space: nowrap;
+  box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.3);
+  color: var(--base1);
+  white-space: pre-line;
 }
-.timezone-tip-offset { font-weight: 700; }
-.timezone-tip-time { font-variant-numeric: tabular-nums; color: var(--base2); }
-.timezone-tip.timezone-c0 { border: 1px solid var(--neon-cyan); box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.35); }
-.timezone-tip.timezone-c0 .timezone-tip-offset { color: var(--neon-cyan); }
-.timezone-tip.timezone-c1 { border: 1px solid var(--neon-pink); box-shadow: 0 0 8px rgba(var(--neon-pink-rgb), 0.35); }
-.timezone-tip.timezone-c1 .timezone-tip-offset { color: var(--neon-pink); }
-.timezone-tip.timezone-c2 { border: 1px solid var(--neon-violet); box-shadow: 0 0 8px rgba(var(--neon-violet-rgb), 0.35); }
-.timezone-tip.timezone-c2 .timezone-tip-offset { color: var(--neon-violet); }
+.tip-strong { font-weight: 700; color: var(--neon-cyan); }
+.tip-part { font-variant-numeric: tabular-nums; }
+.tip-row.timezone-c0 { border-color: var(--neon-cyan); box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.35); }
+.tip-row.timezone-c0 .tip-strong { color: var(--neon-cyan); }
+.tip-row.timezone-c1 { border-color: var(--neon-pink); box-shadow: 0 0 8px rgba(var(--neon-pink-rgb), 0.35); }
+.tip-row.timezone-c1 .tip-strong { color: var(--neon-pink); }
+.tip-row.timezone-c2 { border-color: var(--neon-violet); box-shadow: 0 0 8px rgba(var(--neon-violet-rgb), 0.35); }
+.tip-row.timezone-c2 .tip-strong { color: var(--neon-violet); }
+.tip-row.timezone-c0 .tip-part, .tip-row.timezone-c1 .tip-part, .tip-row.timezone-c2 .tip-part { color: var(--base2); font-size: 13px; }
 /* Ocean currents: schematic thick arrows over real paths. */
 .overview-current-line {
   fill: none;

@@ -6,6 +6,7 @@ import { nativeToLonLat, formatLonLat, findInset } from './geoCoords.js';
 import { loadSuccessStats, setSuccessCount } from './successStats.js';
 import { getLang, t, itemName, terrainDescription, terrainLabel, bilingualLabel, hiIslandName } from './i18n.js';
 import { cityMarkersHtml, searchBoxHtml, bindSearchClear } from './listWidgets.js';
+import { registerTipProvider, refreshTips } from './tooltips.js';
 
 // Hawaii's own piece is one <path> with 8 real, physically separate
 // island rings (see scripts/build_usa_level.js's Hawaii-splice comment) —
@@ -464,7 +465,7 @@ export class OverviewBoard {
     this.terrainRegionsByCategory = null; // category -> <path>, set once terrainLayer is built
     this.terrainLabelsByCategory = null; // category -> Russian label, set alongside terrainRegionsByCategory
     this.terrainHiddenCategories = new Set(); // categories the player filtered off via the legend
-    this.terrainHoverTipEl = null; // built lazily on first hover — see _onMapMouseMove
+    this._tipUnregister = []; // js/tooltips.js providers, see _terrainTipRow/_timezoneTipRow
     this.statesById = new Map(); // id -> { data, pathEl }
     this.citiesById = new Map(); // id -> { data, dotEl } | { data, pathEl }
     this.placesById = new Map(); // id -> { data, dotEl }
@@ -695,7 +696,7 @@ export class OverviewBoard {
       path.dataset.kind = 'state';
       path.dataset.id = p.id;
       // Detached while "Рельеф" is showing (see
-      // _setStateNativeTooltipsEnabled) — the custom terrain-hover-tip
+      // _setStateNativeTooltipsEnabled) — the custom terrain tip row (_terrainTipRow)
       // already shows this same name (plus the terrain category), and
       // having both the native browser tooltip AND the custom one active
       // at once is confusing/redundant, not additive.
@@ -712,7 +713,7 @@ export class OverviewBoard {
       // already right by the time the browser's own hover-delay timer
       // fires. This only covers the native-tooltip path — when "Рельеф" is
       // on, this <title> is detached (see _setStateNativeTooltipsEnabled)
-      // and _onMapMouseMove's custom terrain-hover-tip takes over instead,
+      // and _terrainTipRow's tooltip row takes over instead,
       // which calls the same _hiIslandLabelAt helper itself.
       if (p.id === 'HI') {
         path.addEventListener('pointermove', (e) => {
@@ -1164,15 +1165,9 @@ export class OverviewBoard {
     // separate event types), so the ruler needs no "enter ruler mode"
     // toggle at all.
     this.svg.addEventListener('contextmenu', (ev) => this._onMapContextMenu(ev));
-    // "Рельеф" hover readout — see _onMapMouseMove. Always bound (not only
-    // while terrainMode !== 'off') since it's a no-op early return
-    // otherwise; that avoids adding/removing the listener every time the
-    // toggle flips.
-    this.svg.addEventListener('mousemove', (ev) => this._onMapMouseMove(ev));
-    this.svg.addEventListener('mouseleave', () => {
-      this._hideTerrainHoverTip();
-      this._hideTimezoneTip();
-    });
+    // Cursor-dependent hover readouts ("Рельеф" category, time-zone clock) are rows of the shared
+    // tooltip stack (js/tooltips.js): registered once, each returns null while it doesn't apply.
+    this._tipUnregister = [registerTipProvider((ev) => this._terrainTipRow(ev)), registerTipProvider((ev) => this._timezoneTipRow(ev))];
 
     this._rescaleForZoom(1);
     this.setLabelsVisible(this.labelsVisible);
@@ -2701,7 +2696,7 @@ export class OverviewBoard {
         path.dataset.terrain = region.category;
         // No <title> here on purpose — pointer-events:none (style.css)
         // means this path can never actually receive the hover that would
-        // show it; _onMapMouseMove's custom terrain-hover-tip is what
+        // show it; _terrainTipRow's tooltip row is what
         // actually reports the category, via _terrainCategoryAt.
         g.appendChild(path);
         this.terrainRegionsByCategory.set(region.category, path);
@@ -2776,7 +2771,7 @@ export class OverviewBoard {
   // Nearest of HI_ISLAND_HOVER_LABELS's 8 real island centers to a given
   // native-coordinate point, or null off the projection's known area
   // entirely. Shared by the HI piece's native <title> (pointermove, above)
-  // and _onMapMouseMove's custom terrain-hover-tip — Hawaii has no terrain
+  // and _terrainTipRow's tooltip row — Hawaii has no terrain
   // category data at all (see _terrainCategoryAt's own comment on gaps in
   // the source dataset), so without this its terrain tooltip falls back to
   // the bare state name same as before this existed.
@@ -2812,18 +2807,16 @@ export class OverviewBoard {
     return null;
   }
 
-  // Live "Вайоминг — Пустыня" readout while the mouse moves over a state
-  // with "Рельеф" on — a plain state <title> can't do this since its text
-  // is fixed per-element, not per-cursor-position, and a state can straddle
-  // several terrain categories (see _terrainCategoryAt). Cheap early-outs
-  // (terrainMode 'off', not hovering a state) keep this from doing any
-  // point-in-fill work on every ordinary mousemove.
-  _onMapMouseMove(ev) {
-    this._updateTimezoneTip(ev);
-    if (this.terrainMode === 'off') return this._hideTerrainHoverTip();
-    const kind = ev.target?.dataset?.kind;
-    const id = ev.target?.dataset?.id;
-    if (kind !== 'state' || !id) return this._hideTerrainHoverTip();
+  // Live "Вайоминг — Пустыня" row for the tooltip stack while the mouse moves over a state with
+  // "Рельеф" on — a plain state <title> can't do this since its text is fixed per-element, not
+  // per-cursor-position, and a state can straddle several terrain categories (see
+  // _terrainCategoryAt). Cheap early-outs (terrainMode 'off', not hovering a state) keep this
+  // from doing any point-in-fill work on every ordinary mousemove.
+  _terrainTipRow(ev) {
+    if (this.terrainMode === 'off' || !this.svg.contains(ev.target)) return null;
+    const kind = ev.target.dataset?.kind;
+    const id = ev.target.dataset?.id;
+    if (kind !== 'state' || !id) return null;
     const state = this.statesById.get(id);
     const nativePt = this._clientToNative(ev.clientX, ev.clientY);
     const category = this._terrainCategoryAt(nativePt);
@@ -2834,26 +2827,7 @@ export class OverviewBoard {
       : hiIsland
         ? `${stateName} — ${hiIsland}`
         : stateName;
-    this._showTerrainHoverTip(ev.clientX, ev.clientY, text);
-  }
-
-  _showTerrainHoverTip(clientX, clientY, text) {
-    if (!this.terrainHoverTipEl) {
-      const el = document.createElement('div');
-      el.className = 'terrain-hover-tip';
-      // Sibling of zoomWrap inside this.container, not a zoomWrap child —
-      // same "oversized zoom-wrap is a trap for absolutely-positioned
-      // overlays" reasoning as .zoom-controls/.terrain-legend, and this one
-      // in particular needs to track the raw client cursor position, which
-      // only lines up correctly against a container that isn't oversized.
-      this.container.appendChild(el);
-      this.terrainHoverTipEl = el;
-    }
-    const wrapRect = this.container.getBoundingClientRect();
-    this.terrainHoverTipEl.textContent = text;
-    this.terrainHoverTipEl.style.left = `${clientX - wrapRect.left + 14}px`;
-    this.terrainHoverTipEl.style.top = `${clientY - wrapRect.top + 18}px`;
-    setElementHidden(this.terrainHoverTipEl, false);
+    return { key: 'terrain', parts: [{ text }] };
   }
 
   // (Re)computes each area's current offset (daylight saving included, via Intl) and with it the
@@ -2876,58 +2850,28 @@ export class OverviewBoard {
     this._timezoneOffsetsAt = now.getTime();
   }
 
-  // Floating "+3  14:05:07" readout next to the cursor while the time-zone layer is on: the area
-  // under the cursor (isPointInFill on its band, bbox pre-check first) and the current local
-  // time there — the real one, daylight saving included (offset looked up with Intl every tick).
-  _updateTimezoneTip(ev) {
-    if (!this.timezonesVisible || !this.timezoneEntries.length) return this._hideTimezoneTip();
+  // Row "+3  14:05:07" for the tooltip stack while the time-zone layer is on: the area under the
+  // cursor (isPointInFill on its band, bbox pre-check first) and the current local time there —
+  // the real one, daylight saving included (the offset is looked up with Intl on every poll, and
+  // js/tooltips.js polls once a second, so the seconds run while the cursor rests).
+  _timezoneTipRow(ev) {
+    if (!this.timezonesVisible || !this.timezoneEntries.length || !this.svg.contains(ev.target)) return null;
     const pt = this._clientToNative(ev.clientX, ev.clientY);
     const hit = this.timezoneEntries.find(({ zone, path }) => {
       const [x0, y0, x1, y1] = zone.bbox;
       return pt.x >= x0 && pt.x <= x1 && pt.y >= y0 && pt.y <= y1 && path.isPointInFill(new DOMPoint(pt.x, pt.y));
     });
-    if (!hit) return this._hideTimezoneTip();
-    if (!this.timezoneTipEl) {
-      const el = document.createElement('div');
-      el.className = 'timezone-tip';
-      el.innerHTML = '<span class="timezone-tip-offset"></span><span class="timezone-tip-time"></span>';
-      // Sibling of zoomWrap (see _showTerrainHoverTip): it tracks the raw client cursor.
-      this.container.appendChild(el);
-      this.timezoneTipEl = el;
-    }
-    const el = this.timezoneTipEl;
-    el.classList.remove('timezone-c0', 'timezone-c1', 'timezone-c2');
-    el.classList.add(hit.colorClass);
-    this._timezoneTipEntry = hit;
-    this._tickTimezoneTip();
-    const wrapRect = this.container.getBoundingClientRect();
-    el.style.left = `${ev.clientX - wrapRect.left + 14}px`;
-    el.style.top = `${ev.clientY - wrapRect.top + 18}px`;
-    setElementHidden(el, false);
-    // Keep the seconds running while the cursor rests on the zone.
-    if (!this._timezoneClock) this._timezoneClock = setInterval(() => this._tickTimezoneTip(), 1000);
-  }
-
-  _tickTimezoneTip() {
-    if (!this.timezoneTipEl || !this._timezoneTipEntry) return;
+    if (!hit) return null;
     const now = Date.now();
     if (now - this._timezoneOffsetsAt > 60000) this._refreshTimezoneOffsets(); // a DST switch may have happened
-    const offset = timezoneOffsetHours(this._timezoneTipEntry.zone.tz, new Date(now));
+    const offset = timezoneOffsetHours(hit.zone.tz, new Date(now));
     const d = new Date(now + offset * 3600 * 1000);
     const p = (n) => String(n).padStart(2, '0');
-    this.timezoneTipEl.querySelector('.timezone-tip-offset').textContent = timezoneOffsetLabel(offset).slice(3);
-    this.timezoneTipEl.querySelector('.timezone-tip-time').textContent = `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`;
-  }
-
-  _hideTimezoneTip() {
-    if (this.timezoneTipEl) setElementHidden(this.timezoneTipEl, true);
-    this._timezoneTipEntry = null;
-    clearInterval(this._timezoneClock);
-    this._timezoneClock = null;
-  }
-
-  _hideTerrainHoverTip() {
-    if (this.terrainHoverTipEl) setElementHidden(this.terrainHoverTipEl, true);
+    return {
+      key: 'tz',
+      accent: hit.colorClass.slice('timezone-'.length),
+      parts: [{ text: timezoneOffsetLabel(offset).slice(3), strong: true }, { text: `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}` }],
+    };
   }
 
   // Picks, for each highway, whichever of its sampled points (see
@@ -3044,7 +2988,7 @@ export class OverviewBoard {
     this.timezonesVisible = visible;
     this.timezonesLayer.style.display = visible ? '' : 'none';
     if (visible) this._refreshTimezoneOffsets();
-    if (!visible) this._hideTimezoneTip();
+    refreshTips(); // the readout row appears/disappears without waiting for a mouse move
     // The labels' opacity is also driven by _rescaleForZoom (zoom thresholds), so re-run it.
     this._rescaleForZoom(this.zoomCtl?.getZoom() ?? 1);
   }
@@ -3415,6 +3359,7 @@ export class OverviewBoard {
     this._closeContextMenu(); // removes its window-level listeners too, not just the DOM node
     this._closeLayerSwitcher(); // same reasoning — its outside-click/Escape listeners are window-level too
     this.zoomCtl?.destroy();
+    for (const off of this._tipUnregister) off();
     this.container.innerHTML = '';
     // Otherwise leaving Overview for any other mode would leave
     // #board-container's .zoom-controls permanently shifted to the
