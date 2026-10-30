@@ -1,5 +1,6 @@
 import { shuffle, clamp, levenshtein, weightedSampleWithoutReplacement } from './utils.js';
-import { playSnap, playError, playWin } from './audio.js';
+import { playSnap, playError } from './audio.js';
+import { attachChallenge, challengeRoundCount } from './challengeClock.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { loadSuccessStats, recordOutcome } from './successStats.js';
 import { flyCoinToBalance } from './coins.js';
@@ -62,13 +63,14 @@ export class NeighborBoard {
     this.availH = opts.availH || window.innerHeight - 200;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
+    attachChallenge(this, opts);
 
     const eligible =
       opts.eligibleIds && opts.eligibleIds.size ? level.pieces.filter((p) => opts.eligibleIds.has(p.id)) : level.pieces;
     // States with no land neighbors (e.g. Hawaii) can't be asked about at
     // all — excluded from the pool outright, not just skipped per-round.
     const pool = eligible.filter((p) => p.neighbors && p.neighbors.length > 0);
-    const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
+    const rounds = challengeRoundCount(pool.length, opts);
     if (opts.adaptive && this.levelId) {
       const stats = loadSuccessStats(this.levelId, SUCCESS_SCOPE);
       const picked = weightedSampleWithoutReplacement(pool, (p) => 1 / ((stats[p.id] || 0) + 1), rounds);
@@ -94,6 +96,7 @@ export class NeighborBoard {
   _build() {
     this.container.innerHTML = '';
     this._buildAnswerBar();
+    this._beginChallengeClock();
     this._nextQuestion();
     // Explicit rather than relying on the focused "Далее" button's native
     // Enter-activation — that didn't fire reliably (focus moving to a
@@ -112,7 +115,7 @@ export class NeighborBoard {
     // the input makes sure only a genuinely SEPARATE later Enter press
     // (target has moved elsewhere by then) can advance.
     this._onKeydown = (ev) => {
-      if (ev.key !== 'Enter' || ev.target === this.inputEl) return;
+      if (ev.key !== 'Enter' || ev.target === this.inputEl || this.finished) return;
       if (this.locked && this.nextBtn && !this.nextBtn.hidden) {
         ev.preventDefault();
         this._advance();
@@ -328,13 +331,9 @@ export class NeighborBoard {
   }
 
   _nextQuestion() {
+    if (this.finished) return;
     if (this.index >= this.queue.length) {
-      // Leave the last-answered state's crop on screen instead of tearing
-      // it down — same as every other board here (quizBoard.js,
-      // nameStateBoard.js never clear their map on finish either), so the
-      // player can keep looking at it while the win bar shows.
-      setTimeout(() => playWin(), 100);
-      this.onFinish({ correct: this.correct, mistakes: this.mistakes, total: this.queue.length });
+      this._endChallenge('all');
       return;
     }
     this.locked = false;
@@ -416,7 +415,7 @@ export class NeighborBoard {
   // no-op, which was the bug the whole "wait for explicit advance" design
   // replaces a timer-based version of.
   _advance() {
-    if (!this.locked) return;
+    if (!this.locked || this.finished) return;
     this.nextBtn.hidden = true;
     if (this.inputEl) this.inputEl.disabled = false;
     this.index++;
@@ -424,7 +423,7 @@ export class NeighborBoard {
   }
 
   _answerEasy(id, btn) {
-    if (this.locked || this.wrongOptionIds.has(id)) return;
+    if (this.locked || this.finished || this.wrongOptionIds.has(id)) return;
     if (id === this.currentNeighbor.id) {
       btn.classList.add('name-option-correct');
       for (const b of this.optionsEl.querySelectorAll('.name-option-btn')) b.disabled = true;
@@ -440,6 +439,7 @@ export class NeighborBoard {
       this.feedbackEl.classList.remove('name-feedback-correct');
       this.feedbackEl.classList.add('name-feedback-wrong');
       this._reportProgress();
+      if (this._challengeHitLimit()) this._endChallenge('mistakes');
     }
   }
 
@@ -459,7 +459,7 @@ export class NeighborBoard {
   }
 
   _onInput() {
-    if (this.locked) return;
+    if (this.locked || this.finished) return;
     const { piece, dist } = this._closestPiece(this.inputEl.value);
     const matched = dist <= FUZZY_MATCH_MAX_DIST ? piece : null;
     this.matchedPiece = matched;
@@ -470,7 +470,7 @@ export class NeighborBoard {
   }
 
   _revealHint() {
-    if (this.locked || !this.current) return;
+    if (this.locked || this.finished || !this.current) return;
     this.roundNeededHelp = true;
     this.feedbackEl.textContent = answerRevealText(this.currentNeighbor);
     this.feedbackEl.classList.remove('name-feedback-correct', 'name-feedback-wrong');
@@ -487,7 +487,7 @@ export class NeighborBoard {
 
   _confirmHard() {
     if (this.inputEl.value === '?') this._revealHint();
-    if (this.locked || !this.matchedPiece) return;
+    if (this.locked || this.finished || !this.matchedPiece) return;
     if (this.matchedPiece.id === this.currentNeighbor.id) {
       this.inputEl.disabled = true;
       this.confirmBtn.disabled = true;
@@ -502,6 +502,7 @@ export class NeighborBoard {
       this.answerBar.classList.add('name-shake');
       setTimeout(() => this.answerBar.classList.remove('name-shake'), WRONG_FLASH_MS);
       this._reportProgress();
+      if (this._challengeHitLimit()) this._endChallenge('mistakes');
     }
   }
 
@@ -509,11 +510,15 @@ export class NeighborBoard {
     this.onProgress({
       index: this.index + 1,
       total: this.queue.length,
+      correct: this.correct,
       mistakes: this.mistakes,
+      maxMistakes: this.maxMistakes,
+      timed: this.timed,
     });
   }
 
   destroy() {
+    this._stopChallengeClock();
     document.removeEventListener('keydown', this._onKeydown);
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';

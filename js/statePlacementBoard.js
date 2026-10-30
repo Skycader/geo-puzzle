@@ -1,5 +1,6 @@
 import { clamp, shuffle } from './utils.js';
-import { playSnap, playError, playWin } from './audio.js';
+import { playSnap, playError } from './audio.js';
+import { attachChallenge, challengeRoundCount } from './challengeClock.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { flyCoinToBalance } from './coins.js';
 import { REWARDS } from './constants.js';
@@ -82,14 +83,16 @@ export class StatePlacementBoard {
     this.toleranceKm = Number.isFinite(opts.toleranceKm) ? opts.toleranceKm : 100;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
+    attachChallenge(this, opts);
 
     const candidates = level.pieces.filter((p) => !p.inset);
-    const rounds = clamp(opts.rounds ?? 15, 1, candidates.length);
+    const rounds = challengeRoundCount(candidates.length, opts);
     this.queue = shuffle(candidates).slice(0, rounds);
     this.index = 0;
     this.piece = null;
 
     this.hearts = HEARTS_START;
+    this.mistakes = 0;
     this.solved = false;
     this.failed = false;
     this.offsetX = 0;
@@ -227,6 +230,7 @@ export class StatePlacementBoard {
     this.container.appendChild(this.scaleBarEl);
 
     this._buildActionBar();
+    this._beginChallengeClock();
     this._nextRound();
   }
 
@@ -253,14 +257,14 @@ export class StatePlacementBoard {
   // this.queue, no repeats within the session), fresh hearts, fresh
   // random offset — or ends the whole session once the queue is spent.
   _nextRound() {
+    if (this.finished) return;
     if (this.index >= this.queue.length) {
       const avgErrorKm = this.answeredRounds ? Math.round(this.totalErrorKm / this.answeredRounds) : 0;
-      setTimeout(() => playWin(), 100);
-      this.onFinish({ roundsPassed: this.roundsPassed, total: this.queue.length, avgErrorKm });
+      this._endChallenge('all', { avgErrorKm, roundsPassed: this.roundsPassed });
       return;
     }
     this.piece = this.queue[this.index];
-    this.hearts = HEARTS_START;
+    if (!this.timed) this.hearts = HEARTS_START;
     this.solved = false;
     this.failed = false;
     this.dragging = false;
@@ -363,7 +367,7 @@ export class StatePlacementBoard {
   }
 
   _onPointerDown(ev) {
-    if (this.solved || this.failed) return;
+    if (this.solved || this.failed || this.finished) return;
     ev.preventDefault();
     ev.stopPropagation();
     const boardRect = this.svg.getBoundingClientRect();
@@ -409,13 +413,14 @@ export class StatePlacementBoard {
   }
 
   _check() {
-    if (this.solved || this.failed || this.difficulty === 'easy') return;
+    if (this.solved || this.failed || this.finished || this.difficulty === 'easy') return;
     const dist = this._distanceNative();
     if (dist <= this.toleranceNative) {
       this._solve();
       return;
     }
     this.hearts--;
+    this.mistakes++;
     this._updateHeartsUI();
     playError();
     this.pieceGroup.classList.add('wrong-shake');
@@ -427,7 +432,10 @@ export class StatePlacementBoard {
       this.feedbackEl.textContent = t('placementWrongLabel');
     }
     this._reportProgress();
-    if (this.hearts <= 0) this._fail();
+    if (this.hearts <= 0) {
+      if (this.timed) this._endChallenge('mistakes');
+      else this._fail();
+    }
   }
 
   _solve() {
@@ -455,6 +463,7 @@ export class StatePlacementBoard {
     this.checkBtn.hidden = true;
     this._reportProgress();
     setTimeout(() => {
+      if (this.finished) return;
       this.index++;
       this._nextRound();
     }, 650);
@@ -481,6 +490,7 @@ export class StatePlacementBoard {
     this.checkBtn.hidden = true;
     this._reportProgress();
     setTimeout(() => {
+      if (this.finished) return;
       this.index++;
       this._nextRound();
     }, 1400);
@@ -490,6 +500,10 @@ export class StatePlacementBoard {
     this.onProgress({
       index: this.index + 1,
       total: this.queue.length,
+      correct: this.roundsPassed,
+      mistakes: this.mistakes,
+      maxMistakes: this.maxMistakes,
+      timed: this.timed,
       roundsPassed: this.roundsPassed,
       hearts: this.hearts,
       difficulty: this.difficulty,
@@ -497,6 +511,7 @@ export class StatePlacementBoard {
   }
 
   destroy() {
+    this._stopChallengeClock();
     window.removeEventListener('pointermove', this._boundMove);
     window.removeEventListener('pointerup', this._boundUp);
     this.zoomCtl?.destroy();

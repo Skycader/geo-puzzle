@@ -1,10 +1,10 @@
 import {
   shuffle,
-  clamp,
   levenshtein,
   weightedSampleWithoutReplacement,
 } from "./utils.js";
-import { playSnap, playError, playWin } from "./audio.js";
+import { playSnap, playError } from "./audio.js";
+import { attachChallenge, challengeRoundCount } from "./challengeClock.js";
 import {
   attachZoomPan,
   createZoomControls,
@@ -70,12 +70,13 @@ export class NameStateBoard {
     this.showBorders = opts.showBorders ?? true;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
+    attachChallenge(this, opts);
 
     const pool =
       opts.eligibleIds && opts.eligibleIds.size
         ? level.pieces.filter((p) => opts.eligibleIds.has(p.id))
         : level.pieces;
-    const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
+    const rounds = challengeRoundCount(pool.length, opts);
     if (opts.adaptive && this.levelId) {
       // Same adaptive weighting as quizBoard.js — see js/successStats.js
       // and js/utils.js's weightedSampleWithoutReplacement.
@@ -222,6 +223,7 @@ export class NameStateBoard {
     );
 
     this._buildAnswerBar();
+    this._beginChallengeClock();
     this._nextQuestion();
   }
 
@@ -284,15 +286,11 @@ export class NameStateBoard {
   }
 
   _nextQuestion() {
+    if (this.finished) return;
     this.currentPath?.classList.remove("quiz-hint");
     this.hintDot.setAttribute("hidden", "");
     if (this.index >= this.queue.length) {
-      setTimeout(() => playWin(), 100);
-      this.onFinish({
-        correct: this.correct,
-        mistakes: this.mistakes,
-        total: this.queue.length,
-      });
+      this._endChallenge("all");
       return;
     }
     this.locked = false;
@@ -412,7 +410,7 @@ export class NameStateBoard {
   }
 
   _answerEasy(id, btn) {
-    if (this.locked || this.wrongOptionIds.has(id)) return;
+    if (this.locked || this.finished || this.wrongOptionIds.has(id)) return;
     if (id === this.current.id) {
       this.locked = true;
       btn.classList.add("name-option-correct");
@@ -438,6 +436,7 @@ export class NameStateBoard {
       // weight, reserving .name-feedback's min-height for a message that
       // added nothing.
       setTimeout(() => {
+        if (this.finished) return;
         this.index++;
         this._nextQuestion();
       }, ADVANCE_DELAY_MS);
@@ -450,6 +449,7 @@ export class NameStateBoard {
       this.mistakes++;
       this._setFeedback(t('wrongStateFeedback'), "wrong");
       this._reportProgress();
+      if (this._challengeHitLimit()) this._endChallenge("mistakes");
     }
   }
 
@@ -477,7 +477,7 @@ export class NameStateBoard {
   }
 
   _onInput() {
-    if (this.locked) return;
+    if (this.locked || this.finished) return;
     const { piece, dist } = this._closestPiece(this.inputEl.value);
     const matched = dist <= FUZZY_MATCH_MAX_DIST ? piece : null;
     this.matchedPiece = matched;
@@ -499,7 +499,7 @@ export class NameStateBoard {
   // Counts the same as a wrong guess for the adaptive streak, though —
   // seeing the answer means this state still needs practice.
   _revealHint() {
-    if (this.locked || !this.current) return;
+    if (this.locked || this.finished || !this.current) return;
     this.roundNeededHelp = true;
     this._setFeedback(answerRevealText(this.current));
   }
@@ -515,7 +515,7 @@ export class NameStateBoard {
 
   _confirmHard() {
     if (this.inputEl.value === "?") this._revealHint(); //Allow manual asking for help;
-    if (this.locked || !this.matchedPiece) return;
+    if (this.locked || this.finished || !this.matchedPiece) return;
     if (this.matchedPiece.id === this.current.id) {
       this.locked = true;
       this.inputEl.disabled = true;
@@ -536,6 +536,7 @@ export class NameStateBoard {
       }
       this._setFeedback(t('correctFeedback'), "correct");
       setTimeout(() => {
+        if (this.finished) return;
         this.inputEl.disabled = false;
         this.index++;
         this._nextQuestion();
@@ -551,6 +552,7 @@ export class NameStateBoard {
         WRONG_FLASH_MS,
       );
       this._reportProgress();
+      if (this._challengeHitLimit()) this._endChallenge("mistakes");
     }
   }
 
@@ -558,11 +560,15 @@ export class NameStateBoard {
     this.onProgress({
       index: this.index + 1,
       total: this.queue.length,
+      correct: this.correct,
       mistakes: this.mistakes,
+      maxMistakes: this.maxMistakes,
+      timed: this.timed,
     });
   }
 
   destroy() {
+    this._stopChallengeClock();
     this.zoomCtl?.destroy();
     this.container.innerHTML = "";
   }

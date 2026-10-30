@@ -1,5 +1,6 @@
-import { shuffle, clamp } from './utils.js';
-import { playSnap, playError, playWin } from './audio.js';
+import { shuffle } from './utils.js';
+import { playSnap, playError } from './audio.js';
+import { attachChallenge, challengeRoundCount } from './challengeClock.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { buildStateBackground } from './mapBackground.js';
 import { flyCoinToBalance } from './coins.js';
@@ -23,6 +24,7 @@ export class CityQuizBoard {
     this.scale = opts.scale || 1;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
+    attachChallenge(this, opts);
 
     // items defaults to level.cities so nothing breaks if ever constructed
     // the old way — game.js's merged "Города и места" mode passes
@@ -33,7 +35,7 @@ export class CityQuizBoard {
     // and game.js's _startCityQuiz) restricts which items can be ASKED
     // about; every dot is still drawn either way (see the loop below).
     const pool = opts.eligibleIds && opts.eligibleIds.size ? this.items.filter((c) => opts.eligibleIds.has(c.id)) : this.items;
-    const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
+    const rounds = challengeRoundCount(pool.length, opts);
     this.queue = shuffle(pool).slice(0, rounds);
     this.index = 0;
     this.correct = 0;
@@ -111,6 +113,7 @@ export class CityQuizBoard {
     this.container.appendChild(createZoomControls(this.zoomCtl));
     this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
+    this._beginChallengeClock();
     this._nextQuestion();
   }
 
@@ -127,9 +130,9 @@ export class CityQuizBoard {
   }
 
   _nextQuestion() {
+    if (this.finished) return;
     if (this.index >= this.queue.length) {
-      setTimeout(() => playWin(), 100);
-      this.onFinish({ correct: this.correct, mistakes: this.mistakes, total: this.queue.length });
+      this._endChallenge('all');
       return;
     }
     this.hinted = false;
@@ -138,7 +141,7 @@ export class CityQuizBoard {
   }
 
   _onClick(id) {
-    if (this.locked || !this.current) return;
+    if (this.locked || this.finished || !this.current) return;
     const { hit, dot } = this.dots.get(id);
 
     if (id === this.current.id) {
@@ -153,6 +156,7 @@ export class CityQuizBoard {
         flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
       }
       setTimeout(() => {
+        if (this.finished) return;
         dot.classList.remove('city-correct');
         dot.classList.add('city-used');
         this.locked = false;
@@ -169,6 +173,7 @@ export class CityQuizBoard {
       }
       this._reportProgress();
       setTimeout(() => dot.classList.remove('city-wrong'), 400);
+      if (this._challengeHitLimit()) this._endChallenge('mistakes');
     }
     void hit; // hit-circle is purely for pointer targeting, never styled
   }
@@ -177,13 +182,17 @@ export class CityQuizBoard {
     this.onProgress({
       index: this.index + 1,
       total: this.queue.length,
+      correct: this.correct,
       mistakes: this.mistakes,
+      maxMistakes: this.maxMistakes,
+      timed: this.timed,
       promptRu: this.current ? this.current.ru : '',
       promptName: this.current ? this.current.name : '',
     });
   }
 
   destroy() {
+    this._stopChallengeClock();
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }

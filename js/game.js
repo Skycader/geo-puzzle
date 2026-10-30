@@ -42,7 +42,9 @@ import {
   NUMBERS_TIME_LIMIT_S,
   NUMBERS_DEFAULT_MAX_MISTAKES,
   NUMBERS_MAX_MISTAKES_RANGE,
+  ROUNDS_MODES,
 } from './modes.js';
+import { CHALLENGE_TIME_LIMIT_S, CHALLENGE_MAX_MISTAKES } from './challengeClock.js';
 import { playClick } from './audio.js';
 import { APP_VERSION } from './version.js';
 import { openChangelog } from './changelogModal.js';
@@ -208,6 +210,8 @@ export class Game {
     this.overviewModeId = OVERVIEW_MODES[0].id;
     this.customCount = DEFAULT_CUSTOM_COUNT;
     this.quizRounds = 15;
+    // "Раунд" panel: timed (60 s / 3 mistakes) XOR fixed question count.
+    this.roundsMode = 'count';
     this.nameStateDifficulty = NAME_STATE_DIFFICULTIES[0].id;
     // "Назови штат"'s Сложный/Хардкор only — see js/nameStateBoard.js's
     // omitIndividualStates.
@@ -452,6 +456,8 @@ export class Game {
       journeyShowDestinationCheckbox: document.getElementById('journey-show-destination-checkbox'),
       quizPanelHeading: document.getElementById('quiz-panel-heading'),
       quizCountLabel: document.getElementById('quiz-count-label'),
+      roundsModeEl: document.getElementById('rounds-mode'),
+      quizCountRow: document.getElementById('quiz-count-row'),
       customCountRow: document.getElementById('custom-count-row'),
       customCountInput: document.getElementById('custom-count'),
       customCountValue: document.getElementById('custom-count-value'),
@@ -585,6 +591,7 @@ export class Game {
     if (OVERVIEW_MODES.some((m) => m.id === saved.overviewModeId)) this.overviewModeId = saved.overviewModeId;
     if (Number.isFinite(saved.customCount)) this.customCount = clamp(saved.customCount, 1, 50);
     if (Number.isFinite(saved.quizRounds)) this.quizRounds = clamp(saved.quizRounds, 1, 50);
+    if (saved.roundsMode === 'timed' || saved.roundsMode === 'count') this.roundsMode = saved.roundsMode;
     if (NAME_STATE_DIFFICULTIES.some((d) => d.id === saved.nameStateDifficulty)) this.nameStateDifficulty = saved.nameStateDifficulty;
     if (typeof saved.nameStateShowBorders === 'boolean') this.nameStateShowBorders = saved.nameStateShowBorders;
     if (NEIGHBOR_DIFFICULTIES.some((d) => d.id === saved.neighborDifficulty)) this.neighborDifficulty = saved.neighborDifficulty;
@@ -621,6 +628,7 @@ export class Game {
       overviewModeId: this.overviewModeId,
       customCount: this.customCount,
       quizRounds: this.quizRounds,
+      roundsMode: this.roundsMode,
       nameStateDifficulty: this.nameStateDifficulty,
       nameStateShowBorders: this.nameStateShowBorders,
       neighborDifficulty: this.neighborDifficulty,
@@ -1194,6 +1202,7 @@ export class Game {
     this.el.quizPanelHeading.textContent = text.heading;
     this.el.quizCountLabel.textContent = text.label;
     this.el.quizPromptLabel.textContent = text.prompt;
+    this._renderRoundsMode();
 
     const level = this.levels[this.levelId];
 
@@ -1273,6 +1282,63 @@ export class Game {
     this.el.quizCountInput.value = String(this.quizRounds);
     this.el.quizCountValue.textContent = this.quizRounds;
     this.el.btnStart.disabled = eligibleCount === 0;
+  }
+
+  // Timed (60 s / 3 mistakes) XOR fixed question count — mutually exclusive
+  // cards in the "Раунд" panel; the count slider hides when timed is on.
+  _renderRoundsMode() {
+    this.el.roundsModeEl.innerHTML = '';
+    for (const mode of ROUNDS_MODES) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'preset-card' + (mode.id === this.roundsMode ? ' selected' : '');
+      const title = t(mode.id === 'timed' ? 'roundsModeTimedTitle' : 'roundsModeCountTitle');
+      const desc = t(mode.id === 'timed' ? 'roundsModeTimedDesc' : 'roundsModeCountDesc');
+      card.innerHTML = `<strong>${title}</strong><p>${desc}</p>`;
+      card.addEventListener('click', () => {
+        this.roundsMode = mode.id;
+        this._renderRoundsMode();
+        this._saveLastSettings();
+      });
+      this.el.roundsModeEl.appendChild(card);
+    }
+    this.el.quizCountRow.hidden = this.roundsMode === 'timed';
+  }
+
+  // Shared opts every "Раунд" board understands via attachChallenge /
+  // challengeRoundCount — timed owns the HUD clock (see startGame).
+  _challengeOpts() {
+    const timed = this.roundsMode === 'timed';
+    return {
+      timed,
+      timeLimit: CHALLENGE_TIME_LIMIT_S,
+      maxMistakes: timed ? CHALLENGE_MAX_MISTAKES : null,
+      rounds: this.quizRounds,
+      onTick: timed
+        ? (secondsLeft) => {
+            this.el.hudTimer.textContent = formatTime(secondsLeft);
+          }
+        : undefined,
+    };
+  }
+
+  _roundsHudSuffix() {
+    return this.roundsMode === 'timed' ? `${CHALLENGE_TIME_LIMIT_S}с` : String(this.quizRounds);
+  }
+
+  _isRoundsTimed() {
+    return this.roundsMode === 'timed';
+  }
+
+  // Progress line for quiz-like boards — timed shows "Верно: N" + mistakes/3.
+  _applyRoundsProgress({ index, total, correct, mistakes, maxMistakes, timed }) {
+    if (timed) {
+      this.el.hudProgress.textContent = `${t('challengeCorrect')}: ${correct ?? 0}`;
+      this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}/${maxMistakes ?? CHALLENGE_MAX_MISTAKES}`;
+    } else {
+      this.el.hudProgress.textContent = `${index}/${total}`;
+      this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}`;
+    }
   }
 
   // "Найди штат"-style mode heading text — reuses the exact same title
@@ -1739,8 +1805,16 @@ export class Game {
     // there is just noise.
     clearInterval(this.timerHandle);
     this.el.hudTimer.hidden = this.modeId === 'overview';
-    // The timed "Номера штатов" run counts DOWN and the board drives the HUD timer itself.
-    const boardOwnsClock = this.modeId === 'state-numbers' && this.numbersTimed;
+    // Timed challenge modes count DOWN and the board drives the HUD timer
+    // via onTick (numbers has its own clock; every other "Раунд" mode uses
+    // js/challengeClock.js when roundsMode === 'timed').
+    const boardOwnsClock =
+      (this.modeId === 'state-numbers' && this.numbersTimed) ||
+      (this.modeId !== 'puzzle' &&
+        this.modeId !== 'overview' &&
+        this.modeId !== 'journey' &&
+        this.modeId !== 'state-numbers' &&
+        this.roundsMode === 'timed');
     if (this.modeId !== 'overview' && !boardOwnsClock) {
       this.seconds = 0;
       this.el.hudTimer.textContent = formatTime(0);
@@ -1748,6 +1822,9 @@ export class Game {
         this.seconds++;
         this.el.hudTimer.textContent = formatTime(this.seconds);
       }, 1000);
+    } else if (boardOwnsClock) {
+      const limit = this.modeId === 'state-numbers' ? NUMBERS_TIME_LIMIT_S : CHALLENGE_TIME_LIMIT_S;
+      this.el.hudTimer.textContent = formatTime(limit);
     }
   }
 
@@ -1835,14 +1912,13 @@ export class Game {
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
-    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('quiz', 'Найди штат')} (${this.quizRounds})`;
-    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('quiz', 'Найди штат')} (${this._roundsHudSuffix()})`;
+    this._applyRoundsProgress({ index: 0, total: this.quizRounds, correct: 0, mistakes: 0, maxMistakes: CHALLENGE_MAX_MISTAKES, timed: this._isRoundsTimed() });
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new QuizBoard(this.el.boardContainer, level, {
-      rounds: this.quizRounds,
+      ...this._challengeOpts(),
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       levelId: this.levelId,
       adaptive: this.adaptiveMode,
@@ -1868,14 +1944,13 @@ export class Game {
     // the answer.
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('name-state', 'Назови штат')} (${this.quizRounds})`;
-    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('name-state', 'Назови штат')} (${this._roundsHudSuffix()})`;
+    this._applyRoundsProgress({ index: 0, total: this.quizRounds, correct: 0, mistakes: 0, maxMistakes: CHALLENGE_MAX_MISTAKES, timed: this._isRoundsTimed() });
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new NameStateBoard(this.el.boardContainer, level, {
-      rounds: this.quizRounds,
+      ...this._challengeOpts(),
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       difficulty: this.nameStateDifficulty,
       showBorders: this.nameStateShowBorders,
@@ -1943,10 +2018,9 @@ export class Game {
     // state + glowing border), same reasoning as _startNameState.
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('neighbor', 'Назови соседа')} (${this.quizRounds})`;
-    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('neighbor', 'Назови соседа')} (${this._roundsHudSuffix()})`;
+    this._applyRoundsProgress({ index: 0, total: this.quizRounds, correct: 0, mistakes: 0, maxMistakes: CHALLENGE_MAX_MISTAKES, timed: this._isRoundsTimed() });
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     // Unlike every other board, this one crops/zooms to a DIFFERENT
     // native-unit bounding box every round (just the current state's own
@@ -1954,7 +2028,7 @@ export class Game {
     // pixel space to fit against each round, not a single pre-computed
     // scale for the whole (unused, here) canvas.
     this.board = new NeighborBoard(this.el.boardContainer, level, {
-      rounds: this.quizRounds,
+      ...this._challengeOpts(),
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       difficulty: this.neighborDifficulty,
       levelId: this.levelId,
@@ -1978,16 +2052,15 @@ export class Game {
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('identify', 'Определи штат')} (${this.quizRounds})`;
-    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('identify', 'Определи штат')} (${this._roundsHudSuffix()})`;
+    this._applyRoundsProgress({ index: 0, total: this.quizRounds, correct: 0, mistakes: 0, maxMistakes: CHALLENGE_MAX_MISTAKES, timed: this._isRoundsTimed() });
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     // Same per-round isolated-shape cropping as _startNeighbor — see its
     // comment for why raw available pixel space is passed instead of a
     // single pre-computed scale.
     this.board = new IdentifyStateBoard(this.el.boardContainer, level, {
-      rounds: this.quizRounds,
+      ...this._challengeOpts(),
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       difficulty: this.identifyDifficulty,
       levelId: this.levelId,
@@ -2011,10 +2084,9 @@ export class Game {
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('sea-identify', 'Определи море или океан')} (${this.quizRounds})`;
-    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('sea-identify', 'Определи море или океан')} (${this._roundsHudSuffix()})`;
+    this._applyRoundsProgress({ index: 0, total: this.quizRounds, correct: 0, mistakes: 0, maxMistakes: CHALLENGE_MAX_MISTAKES, timed: this._isRoundsTimed() });
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     // Unlike _startIdentify/_startNeighbor's per-round isolated-shape crop,
     // this shows the whole world map with the target sea highlighted —
@@ -2023,7 +2095,7 @@ export class Game {
     // left the target floating in blank space. See seaIdentifyBoard.js.
     const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new SeaIdentifyBoard(this.el.boardContainer, level, {
-      rounds: this.quizRounds,
+      ...this._challengeOpts(),
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       difficulty: this.seaIdentifyDifficulty,
       scale,
@@ -2045,10 +2117,12 @@ export class Game {
     this.el.progressScopeWrap.hidden = true;
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('place-state', 'Расположи штат')} (${this.quizRounds})`;
-    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('place-state', 'Расположи штат')} (${this._roundsHudSuffix()})`;
+    this.el.hudProgress.textContent = this._isRoundsTimed() ? `${t('challengeCorrect')}: 0` : `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = `${t('heartsLabel')}: —`;
+    this.el.hudGroups.textContent = this._isRoundsTimed()
+      ? `${t('mistakes')}: 0/${CHALLENGE_MAX_MISTAKES}`
+      : `${t('heartsLabel')}: —`;
 
     // Fit against the outline's own (padded) bbox, not the full
     // level.canvas — that canvas reserves large empty margins for the
@@ -2062,7 +2136,7 @@ export class Game {
     const vb = outlineViewBox();
     const scale = this._computeScale({ width: vb.width, height: vb.height }, this._availableHeight(), undefined, true);
     this.board = new StatePlacementBoard(this.el.boardContainer, level, {
-      rounds: this.quizRounds,
+      ...this._challengeOpts(),
       difficulty: this.placeStateDifficulty,
       toleranceKm: this.placeStateToleranceKm,
       levelId: this.levelId,
@@ -2084,14 +2158,13 @@ export class Game {
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
-    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('sea-quiz', 'Найди море или океан')} (${this.quizRounds})`;
-    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('sea-quiz', 'Найди море или океан')} (${this._roundsHudSuffix()})`;
+    this._applyRoundsProgress({ index: 0, total: this.quizRounds, correct: 0, mistakes: 0, maxMistakes: CHALLENGE_MAX_MISTAKES, timed: this._isRoundsTimed() });
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new SeaQuizBoard(this.el.boardContainer, level, {
-      rounds: this.quizRounds,
+      ...this._challengeOpts(),
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       quickSelect: this.quickSelect,
       scale,
@@ -2119,15 +2192,17 @@ export class Game {
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
 
-    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('city-place', 'Города и места')} (${this.quizRounds})`;
-    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('city-place', 'Города и места')} (${this._roundsHudSuffix()})`;
+    this.el.hudProgress.textContent = this._isRoundsTimed() ? `${t('challengeCorrect')}: 0` : `0/${this.quizRounds}`;
     this.el.hudGroups.hidden = false;
 
     if (isPin) {
-      this.el.hudGroups.textContent = `${t('avgError')}: —`;
+      this.el.hudGroups.textContent = this._isRoundsTimed()
+        ? `${t('mistakes')}: 0/${CHALLENGE_MAX_MISTAKES}`
+        : `${t('avgError')}: —`;
       const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
       this.board = new CityPinBoard(this.el.boardContainer, level, {
-        rounds: this.quizRounds,
+        ...this._challengeOpts(),
         items,
         levelId: this.levelId,
         scale,
@@ -2135,10 +2210,10 @@ export class Game {
         onFinish: () => this._onFinish(),
       });
     } else {
-      this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
+      this._applyRoundsProgress({ index: 0, total: this.quizRounds, correct: 0, mistakes: 0, maxMistakes: CHALLENGE_MAX_MISTAKES, timed: this._isRoundsTimed() });
       const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
       this.board = new CityQuizBoard(this.el.boardContainer, level, {
-        rounds: this.quizRounds,
+        ...this._challengeOpts(),
         items,
         eligibleIds: this.eligibilityList?.getSelectedIds(),
         levelId: this.levelId,
@@ -2172,10 +2247,9 @@ export class Game {
     // repeat what's already on screen.
     this.el.quizPrompt.hidden = true;
 
-    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('colorfill', 'Раскраска')} (${this.quizRounds})`;
-    this.el.hudProgress.textContent = `0/${this.quizRounds}`;
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('colorfill', 'Раскраска')} (${this._roundsHudSuffix()})`;
+    this._applyRoundsProgress({ index: 0, total: this.quizRounds, correct: 0, mistakes: 0, maxMistakes: CHALLENGE_MAX_MISTAKES, timed: this._isRoundsTimed() });
     this.el.hudGroups.hidden = false;
-    this.el.hudGroups.textContent = `${t('mistakes')}: 0`;
 
     const { default: terrainData } = await import('../levels/usaTerrain.js');
     // The player could have switched levels/modes while that import was in
@@ -2185,7 +2259,7 @@ export class Game {
 
     const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
     this.board = new ColorFillBoard(this.el.boardContainer, level, {
-      rounds: this.quizRounds,
+      ...this._challengeOpts(),
       eligibleIds: this.eligibilityList?.getSelectedIds(),
       levelId: this.levelId,
       adaptive: this.adaptiveMode,
@@ -2420,9 +2494,8 @@ export class Game {
     this.el.hudGroups.textContent = `${t('pieces')}: ${groups}`;
   }
 
-  _onQuizProgress({ index, total, mistakes, promptRu, promptName }) {
-    this.el.hudProgress.textContent = `${index}/${total}`;
-    this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}`;
+  _onQuizProgress({ index, total, correct, mistakes, maxMistakes, timed, promptRu, promptName }) {
+    this._applyRoundsProgress({ index, total, correct, mistakes, maxMistakes, timed });
     // Prompt names come from the board as separate ru/name fields (same
     // pair as itemName() picks between elsewhere) — shows both, primary
     // language first, so the round still teaches the OTHER language's
@@ -2434,12 +2507,16 @@ export class Game {
         : `${promptRu} (${promptName})`;
   }
 
-  _onNameStateProgress({ index, total, mistakes }) {
-    this.el.hudProgress.textContent = `${index}/${total}`;
-    this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}`;
+  _onNameStateProgress({ index, total, correct, mistakes, maxMistakes, timed }) {
+    this._applyRoundsProgress({ index, total, correct, mistakes, maxMistakes, timed });
   }
 
-  _onPlaceStateProgress({ index, total, roundsPassed, hearts, difficulty }) {
+  _onPlaceStateProgress({ index, total, roundsPassed, hearts, difficulty, correct, mistakes, maxMistakes, timed }) {
+    if (timed) {
+      this.el.hudProgress.textContent = `${t('challengeCorrect')}: ${correct ?? roundsPassed ?? 0}`;
+      this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}/${maxMistakes ?? CHALLENGE_MAX_MISTAKES}`;
+      return;
+    }
     this.el.hudProgress.textContent = `${index}/${total}`;
     // Easy has unlimited attempts (no hearts to show) — report rounds
     // passed so far instead; medium/hard show remaining hearts.
@@ -2448,14 +2525,18 @@ export class Game {
       : `${t('heartsLabel')}: ${hearts}`;
   }
 
-  _onColorFillProgress({ index, total, mistakes }) {
-    this.el.hudProgress.textContent = `${index}/${total}`;
-    this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}`;
+  _onColorFillProgress({ index, total, correct, mistakes, maxMistakes, timed }) {
+    this._applyRoundsProgress({ index, total, correct, mistakes, maxMistakes, timed });
   }
 
-  _onPinProgress({ index, total, avgDistanceKm, promptRu, promptName }) {
-    this.el.hudProgress.textContent = `${index}/${total}`;
-    this.el.hudGroups.textContent = avgDistanceKm == null ? `${t('avgError')}: —` : `${t('avgError')}: ${avgDistanceKm} ${t('kmUnit')}`;
+  _onPinProgress({ index, total, correct, mistakes, maxMistakes, timed, avgDistanceKm, promptRu, promptName }) {
+    if (timed) {
+      this.el.hudProgress.textContent = `${t('challengeCorrect')}: ${correct ?? 0}`;
+      this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}/${maxMistakes ?? CHALLENGE_MAX_MISTAKES}`;
+    } else {
+      this.el.hudProgress.textContent = `${index}/${total}`;
+      this.el.hudGroups.textContent = avgDistanceKm == null ? `${t('avgError')}: —` : `${t('avgError')}: ${avgDistanceKm} ${t('kmUnit')}`;
+    }
     // Prompt names come from the board as separate ru/name fields (same
     // pair as itemName() picks between elsewhere) — shows both, primary
     // language first, so the round still teaches the OTHER language's
@@ -2479,7 +2560,7 @@ export class Game {
     // now: hide whatever answer UI the board built, and leave only the way
     // back to the menu.
     this.el.quizPrompt.hidden = true;
-    this.el.boardContainer.querySelectorAll('.name-answer-bar, .city-actions, .colorfill-palette').forEach((el) => { el.hidden = true; });
+    this.el.boardContainer.querySelectorAll('.name-answer-bar, .city-actions, .colorfill-palette, .state-placement-bar').forEach((el) => { el.hidden = true; });
     this.el.winBar.hidden = false;
     this._positionWinBar();
   }

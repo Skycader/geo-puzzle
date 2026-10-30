@@ -1,5 +1,6 @@
 import { shuffle, clamp } from './utils.js';
-import { playSnap, playWin } from './audio.js';
+import { playSnap } from './audio.js';
+import { attachChallenge, challengeRoundCount } from './challengeClock.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { buildStateBackground } from './mapBackground.js';
 import { flyCoinToBalance } from './coins.js';
@@ -9,6 +10,7 @@ import { t, itemName } from './i18n.js';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const MAX_DISTANCE_KM = 400; // guesses this far or farther read as fully red
+const PIN_MISTAKE_KM = 100;
 const TRUE_MARK_R = 5;
 
 const RED = [220, 50, 47];
@@ -36,20 +38,27 @@ export class CityPinBoard {
     this.scale = opts.scale || 1;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
+    attachChallenge(this, opts);
 
     // items defaults to level.cities so nothing breaks if ever constructed
     // the old way — game.js's merged "Города и места" mode passes
     // level.places instead when the entity toggle is set to "места".
     this.items = opts.items || level.cities;
 
-    const rounds = clamp(opts.rounds ?? 15, 1, this.items.length);
-    this.queue = shuffle(this.items).slice(0, rounds);
+    const pool =
+      opts.eligibleIds && opts.eligibleIds.size
+        ? this.items.filter((c) => opts.eligibleIds.has(c.id))
+        : this.items;
+    const rounds = challengeRoundCount(pool.length, opts);
+    this.queue = shuffle(pool).slice(0, rounds);
     this.index = 0;
     this.current = null;
     this.confirmed = false;
     this.pinNative = null; // {x,y} in canvas-native units
     this.totalDistanceKm = 0;
     this.roundsAnswered = 0;
+    this.mistakes = 0;
+    this.correct = 0;
 
     this._build();
   }
@@ -106,6 +115,7 @@ export class CityPinBoard {
     this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
     this._buildActionBar();
+    this._beginChallengeClock();
     this._nextQuestion();
   }
 
@@ -132,10 +142,10 @@ export class CityPinBoard {
   }
 
   _nextQuestion() {
+    if (this.finished) return;
     if (this.index >= this.queue.length) {
       const avg = this.roundsAnswered ? Math.round(this.totalDistanceKm / this.roundsAnswered) : 0;
-      setTimeout(() => playWin(), 100);
-      this.onFinish({ rounds: this.roundsAnswered, avgDistanceKm: avg, total: this.queue.length });
+      this._endChallenge('all', { avgDistanceKm: avg, rounds: this.roundsAnswered });
       return;
     }
     this.current = this.queue[this.index];
@@ -163,7 +173,7 @@ export class CityPinBoard {
   }
 
   _placePinAtClient(clientX, clientY) {
-    if (this.confirmed || !this.current) return;
+    if (this.confirmed || this.finished || !this.current) return;
     this.pinNative = this._clientToNative(clientX, clientY);
     this.pinGroup.hidden = false;
     this.confirmBtn.disabled = false;
@@ -171,7 +181,7 @@ export class CityPinBoard {
   }
 
   _onPinPointerDown(ev) {
-    if (this.confirmed) return;
+    if (this.confirmed || this.finished) return;
     ev.stopPropagation();
     ev.preventDefault();
     const move = (mv) => this._placePinAtClient(mv.clientX, mv.clientY);
@@ -216,11 +226,13 @@ export class CityPinBoard {
   }
 
   _confirm() {
-    if (this.confirmed || !this.pinNative || !this.current) return;
+    if (this.confirmed || this.finished || !this.pinNative || !this.current) return;
     this.confirmed = true;
     const distKm = Math.round(this._distanceKm());
     this.totalDistanceKm += distKm;
     this.roundsAnswered++;
+    if (distKm < PIN_MISTAKE_KM) this.correct++;
+    else this.mistakes++;
 
     const { cx, cy } = this.current;
     const line = document.createElementNS(SVG_NS, 'line');
@@ -259,10 +271,11 @@ export class CityPinBoard {
     this.confirmBtn.hidden = true;
     this.nextBtn.hidden = false;
     this._reportProgress();
+    if (this._challengeHitLimit()) this._endChallenge('mistakes');
   }
 
   _next() {
-    if (!this.confirmed) return;
+    if (!this.confirmed || this.finished) return;
     this.index++;
     this._nextQuestion();
   }
@@ -271,6 +284,10 @@ export class CityPinBoard {
     this.onProgress({
       index: this.index + 1,
       total: this.queue.length,
+      correct: this.correct,
+      mistakes: this.mistakes,
+      maxMistakes: this.maxMistakes,
+      timed: this.timed,
       avgDistanceKm: this.roundsAnswered ? Math.round(this.totalDistanceKm / this.roundsAnswered) : null,
       promptRu: this.current ? this.current.ru : '',
       promptName: this.current ? this.current.name : '',
@@ -278,6 +295,7 @@ export class CityPinBoard {
   }
 
   destroy() {
+    this._stopChallengeClock();
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }

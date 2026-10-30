@@ -145,9 +145,17 @@ export const NUMBERS_SUBMODES = [
   { id: 'map', title: 'Карта', desc: 'Номер → кликни штат на карте' },
 ];
 // Its timed run: this many seconds, and the default number of mistakes allowed.
+// Keep in sync with js/challengeClock.js (shared by every other "Раунд" mode).
 export const NUMBERS_TIME_LIMIT_S = 60;
 export const NUMBERS_DEFAULT_MAX_MISTAKES = 3;
 export const NUMBERS_MAX_MISTAKES_RANGE = { min: 0, max: 10 };
+
+// "Раунд" panel: either race the clock (60 s, 3 mistakes) or play a fixed
+// number of questions — mutually exclusive (js/game.js's roundsMode).
+export const ROUNDS_MODES = [
+  { id: 'timed', title: 'На время', desc: '60 с, 3 ошибки — сколько успеешь' },
+  { id: 'count', title: 'Количество', desc: 'Заданное число вопросов' },
+];
 
 // "Отображение" choice shown only for the Обзор (overview) mode.
 export const OVERVIEW_MODES = [

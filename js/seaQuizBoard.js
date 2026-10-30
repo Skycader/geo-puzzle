@@ -1,5 +1,6 @@
-import { shuffle, clamp } from './utils.js';
-import { playSnap, playError, playWin } from './audio.js';
+import { shuffle } from './utils.js';
+import { playSnap, playError } from './audio.js';
+import { attachChallenge, challengeRoundCount } from './challengeClock.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { buildStateBackground } from './mapBackground.js';
 
@@ -20,9 +21,10 @@ export class SeaQuizBoard {
     this.scale = opts.scale || 1;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
+    attachChallenge(this, opts);
 
     const pool = opts.eligibleIds && opts.eligibleIds.size ? level.pieces.filter((p) => opts.eligibleIds.has(p.id)) : level.pieces;
-    const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
+    const rounds = challengeRoundCount(pool.length, opts);
     this.queue = shuffle(pool).slice(0, rounds);
     this.index = 0;
     this.correct = 0;
@@ -82,7 +84,7 @@ export class SeaQuizBoard {
     this.svg.addEventListener('contextmenu', (ev) => {
       if (!this.quickSelect) return;
       ev.preventDefault();
-      if (this.locked || !this.current) return;
+      if (this.locked || this.finished || !this.current) return;
       const id = ev.target?.dataset?.id;
       if (id) this._confirmAnswer(id);
     });
@@ -94,13 +96,14 @@ export class SeaQuizBoard {
     this.container.appendChild(createZoomControls(this.zoomCtl));
     this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
+    this._beginChallengeClock();
     this._nextQuestion();
   }
 
   _nextQuestion() {
+    if (this.finished) return;
     if (this.index >= this.queue.length) {
-      setTimeout(() => playWin(), 100);
-      this.onFinish({ correct: this.correct, mistakes: this.mistakes, total: this.queue.length });
+      this._endChallenge('all');
       return;
     }
     this.hinted = false;
@@ -110,7 +113,7 @@ export class SeaQuizBoard {
   }
 
   _onClick(id) {
-    if (this.locked || !this.current) return;
+    if (this.locked || this.finished || !this.current) return;
     if (this.selectedId !== id) {
       this._selectPiece(id);
       return;
@@ -125,6 +128,7 @@ export class SeaQuizBoard {
   }
 
   _confirmAnswer(id) {
+    if (this.finished) return;
     const path = this.paths.get(id);
     path.classList.remove('quiz-selected');
     this.selectedId = null;
@@ -136,6 +140,7 @@ export class SeaQuizBoard {
       playSnap();
       this.correct++;
       setTimeout(() => {
+        if (this.finished) return;
         path.classList.remove('quiz-correct');
         path.classList.add('quiz-used');
         this.locked = false;
@@ -152,6 +157,7 @@ export class SeaQuizBoard {
       }
       this._reportProgress();
       setTimeout(() => path.classList.remove('quiz-wrong'), 400);
+      if (this._challengeHitLimit()) this._endChallenge('mistakes');
     }
   }
 
@@ -159,13 +165,17 @@ export class SeaQuizBoard {
     this.onProgress({
       index: this.index + 1,
       total: this.queue.length,
+      correct: this.correct,
       mistakes: this.mistakes,
+      maxMistakes: this.maxMistakes,
+      timed: this.timed,
       promptRu: this.current ? this.current.ru : '',
       promptName: this.current ? this.current.name : '',
     });
   }
 
   destroy() {
+    this._stopChallengeClock();
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }

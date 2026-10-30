@@ -1,5 +1,6 @@
-import { shuffle, clamp, levenshtein } from './utils.js';
-import { playSnap, playError, playWin } from './audio.js';
+import { shuffle, levenshtein } from './utils.js';
+import { playSnap, playError } from './audio.js';
+import { attachChallenge, challengeRoundCount } from './challengeClock.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { buildStateBackground } from './mapBackground.js';
 import { t, itemName, answerRevealText, wrongGuessNoNounText } from './i18n.js';
@@ -33,9 +34,10 @@ export class SeaIdentifyBoard {
     this.scale = opts.scale || 1;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
+    attachChallenge(this, opts);
 
     const pool = opts.eligibleIds && opts.eligibleIds.size ? level.pieces.filter((p) => opts.eligibleIds.has(p.id)) : level.pieces;
-    const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
+    const rounds = challengeRoundCount(pool.length, opts);
     this.queue = shuffle(pool).slice(0, rounds);
     this.index = 0;
     this.correct = 0;
@@ -54,6 +56,7 @@ export class SeaIdentifyBoard {
   _build() {
     this.container.innerHTML = '';
     this._buildAnswerBar();
+    this._beginChallengeClock();
     this._nextQuestion();
   }
 
@@ -144,9 +147,9 @@ export class SeaIdentifyBoard {
   }
 
   _nextQuestion() {
+    if (this.finished) return;
     if (this.index >= this.queue.length) {
-      setTimeout(() => playWin(), 100);
-      this.onFinish({ correct: this.correct, mistakes: this.mistakes, total: this.queue.length });
+      this._endChallenge('all');
       return;
     }
     this.locked = false;
@@ -187,6 +190,7 @@ export class SeaIdentifyBoard {
     this.feedbackEl.classList.remove('name-feedback-wrong');
     this.feedbackEl.classList.add('name-feedback-correct');
     setTimeout(() => {
+      if (this.finished) return;
       if (this.inputEl) this.inputEl.disabled = false;
       this.index++;
       this._nextQuestion();
@@ -194,7 +198,7 @@ export class SeaIdentifyBoard {
   }
 
   _answerEasy(id, btn) {
-    if (this.locked || this.wrongOptionIds.has(id)) return;
+    if (this.locked || this.finished || this.wrongOptionIds.has(id)) return;
     if (id === this.current.id) {
       btn.classList.add('name-option-correct');
       for (const b of this.optionsEl.querySelectorAll('.name-option-btn')) b.disabled = true;
@@ -210,6 +214,7 @@ export class SeaIdentifyBoard {
       this.feedbackEl.classList.remove('name-feedback-correct');
       this.feedbackEl.classList.add('name-feedback-wrong');
       this._reportProgress();
+      if (this._challengeHitLimit()) this._endChallenge('mistakes');
     }
   }
 
@@ -232,7 +237,7 @@ export class SeaIdentifyBoard {
   }
 
   _onInput() {
-    if (this.locked) return;
+    if (this.locked || this.finished) return;
     const { piece, dist } = this._closestPiece(this.inputEl.value);
     const matched = dist <= FUZZY_MATCH_MAX_DIST ? piece : null;
     this.matchedPiece = matched;
@@ -243,7 +248,7 @@ export class SeaIdentifyBoard {
   }
 
   _revealHint() {
-    if (this.locked || !this.current) return;
+    if (this.locked || this.finished || !this.current) return;
     this.roundNeededHelp = true;
     this.feedbackEl.textContent = answerRevealText(this.current);
     this.feedbackEl.classList.remove('name-feedback-correct', 'name-feedback-wrong');
@@ -260,7 +265,7 @@ export class SeaIdentifyBoard {
 
   _confirmHard() {
     if (this.inputEl.value === '?') this._revealHint();
-    if (this.locked || !this.matchedPiece) return;
+    if (this.locked || this.finished || !this.matchedPiece) return;
     if (this.matchedPiece.id === this.current.id) {
       this.inputEl.disabled = true;
       this.confirmBtn.disabled = true;
@@ -275,6 +280,7 @@ export class SeaIdentifyBoard {
       this.answerBar.classList.add('name-shake');
       setTimeout(() => this.answerBar.classList.remove('name-shake'), WRONG_FLASH_MS);
       this._reportProgress();
+      if (this._challengeHitLimit()) this._endChallenge('mistakes');
     }
   }
 
@@ -282,11 +288,15 @@ export class SeaIdentifyBoard {
     this.onProgress({
       index: this.index + 1,
       total: this.queue.length,
+      correct: this.correct,
       mistakes: this.mistakes,
+      maxMistakes: this.maxMistakes,
+      timed: this.timed,
     });
   }
 
   destroy() {
+    this._stopChallengeClock();
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }

@@ -1,9 +1,10 @@
-import { shuffle, clamp, weightedSampleWithoutReplacement } from './utils.js';
-import { playSnap, playError, playWin } from './audio.js';
+import { shuffle, weightedSampleWithoutReplacement } from './utils.js';
+import { playSnap, playError } from './audio.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { loadSuccessStats, recordOutcome } from './successStats.js';
 import { flyCoinToBalance } from './coins.js';
 import { REWARDS } from './constants.js';
+import { attachChallenge, challengeRoundCount } from './challengeClock.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SUCCESS_SCOPE = 'quiz-states';
@@ -22,6 +23,7 @@ export class QuizBoard {
     this.scale = opts.scale || 1;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
+    attachChallenge(this, opts);
 
     // eligibleIds (from the pre-game checklist — see js/eligibilityList.js
     // and game.js's _startQuiz) restricts which states can be ASKED about;
@@ -29,7 +31,7 @@ export class QuizBoard {
     // wrong click can still land on a non-eligible state, it just never
     // becomes the prompt itself.
     const pool = opts.eligibleIds && opts.eligibleIds.size ? level.pieces.filter((p) => opts.eligibleIds.has(p.id)) : level.pieces;
-    const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
+    const rounds = challengeRoundCount(pool.length, opts);
     if (opts.adaptive && this.levelId) {
       // Adaptive mode: draw states weighted by 1/(streak+1), so a state
       // with a 0 streak (never answered right in a row, or just missed
@@ -116,7 +118,7 @@ export class QuizBoard {
     this.svg.addEventListener('contextmenu', (ev) => {
       if (!this.quickSelect) return;
       ev.preventDefault();
-      if (this.locked || !this.current) return;
+      if (this.locked || this.finished || !this.current) return;
       const id = ev.target?.dataset?.id;
       if (id) this._confirmAnswer(id);
     });
@@ -128,13 +130,14 @@ export class QuizBoard {
     this.container.appendChild(createZoomControls(this.zoomCtl));
     this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
+    this._beginChallengeClock();
     this._nextQuestion();
   }
 
   _nextQuestion() {
+    if (this.finished) return;
     if (this.index >= this.queue.length) {
-      setTimeout(() => playWin(), 100);
-      this.onFinish({ correct: this.correct, mistakes: this.mistakes, total: this.queue.length });
+      this._endChallenge('all');
       return;
     }
     this.hinted = false;
@@ -148,7 +151,7 @@ export class QuizBoard {
   // gives a misclick an escape hatch: clicking a different state just moves
   // the highlight instead of immediately counting as a wrong answer.
   _onClick(id) {
-    if (this.locked || !this.current) return;
+    if (this.locked || this.finished || !this.current) return;
     if (this.selectedId !== id) {
       this._selectPiece(id);
       return;
@@ -163,6 +166,7 @@ export class QuizBoard {
   }
 
   _confirmAnswer(id) {
+    if (this.finished) return;
     const path = this.paths.get(id);
     path.classList.remove('quiz-selected');
     this.selectedId = null;
@@ -183,6 +187,7 @@ export class QuizBoard {
         flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
       }
       setTimeout(() => {
+        if (this.finished) return;
         path.classList.remove('quiz-correct');
         path.classList.add('quiz-used');
         this.locked = false;
@@ -199,6 +204,7 @@ export class QuizBoard {
       }
       this._reportProgress();
       setTimeout(() => path.classList.remove('quiz-wrong'), 400);
+      if (this._challengeHitLimit()) this._endChallenge('mistakes');
     }
   }
 
@@ -206,13 +212,17 @@ export class QuizBoard {
     this.onProgress({
       index: this.index + 1,
       total: this.queue.length,
+      correct: this.correct,
       mistakes: this.mistakes,
+      maxMistakes: this.maxMistakes,
+      timed: this.timed,
       promptRu: this.current ? this.current.ru : '',
       promptName: this.current ? this.current.name : '',
     });
   }
 
   destroy() {
+    this._stopChallengeClock();
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }

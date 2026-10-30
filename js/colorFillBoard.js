@@ -1,5 +1,6 @@
-import { shuffle, clamp, weightedSampleWithoutReplacement } from './utils.js';
-import { playSnap, playError, playWin } from './audio.js';
+import { shuffle, weightedSampleWithoutReplacement } from './utils.js';
+import { playSnap, playError } from './audio.js';
+import { attachChallenge, challengeRoundCount } from './challengeClock.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { loadSuccessStats, recordOutcome } from './successStats.js';
 import { flyCoinToBalance } from './coins.js';
@@ -32,6 +33,7 @@ export class ColorFillBoard {
     this.scale = opts.scale || 1;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
+    attachChallenge(this, opts);
     // { regions, stateCategories } from levels/usaTerrain.js — passed in
     // already-resolved rather than imported directly here, so this ~480KB
     // module only ever loads when this mode is actually started (see
@@ -46,7 +48,7 @@ export class ColorFillBoard {
     // unsolvable 0-piece round.
     const basePool = opts.eligibleIds && opts.eligibleIds.size ? level.pieces.filter((p) => opts.eligibleIds.has(p.id)) : level.pieces;
     const pool = basePool.filter((p) => this.terrainData.stateCategories[p.id]?.length);
-    const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
+    const rounds = challengeRoundCount(pool.length, opts);
     if (opts.adaptive && this.levelId) {
       const stats = loadSuccessStats(this.levelId, SUCCESS_SCOPE);
       const picked = weightedSampleWithoutReplacement(pool, (p) => 1 / ((stats[p.id] || 0) + 1), rounds);
@@ -135,6 +137,7 @@ export class ColorFillBoard {
     this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
     this._buildPalette();
+    this._beginChallengeClock();
     this._nextQuestion();
   }
 
@@ -157,17 +160,17 @@ export class ColorFillBoard {
   }
 
   _selectCategory(category, btn) {
-    if (this.locked) return;
+    if (this.locked || this.finished) return;
     this.selectedCategory = category;
     for (const b of this.paletteEl.querySelectorAll('.colorfill-swatch-btn')) b.classList.remove('selected');
     btn.classList.add('selected');
   }
 
   _nextQuestion() {
+    if (this.finished) return;
     this.currentPath?.classList.remove('colorfill-context-active');
     if (this.index >= this.queue.length) {
-      setTimeout(() => playWin(), 100);
-      this.onFinish({ correct: this.correct, mistakes: this.mistakes, total: this.queue.length });
+      this._endChallenge('all');
       return;
     }
     this.locked = false;
@@ -203,7 +206,7 @@ export class ColorFillBoard {
   }
 
   _onPieceClick(ev) {
-    if (this.locked) return;
+    if (this.locked || this.finished) return;
     const path = ev.target.closest?.('.colorfill-piece');
     if (!path) return;
     const category = path.dataset.category;
@@ -238,6 +241,11 @@ export class ColorFillBoard {
       // which pieces the player actually got right.
       path.classList.add('colorfill-piece-revealed', 'colorfill-piece-wrong');
       setTimeout(() => path.classList.remove('colorfill-piece-wrong'), WRONG_FLASH_MS);
+      this._reportProgress();
+      if (this._challengeHitLimit()) {
+        this._endChallenge('mistakes');
+        return;
+      }
     }
     this.remainingCategories.delete(category);
     if (this.remainingCategories.size === 0) {
@@ -250,6 +258,7 @@ export class ColorFillBoard {
         flyCoinToBalance(r.left + r.width / 2, r.top + r.height / 2, reward);
       }
       setTimeout(() => {
+        if (this.finished) return;
         this.index++;
         this._nextQuestion();
       }, ADVANCE_DELAY_MS);
@@ -259,10 +268,18 @@ export class ColorFillBoard {
   }
 
   _reportProgress() {
-    this.onProgress({ index: this.index + 1, total: this.queue.length, mistakes: this.mistakes });
+    this.onProgress({
+      index: this.index + 1,
+      total: this.queue.length,
+      correct: this.correct,
+      mistakes: this.mistakes,
+      maxMistakes: this.maxMistakes,
+      timed: this.timed,
+    });
   }
 
   destroy() {
+    this._stopChallengeClock();
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }

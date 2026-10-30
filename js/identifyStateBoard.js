@@ -1,5 +1,6 @@
 import { shuffle, clamp, levenshtein, weightedSampleWithoutReplacement } from './utils.js';
-import { playSnap, playError, playWin } from './audio.js';
+import { playSnap, playError } from './audio.js';
+import { attachChallenge, challengeRoundCount } from './challengeClock.js';
 import { attachZoomPan, createZoomControls, createZoomWrap, createScaleBar } from './zoomPan.js';
 import { loadSuccessStats, recordOutcome } from './successStats.js';
 import { flyCoinToBalance } from './coins.js';
@@ -36,10 +37,11 @@ export class IdentifyStateBoard {
     this.availH = opts.availH || window.innerHeight - 200;
     this.onProgress = opts.onProgress || (() => {});
     this.onFinish = opts.onFinish || (() => {});
+    attachChallenge(this, opts);
 
     const pool =
       opts.eligibleIds && opts.eligibleIds.size ? level.pieces.filter((p) => opts.eligibleIds.has(p.id)) : level.pieces;
-    const rounds = clamp(opts.rounds ?? 15, 1, pool.length);
+    const rounds = challengeRoundCount(pool.length, opts);
     if (opts.adaptive && this.levelId) {
       const stats = loadSuccessStats(this.levelId, SUCCESS_SCOPE);
       const picked = weightedSampleWithoutReplacement(pool, (p) => 1 / ((stats[p.id] || 0) + 1), rounds);
@@ -64,6 +66,7 @@ export class IdentifyStateBoard {
   _build() {
     this.container.innerHTML = '';
     this._buildAnswerBar();
+    this._beginChallengeClock();
     this._nextQuestion();
   }
 
@@ -183,11 +186,9 @@ export class IdentifyStateBoard {
   }
 
   _nextQuestion() {
+    if (this.finished) return;
     if (this.index >= this.queue.length) {
-      // Leave the last-answered state's crop on screen — see
-      // neighborBoard.js's identical reasoning.
-      setTimeout(() => playWin(), 100);
-      this.onFinish({ correct: this.correct, mistakes: this.mistakes, total: this.queue.length });
+      this._endChallenge('all');
       return;
     }
     this.locked = false;
@@ -240,6 +241,7 @@ export class IdentifyStateBoard {
     this.feedbackEl.classList.remove('name-feedback-wrong');
     this.feedbackEl.classList.add('name-feedback-correct');
     setTimeout(() => {
+      if (this.finished) return;
       // Re-enabling the (hard-mode-only) input HERE, before _nextQuestion()
       // rather than in a second setTimeout of its own back in _confirmHard,
       // is what guarantees it happens before _resetHardInput()'s
@@ -254,7 +256,7 @@ export class IdentifyStateBoard {
   }
 
   _answerEasy(id, btn) {
-    if (this.locked || this.wrongOptionIds.has(id)) return;
+    if (this.locked || this.finished || this.wrongOptionIds.has(id)) return;
     if (id === this.current.id) {
       btn.classList.add('name-option-correct');
       for (const b of this.optionsEl.querySelectorAll('.name-option-btn')) b.disabled = true;
@@ -270,6 +272,7 @@ export class IdentifyStateBoard {
       this.feedbackEl.classList.remove('name-feedback-correct');
       this.feedbackEl.classList.add('name-feedback-wrong');
       this._reportProgress();
+      if (this._challengeHitLimit()) this._endChallenge('mistakes');
     }
   }
 
@@ -289,7 +292,7 @@ export class IdentifyStateBoard {
   }
 
   _onInput() {
-    if (this.locked) return;
+    if (this.locked || this.finished) return;
     const { piece, dist } = this._closestPiece(this.inputEl.value);
     const matched = dist <= FUZZY_MATCH_MAX_DIST ? piece : null;
     this.matchedPiece = matched;
@@ -300,7 +303,7 @@ export class IdentifyStateBoard {
   }
 
   _revealHint() {
-    if (this.locked || !this.current) return;
+    if (this.locked || this.finished || !this.current) return;
     this.roundNeededHelp = true;
     this.feedbackEl.textContent = answerRevealText(this.current);
     this.feedbackEl.classList.remove('name-feedback-correct', 'name-feedback-wrong');
@@ -317,7 +320,7 @@ export class IdentifyStateBoard {
 
   _confirmHard() {
     if (this.inputEl.value === '?') this._revealHint();
-    if (this.locked || !this.matchedPiece) return;
+    if (this.locked || this.finished || !this.matchedPiece) return;
     if (this.matchedPiece.id === this.current.id) {
       this.inputEl.disabled = true;
       this.confirmBtn.disabled = true;
@@ -332,6 +335,7 @@ export class IdentifyStateBoard {
       this.answerBar.classList.add('name-shake');
       setTimeout(() => this.answerBar.classList.remove('name-shake'), WRONG_FLASH_MS);
       this._reportProgress();
+      if (this._challengeHitLimit()) this._endChallenge('mistakes');
     }
   }
 
@@ -339,11 +343,15 @@ export class IdentifyStateBoard {
     this.onProgress({
       index: this.index + 1,
       total: this.queue.length,
+      correct: this.correct,
       mistakes: this.mistakes,
+      maxMistakes: this.maxMistakes,
+      timed: this.timed,
     });
   }
 
   destroy() {
+    this._stopChallengeClock();
     this.zoomCtl?.destroy();
     this.container.innerHTML = '';
   }
