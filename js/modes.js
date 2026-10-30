@@ -27,6 +27,7 @@ export const MENU_ORDER = [
   'name-state',
   'neighbor',
   'identify',
+  'state-numbers',
   'place-state',
   'colorfill',
   'city-place',
@@ -65,6 +66,12 @@ export const MODES = [
     title: 'Определи штат',
     desc: 'Угадай штат по форме',
     levels: ['usa', 'countries'],
+  },
+  {
+    id: 'state-numbers',
+    title: 'Номера штатов',
+    desc: 'Номер → штат (порядок вступления)',
+    levels: ['usa'],
   },
   {
     id: 'city-place',
@@ -131,6 +138,16 @@ export const JOURNEY_DIFFICULTIES = [
   { id: 'medium', title: 'Средний', desc: '3–5 штатов между', min: 3, max: 5 },
   { id: 'hard', title: 'Сложный', desc: '6+ штатов между', min: 6, max: 12 },
 ];
+
+// "Номера штатов" — how to answer: type the state's name (RU or EN) or click it on the map.
+export const NUMBERS_SUBMODES = [
+  { id: 'type', title: 'Quiz', desc: 'Номер → впиши название штата' },
+  { id: 'map', title: 'Карта', desc: 'Номер → кликни штат на карте' },
+];
+// Its timed run: this many seconds, and the default number of mistakes allowed.
+export const NUMBERS_TIME_LIMIT_S = 60;
+export const NUMBERS_DEFAULT_MAX_MISTAKES = 3;
+export const NUMBERS_MAX_MISTAKES_RANGE = { min: 0, max: 10 };
 
 // "Отображение" choice shown only for the Обзор (overview) mode.
 export const OVERVIEW_MODES = [

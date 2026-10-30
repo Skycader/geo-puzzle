@@ -830,7 +830,7 @@ body {
 
 /* Changelog modal (js/changelogModal.js): theme-accent frame, header with icon / title / close,
    a tab per release, scrolling markdown body. */
-.cl-overlay {
+.app-modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
@@ -841,7 +841,7 @@ body {
   background: rgba(var(--ink-rgb), 0.7);
   backdrop-filter: blur(3px);
 }
-.cl-modal {
+.app-modal {
   display: flex;
   flex-direction: column;
   width: min(680px, 100%);
@@ -852,21 +852,21 @@ body {
   font-family: var(--font-mono);
   color: var(--base1);
 }
-.cl-head {
+.app-modal-head {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
   border-bottom: 1px solid rgba(var(--neon-cyan-rgb), 0.3);
 }
-.cl-head-ico { flex: none; color: var(--neon-cyan); }
-.cl-title {
+.app-modal-ico { flex: none; color: var(--neon-cyan); }
+.app-modal-title {
   flex: 1;
   font-weight: 700;
   letter-spacing: 2px;
   color: var(--neon-cyan);
 }
-.cl-x {
+.app-modal-x {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -877,8 +877,8 @@ body {
   color: var(--neon-cyan);
   cursor: pointer;
 }
-.cl-x:hover { background: rgba(var(--neon-cyan-rgb), 0.15); }
-.cl-content {
+.app-modal-x:hover { background: rgba(var(--neon-cyan-rgb), 0.15); }
+.app-modal-content {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -904,27 +904,137 @@ body {
   background: rgba(var(--neon-cyan-rgb), 0.12);
   color: var(--neon-cyan);
 }
-.cl-body {
+.modal-body {
   overflow-y: auto;
   padding: 12px 18px 18px;
   font-size: 13px;
   line-height: 1.55;
 }
-.cl-body h2, .cl-body h3, .cl-body h4 { margin: 16px 0 6px; font-family: inherit; }
-.cl-body .cl-h1 { margin-top: 4px; font-size: 17px; color: var(--base2); }
-.cl-body .cl-h2 { font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--neon-pink); }
-.cl-body .cl-h3 { font-size: 13px; color: var(--neon-violet); }
-.cl-body p { margin: 8px 0; }
-.cl-body ul { margin: 6px 0; padding-left: 20px; }
-.cl-body li { margin: 4px 0; }
-.cl-body b { color: var(--base2); }
-.cl-body code {
+.modal-body h2, .modal-body h3, .modal-body h4 { margin: 16px 0 6px; font-family: inherit; }
+.modal-body .modal-h1 { margin-top: 4px; font-size: 17px; color: var(--base2); }
+.modal-body .modal-h2 { font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--neon-pink); }
+.modal-body .modal-h3 { font-size: 13px; color: var(--neon-violet); }
+.modal-body p { margin: 8px 0; }
+.modal-body ul { margin: 6px 0; padding-left: 20px; }
+.modal-body li { margin: 4px 0; }
+.modal-body b { color: var(--base2); }
+.modal-body code {
   padding: 0 4px;
   background: rgba(var(--neon-cyan-rgb), 0.12);
   color: var(--neon-cyan);
 }
-.cl-body a { color: var(--neon-cyan); }
+.modal-body a { color: var(--neon-cyan); }
 .cl-msg { color: var(--base0); }
+
+/* Round "i" button (the "Номера штатов" info — settings panel heading and in-game HUD). */
+.info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--neon-cyan);
+  border-radius: 50%;
+  background: rgba(var(--ink-rgb), 0.8);
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.info-btn:hover {
+  background: rgba(var(--neon-cyan-rgb), 0.15);
+  box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.5);
+}
+.heading-with-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* "Номера штатов" ('type' submode): the big number and the answer row, centred in the board area. */
+.sn-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  pointer-events: none;
+}
+.sn-stage > * { pointer-events: auto; }
+.sn-number {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+}
+.sn-number-label {
+  font-size: 14px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--base0);
+}
+.sn-number-value {
+  font-size: clamp(72px, 16vh, 140px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 24px rgba(var(--neon-cyan-rgb), 0.55);
+}
+.name-answer-bar.sn-answer {
+  position: static;
+  transform: none;
+  width: min(520px, calc(100% - 20px));
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.35);
+}
+/* The result of a run, centred over the board. */
+.sn-result {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 44px;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(var(--ink-rgb), 0.94);
+  box-shadow: 0 0 24px rgba(var(--neon-cyan-rgb), 0.3);
+  font-family: var(--font-mono);
+  text-align: center;
+}
+.sn-result-title { font-size: 18px; font-weight: 700; letter-spacing: 1px; color: var(--neon-pink); }
+.sn-result-score { display: flex; align-items: baseline; gap: 10px; color: var(--base1); }
+.sn-result-score b { font-size: 56px; line-height: 1; color: var(--neon-cyan); text-shadow: 0 0 16px rgba(var(--neon-cyan-rgb), 0.5); }
+.sn-result-line { font-size: 13px; color: var(--base0); }
+
+/* "Номера штатов" info window: the admission table in two columns. */
+.sn-info .sn-note { font-size: 12px; color: var(--base0); margin: 4px 0 10px; }
+.sn-table { column-count: 2; column-gap: 24px; }
+.sn-row {
+  display: grid;
+  grid-template-columns: 2.2em 1fr auto;
+  gap: 8px;
+  padding: 2px 0;
+  border-bottom: 1px dashed rgba(var(--neon-cyan-rgb), 0.14);
+  font-size: 12px;
+  break-inside: avoid;
+}
+.sn-row-no { text-align: right; font-weight: 700; color: var(--neon-cyan); }
+.sn-row-original .sn-row-no { color: var(--neon-pink); }
+.sn-row-date { color: var(--base0); white-space: nowrap; }
+@media (max-width: 620px) { .sn-table { column-count: 1; } }
 
 /* Language switcher (js/i18n.js, js/game.js's _bindLangSwitcher) — flag
    emoji + dropdown, identical open/close mechanics and look to

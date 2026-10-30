@@ -154,6 +154,19 @@ const STRINGS = {
   // Tooltips (title=/aria-label=) — lower visual priority than the text
   // above (only shown on hover), but still real UI a player can see.
   brandTitle: { ru: 'В главное меню', en: 'Back to main menu' },
+  stateNumbersTitle: { ru: 'Номера штатов', en: 'State numbers' },
+  numbersInfoTitle: { ru: 'О номерах штатов', en: 'About state numbers' },
+  numbersTimedText: { ru: 'На время (60 с) — сколько успеешь', en: 'Timed (60 s) — as many as you can' },
+  numbersMistakesLabel: { ru: 'Допустимо ошибок', en: 'Mistakes allowed' },
+  numbersNumberLabel: { ru: 'Штат №', en: 'State #' },
+  numbersPromptLabel: { ru: 'Кликни штат под номером:', en: 'Click the state numbered:' },
+  numbersSkipTitle: { ru: 'Не знаю — показать ответ (засчитывается ошибкой)', en: "Don't know — show the answer (counts as a mistake)" },
+  numbersWrongPrefix: { ru: 'Правильно:', en: 'Correct:' },
+  numbersCorrect: { ru: 'Верно', en: 'Correct' },
+  numbersResultTime: { ru: 'Время вышло!', en: "Time's up!" },
+  numbersResultMistakes: { ru: 'Слишком много ошибок', en: 'Too many mistakes' },
+  numbersResultAll: { ru: 'Все 50 штатов!', en: 'All 50 states!' },
+  numbersResultOf: { ru: 'из', en: 'of' },
   versionBtnTitle: { ru: 'Версия приложения — журнал изменений', en: 'App version — changelog' },
   changelogTitle: { ru: 'CHANGELOG', en: 'CHANGELOG' },
   changelogClose: { ru: 'Закрыть', en: 'Close' },
@@ -298,6 +311,7 @@ const MODE_EN = {
   'sea-quiz': { title: 'Find the Sea', desc: 'Click the named sea' },
   overview: { title: 'Overview', desc: 'Explore the map, no tasks' },
   journey: { title: 'Journey', desc: 'Trace a highway between two states' },
+  'state-numbers': { title: 'State Numbers', desc: 'Number → state (order of joining)' },
 };
 
 // English mirror of js/game.js's own MODE_CARD_TEXT_COUNTRIES — "state"
@@ -367,6 +381,10 @@ const JOURNEY_DIFFICULTIES_EN = {
   medium: { title: 'Medium', desc: '3–5 states between' },
   hard: { title: 'Hard', desc: '6+ states between' },
 };
+const NUMBERS_SUBMODES_EN = {
+  type: { title: 'Quiz', desc: 'Number → type the state name' },
+  map: { title: 'Map', desc: 'Number → click the state on the map' },
+};
 const OVERVIEW_MODES_EN = {
   full: { title: 'Full Info', desc: 'Every state and city labeled' },
   hidden: { title: 'Hidden Info', desc: 'Hover to reveal the name' },
@@ -380,6 +398,7 @@ export {
   PLACE_STATE_DIFFICULTIES_EN,
   JOURNEY_ANSWER_MODES_EN,
   JOURNEY_DIFFICULTIES_EN,
+  NUMBERS_SUBMODES_EN,
   OVERVIEW_MODES_EN,
 };
 

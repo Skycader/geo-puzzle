@@ -9,6 +9,8 @@ import { ColorFillBoard } from './colorFillBoard.js';
 import { SeaIdentifyBoard } from './seaIdentifyBoard.js';
 import { SeaQuizBoard } from './seaQuizBoard.js';
 import { StatePlacementBoard, outlineViewBox } from './statePlacementBoard.js';
+import { StateNumbersBoard } from './stateNumbersBoard.js';
+import { openStateNumbersInfo } from './stateNumbersInfo.js';
 import { OverviewBoard } from './overviewBoard.js';
 import { sourceNoteHtml } from './dataSources.js';
 import { JourneyNameBoard } from './journeyNameBoard.js';
@@ -31,6 +33,10 @@ import {
   PLACE_STATE_TOLERANCE_RANGE,
   JOURNEY_ANSWER_MODES,
   JOURNEY_DIFFICULTIES,
+  NUMBERS_SUBMODES,
+  NUMBERS_TIME_LIMIT_S,
+  NUMBERS_DEFAULT_MAX_MISTAKES,
+  NUMBERS_MAX_MISTAKES_RANGE,
 } from './modes.js';
 import { playClick } from './audio.js';
 import { APP_VERSION } from './version.js';
@@ -57,6 +63,7 @@ import {
   JOURNEY_ANSWER_MODES_EN,
   JOURNEY_DIFFICULTIES_EN,
   OVERVIEW_MODES_EN,
+  NUMBERS_SUBMODES_EN,
 } from './i18n.js';
 
 // Distinct scopes per mode — clicking a state on the map (quiz), recalling
@@ -141,6 +148,8 @@ const MODE_ICON_SVG = {
   puzzle:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v2a2 2 0 1 0 4 0V4h6v6h-2a2 2 0 1 0 0 4h2v6h-6v-2a2 2 0 1 0-4 0v2H4v-6h2a2 2 0 1 0 0-4H4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
   quiz: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M15.3 15.3 21 21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  'state-numbers':
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 7 20M17 4l-2 16M4.5 9h16M3.5 15h16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
   'name-state':
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H9l-4 4v-4H4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
   neighbor:
@@ -213,6 +222,10 @@ export class Game {
     // either named directly or reached by connecting through it.
     this.journeyLabelStates = true;
     this.journeyShowDestination = true;
+    // "Номера штатов" — answer method, the optional 60 s clock, and mistakes allowed.
+    this.numbersSubmode = NUMBERS_SUBMODES[0].id;
+    this.numbersTimed = true;
+    this.numbersMaxMistakes = NUMBERS_DEFAULT_MAX_MISTAKES;
     // "Города и места" — two independent toggles instead of separate mode
     // cards: WHAT to ask about (cities vs places) and HOW to answer
     // (click-to-find vs place-a-pin). See _startCityPlace.
@@ -383,6 +396,13 @@ export class Game {
       panelQuizSettings: document.getElementById('panel-quiz-settings'),
       panelOverviewSettings: document.getElementById('panel-overview-settings'),
       overviewList: document.getElementById('overview-list'),
+      panelNumbersSettings: document.getElementById('panel-numbers-settings'),
+      numbersSubmodeEl: document.getElementById('numbers-submode'),
+      numbersTimedCheckbox: document.getElementById('numbers-timed-checkbox'),
+      numbersMistakesInput: document.getElementById('numbers-mistakes'),
+      numbersMistakesValue: document.getElementById('numbers-mistakes-value'),
+      numbersInfoBtn: document.getElementById('numbers-info-btn'),
+      hudNumbersInfo: document.getElementById('hud-numbers-info'),
       panelJourneySettings: document.getElementById('panel-journey-settings'),
       journeyAnswerModeEl: document.getElementById('journey-answer-mode'),
       journeyDifficultyEl: document.getElementById('journey-difficulty'),
@@ -487,6 +507,9 @@ export class Game {
       adaptiveModeText: document.getElementById('adaptive-mode-text'),
       quickSelectText: document.getElementById('quick-select-text'),
       overviewHeadingEl: document.getElementById('overview-heading'),
+      numbersHeadingEl: document.getElementById('numbers-heading'),
+      numbersTimedText: document.getElementById('numbers-timed-text'),
+      numbersMistakesLabel: document.getElementById('numbers-mistakes-label'),
       journeyAnswerHeadingEl: document.getElementById('journey-answer-heading'),
       journeyDifficultyHeadingEl: document.getElementById('journey-difficulty-heading'),
       journeyLabelStatesText: document.getElementById('journey-label-states-text'),
@@ -533,6 +556,10 @@ export class Game {
     if (JOURNEY_DIFFICULTIES.some((d) => d.id === saved.journeyDifficulty)) this.journeyDifficulty = saved.journeyDifficulty;
     if (typeof saved.journeyLabelStates === 'boolean') this.journeyLabelStates = saved.journeyLabelStates;
     if (typeof saved.journeyShowDestination === 'boolean') this.journeyShowDestination = saved.journeyShowDestination;
+    if (NUMBERS_SUBMODES.some((m) => m.id === saved.numbersSubmode)) this.numbersSubmode = saved.numbersSubmode;
+    if (typeof saved.numbersTimed === 'boolean') this.numbersTimed = saved.numbersTimed;
+    if (Number.isFinite(saved.numbersMaxMistakes))
+      this.numbersMaxMistakes = clamp(saved.numbersMaxMistakes, NUMBERS_MAX_MISTAKES_RANGE.min, NUMBERS_MAX_MISTAKES_RANGE.max);
     if (saved.cityPlaceEntity === 'cities' || saved.cityPlaceEntity === 'places') this.cityPlaceEntity = saved.cityPlaceEntity;
     if (saved.cityPlaceMode === 'find' || saved.cityPlaceMode === 'pin') this.cityPlaceMode = saved.cityPlaceMode;
     if (typeof saved.adaptiveMode === 'boolean') this.adaptiveMode = saved.adaptiveMode;
@@ -564,6 +591,9 @@ export class Game {
       journeyDifficulty: this.journeyDifficulty,
       journeyLabelStates: this.journeyLabelStates,
       journeyShowDestination: this.journeyShowDestination,
+      numbersSubmode: this.numbersSubmode,
+      numbersTimed: this.numbersTimed,
+      numbersMaxMistakes: this.numbersMaxMistakes,
       cityPlaceEntity: this.cityPlaceEntity,
       cityPlaceMode: this.cityPlaceMode,
       adaptiveMode: this.adaptiveMode,
@@ -743,6 +773,11 @@ export class Game {
     this.el.quickSelectText.textContent = t('quickSelectText');
     this.el.nameStateBordersText.textContent = t('nameStateBordersText');
     this.el.overviewHeadingEl.textContent = t('overviewHeading');
+    this.el.numbersHeadingEl.textContent = t('stateNumbersTitle');
+    this.el.numbersTimedText.textContent = t('numbersTimedText');
+    this.el.numbersMistakesLabel.textContent = t('numbersMistakesLabel');
+    this.el.numbersInfoBtn.title = t('numbersInfoTitle');
+    this.el.hudNumbersInfo.title = t('numbersInfoTitle');
     this.el.journeyAnswerHeadingEl.textContent = t('journeyAnswerHeading');
     this.el.journeyDifficultyHeadingEl.textContent = t('journeyDifficultyHeading');
     this.el.journeyLabelStatesText.textContent = t('journeyLabelStatesText');
@@ -1005,10 +1040,12 @@ export class Game {
     const isPuzzle = this.modeId === 'puzzle';
     const isOverview = this.modeId === 'overview';
     const isJourney = this.modeId === 'journey';
+    const isNumbers = this.modeId === 'state-numbers';
     // Journey has no round-count/eligibility-checklist/adaptive-mode row —
     // it's a third structural category alongside puzzle/overview (one
     // fixed round: a randomly-picked state pair), not a "rounds" mode.
-    const isRounds = !isPuzzle && !isOverview && !isJourney;
+    // "Номера штатов" has its own panel (always all 50 states, run by clock/mistakes).
+    const isRounds = !isPuzzle && !isOverview && !isJourney && !isNumbers;
     const isNameState = this.modeId === 'name-state';
     const isNeighbor = this.modeId === 'neighbor';
     const isIdentify = this.modeId === 'identify';
@@ -1028,6 +1065,8 @@ export class Game {
     this.el.panelQuizSettings.hidden = !isRounds;
     this.el.panelOverviewSettings.hidden = !isOverview;
     this.el.panelJourneySettings.hidden = !isJourney;
+    this.el.panelNumbersSettings.hidden = !isNumbers;
+    if (isNumbers) this._renderNumbersPanel();
     if (isJourney) {
       this._renderJourneyAnswerMode();
       this._renderJourneyDifficulty();
@@ -1298,6 +1337,22 @@ export class Game {
     this.el.placeStateToleranceValue.textContent = this.placeStateToleranceKm;
   }
 
+  // "Номера штатов" settings: submode cards + the timed checkbox + the mistakes slider.
+  _renderNumbersPanel() {
+    this._renderDifficultyList(
+      NUMBERS_SUBMODES,
+      this.numbersSubmode,
+      (id) => {
+        this.numbersSubmode = id;
+      },
+      this.el.numbersSubmodeEl,
+      NUMBERS_SUBMODES_EN,
+    );
+    this.el.numbersTimedCheckbox.checked = this.numbersTimed;
+    this.el.numbersMistakesInput.value = String(this.numbersMaxMistakes);
+    this.el.numbersMistakesValue.textContent = this.numbersMaxMistakes;
+  }
+
   _renderJourneyAnswerMode() {
     this._renderDifficultyList(
       JOURNEY_ANSWER_MODES,
@@ -1451,6 +1506,21 @@ export class Game {
       this._applyModeVisibility(); // eligibility only applies to "найти", not "расставь"
       this._saveLastSettings();
     });
+    this.el.numbersTimedCheckbox.addEventListener('change', (ev) => {
+      this.numbersTimed = ev.target.checked;
+      this._saveLastSettings();
+    });
+    this.el.numbersMistakesInput.addEventListener('input', (ev) => {
+      this.numbersMaxMistakes = Number(ev.target.value);
+      this.el.numbersMistakesValue.textContent = this.numbersMaxMistakes;
+      this._saveLastSettings();
+    });
+    for (const btn of [this.el.numbersInfoBtn, this.el.hudNumbersInfo]) {
+      btn.addEventListener('click', () => {
+        playClick();
+        openStateNumbersInfo(this.levels.usa);
+      });
+    }
     this.el.journeyLabelStatesCheckbox.addEventListener('change', (ev) => {
       this.journeyLabelStates = ev.target.checked;
       this._saveLastSettings();
@@ -1573,6 +1643,7 @@ export class Game {
     if (this.modeId !== 'overview') clearOverviewView(); // only Overview keeps its camera in the URL
 
     if (this.board) this.board.destroy();
+    this.el.hudNumbersInfo.hidden = true; // only "Номера штатов" shows it
 
     if (this.modeId === 'quiz') this._startQuiz(level);
     else if (this.modeId === 'name-state') this._startNameState(level);
@@ -1585,6 +1656,7 @@ export class Game {
     else if (this.modeId === 'sea-quiz') this._startSeaQuiz(level);
     else if (this.modeId === 'overview') this._startOverview(level);
     else if (this.modeId === 'journey') this._startJourney(level);
+    else if (this.modeId === 'state-numbers') this._startStateNumbers(level);
     else this._startPuzzle(level);
 
     // Overview is free browsing, not a timed challenge — the win bar it
@@ -1592,7 +1664,9 @@ export class Game {
     // there is just noise.
     clearInterval(this.timerHandle);
     this.el.hudTimer.hidden = this.modeId === 'overview';
-    if (this.modeId !== 'overview') {
+    // The timed "Номера штатов" run counts DOWN and the board drives the HUD timer itself.
+    const boardOwnsClock = this.modeId === 'state-numbers' && this.numbersTimed;
+    if (this.modeId !== 'overview' && !boardOwnsClock) {
       this.seconds = 0;
       this.el.hudTimer.textContent = formatTime(0);
       this.timerHandle = setInterval(() => {
@@ -1734,6 +1808,47 @@ export class Game {
       adaptive: this.adaptiveMode,
       scale,
       onProgress: (p) => this._onNameStateProgress(p),
+      onFinish: () => this._onFinish(),
+    });
+  }
+
+  _startStateNumbers(level) {
+    this.el.toggleHintsWrap.hidden = true;
+    this.el.togglePlacesWrap.hidden = true;
+    this.el.toggleLabelsWrap.hidden = true;
+    this.el.toggleHighwaysWrap.hidden = true;
+    this.el.toggleAirportsWrap.hidden = true;
+    this.el.toggleCurrentsWrap.hidden = true;
+    this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleProgressWrap.hidden = true;
+    this.el.toggleTerrainWrap.hidden = true;
+    this.el.progressScopeWrap.hidden = true;
+    // 'map' submode: the number is the prompt bar's text; 'type' draws its own big number.
+    const isMap = this.numbersSubmode === 'map';
+    this.el.quizPrompt.hidden = !isMap;
+    this.el.quizPromptLabel.textContent = t('numbersPromptLabel');
+    this.el.hudNumbersInfo.hidden = false;
+
+    this.el.hudLevel.textContent = `${levelText(level).title} · ${this._modeHeadingText('state-numbers', 'Номера штатов')}`;
+    this.el.hudProgress.textContent = `${t('numbersCorrect')}: 0`;
+    this.el.hudGroups.hidden = false;
+    this.el.hudGroups.textContent = `${t('mistakes')}: 0/${this.numbersMaxMistakes}`;
+
+    const scale = this._computeScale(level.canvas, this._availableHeight(), undefined, true);
+    this.board = new StateNumbersBoard(this.el.boardContainer, level, {
+      submode: this.numbersSubmode,
+      timed: this.numbersTimed,
+      timeLimit: NUMBERS_TIME_LIMIT_S,
+      maxMistakes: this.numbersMaxMistakes,
+      scale,
+      onProgress: ({ correct, mistakes, maxMistakes, promptText }) => {
+        this.el.hudProgress.textContent = `${t('numbersCorrect')}: ${correct}`;
+        this.el.hudGroups.textContent = `${t('mistakes')}: ${mistakes}/${maxMistakes}`;
+        this.el.quizPromptName.textContent = promptText;
+      },
+      onTick: (secondsLeft) => {
+        this.el.hudTimer.textContent = formatTime(secondsLeft);
+      },
       onFinish: () => this._onFinish(),
     });
   }

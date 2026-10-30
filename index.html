@@ -54,6 +54,7 @@
       </button>
       <div class="hud" id="hud" hidden>
         <span id="hud-level" class="hud-item"></span>
+        <button type="button" class="info-btn" id="hud-numbers-info" title="О номерах штатов" hidden>i</button>
         <span id="hud-progress" class="hud-item hud-chip">0/0</span>
         <span id="hud-groups" class="hud-item hud-chip">Частей: 0</span>
         <span id="hud-timer" class="hud-item hud-chip">00:00</span>
@@ -339,6 +340,24 @@
           <div id="overview-list" class="preset-list"></div>
         </section>
 
+        <!-- "Номера штатов" (js/stateNumbersBoard.js): quiz/map submode, an optional 60 s clock and the
+             number of mistakes allowed. The (i) opens the info window (js/stateNumbersInfo.js). -->
+        <section class="panel" id="panel-numbers-settings" hidden>
+          <h2 class="heading-with-info">
+            <span id="numbers-heading">Номера штатов</span>
+            <button type="button" class="info-btn" id="numbers-info-btn" title="О номерах штатов">i</button>
+          </h2>
+          <div id="numbers-submode" class="preset-list"></div>
+          <label class="toggle toggle-multiline" id="numbers-timed-row">
+            <input type="checkbox" id="numbers-timed-checkbox" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text" id="numbers-timed-text">На время (60 с) — сколько успеешь</span>
+          </label>
+          <div class="custom-count-row">
+            <label for="numbers-mistakes"><span id="numbers-mistakes-label">Допустимо ошибок</span>: <strong id="numbers-mistakes-value">3</strong></label>
+            <input type="range" id="numbers-mistakes" min="0" max="10" step="1" value="3" />
+          </div>
+        </section>
         <section class="panel" id="panel-journey-settings" hidden>
           <h2 id="journey-answer-heading">Как отвечать</h2>
           <div id="journey-answer-mode" class="preset-list"></div>
