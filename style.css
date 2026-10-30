@@ -960,7 +960,8 @@ body {
 .modal-body a { color: var(--neon-cyan); }
 .cl-msg { color: var(--base0); }
 
-/* Round "i" button (the "Номера штатов" info — settings panel heading and in-game HUD). */
+/* Square info button (the "Номера штатов" help — settings panel heading and in-game HUD).
+   Same language as .version-btn: cyan frame, no radius, mono-adjacent SVG glyph. */
 .info-btn {
   display: inline-flex;
   align-items: center;
@@ -969,16 +970,16 @@ body {
   height: 22px;
   padding: 0;
   border: 1px solid var(--neon-cyan);
-  border-radius: 50%;
+  border-radius: 0;
   background: rgba(var(--ink-rgb), 0.8);
   color: var(--neon-cyan);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-style: italic;
-  font-weight: 700;
-  line-height: 1;
   cursor: pointer;
   transition: all 0.15s ease;
+}
+.info-btn-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 .info-btn:hover {
   background: rgba(var(--neon-cyan-rgb), 0.15);
@@ -1400,6 +1401,136 @@ body {
   width: 100%;
   height: 20px;
   accent-color: var(--neon-pink);
+}
+
+.menu-steps {
+  display: none;
+  /* Same full width as .menu-columns / the single settings panel under it. */
+  width: 100%;
+  gap: 0;
+  align-items: stretch;
+  justify-content: stretch;
+  flex: none;
+}
+.menu-step {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 6px;
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.4);
+  border-right-width: 0;
+  background: rgba(var(--ink-rgb), 0.8);
+  color: var(--base0);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.menu-step:last-child { border-right-width: 1px; }
+.menu-step:hover { color: var(--neon-cyan); border-color: var(--neon-cyan); }
+.menu-step[aria-current='step'] {
+  color: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+  background: rgba(var(--neon-cyan-rgb), 0.15);
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.35);
+  z-index: 1;
+}
+.menu-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex: none;
+  width: 100%;
+}
+/* Phones + tablets: three columns don't fit — one column, steps 1→2→3→Play.
+   Driven by viewport + data-menu-step (works before JS); .menu-compact
+   shows the step tabs. Navigate via tabs / card picks — no Back/Next. */
+@media (max-width: 900px) {
+  .screen-menu {
+    padding: 12px 14px 16px;
+    max-width: none;
+    /* `margin: 0 auto` on a column-flex child (#app) absorbs free space and
+       shrink-wraps width to content — level cards vs mode cards vs numbers
+       checklist each had a different min-content width, so the panel AND
+       Play jumped every tab switch. Kill auto sides + force full width. */
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    align-items: stretch;
+  }
+  .screen-menu .title,
+  .screen-menu .subtitle {
+    align-self: center;
+  }
+  .screen-menu .menu-steps:not([hidden]) { display: flex; }
+  .screen-menu .menu-steps,
+  .screen-menu .menu-columns,
+  .screen-menu .menu-footer {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  /* One column; height comes from flex:1 on .menu-columns (parent), not
+     from whichever panel is shown — so display:none tab switches don't
+     resize the area. Do NOT stack panels (semi-transparent .panel bg
+     would show the previous step underneath). */
+  .screen-menu .menu-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .screen-menu[data-menu-step='1'] .menu-columns > [data-menu-col]:not([data-menu-col='1']),
+  .screen-menu[data-menu-step='2'] .menu-columns > [data-menu-col]:not([data-menu-col='2']),
+  .screen-menu[data-menu-step='3'] .menu-columns > [data-menu-col]:not([data-menu-col='3']) {
+    display: none !important;
+  }
+  .screen-menu .menu-columns > .panel {
+    min-height: 0;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .screen-menu .elig-wrap {
+    min-height: 160px;
+  }
+  /* Same width as the panel above — not a narrower centered 320px pill. */
+  .screen-menu #btn-start {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    padding: 12px 28px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 620px) {
+  .topbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .brand-text { font-size: 14px; letter-spacing: 1px; }
+  .brand-icon { width: 26px; height: 26px; }
+  .topbar-right { gap: 10px; }
+  .hud {
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: 55vw;
+  }
+  .hud-item { font-size: 11px; }
+  .title {
+    letter-spacing: 2px;
+  }
+  .subtitle { font-size: 13px; }
+  .panel { padding: 10px 12px 12px; }
+  /* ПКМ shortcut is meaningless on touch phones. */
+  #quick-select-row { display: none !important; }
 }
 
 /* ---------------- game screen ---------------- */

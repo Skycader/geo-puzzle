@@ -19,6 +19,10 @@ import { pickJourneyPair } from './journeyRoute.js';
 import { EligibilityList } from './eligibilityList.js';
 import { getCoins, spendAllCoins, onCoinsChanged } from './coins.js';
 import { SCREEN_EDGE_MARGIN_PX } from './constants.js';
+
+// Below this width the three menu columns don't fit — switch to steps 1→2→3→Play.
+// Keep in sync with style.css's `@media (max-width: 900px)` menu-compact rules.
+const MENU_COMPACT_MQ = '(max-width: 900px)';
 import { clamp, unionBBox } from './utils.js';
 import { PRESETS, DEFAULT_CUSTOM_COUNT } from './presets.js';
 import {
@@ -254,6 +258,9 @@ export class Game {
     // _setTerrainMode and OverviewBoard's setTerrainMode.
     this.terrainMode = 'off';
     this.eligibilityList = null; // current EligibilityList instance for quiz/city-place — see _applyModeVisibility
+    // Narrow screens: wizard step 1=level, 2=mode, 3=settings (see _initMenuCompact).
+    this.menuStep = 1;
+    this.menuCompact = false;
     this.board = null;
     this.seconds = 0;
     this.timerHandle = null;
@@ -273,7 +280,38 @@ export class Game {
     // choice on first paint, not just RU.
     this._applyMenuTranslations();
     this._bindEvents();
+    this._initMenuCompact();
     this._restoreOverviewFromUrl();
+  }
+
+  // Phones / narrow tablets: one column at a time (level → mode → settings → Play).
+  // Desktop keeps the 3-column grid; matchMedia toggles .menu-compact on #screen-menu.
+  _initMenuCompact() {
+    const mq = window.matchMedia(MENU_COMPACT_MQ);
+    const sync = () => {
+      this.menuCompact = mq.matches;
+      this.el.screenMenu.classList.toggle('menu-compact', this.menuCompact);
+      this.el.menuSteps.hidden = !this.menuCompact;
+      this._syncMenuStepUi();
+    };
+    sync();
+    // Safari < 14 only has addListener; modern browsers prefer addEventListener.
+    if (typeof mq.addEventListener === 'function') mq.addEventListener('change', sync);
+    else if (typeof mq.addListener === 'function') mq.addListener(sync);
+  }
+
+  _setMenuStep(step) {
+    this.menuStep = Math.max(1, Math.min(3, step));
+    this._syncMenuStepUi();
+  }
+
+  _syncMenuStepUi() {
+    this.el.screenMenu.dataset.menuStep = String(this.menuStep);
+    for (const btn of this.el.menuSteps.querySelectorAll('.menu-step')) {
+      const n = Number(btn.dataset.step);
+      if (n === this.menuStep) btn.setAttribute('aria-current', 'step');
+      else btn.removeAttribute('aria-current');
+    }
   }
 
   // A hash like #overview?level=countries&z=3.3&x=345&y=210 (js/viewUrl.js) reopens that
@@ -440,6 +478,7 @@ export class Game {
       quickSelectRow: document.getElementById('quick-select-row'),
       quickSelectCheckbox: document.getElementById('quick-select-checkbox'),
       btnStart: document.getElementById('btn-start'),
+      menuSteps: document.getElementById('menu-steps'),
       langSwitcherWrap: document.getElementById('lang-switcher-wrap'),
       langSwitcherBtn: document.getElementById('lang-switcher-btn'),
       versionBtn: document.getElementById('version-btn'),
@@ -786,6 +825,11 @@ export class Game {
     this.el.journeyShowDestinationText.textContent = t('journeyShowDestinationText');
     this.el.btnStart.textContent = t('playButton');
     this.el.btnBackMenu.textContent = t('backToMenuButton');
+    this.el.menuSteps.setAttribute('aria-label', t('menuStepsLabel'));
+    const stepLabels = { 1: t('menuStepLevel'), 2: t('menuStepMode'), 3: t('menuStepSettings') };
+    for (const btn of this.el.menuSteps.querySelectorAll('.menu-step')) {
+      btn.textContent = stepLabels[Number(btn.dataset.step)] || btn.textContent;
+    }
   }
 
   _openLangSwitcherMenu() {
@@ -1006,6 +1050,8 @@ export class Game {
         // stale states/cities list behind.
         this._applyModeVisibility();
         this._saveLastSettings();
+        // Compact wizard: picking a level advances to mode selection.
+        if (this.menuCompact) this._setMenuStep(2);
       });
       this.el.levelList.appendChild(card);
     }
@@ -1033,6 +1079,8 @@ export class Game {
         card.classList.add('selected');
         this._applyModeVisibility();
         this._saveLastSettings();
+        // Compact wizard: picking a mode advances to settings / Play.
+        if (this.menuCompact) this._setMenuStep(3);
       });
       this.el.modeList.appendChild(card);
     }
@@ -1454,6 +1502,12 @@ export class Game {
     this.el.btnStart.addEventListener('click', () => {
       playClick();
       this.startGame();
+    });
+    this.el.menuSteps.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('.menu-step');
+      if (!btn || !this.menuCompact) return;
+      playClick();
+      this._setMenuStep(Number(btn.dataset.step));
     });
     this._bindProgressIo();
     this._bindLangSwitcher();
@@ -2479,5 +2533,7 @@ export class Game {
     // that was just played — otherwise it kept showing whatever stats were
     // loaded when the settings panel was last opened, before the round.
     this._applyModeVisibility();
+    // Compact menu: start again from level selection after a round.
+    if (this.menuCompact) this._setMenuStep(1);
   }
 }

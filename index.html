@@ -54,7 +54,12 @@
       </button>
       <div class="hud" id="hud" hidden>
         <span id="hud-level" class="hud-item"></span>
-        <button type="button" class="info-btn" id="hud-numbers-info" title="О номерах штатов" hidden>i</button>
+        <button type="button" class="info-btn" id="hud-numbers-info" title="О номерах штатов" hidden aria-label="О номерах штатов">
+          <svg class="info-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 10.5v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" />
+            <rect x="11" y="5.5" width="2" height="2.5" fill="currentColor" />
+          </svg>
+        </button>
         <span id="hud-progress" class="hud-item hud-chip">0/0</span>
         <span id="hud-groups" class="hud-item hud-chip">Частей: 0</span>
         <span id="hud-timer" class="hud-item hud-chip">00:00</span>
@@ -256,22 +261,30 @@
       </div>
     </header>
 
-    <main id="screen-menu" class="screen screen-menu">
+    <main id="screen-menu" class="screen screen-menu" data-menu-step="1">
       <h1 class="title">GEO PUZZLE</h1>
       <p class="subtitle" id="menu-subtitle">Настрой под настроение — и вперёд.</p>
 
+      <!-- Compact/narrow layout only (phones + tablets where 3 columns don't fit):
+           step 1 = level, 2 = mode, 3 = settings, then Play. Wired in js/game.js. -->
+      <nav class="menu-steps" id="menu-steps" aria-label="Шаги настройки" hidden>
+        <button type="button" class="menu-step" data-step="1" aria-current="step">Уровень</button>
+        <button type="button" class="menu-step" data-step="2">Режим</button>
+        <button type="button" class="menu-step" data-step="3">Настройки</button>
+      </nav>
+
       <div class="menu-columns">
-        <section class="panel">
+        <section class="panel" data-menu-col="1">
           <h2 id="menu-level-heading">Уровень</h2>
           <div id="level-list" class="level-list"></div>
         </section>
 
-        <section class="panel">
+        <section class="panel" data-menu-col="2">
           <h2 id="menu-mode-heading">Режим</h2>
           <div id="mode-list" class="preset-list"></div>
         </section>
 
-        <section class="panel" id="panel-puzzle-settings">
+        <section class="panel" data-menu-col="3" id="panel-puzzle-settings">
           <h2 id="puzzle-difficulty-heading">Сложность</h2>
           <div id="preset-list" class="preset-list"></div>
           <div id="custom-count-row" class="custom-count-row" hidden>
@@ -280,7 +293,7 @@
           </div>
         </section>
 
-        <section class="panel" id="panel-quiz-settings" hidden>
+        <section class="panel" data-menu-col="3" id="panel-quiz-settings" hidden>
           <h2 id="quiz-panel-heading">Раунд</h2>
           <div id="name-state-difficulty" class="preset-list name-state-difficulty" hidden></div>
           <!-- "Назови штат"'s Сложный/Хардкор only (js/nameStateBoard.js) —
@@ -335,17 +348,22 @@
           <div id="quiz-eligible-wrap" class="elig-wrap" hidden></div>
         </section>
 
-        <section class="panel" id="panel-overview-settings" hidden>
+        <section class="panel" data-menu-col="3" id="panel-overview-settings" hidden>
           <h2 id="overview-heading">Отображение</h2>
           <div id="overview-list" class="preset-list"></div>
         </section>
 
         <!-- "Номера штатов" (js/stateNumbersBoard.js): quiz/map submode, an optional 60 s clock and the
              number of mistakes allowed. The (i) opens the info window (js/stateNumbersInfo.js). -->
-        <section class="panel" id="panel-numbers-settings" hidden>
+        <section class="panel" data-menu-col="3" id="panel-numbers-settings" hidden>
           <h2 class="heading-with-info">
             <span id="numbers-heading">Номера штатов</span>
-            <button type="button" class="info-btn" id="numbers-info-btn" title="О номерах штатов">i</button>
+            <button type="button" class="info-btn" id="numbers-info-btn" title="О номерах штатов" aria-label="О номерах штатов">
+              <svg class="info-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 10.5v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" />
+                <rect x="11" y="5.5" width="2" height="2.5" fill="currentColor" />
+              </svg>
+            </button>
           </h2>
           <div id="numbers-submode" class="preset-list"></div>
           <label class="toggle toggle-multiline" id="numbers-timed-row">
@@ -361,7 +379,7 @@
                kind "statehood"), mounted by game.js when mode is state-numbers. -->
           <div id="numbers-eligible-wrap" class="elig-wrap"></div>
         </section>
-        <section class="panel" id="panel-journey-settings" hidden>
+        <section class="panel" data-menu-col="3" id="panel-journey-settings" hidden>
           <h2 id="journey-answer-heading">Как отвечать</h2>
           <div id="journey-answer-mode" class="preset-list"></div>
           <h2 id="journey-difficulty-heading">Сложность</h2>
@@ -382,7 +400,9 @@
         </section>
       </div>
 
-      <button id="btn-start" class="btn btn-primary btn-lg">Играть ▶</button>
+      <div class="menu-footer">
+        <button id="btn-start" class="btn btn-primary btn-lg">Играть ▶</button>
+      </div>
     </main>
 
     <main id="screen-game" class="screen screen-game" hidden>

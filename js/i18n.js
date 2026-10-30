@@ -47,6 +47,10 @@ export function setLang(lang) {
 // 'русский'` fallback.
 const STRINGS = {
   menuSubtitle: { ru: 'Настрой под настроение — и вперёд.', en: 'Set the mood, then go.' },
+  menuStepsLabel: { ru: 'Шаги настройки', en: 'Setup steps' },
+  menuStepLevel: { ru: 'Уровень', en: 'Level' },
+  menuStepMode: { ru: 'Режим', en: 'Mode' },
+  menuStepSettings: { ru: 'Настройки', en: 'Settings' },
   levelHeading: { ru: 'Уровень', en: 'Level' },
   modeHeading: { ru: 'Режим', en: 'Mode' },
   eligAll: { ru: 'Все', en: 'All' },

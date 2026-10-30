@@ -11,9 +11,9 @@ const SVG_DOC =
   '</svg>';
 const SVG_INFO =
   '<svg class="app-modal-ico" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">' +
-  '<circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"></circle>' +
-  '<path d="M12 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>' +
-  '<circle cx="12" cy="7.5" r="1.2" fill="currentColor"></circle></svg>';
+  '<rect x="3.5" y="3.5" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"></rect>' +
+  '<path d="M12 10.5v7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"></path>' +
+  '<rect x="11" y="6" width="2" height="2.5" fill="currentColor"></rect></svg>';
 const SVG_X =
   '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2L12 12M12 2L2 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>';
 export const MODAL_ICONS = { doc: SVG_DOC, info: SVG_INFO };
