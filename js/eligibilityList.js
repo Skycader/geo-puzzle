@@ -15,7 +15,9 @@ export class EligibilityList {
   constructor(container, items, opts = {}) {
     this.container = container;
     this.items = items;
-    this.kind = opts.kind; // 'states' | 'cities' | 'places' | 'seas' — see _areaOf/_mainColumnHtml for what each actually changes
+    // 'states' | 'cities' | 'places' | 'seas' | 'countries' | 'statehood' —
+    // see _areaOf/_mainColumnHtml. 'statehood' = USA admission order (№ + name).
+    this.kind = opts.kind;
     this.storageKey = opts.storageKey;
     this.onChange = opts.onChange || (() => {});
     // Optional extra column (e.g. "Найди штат"'s adaptive-mode success
@@ -38,19 +40,26 @@ export class EligibilityList {
   // their area is derived (they're rendered as a circle of that radius to
   // begin with).
   _areaOf(it) {
-    return this.kind === 'states' || this.kind === 'seas' || this.kind === 'countries' ? it.area : Math.PI * it.radiusKm * it.radiusKm;
+    return this.kind === 'states' || this.kind === 'statehood' || this.kind === 'seas' || this.kind === 'countries'
+      ? it.area
+      : Math.PI * it.radiusKm * it.radiusKm;
   }
 
   // 'states': short `.id` codes (AL, CA…) fit a dedicated abbreviation
-  // column. 'cities': capital/silhouette markers + a state sub-label.
-  // Everything else ('places', 'seas', 'countries' — a country's `.id` is
-  // its ISO_A3 code where one exists, but ~20% fall back to a full
-  // slugify(name) like "south_ossetia" when it doesn't, so it's not
-  // reliably short either) just gets a plain name — this used to fall
-  // into the 'cities' template by default, which rendered a literal
-  // "undefined" sub-label for anything without a `.state` field.
+  // column. 'statehood': admission order № (1–50) in that same slot — for
+  // "Номера штатов"'s practice checklist. 'cities': capital/silhouette
+  // markers + a state sub-label. Everything else ('places', 'seas',
+  // 'countries' — a country's `.id` is its ISO_A3 code where one exists,
+  // but ~20% fall back to a full slugify(name) like "south_ossetia" when
+  // it doesn't, so it's not reliably short either) just gets a plain
+  // name — this used to fall into the 'cities' template by default, which
+  // rendered a literal "undefined" sub-label for anything without a
+  // `.state` field.
   _mainColumnHtml(it) {
     const name = itemName(it);
+    if (this.kind === 'statehood') {
+      return `<span class="overview-item-main"><span class="overview-item-abbr">${it.order}</span><span class="overview-item-name">${name}</span></span>`;
+    }
     if (this.kind === 'states') {
       return `<span class="overview-item-main"><span class="overview-item-abbr">${it.id}</span><span class="overview-item-name">${name}</span></span>`;
     }
@@ -168,7 +177,15 @@ export class EligibilityList {
   _renderList() {
     const q = this.searchQuery;
     const filtered = q
-      ? this.items.filter((it) => it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q))
+      ? this.items.filter((it) => {
+          if (it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q)) return true;
+          // "Номера штатов": also match the admission number ("13", "№13").
+          if (this.kind === 'statehood' && it.order != null) {
+            const ord = String(it.order);
+            return ord.includes(q) || `№${ord}`.includes(q) || `#${ord}`.includes(q);
+          }
+          return false;
+        })
       : this.items;
 
     let sorted;
@@ -178,6 +195,9 @@ export class EligibilityList {
     } else if (this.sortBy === 'stat' && this.getStat) {
       const dir = this.sortDir === 'asc' ? 1 : -1;
       sorted = [...filtered].sort((a, b) => (this.getStat(a) - this.getStat(b)) * dir);
+    } else if (this.kind === 'statehood') {
+      // Default: admission order 1→50 (what the mode asks about), not A→Z.
+      sorted = [...filtered].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     } else {
       const locale = getLang() === 'en' ? 'en' : 'ru';
       sorted = [...filtered].sort((a, b) => itemName(a).localeCompare(itemName(b), locale));

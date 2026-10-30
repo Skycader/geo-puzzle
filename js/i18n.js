@@ -165,7 +165,7 @@ const STRINGS = {
   numbersCorrect: { ru: 'Верно', en: 'Correct' },
   numbersResultTime: { ru: 'Время вышло!', en: "Time's up!" },
   numbersResultMistakes: { ru: 'Слишком много ошибок', en: 'Too many mistakes' },
-  numbersResultAll: { ru: 'Все 50 штатов!', en: 'All 50 states!' },
+  numbersResultAll: { ru: 'Список пройден!', en: 'List complete!' },
   numbersResultOf: { ru: 'из', en: 'of' },
   versionBtnTitle: { ru: 'Версия приложения — журнал изменений', en: 'App version — changelog' },
   changelogTitle: { ru: 'CHANGELOG', en: 'CHANGELOG' },

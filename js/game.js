@@ -11,6 +11,7 @@ import { SeaQuizBoard } from './seaQuizBoard.js';
 import { StatePlacementBoard, outlineViewBox } from './statePlacementBoard.js';
 import { StateNumbersBoard } from './stateNumbersBoard.js';
 import { openStateNumbersInfo } from './stateNumbersInfo.js';
+import { STATEHOOD_BY_ID } from '../levels/usaStatehood.js';
 import { OverviewBoard } from './overviewBoard.js';
 import { sourceNoteHtml } from './dataSources.js';
 import { JourneyNameBoard } from './journeyNameBoard.js';
@@ -397,6 +398,7 @@ export class Game {
       panelOverviewSettings: document.getElementById('panel-overview-settings'),
       overviewList: document.getElementById('overview-list'),
       panelNumbersSettings: document.getElementById('panel-numbers-settings'),
+      numbersEligibleWrap: document.getElementById('numbers-eligible-wrap'),
       numbersSubmodeEl: document.getElementById('numbers-submode'),
       numbersTimedCheckbox: document.getElementById('numbers-timed-checkbox'),
       numbersMistakesInput: document.getElementById('numbers-mistakes'),
@@ -1044,7 +1046,7 @@ export class Game {
     // Journey has no round-count/eligibility-checklist/adaptive-mode row —
     // it's a third structural category alongside puzzle/overview (one
     // fixed round: a randomly-picked state pair), not a "rounds" mode.
-    // "Номера штатов" has its own panel (always all 50 states, run by clock/mistakes).
+    // "Номера штатов" has its own panel (clock/mistakes + statehood checklist).
     const isRounds = !isPuzzle && !isOverview && !isJourney && !isNumbers;
     const isNameState = this.modeId === 'name-state';
     const isNeighbor = this.modeId === 'neighbor';
@@ -1073,6 +1075,7 @@ export class Game {
       this._applyJourneyNameOptionsVisibility();
     }
     this.el.quizEligibleWrap.hidden = !hasEligibility;
+    this.el.numbersEligibleWrap.hidden = !isNumbers;
     this.el.nameStateDifficultyEl.hidden = !(isNameState || isNeighbor || isIdentify || isSeaIdentify || isPlaceState);
     // place-state-only — _renderPlaceStateDifficulty re-syncs its actual
     // shown/hidden state (Easy vs Medium/Hard/Custom) below, but only when
@@ -1112,9 +1115,29 @@ export class Game {
     this.el.cityPlaceModeCheckbox.checked = this.cityPlaceMode === 'pin';
     this.el.cityPlaceModeText.textContent = t(this.cityPlaceMode === 'pin' ? 'cityPlaceModePin' : 'cityPlaceModeFind');
 
+    this.eligibilityList?.destroy();
+    this.eligibilityList = null;
+
+    if (isNumbers) {
+      // Practice checklist: which admission numbers to ask. Separate storage
+      // from the shared "states" quiz checklist — picking "original 13" for
+      // numbers should not change "Найди штат"'s pool.
+      const level = this.levels[this.levelId];
+      const items = level.pieces
+        .filter((p) => STATEHOOD_BY_ID.has(p.id))
+        .map((p) => ({ ...p, order: STATEHOOD_BY_ID.get(p.id).order }));
+      this.eligibilityList = new EligibilityList(this.el.numbersEligibleWrap, items, {
+        kind: 'statehood',
+        storageKey: `geo-puzzle:eligible:${this.levelId}:statehood`,
+        onChange: (selected) => {
+          this.el.btnStart.disabled = selected.size === 0;
+        },
+      });
+      this.el.btnStart.disabled = this.eligibilityList.getSelectedIds().size === 0;
+      return;
+    }
+
     if (!isRounds) {
-      this.eligibilityList?.destroy();
-      this.eligibilityList = null;
       this.el.btnStart.disabled = false;
       return;
     }
@@ -1125,8 +1148,6 @@ export class Game {
     this.el.quizPromptLabel.textContent = text.prompt;
 
     const level = this.levels[this.levelId];
-    this.eligibilityList?.destroy();
-    this.eligibilityList = null;
 
     if (hasEligibility) {
       const isSharedStateMode = isQuiz || isNameState || isNeighbor || isIdentify || isColorFill;
@@ -1840,6 +1861,7 @@ export class Game {
       timed: this.numbersTimed,
       timeLimit: NUMBERS_TIME_LIMIT_S,
       maxMistakes: this.numbersMaxMistakes,
+      eligibleIds: this.eligibilityList?.getSelectedIds(),
       scale,
       onProgress: ({ correct, mistakes, maxMistakes, promptText }) => {
         this.el.hudProgress.textContent = `${t('numbersCorrect')}: ${correct}`;

@@ -19,8 +19,9 @@ const TICK_MS = 200;
 //   - 'map': the number is the prompt bar's text (set by game.js from onProgress.promptText) and
 //     the player clicks the state on the map — one click answers (speed matters when timed).
 // A wrong answer costs a mistake, shows the right one for a moment and moves on. The run ends when
-// the time is up (optional, `timeLimit` s), when mistakes exceed `maxMistakes`, or when all 50
-// states have been asked; an overlay then shows the score.
+// the time is up (optional, `timeLimit` s), when mistakes exceed `maxMistakes`, or when the queue
+// (all admission-order states, or the player's eligibility checklist) is exhausted; an overlay
+// then shows the score.
 export class StateNumbersBoard {
   constructor(container, level, opts = {}) {
     this.container = container;
@@ -34,7 +35,15 @@ export class StateNumbersBoard {
     this.onTick = opts.onTick || (() => {});
     this.onFinish = opts.onFinish || (() => {});
 
-    this.queue = shuffle(level.pieces.filter((p) => STATEHOOD_BY_ID.has(p.id)));
+    // eligibleIds (from the menu checklist) restricts which numbers can be ASKED;
+    // the full map is still drawn in 'map' submode either way.
+    const pool = level.pieces.filter((p) => {
+      if (!STATEHOOD_BY_ID.has(p.id)) return false;
+      // undefined = no checklist (full pool); empty Set = nothing selected.
+      if (opts.eligibleIds) return opts.eligibleIds.has(p.id);
+      return true;
+    });
+    this.queue = shuffle(pool);
     this.index = 0;
     this.correct = 0;
     this.mistakes = 0;
