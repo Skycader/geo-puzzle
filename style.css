@@ -829,7 +829,7 @@ body {
 }
 
 /* Changelog modal (js/changelogModal.js): theme-accent frame, header with icon / title / close,
-   a tab per release, scrolling markdown body. */
+   accordion of releases (lazy-loaded markdown bodies). */
 .app-modal-overlay {
   position: fixed;
   inset: 0;
@@ -882,27 +882,61 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
-.cl-tabs {
+.cl-list {
   display: flex;
-  gap: 6px;
-  padding: 10px 14px 0;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px 14px;
+  overflow-y: auto;
+  min-height: 0;
 }
-.cl-tab {
-  padding: 4px 10px;
+.cl-item {
   border: 1px solid rgba(var(--neon-cyan-rgb), 0.35);
+  background: rgba(var(--ink-rgb), 0.5);
+}
+.cl-item.open {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.2);
+}
+.cl-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
   background: none;
   color: var(--base0);
   font-family: inherit;
   font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   cursor: pointer;
+  text-align: left;
+  transition: color 0.15s ease, background 0.15s ease;
 }
-.cl-tab:hover { color: var(--neon-cyan); }
-.cl-tab.active {
-  border-color: var(--neon-cyan);
-  background: rgba(var(--neon-cyan-rgb), 0.12);
+.cl-item-head:hover {
   color: var(--neon-cyan);
+  background: rgba(var(--neon-cyan-rgb), 0.08);
+}
+.cl-item.open .cl-item-head {
+  color: var(--neon-cyan);
+  background: rgba(var(--neon-cyan-rgb), 0.12);
+  border-bottom: 1px solid rgba(var(--neon-cyan-rgb), 0.3);
+}
+.cl-item-label { flex: 1; }
+.cl-item-chevron {
+  flex: none;
+  color: var(--neon-cyan);
+  transition: transform 0.15s ease;
+}
+.cl-item.open .cl-item-chevron { transform: rotate(90deg); }
+.cl-item-body.modal-body {
+  overflow: visible;
+  padding: 10px 14px 14px;
 }
 .modal-body {
   overflow-y: auto;

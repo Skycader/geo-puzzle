@@ -6,5 +6,6 @@
 // version at the FRONT of RELEASES, write changelog/<version>.md, tag the commit `v<version>`.
 export const APP_VERSION = '1.0.0';
 
-// Versions that have a changelog/<version>.md file, newest first (one tab each in the modal).
+// Versions that have a changelog/<version>.md file, newest first (one accordion
+// row each in the changelog modal — js/changelogModal.js).
 export const RELEASES = ['1.0.0', '0.9.0'];
