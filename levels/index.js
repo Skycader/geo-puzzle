@@ -16,6 +16,7 @@ import worldCities from './worldCities.js';
 import worldPlaces from './worldPlaces.js';
 import countries from './countries.js';
 import kurilsZone from './kurilsZone.js';
+import dmzZone from './dmzZone.js';
 import worldTimezones from './worldTimezones.js';
 
 // usaCities.js/usaPlaces.js/usaPlacePolys.js/usaHighways.js/
@@ -63,10 +64,10 @@ export const levels = {
   },
   world: { ...world, land: worldLand, currents: worldCurrents },
   // `land` = Overview "Зоны": Western Sahara halves from countries.js plus
-  // overlay highlights (Kurils stay inside Russia's piece for games).
+  // overlay highlights (Kurils / Korean DMZ sit on top of country pieces).
   countries: {
     ...countries,
-    land: [...(countries.land || []), kurilsZone],
+    land: [...(countries.land || []), kurilsZone, dmzZone],
     cities: worldCities,
     places: worldPlaces,
     timezones: worldTimezones,

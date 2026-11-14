@@ -16,6 +16,8 @@ const ZONES = {
   // assets/kuril_islands_alaid.jpg: ISS-31 Alaid Volcano (NASA / Expedition 31), public domain —
   // landscape instead of the article's SVG map thumb (often fails to render as <img>).
   kurils: { title: 'Курильские острова', image: 'assets/kuril_islands_alaid.jpg' },
+  // assets/korean_dmz_panmunjom.jpg: Joint Security Area / Panmunjom (commons "070401 Panmunjeom3.jpg").
+  dmz: { title: 'Корейская демилитаризованная зона', image: 'assets/korean_dmz_panmunjom.jpg' },
 };
 
 const UA = { 'User-Agent': 'geo-puzzle-dev/1.0 (personal learning project)' };

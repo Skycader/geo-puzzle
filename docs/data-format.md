@@ -118,14 +118,15 @@
 | `levels/usa/places-info.en.json` | места | английские; **в коде не подключён** |
 | `levels/usa/lakes-info.json` | озёра | русские |
 | `levels/usa/contextland-info.json` | `canada` | открывается из контекстного меню по правому клику |
-| `levels/world/zones-info.json` | зоны уровня countries (`esh`, `esh_east`, `kurils`) | Обзор → вкладка «Зоны»; клик по полигону / «Что здесь?»; стиль как у USA place-poly |
+| `levels/world/zones-info.json` | зоны уровня countries (`esh`, `esh_east`, `kurils`, `dmz`) | Обзор → вкладка «Зоны»; клик по полигону / «Что здесь?»; стиль как у USA place-poly |
 
 **Картинки карточек.** Поле `image` в `*-info.json` — обычно прямая ссылка на `upload.wikimedia.org`
 (миниатюра статьи, грузится из сети). Свои файлы лежат в `assets/` и указываются путём `assets/<имя>`:
 `assets/kapa'a.jpg` (карточка Капаа), `assets/western_sahara_landscape.jpg` — «Western sahara landscape»,
 автор bob rayner, **CC BY 2.0**, Wikimedia Commons (карточка Западной Сахары), и
 `assets/kuril_islands_alaid.jpg` — «ISS-31 Alaid Volcano…», NASA / Expedition 31 (**public domain**,
-карточка Курил). Локальные `image` закреплены в `build_zones_info.js`, чтобы пересборка их не затёрла.
+карточка Курил), и `assets/korean_dmz_panmunjom.jpg` — Пханмунджом / JSA (карточка DMZ).
+Локальные `image` закреплены в `build_zones_info.js`, чтобы пересборка их не затёрла.
 CC BY у Сахары требует указания автора — в самой карточке подписи нет, только здесь.
 | `levels/usa/airports-info.json` | аэропорты (~144) | + поле `lang` (`ru`/`en`); больше половины только на английском — русской статьи нет |
 | `levels/world/currents-info.json` | течения | русские |
