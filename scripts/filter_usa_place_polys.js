@@ -10,12 +10,21 @@
 //
 // Then: node scripts/filter_usa_place_polys.js
 //       node scripts/build_usa_place_polys.js
+//
+// NE's APPALACHIAN MTS. / ROCKY MOUNTAINS / CASCADE RANGE blobs extend well
+// into Canada (Gaspé at −64° reads as "ocean" on the USA Albers map). After
+// picking, features are clipped to US state land (scripts/data/us-states.geojson)
+// via mapshaper so only the domestic footprint remains.
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 const REGIONS_SRC = path.join(__dirname, 'data', 'ne_10m_geography_regions_polys.geojson');
 const PARKS_SRC = path.join(__dirname, 'data', 'ne_10m_parks_area.geojson');
+const STATES_SRC = path.join(__dirname, 'data', 'us-states.geojson');
 const OUT = path.join(__dirname, 'data', 'us-place-polys.geojson');
+const MASK = path.join(__dirname, 'data', 'us-land-mask.geojson');
+const RAW = path.join(__dirname, 'data', 'us-place-polys-raw.geojson');
 
 // Ranges / plateaus / gorges from geography_regions_polys (match on NAME).
 const REGION_PICKS = [
@@ -60,6 +69,10 @@ function pick(features, picks, nameOf) {
   return out;
 }
 
+function mapshaper(args) {
+  execFileSync('npx', ['--yes', 'mapshaper', ...args], { stdio: 'inherit', shell: true });
+}
+
 const regions = JSON.parse(fs.readFileSync(REGIONS_SRC, 'utf8'));
 const parks = JSON.parse(fs.readFileSync(PARKS_SRC, 'utf8'));
 
@@ -68,13 +81,30 @@ const features = [
   ...pick(parks.features, PARK_PICKS, (f) => f.properties.name),
 ];
 
-const fc = { type: 'FeatureCollection', features };
-fs.writeFileSync(OUT, JSON.stringify(fc));
+fs.writeFileSync(RAW, JSON.stringify({ type: 'FeatureCollection', features }));
+
+// Dissolve US states (drop PR) → clip NE ranges/parks to domestic land only.
+mapshaper([
+  '-i', STATES_SRC,
+  '-filter', `name != 'Puerto Rico'`,
+  '-dissolve',
+  '-o', 'format=geojson', 'precision=0.0001', MASK, 'force',
+]);
+mapshaper([
+  '-i', RAW,
+  '-clip', MASK,
+  '-o', 'format=geojson', 'precision=0.0001', OUT, 'force',
+]);
+
+fs.unlinkSync(RAW);
+fs.unlinkSync(MASK);
+
+const clipped = JSON.parse(fs.readFileSync(OUT, 'utf8'));
 console.error(
   'wrote',
   OUT,
-  features.length,
+  clipped.features.length,
   'features:',
-  features.map((f) => f.properties.id).join(', '),
+  clipped.features.map((f) => f.properties.id).join(', '),
 );
 console.error('bytes', fs.statSync(OUT).size);

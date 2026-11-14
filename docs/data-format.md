@@ -43,7 +43,9 @@
 Полигоны (хребты/парки, `levels/usaPlacePolys.js`): `id`, `name`, `ru`, `kind`
 (`range` | `park`), `cx, cy`, `bbox`, `area`, `d` — как у озёр. В `levels/index.js`
 склеены в один массив; в Обзоре точка → кружок, наличие `d` → заливка.
-Карточка — в info-JSON по тому же `id`.
+Карточка — в info-JSON по тому же `id`. Источник — Natural Earth, после отбора
+обрезан по суше США (`filter_usa_place_polys.js` + mapshaper), иначе Аппалачи/
+Скалистые уезжали в Канаду и на карте США читались как «океан».
 
 ### `lakes[]` (usa)
 

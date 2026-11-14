@@ -3,10 +3,10 @@
 // Same Albers projection + normalization as scripts/build_usa_lakes.js /
 // build_usa_places.js so outlines line up with state borders.
 //
-// Source: scripts/data/us-place-polys.geojson (filtered Natural Earth —
-// regenerate via scripts/filter_usa_place_polys.js).
+// Source: scripts/data/us-place-polys.geojson (filtered + clipped-to-US-land
+// Natural Earth — regenerate via scripts/filter_usa_place_polys.js).
 //
-// Regenerate: node scripts/build_usa_place_polys.js
+// Regenerate: node scripts/filter_usa_place_polys.js && node scripts/build_usa_place_polys.js
 const fs = require('fs');
 const path = require('path');
 
