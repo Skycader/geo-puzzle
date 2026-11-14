@@ -2243,6 +2243,24 @@ body {
 }
 .overview-lake-shape:hover { fill-opacity: 0.8; }
 
+/* Areal places (ranges/parks — levels/usaPlacePolys.js): violet for ranges,
+   green for national parks; same "paint on top of states" layer as lakes. */
+.overview-place-poly {
+  fill: var(--neon-violet);
+  fill-opacity: 0.22;
+  stroke: var(--neon-violet);
+  stroke-width: 1.5;
+  cursor: default;
+  transition: fill-opacity 0.15s ease;
+}
+.overview-place-poly:hover { fill-opacity: 0.4; }
+.overview-place-poly.overview-place-poly-park {
+  fill: #3dba7a;
+  stroke: #2f9a64;
+  fill-opacity: 0.28;
+}
+.overview-place-poly.overview-place-poly-park:hover { fill-opacity: 0.45; }
+
 /* Places (landmarks) — a distinct accent (violet, vs cities' pink) so the
    two are still easy to tell apart at a glance when both are visible.
    Unlike a city dot, r/stroke-width are rescaled every zoom step (js) since

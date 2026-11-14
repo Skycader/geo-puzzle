@@ -441,7 +441,8 @@ export class OverviewBoard {
     this.cityShapeEntries = []; // { id, cx, cy, bbox, path, label, appended }
     // Places aren't virtualized (only 20 of them, same reasoning as
     // states) — always rendered, no `appended` bookkeeping needed.
-    this.placeEntries = []; // { id, cx, cy, dot, pointMark, leaderPath, leaderLabel }
+    this.placeEntries = []; // point places: { id, cx, cy, dot, pointMark, leaderPath, leaderLabel }
+    this.placePolyEls = []; // areal places: { pathEl, labelEl } — see setPlacesVisible
     this.placesVisible = opts.placesVisible !== false;
     this.onPlacesVisibleChange = opts.onPlacesVisibleChange || null;
     this.lakesVisible = opts.lakesVisible !== false;
@@ -951,12 +952,34 @@ export class OverviewBoard {
       this.citiesById.set(c.id, { data: c, dotEl: dot });
     }
 
-    // Places (landmarks) — always rendered (unlike cities, no
-    // virtualization needed for just 20 of them), same leader-line label
-    // construction as a dot-city, but the "dot" itself is a small constant-
-    // screen-px marker (set every _rescaleForZoom) rather than a true-to-
-    // scale circle, since a landmark has no real land-area radius.
+    // Places — point landmarks (constant-screen-px dots) AND areal ones
+    // (ranges/parks with a real `d`, see levels/usaPlacePolys.js). Polys
+    // paint into zonesLayer like lakes; dots stay on pointsLayer.
     for (const p of this.level.places) {
+      if (p.d) {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', p.d);
+        path.setAttribute('class', 'overview-place-poly' + (p.kind === 'park' ? ' overview-place-poly-park' : ''));
+        path.dataset.kind = 'place';
+        path.dataset.id = p.id;
+        const title = document.createElementNS(SVG_NS, 'title');
+        title.textContent = this._placeHoverTitle(p);
+        path.appendChild(title);
+        this.zonesLayer.appendChild(path);
+
+        const label = document.createElementNS(SVG_NS, 'text');
+        label.setAttribute('x', p.cx);
+        label.setAttribute('y', p.cy);
+        label.setAttribute('class', 'piece-label overview-place-poly-label');
+        label.textContent = itemName(p);
+        this.labelsLayer.appendChild(label);
+        this.allLabelEls.push(label);
+        this.stateLabels.push({ el: label });
+        this.placePolyEls.push({ pathEl: path, labelEl: label });
+        this.placesById.set(p.id, { data: p, pathEl: path });
+        continue;
+      }
+
       const dot = document.createElementNS(SVG_NS, 'circle');
       dot.setAttribute('cx', p.cx);
       dot.setAttribute('cy', p.cy);
@@ -1352,6 +1375,9 @@ export class OverviewBoard {
     }
     for (const entry of this.placeEntries) {
       if (this.info.places[entry.id]) entry.dot.classList.add('overview-has-info');
+    }
+    for (const [id, entry] of this.placesById) {
+      if (entry.pathEl && this.info.places[id]) entry.pathEl.classList.add('overview-has-info');
     }
     for (const [id, entry] of this.lakesById) {
       if (this.info.lakes[id]) entry.pathEl.classList.add('overview-has-info');
@@ -2044,6 +2070,8 @@ export class OverviewBoard {
   // derived (they're rendered as a circle of that radius to begin with).
   _areaOf(it) {
     if (this._isPieceTab() || this.activeTab === 'lakes') return it.area;
+    // Areal places (ranges/parks) have a real `area`; point places fall through.
+    if (this.activeTab === 'places' && it.area != null) return it.area;
     if (it.pop != null) return it.pop; // world city: the list's number column shows population
     return Math.PI * it.radiusKm * it.radiusKm;
   }
@@ -2072,6 +2100,10 @@ export class OverviewBoard {
     if (this.activeTab === 'cities') {
       return `<span class="overview-item-main"><span class="overview-item-name">${name}${cityMarkersHtml(it)}</span><span class="overview-item-sub">${getLang() === 'en' ? it.stateEn || it.state || '' : it.state || ''}</span></span>`;
     }
+    // ◆ = areal place (range/park polygon), same marker cities use for silhouettes.
+    if (this.activeTab === 'places') {
+      return `<span class="overview-item-main"><span class="overview-item-name">${name}${cityMarkersHtml(it)}</span></span>`;
+    }
     return `<span class="overview-item-main"><span class="overview-item-name">${name}</span></span>`;
   }
 
@@ -2087,10 +2119,11 @@ export class OverviewBoard {
     return `${bilingualLabel(c)} — R ${c.radiusKm.toFixed(1)} ${t('kmUnit')} (${areaStr} ${t('areaUnit')})`;
   }
 
-  // Places have no meaningful radius/area (see scripts/build_usa_places.js)
-  // — just the name, unlike _cityHoverTitle.
+  // Point places: name only. Areal places (usaPlacePolys): real computed area.
   _placeHoverTitle(p) {
-    return bilingualLabel(p);
+    if (p.area == null) return bilingualLabel(p);
+    const areaStr = Math.round(p.area).toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU');
+    return `${bilingualLabel(p)} — ${areaStr} ${t('areaUnit')}`;
   }
 
   // Lakes DO have a real area (scripts/build_usa_lakes.js computes it from
@@ -2173,10 +2206,9 @@ export class OverviewBoard {
       ? items.filter((it) => it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q))
       : items;
 
-    // Places carry only a nominal radiusKm (identical for every place), so
-    // sorting/showing "Площадь" for them would be a meaningless tie —
-    // hide that column entirely on this tab instead of displaying it.
-    const showArea = this.activeTab !== 'places' && this.activeTab !== 'highways' && this.activeTab !== 'airports' && this.activeTab !== 'currents';
+    // Places mix point pins (no real area) with areal polys (real `area`) —
+    // show the column so polys can sort/display; points get a blank cell.
+    const showArea = this.activeTab !== 'highways' && this.activeTab !== 'airports' && this.activeTab !== 'currents';
     this.sortBtnEl.hidden = !showArea;
     const popMode = this.activeTab === 'cities' && items.length > 0 && items[0].pop != null;
     this.sortBtnEl.firstChild.nodeValue = t(popMode ? 'eligColPop' : 'eligColArea');
@@ -2184,7 +2216,11 @@ export class OverviewBoard {
     let sorted;
     if (this.sortBy === 'area' && showArea) {
       const dir = this.sortDir === 'asc' ? 1 : -1;
-      sorted = [...filtered].sort((a, b) => (this._areaOf(a) - this._areaOf(b)) * dir);
+      sorted = [...filtered].sort((a, b) => {
+        const aa = this.activeTab === 'places' && a.area == null ? -1 : this._areaOf(a);
+        const bb = this.activeTab === 'places' && b.area == null ? -1 : this._areaOf(b);
+        return (aa - bb) * dir;
+      });
     } else if (this.activeTab === 'highways') {
       // Numbered Interstates first in numeric order (I-5 before I-10, which
       // a plain alphabetical sort gets backwards), then Hawaii's named
@@ -2212,7 +2248,10 @@ export class OverviewBoard {
       const row = document.createElement('button');
       row.type = 'button';
       row.className = 'overview-item';
-      const areaStr = showArea ? Math.round(this._areaOf(it)).toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU') + (it.pop != null ? '' : ' ' + t('areaUnit')) : '';
+      const areaStr =
+        showArea && !(this.activeTab === 'places' && it.area == null)
+          ? Math.round(this._areaOf(it)).toLocaleString(getLang() === 'en' ? 'en-US' : 'ru-RU') + (it.pop != null ? '' : ' ' + t('areaUnit'))
+          : '';
       row.innerHTML = this._mainColumnHtml(it) + `<span class="overview-item-area">${areaStr}</span>`;
       row.addEventListener('click', () => {
         if (this._isPieceTab()) this._focusState(it.id);
@@ -2266,21 +2305,21 @@ export class OverviewBoard {
     this._scheduleAutoClear();
   }
 
-  // A place has no bbox and no real physical radius (unlike a city's
-  // true-to-scale one) — same point-feature zoom math as _focusCity's
-  // point branch, against a fixed "close-up" radius. The highlight is a
-  // pulsing screen-px ring (plus the yellowed place-dot), not just the
-  // 4 px fill change — that alone was effectively invisible.
+  // Point places: fixed close-up + pulsing screen-px ring. Areal places
+  // (ranges/parks with `d`) reuse _focusShape like lakes.
   _focusPlace(id) {
     const entry = this.placesById.get(id);
     if (!entry) return;
     const { data } = entry;
     // Panel click must still reveal the place even if the layer toggle is off
     // — otherwise the camera moves and nothing on the map appears to react.
-    // Glow is drawn either way; the place-dot itself needs the layer on.
     if (!this.placesVisible) {
       this.setPlacesVisible(true);
       this.onPlacesVisibleChange?.(true);
+    }
+    if (data.d) {
+      this._focusShape(data);
+      return;
     }
     const radiusNative = PLACE_FOCUS_RADIUS_KM / this.level.kmPerUnit;
     const diameterNative = Math.max(radiusNative * 2, 1);
@@ -3011,6 +3050,10 @@ export class OverviewBoard {
       entry.pointMark.style.display = visible ? '' : 'none';
       entry.leaderPath.style.display = visible ? '' : 'none';
       entry.leaderLabel.style.display = visible ? '' : 'none';
+    }
+    for (const { pathEl, labelEl } of this.placePolyEls) {
+      pathEl.style.display = visible ? '' : 'none';
+      labelEl.style.display = visible ? '' : 'none';
     }
   }
 

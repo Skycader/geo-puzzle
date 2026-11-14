@@ -14,6 +14,21 @@
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Canyon_River_Tree_%28165872763%29.jpeg/330px-Canyon_River_Tree_%28165872763%29.jpeg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Grand_Canyon"
   },
+  "yellowstone": {
+    "extract": "Yellowstone National Park is a national park of the United States located in the western United States, largely in the northwest corner of Wyoming and extending into Montana and Idaho. It was established by the U.S. Congress and signed into law by President Ulysses S. Grant on March 1, 1872. Yellowstone was the first national park in the U.S. and is also widely held to be the first national park in the world. The park is known for its wildlife and its many geothermal features, especially Old Faithful geyser, one of its most popular features. It has many types of ecosystems, but the subalpine forest is the most abundant. It is part of the South Central Rockies forests ecoregion.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Grand_Prismatic_Spring_2013.jpg/330px-Grand_Prismatic_Spring_2013.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Yellowstone_National_Park"
+  },
+  "death_valley": {
+    "extract": "Death Valley National Park is an American national park that straddles the California–Nevada border, east of the Sierra Nevada. The park covers 3,373,063 acres (3,408,446 including non-federal land), larger than the states of Rhode Island and Delaware combined, and almost all of it is declared a wilderness area. It is the largest national park in the contiguous United States, and the hottest, driest and lowest of all the national parks in the United States. Badwater Basin is the lowest point in North America at 282 feet (86 m) below sea level.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Aguereberry_Point_-_View_South_%283811736781%29.jpg/330px-Aguereberry_Point_-_View_South_%283811736781%29.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Death_Valley_National_Park"
+  },
+  "everglades": {
+    "extract": "The Everglades is a natural region of tropical wetlands in southern Florida, comprising the southern half of a large drainage basin within the Neotropical realm. The ecosystem it forms is not presently found anywhere else on earth. The system begins near Orlando with the Kissimmee River, which discharges into the vast but shallow Lake Okeechobee. Water leaving the lake in the wet season forms a slow-moving river 60 miles (97 km) wide and over 100 miles (160 km) long, flowing southward across a limestone shelf to Florida Bay at the southern end of the state.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Pinus_elliottii_Everglades.JPG/330px-Pinus_elliottii_Everglades.JPG",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Everglades"
+  },
   "mount_rushmore": {
     "extract": "The Mount Rushmore National Memorial is a national memorial featuring a colossal sculpture carved into the granite face of Mount Rushmore in the Black Hills, about 2 mi (3 km) southwest of Keystone, South Dakota, United States.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Mount_Rushmore_detail_view_%28100MP%29.jpg/330px-Mount_Rushmore_detail_view_%28100MP%29.jpg",
@@ -48,5 +63,60 @@
     "extract": "The Begich Towers Condominium is a building in the small American city of Whittier, Alaska. The structure is the residence of nearly the entire population of the city and home to many of its public facilities; this has earned Whittier the nickname of \"town under one roof\". The building is depicted on the city's seal.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Begich_Towers%2C_2019.jpg/330px-Begich_Towers%2C_2019.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/Begich_Towers"
+  },
+  "sierra_nevada": {
+    "extract": "The Sierra Nevada is a mountain range in the Western United States, between the Central Valley of California and the Great Basin. The vast majority of the range lies in the state of California, although the Carson Range spur lies primarily in Nevada. The Sierra Nevada is part of the American Cordillera, an almost continuous chain of mountain ranges that forms the western \"backbone\" of the Americas.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1c/Sierra_Nevada_aerial.jpg/330px-Sierra_Nevada_aerial.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Sierra_Nevada"
+  },
+  "rocky_mountains": {
+    "extract": "The Rocky Mountains, also known as the Rockies, are a major mountain range and the largest mountain system in North America. The Rocky Mountains stretch 3,000 mi (4,800 km) in a straight-line distance from the northernmost part of Western Canada, to New Mexico in the Southwestern United States. Depending on differing definitions between Canada and the U.S., its northern terminus is located either in northern British Columbia's Terminal Range south of the Liard River and east of the Trench, or in the northeastern foothills of the Brooks Range/British Mountains that face the Beaufort Sea coasts between the Canning River and the Firth River across the Alaska–Yukon border. Its southernmost point is near the Albuquerque metropolitan area, adjacent to the Rio Grande rift, and north of the Sandia–Manzano Mountain Range, also near Santa Fe, New Mexico. Being the easternmost portion of the North American Cordillera, the Rockies are distinct from the tectonically younger Cascade Range and Sierra Nevada, which both lie farther to its west.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Maroon_Bells_%2811553%29a.jpg/330px-Maroon_Bells_%2811553%29a.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Rocky_Mountains"
+  },
+  "cascade_range": {
+    "extract": "The Cascade Range, or Cascades, is a major mountain range of western North America, extending from southern British Columbia through Washington and Oregon to Northern California. It includes both non-volcanic mountains, such as many of those in the North Cascades, and the notable volcanoes known as the High Cascades. The small part of the range in British Columbia is referred to as the Canadian Cascades or, locally, as the Cascade Mountains. The highest peak in the range is Mount Rainier in Washington at 14,411 feet (4,392 m).",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/Mount_Rainier_and_other_Cascades_mountains_poking_through_clouds.jpg/330px-Mount_Rainier_and_other_Cascades_mountains_poking_through_clouds.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Cascade_Range"
+  },
+  "yosemite": {
+    "extract": "Yosemite National Park is a national park of the United States in California. It is bordered on the southeast by the Sierra National Forest and on the northwest by Stanislaus National Forest. The park is managed by the National Park Service and covers 1,187 mi2 (3,070 km2) in four counties – centered in Tuolumne and Mariposa, extending north and east to Mono and south to Madera. Designated a World Heritage Site in 1984, Yosemite is internationally recognized for its granite cliffs, waterfalls, clear streams, groves of giant sequoia, lakes, mountains, meadows, glaciers, and biological diversity. Almost 95 percent of the park is designated wilderness. Yosemite is one of the largest and least fragmented habitat blocks in the Sierra Nevada mountain range.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Half_Dome_with_Eastern_Yosemite_Valley_%2850MP%29.jpg/330px-Half_Dome_with_Eastern_Yosemite_Valley_%2850MP%29.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Yosemite_National_Park"
+  },
+  "denali": {
+    "extract": "Denali National Park and Preserve, formerly known as Mount McKinley National Park, is a United States national park and preserve located in Interior Alaska, centered on Denali, the highest mountain in North America. The park and contiguous preserve encompass 6,045,153 acres which is larger than the state of New Hampshire. On December 2, 1980, 2,146,580 acres of Mount McKinley's Wilderness was established within the park. Denali's landscape is a mix of forest at the lowest elevations, including deciduous taiga, with tundra at middle elevations, and glaciers, snow, and bare rock at the highest elevations. The longest glacier is Kahiltna Glacier. Wintertime activities include dog sledding, cross-country skiing, and snowmobiling. The park received 543,300 recreational visitors in 2025.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Every_Road-_Denali_%287945497984%29.jpg/330px-Every_Road-_Denali_%287945497984%29.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Denali_National_Park_and_Preserve"
+  },
+  "coast_ranges": {
+    "extract": "The Pacific Coast Ranges are the series of mountain ranges that stretch along the West Coast of North America from Alaska south to northern and central Mexico. Although they are commonly thought to be the westernmost mountain range of the continental United States and Canada, the geologically distinct Insular Mountains of Vancouver Island lie farther west.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Canadian_Coast_Range.jpg/330px-Canadian_Coast_Range.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Pacific_Coast_Ranges"
+  },
+  "alaska_range": {
+    "extract": "The Alaska Range is a relatively narrow, 600-mile-long (970-kilometer) mountain range in the southcentral region of the U.S. state of Alaska, from Lake Clark at its southwest end to the White River in Canada's Yukon Territory in the southeast. Denali, the highest mountain in North America, is in the Alaska Range. The range is part of the American Cordillera.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Peaks_of_the_Alaska_Range_%281%29.jpg/330px-Peaks_of_the_Alaska_Range_%281%29.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Alaska_Range"
+  },
+  "brooks_range": {
+    "extract": "The Brooks Range is a mountain range in far northern North America stretching some 700 miles (1,100 km) from west to east across northern Alaska into Canada's Yukon Territory. Reaching a peak elevation of 8,976 feet (2,736 m) on Mount Isto, the range is believed to be approximately 126 million years old.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Caribou_with_brooks_range_mountains_in_background.jpg/330px-Caribou_with_brooks_range_mountains_in_background.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Brooks_Range"
+  },
+  "wasatch_range": {
+    "extract": "The Wasatch Range or Wasatch Mountains is a mountain range in the western United States that runs about 160 miles (260 km) from the Utah–Idaho border south to central Utah. It is the western edge of the greater Rocky Mountains, and the eastern edge of the Great Basin region. The northern extension of the Wasatch Range, the Bear River Mountains, extends just into Idaho, constituting all of the Wasatch Range in that state.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Jan_14_06_eastern_Salt_Lake_County_UT_USA.JPG/330px-Jan_14_06_eastern_Salt_Lake_County_UT_USA.JPG",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Wasatch_Range"
+  },
+  "black_hills": {
+    "extract": "The Black Hills are an outlying subrange of the greater Rocky Mountain system rising from the Great Plains of North America in western South Dakota and eastern Wyoming, United States. Black Elk Peak, which rises to 7,242 feet (2,207 m), is the range's highest summit. The name of the range in Lakota is Pahá Sápa. It encompasses the Black Hills National Forest. It formed as a result of an upwarping of ancient rock, after which the removal of the higher portions of the mountain mass by stream erosion produced the present-day topography. The Black Hills are part of the North American Cordillera, specifically a range within the Rocky Mountain Front of Wyoming, South Dakota, and Montana. The mountains are so called because of their dark appearance from a distance, as they are covered in evergreen trees.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/Needles_Highway_05.jpg/330px-Needles_Highway_05.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Black_Hills"
+  },
+  "adirondacks": {
+    "extract": "The Adirondack Mountains are a massif of mountains in Northeastern New York State which form a circular dome approximately 160 miles (260 km) wide and covering about 5,000 square miles (13,000 km2). The region contains more than 100 peaks, including Mount Marcy, which is the highest point in New York at 5,344 feet (1,629 m). The Adirondack High Peaks, a traditional list of 46 peaks over 4,000 feet (1,200 m), are popular hiking destinations. There are over 200 named lakes with the number of smaller lakes, ponds, and other bodies of water reaching over 3,000, amidst the thousands of square miles of Adirondack taiga boreal forest. Among the named lakes around the mountains are Lake George, Lake Placid, and Lake Tear of the Clouds. The region has over 1,200 miles (1,900 km) of rivers.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/Adirondacks_2016_Cascade_mountain_hike.jpg/330px-Adirondacks_2016_Cascade_mountain_hike.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Adirondack_Mountains"
   }
 }

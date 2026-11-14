@@ -188,5 +188,60 @@
     "extract": "Башни Бегич — здание в небольшом городе Уиттиер, Аляска. Представляет собой небольшую аркологию, в которой живёт почти всё население города, а также присутствуют общественные объекты. За это Уиттиер получил прозвище «город под одной крышей».",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Begich_Towers%2C_2019.jpg/330px-Begich_Towers%2C_2019.jpg",
     "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D1%88%D0%BD%D0%B8_%D0%91%D0%B5%D0%B3%D0%B8%D1%87"
+  },
+  "sierra_nevada": {
+    "extract": "Сье́рра-Нева́да — горный хребет в западном поясе Кордильер в Северной Америке, проходящий почти через всю восточную часть штата Калифорния. Название хребта имеет испанское происхождение, буквально означающее «снежные горы» — так их назвал отец Педро Фонт во время второго путешествия Хуана Баутисты де Анса в 1776 году.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/Mount_Whitney_2003-03-25.jpg/330px-Mount_Whitney_2003-03-25.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D1%8C%D0%B5%D1%80%D1%80%D0%B0-%D0%9D%D0%B5%D0%B2%D0%B0%D0%B4%D0%B0_(%D0%A1%D0%A8%D0%90)"
+  },
+  "rocky_mountains": {
+    "extract": "Скали́стые го́ры — основной горный хребет в системе Кордильер Северной Америки, на западе США и Канады, между 32° и 60° с. ш.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/RockyMountainsLocatorMap.png/330px-RockyMountainsLocatorMap.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%BA%D0%B0%D0%BB%D0%B8%D1%81%D1%82%D1%8B%D0%B5_%D0%B3%D0%BE%D1%80%D1%8B"
+  },
+  "cascade_range": {
+    "extract": "Каска́дные го́ры — крупный горный хребет на западе Северной Америки, простирающийся от южной части канадской провинции Британская Колумбия через американские штаты Вашингтон и Орегон до северной Калифорнии.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Mt._Baker_National_Forest_aerial_02A.jpg/330px-Mt._Baker_National_Forest_aerial_02A.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D1%81%D0%BA%D0%B0%D0%B4%D0%BD%D1%8B%D0%B5_%D0%B3%D0%BE%D1%80%D1%8B"
+  },
+  "yosemite": {
+    "extract": "Йосе́митский национа́льный па́рк — национальный парк, расположенный в округах Мадера, Марипоса и Туолумне штата Калифорния (США). Занимает площадь в 3081 км² и находится на западных склонах горного хребта Сьерра-Невада. Славится своими ландшафтами и природой: впечатляющие гранитные скалы, водопады, реки с чистой водой, рощи секвойядендронов и богатое биологическое разнообразие. В 1984 году парк получил статус «Всемирного наследия» под эгидой ЮНЕСКО. Был с самого начала задуман именно как национальный парк. Среди его организаторов — один из первых защитников идеи заповедников Джон Мьюр. Каждый год парк посещают 4—5 миллионов человек; большинство останавливается только в Йосемитской долине.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Half_Dome_with_Eastern_Yosemite_Valley_%2850MP%29.jpg/330px-Half_Dome_with_Eastern_Yosemite_Valley_%2850MP%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%99%D0%BE%D1%81%D0%B5%D0%BC%D0%B8%D1%82%D1%81%D0%BA%D0%B8%D0%B9_%D0%BD%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D0%BF%D0%B0%D1%80%D0%BA"
+  },
+  "denali": {
+    "extract": "Национальный парк Дена́ли, или Национальный парк Де́нали, ранее Ма́унт-Мак-Ки́нли — биосферный заповедник в США общей площадью около 25 тысяч км²; расположен в самом центре Аляски.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Wonder_Lake%2C_Denali2.jpg/330px-Wonder_Lake%2C_Denali2.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%94%D0%B5%D0%BD%D0%B0%D0%BB%D0%B8_(%D0%BD%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D0%BF%D0%B0%D1%80%D0%BA)"
+  },
+  "coast_ranges": {
+    "extract": "Береговы́е хребты́ — самая западная цепь горных хребтов Кордильер, протянувшаяся вдоль побережья Северной Америки от Аляски до центральной Мексики.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Mt_Constance_Dosewallips_River.JPG/330px-Mt_Constance_Dosewallips_River.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%B5%D1%80%D0%B5%D0%B3%D0%BE%D0%B2%D1%8B%D0%B5_%D1%85%D1%80%D0%B5%D0%B1%D1%82%D1%8B"
+  },
+  "alaska_range": {
+    "extract": " Аля́скинский хребе́т — относительно узкий горный хребет длиной около 1000 км на Аляске (США). Высочайшая вершина Северной Америки — гора Денали — находится на Аляскинском хребте. Часть хребта расположена на территории Юкон.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Peaks_of_the_Alaska_Range_%281%29.jpg/330px-Peaks_of_the_Alaska_Range_%281%29.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%BB%D1%8F%D1%81%D0%BA%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B9_%D1%85%D1%80%D0%B5%D0%B1%D0%B5%D1%82"
+  },
+  "brooks_range": {
+    "extract": "Брукс, Брукс-Рейндж — заполярный горный хребет, расположенный на северо-западе Северной Америки. Пролегает с запада на восток Аляски. Общая длина составляет около 970 км, средняя высота составляет 2000—2500 м. Самая высокая точка — гора Чеймберлин с высотой 2749 м, находится на востоке хребта недалеко от границы США и Канады. В США данный хребет считается частью Скалистых гор, тогда как в Канаде он определяется отдельно от Скалистых гор, граница которых проводится по реке Лиард на севере Британской Колумбии.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/Brooks_Range-400px.jpg/330px-Brooks_Range-400px.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D1%80%D1%83%D0%BA%D1%81_(%D1%85%D1%80%D0%B5%D0%B1%D0%B5%D1%82)"
+  },
+  "wasatch_range": {
+    "extract": "Уо́сатч — горный хребет на западе США; является частью Скалистых гор. Простирается приблизительно на 260 км от границы штатов Юта и Айдахо на юг, до центральной части Юты. Представляет собой западную границу Скалистых гор и восточную границу региона, известного как Большой Бассейн. Северным продолжением хребта Уосатч является хребет Бэр-Ривер, которые простираются далее, на территорию штата Айдахо. Высочайшей точкой хребта является гора Нибо, возвышающаяся на южной его оконечности над городом Нифай и высотой 3636 м над уровнем моря. Второй по высоте является гора Тимпаногос, высотой 3582 м и возвышающаяся над большей частью юга округа Солт-Лейк и севера округа Юта. Не достигая даже высоты 3700 м, хребет Уосатч значительно ниже Скалистых гор на территории соседнего Колорадо и даже ниже гор Юинта, которые представляют собой большую часть Скалистых гор в Юте.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Wasatch_Range_Salt_Lake_County_UT_United_States_2006.JPG/330px-Wasatch_Range_Salt_Lake_County_UT_United_States_2006.JPG",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A3%D0%BE%D1%81%D0%B0%D1%82%D1%87"
+  },
+  "black_hills": {
+    "extract": "Блэк-Хилс — горы (хребет), расположенные в северной части Великих равнин на Среднем Западе США, в юго-западной части штата Южная Дакота и северо-восточной части штата Вайоминг. Самой высокой точкой массива является гора Харни-Пик.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/01/Black_Elk_Wilderness_South_Dakota_5.jpg/330px-Black_Elk_Wilderness_South_Dakota_5.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%91%D0%BB%D1%8D%D0%BA-%D0%A5%D0%B8%D0%BB%D1%81"
+  },
+  "adirondacks": {
+    "extract": "Адиро́ндак — горный хребет на северо-востоке штата Нью-Йорк. Иногда включается в горную систему Аппалачей, хотя имеет другое геологическое происхождение.",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/ff/Mountain_Range.jpg/330px-Mountain_Range.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%B4%D0%B8%D1%80%D0%BE%D0%BD%D0%B4%D0%B0%D0%BA"
   }
 }

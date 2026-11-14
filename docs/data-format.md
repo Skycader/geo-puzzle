@@ -39,8 +39,11 @@
 
 ### `places[]` (usa)
 
-`id`, `name`, `ru`, `cx, cy`, `radiusKm` (условное `2`, физического смысла нет).
-Карточка для места и города — в info-JSON по тому же `id`.
+Точки: `id`, `name`, `ru`, `cx, cy`, `radiusKm` (условное `2`).
+Полигоны (хребты/парки, `levels/usaPlacePolys.js`): `id`, `name`, `ru`, `kind`
+(`range` | `park`), `cx, cy`, `bbox`, `area`, `d` — как у озёр. В `levels/index.js`
+склеены в один массив; в Обзоре точка → кружок, наличие `d` → заливка.
+Карточка — в info-JSON по тому же `id`.
 
 ### `lakes[]` (usa)
 

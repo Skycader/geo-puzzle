@@ -112,11 +112,10 @@ const PLACES = [
   ['hollywood_sign', 'Hollywood Sign', 'Знак Голливуд', 34.1341, -118.3215],
   ['kennedy_space_center', 'Kennedy Space Center', 'Космический центр Кеннеди', 28.5729, -80.6490],
   ['harvard_university', 'Harvard University', 'Гарвардский университет', 42.3770, -71.1167],
-  ['grand_canyon', 'Grand Canyon', 'Гранд-Каньон', 36.1069, -112.1129],
-  ['yellowstone', 'Yellowstone National Park', 'Йеллоустоунский парк', 44.4280, -110.5885],
-  ['death_valley', 'Death Valley', 'Долина Смерти', 36.5323, -116.9325],
+  // grand_canyon / yellowstone / death_valley / everglades / appalachians —
+  // moved to real polygons (scripts/build_usa_place_polys.js), same reason
+  // major lakes left this list for levels/usaLakes.js.
   ['niagara_falls', 'Niagara Falls', 'Ниагарский водопад', 43.0962, -79.0377],
-  ['everglades', 'Everglades', 'Эверглейдс', 25.2866, -80.8987],
   ['mauna_kea', 'Mauna Kea', 'Мауна-Кеа', 19.8207, -155.4681, 'HI'],
   ['camp_walden', 'Camp Walden', 'Лагерь Уолден', 44.5, -70.5],
   ['forks', 'Forks', 'Форкс', 47.9506, -124.3856],
@@ -132,9 +131,6 @@ const PLACES = [
   // (see levels/usaLakes.js) — that's real geography, not a coincidence
   // (the dam is what impounds the Colorado River into Lake Mead).
   ['hoover_dam', 'Hoover Dam', 'Плотина Гувера', 36.01583333, -114.73777778],
-  // A 2400 km mountain range has no single point — pinned at the coordinates
-  // Wikipedia itself gives for it (40°N 78°W, central Pennsylvania).
-  ['appalachians', 'Appalachian Mountains', 'Аппалачи', 40, -78],
   // MediaWiki API coordinates for "Пентагон" (Arlington, VA).
   ['pentagon', 'The Pentagon', 'Пентагон', 38.8709889, -77.0559611],
   // A 3940 km road has no single point — pinned at Adrian, TX (Wikipedia's

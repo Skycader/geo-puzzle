@@ -4,6 +4,7 @@
 import usa from './usa.js';
 import usaCities from './usaCities.js';
 import usaPlaces from './usaPlaces.js';
+import usaPlacePolys from './usaPlacePolys.js';
 import usaHighways from './usaHighways.js';
 import usaHawaiiHighways from './usaHawaiiHighways.js';
 import usaRouteGraph from './usaRouteGraph.js';
@@ -16,13 +17,16 @@ import worldPlaces from './worldPlaces.js';
 import countries from './countries.js';
 import worldTimezones from './worldTimezones.js';
 
-// usaCities.js/usaPlaces.js/usaHighways.js/usaHawaiiHighways.js/
-// usaRouteGraph.js/usaLakes.js are generated independently
-// (scripts/build_usa_cities.js, scripts/build_usa_places.js,
-// scripts/build_usa_highways.js, scripts/build_hawaii_highways.js,
-// scripts/build_usa_route_graph.js, scripts/build_usa_lakes.js) so each
-// can be regenerated without touching the state polygon data — attach
-// them here rather than baking them into the generated usa.js file.
+// usaCities.js/usaPlaces.js/usaPlacePolys.js/usaHighways.js/
+// usaHawaiiHighways.js/usaRouteGraph.js/usaLakes.js are generated
+// independently (scripts/build_usa_cities.js, build_usa_places.js,
+// build_usa_place_polys.js, build_usa_highways.js, build_hawaii_highways.js,
+// build_usa_route_graph.js, build_usa_lakes.js) so each can be regenerated
+// without touching the state polygon data — attach them here rather than
+// baking them into the generated usa.js file.
+// Areal places (ranges/parks with a real `d`) live in usaPlacePolys and are
+// concatenated onto `places` — overviewBoard.js treats entries with `d` as
+// shapes (like lakes) and the rest as point dots.
 // Hawaii's routes are concatenated onto the same `highways` array (not a
 // separate field) — js/overviewBoard.js's single render loop tells them
 // apart by shape: a mainland entry has `number` (numbered shield), a
@@ -47,7 +51,15 @@ const worldLand = world.land.map((l) => {
 });
 
 export const levels = {
-  usa: { ...usa, cities: usaCities, places: usaPlaces, highways: [...usaHighways, ...usaHawaiiHighways], routeGraph: usaRouteGraph, lakes: usaLakes, airports: usaAirports },
+  usa: {
+    ...usa,
+    cities: usaCities,
+    places: [...usaPlaces, ...usaPlacePolys],
+    highways: [...usaHighways, ...usaHawaiiHighways],
+    routeGraph: usaRouteGraph,
+    lakes: usaLakes,
+    airports: usaAirports,
+  },
   world: { ...world, land: worldLand, currents: worldCurrents },
   countries: { ...countries, cities: worldCities, places: worldPlaces, timezones: worldTimezones },
 };
