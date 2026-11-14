@@ -328,7 +328,9 @@ export class Game {
     }
     this.levelId = view.levelId;
     this.modeId = 'overview';
-    this._pendingOverviewView = view;
+    // Camera may be omitted when the hash only has a level (or z was out of
+    // range) — still reopen Overview; the board keeps its default framing.
+    this._pendingOverviewView = view.zoom != null ? view : null;
     this._applyMenuTranslations(); // re-render the cards so the menu matches when the player goes back
     try {
       this.startGame();

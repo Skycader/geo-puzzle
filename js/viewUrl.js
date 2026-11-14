@@ -4,9 +4,14 @@
 // units (the same units as the pieces' cx/cy). Only Overview writes it (replaceState,
 // so panning doesn't pile up history entries); every other screen clears it.
 const PREFIX = '#overview?';
-const MAX_ZOOM = 1000;
+// Overview zoom is uncapped in zoomPan (deep place/telescope views reach thousands);
+// this only rejects absurd/corrupt values so a bad link still falls back to the menu
+// instead of hanging the board on NaN/Infinity.
+const MAX_ZOOM = 1e7;
 
 // -> { levelId, zoom, x, y } | null when the hash isn't a valid Overview view.
+// A valid level with a missing/out-of-range camera still restores Overview (zoom/x/y
+// omitted) — better than dumping the player into the menu after a deep-zoom reload.
 export function readOverviewView(levels) {
   if (!location.hash.startsWith(PREFIX)) return null;
   const params = new URLSearchParams(location.hash.slice(PREFIX.length));
@@ -15,7 +20,9 @@ export function readOverviewView(levels) {
   const zoom = Number(params.get('z'));
   const x = Number(params.get('x'));
   const y = Number(params.get('y'));
-  if (![zoom, x, y].every(Number.isFinite) || zoom <= 0 || zoom > MAX_ZOOM) return null;
+  if (![zoom, x, y].every(Number.isFinite) || zoom <= 0 || zoom > MAX_ZOOM) {
+    return { levelId, zoom: null, x: null, y: null };
+  }
   return { levelId, zoom, x, y };
 }
 

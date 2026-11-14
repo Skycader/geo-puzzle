@@ -78,10 +78,19 @@ function cityMinLabelZoom(c) {
 // all sizes below are constant *screen* px, like the other label styling.
 const LEADER_POINT_R_PX = 2.2;
 const LEADER_POINT_STROKE_PX = 0.8;
-const LEADER_DIAG_PX = 14; // 45°-down-left diagonal segment length
+// 45° elbow from the marker up-left to the label run:
+//   NAME
+//   ----------\
+//              \__(+)
+// (Not down-left: that put the marker above the text and made the
+// horizontal run cut through the glyphs like a strikethrough.)
+const LEADER_DIAG_PX = 20;
 const LEADER_STROKE_PX = 1.2;
 const LEADER_PAD_PX = 3; // horizontal run's overshoot past the text on the far end
-const LEADER_TEXT_GAP_PX = 3; // gap between the horizontal run and the text sitting above it
+// Clear air between the horizontal run and the label baseline — must clear
+// the label's own stroke (CITY_LABEL_STROKE_PX) or the run reads as a
+// strikethrough through the bottom of the letters.
+const LEADER_TEXT_GAP_PX = 8;
 
 const STATE_FOCUS_FILL = 0.6; // fraction of the viewport a focused state's bbox should fill
 const CITY_POINT_FOCUS_FILL = 0.08; // fraction of the viewport a focused point-city's dot should fill
@@ -108,6 +117,16 @@ const PLACE_POINT_FOCUS_FILL = 0.22;
 // so this ring is what the player actually sees light up.
 const PLACE_FOCUS_GLOW_R_PX = 36;
 const PLACE_FOCUS_GLOW_STROKE_PX = 4;
+
+// Constant-screen-px sizes are stored as native SVG lengths
+// (`px / (board.scale * zoom)`). `toFixed(2)` rounds those to "0.00" once
+// zoom passes ~few hundred (e.g. PLACE_DOT_R_PX=4 at z≈3560 → 0.001), so
+// place dots / leaders / labels vanished on deep Hawaii zoom-ins. Enough
+// decimals that a 1-screen-px size stays non-zero past absurd zooms.
+function fmtScreenNative(px, effScale) {
+  const n = px / effScale;
+  return n.toFixed(n >= 0.01 ? 2 : 8);
+}
 
 // Airports: a constant-screen-px plane icon (Material "flight" glyph, 24x24
 // box, nose up — rotated 45° at render) over the airport's runways, which
@@ -2357,8 +2376,8 @@ export class OverviewBoard {
   _rescalePlaceFocusGlow(effScale) {
     const glow = this.focusGlowEl;
     if (!glow?.classList.contains('overview-focus-glow-place')) return;
-    glow.setAttribute('r', (PLACE_FOCUS_GLOW_R_PX / effScale).toFixed(2));
-    glow.style.strokeWidth = `${(PLACE_FOCUS_GLOW_STROKE_PX / effScale).toFixed(2)}px`;
+    glow.setAttribute('r', fmtScreenNative(PLACE_FOCUS_GLOW_R_PX, effScale));
+    glow.style.strokeWidth = `${fmtScreenNative(PLACE_FOCUS_GLOW_STROKE_PX, effScale)}px`;
   }
 
   // Lakes have a real bbox/`d` (scripts/build_usa_lakes.js), same as
@@ -2474,8 +2493,8 @@ export class OverviewBoard {
         continue;
       }
       el.style.opacity = '';
-      el.style.fontSize = `${(STATE_LABEL_PX / effScale).toFixed(2)}px`;
-      el.style.strokeWidth = `${(STATE_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
+      el.style.fontSize = `${fmtScreenNative(STATE_LABEL_PX, effScale)}px`;
+      el.style.strokeWidth = `${fmtScreenNative(STATE_LABEL_STROKE_PX, effScale)}px`;
     }
     for (const entry of this.cityDotEntries) {
       if (!entry.appended) continue;
@@ -2483,15 +2502,15 @@ export class OverviewBoard {
       this._styleCityEntry(entry, effScale, zoom);
       // dot radius is NOT rescaled here — it's fixed in native units (true
       // geographic size), only the outline stroke stays a constant screen px.
-      entry.dot.style.strokeWidth = `${(CITY_DOT_STROKE_PX / effScale).toFixed(2)}px`;
+      entry.dot.style.strokeWidth = `${fmtScreenNative(CITY_DOT_STROKE_PX, effScale)}px`;
     }
     for (const entry of this.placeEntries) {
       this._layoutCityLeader(entry, effScale);
       // Unlike a city dot, a place's dot IS rescaled here — it has no real
       // physical radius to stay true-to-scale to, so it's just a constant-
       // screen-px marker like the label text/leader-line around it.
-      entry.dot.setAttribute('r', (PLACE_DOT_R_PX / effScale).toFixed(2));
-      entry.dot.style.strokeWidth = `${(PLACE_DOT_STROKE_PX / effScale).toFixed(2)}px`;
+      entry.dot.setAttribute('r', fmtScreenNative(PLACE_DOT_R_PX, effScale));
+      entry.dot.style.strokeWidth = `${fmtScreenNative(PLACE_DOT_STROKE_PX, effScale)}px`;
     }
     this._rescalePlaceFocusGlow(effScale);
     for (const e of this.currentEntries) this._layoutCurrent(e, effScale, zoom);
@@ -2500,8 +2519,8 @@ export class OverviewBoard {
       e.label.style.opacity = shown ? '' : '0';
       if (!shown) continue;
       e.label.textContent = zoom >= TIMEZONE_FULL_LABEL_ZOOM ? e.name : e.name.slice(3);
-      e.label.style.fontSize = `${(TIMEZONE_LABEL_PX / effScale).toFixed(2)}px`;
-      e.label.style.strokeWidth = `${(STATE_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
+      e.label.style.fontSize = `${fmtScreenNative(TIMEZONE_LABEL_PX, effScale)}px`;
+      e.label.style.strokeWidth = `${fmtScreenNative(STATE_LABEL_STROKE_PX, effScale)}px`;
     }
     // Plane icons: constant screen size; the runways themselves are plain
     // native-unit paths (true length) with a non-scaling stroke, no work here.
@@ -2512,7 +2531,7 @@ export class OverviewBoard {
       const labelOn = this.labelsVisible && (!entry.minor || zoom >= AIRPORT_MINOR_LABEL_ZOOM);
       entry.leaderLabel.style.opacity = labelOn ? '' : '0';
       entry.leaderPath.style.opacity = labelOn ? '' : '0';
-      entry.icon.setAttribute('transform', `translate(${entry.cx} ${entry.cy}) scale(${k.toFixed(5)}) translate(-12 -12)`);
+      entry.icon.setAttribute('transform', `translate(${entry.cx} ${entry.cy}) scale(${k >= 0.01 ? k.toFixed(5) : k.toFixed(8)}) translate(-12 -12)`);
     }
     // Keeps whichever shields are already showing at a constant screen
     // size DURING a zoom gesture — _updateHighwayShields itself only runs
@@ -2558,27 +2577,39 @@ export class OverviewBoard {
     const { cx, cy, pointMark, leaderPath, leaderLabel } = entry;
     pointMark.setAttribute('cx', cx);
     pointMark.setAttribute('cy', cy);
-    pointMark.setAttribute('r', (LEADER_POINT_R_PX / effScale).toFixed(2));
-    pointMark.style.strokeWidth = `${(LEADER_POINT_STROKE_PX / effScale).toFixed(2)}px`;
+    pointMark.setAttribute('r', fmtScreenNative(LEADER_POINT_R_PX, effScale));
+    pointMark.style.strokeWidth = `${fmtScreenNative(LEADER_POINT_STROKE_PX, effScale)}px`;
 
+    // Bend sits ABOVE-left of the marker so the callout reads
+    //   NAME
+    //   ----------\
+    //              \__(+)
     const d45 = LEADER_DIAG_PX / effScale / Math.SQRT2;
     const bendX = cx - d45;
-    const bendY = cy + d45;
+    const bendY = cy - d45;
 
     const fontSizeNative = CITY_LABEL_PX / effScale;
-    leaderLabel.style.fontSize = `${fontSizeNative.toFixed(2)}px`;
-    leaderLabel.style.strokeWidth = `${(CITY_LABEL_STROKE_PX / effScale).toFixed(2)}px`;
+    leaderLabel.style.fontSize = `${fmtScreenNative(CITY_LABEL_PX, effScale)}px`;
+    leaderLabel.style.strokeWidth = `${fmtScreenNative(CITY_LABEL_STROKE_PX, effScale)}px`;
     // The early _rescaleForZoom(1) in _build runs before _calibrateCharWidth: fall back to a
     // typical monospace ratio for that one pass (the next rescale uses the measured one).
     const textLen = leaderLabel.textContent.length * (this._charWidthRatio || 0.6) * fontSizeNative;
     const pad = LEADER_PAD_PX / effScale;
     const lineEndX = bendX - textLen - pad * 2;
 
-    leaderPath.setAttribute('d', `M ${cx.toFixed(1)},${cy.toFixed(1)} L ${bendX.toFixed(1)},${bendY.toFixed(1)} L ${lineEndX.toFixed(1)},${bendY.toFixed(1)}`);
-    leaderPath.style.strokeWidth = `${(LEADER_STROKE_PX / effScale).toFixed(2)}px`;
+    // Path coords need the same deep-zoom precision as sizes — toFixed(1)
+    // collapsed the leader diagonal onto the anchor at extreme zoom.
+    const f = (n) => (Math.abs(n) >= 0.01 ? n.toFixed(2) : n.toFixed(8));
+    leaderPath.setAttribute('d', `M ${f(cx)},${f(cy)} L ${f(bendX)},${f(bendY)} L ${f(lineEndX)},${f(bendY)}`);
+    leaderPath.style.strokeWidth = `${fmtScreenNative(LEADER_STROKE_PX, effScale)}px`;
 
+    // Alphabetic baseline sits above the horizontal run by gap + half the
+    // label stroke, so the outline never kisses/crosses the leader line.
     leaderLabel.setAttribute('x', bendX - pad);
-    leaderLabel.setAttribute('y', bendY - LEADER_TEXT_GAP_PX / effScale);
+    leaderLabel.setAttribute(
+      'y',
+      bendY - (LEADER_TEXT_GAP_PX + CITY_LABEL_STROKE_PX * 0.5) / effScale
+    );
   }
 
   setLabelsVisible(visible) {

@@ -169,6 +169,25 @@ const PLACES = [
   ['hana_highway', 'Road to Hāna', 'Дорога в Хану', 20.77, -155.99417, 'HI'],
   ['iolani_palace', 'ʻIolani Palace', 'Дворец Иолани', 21.306622, -157.858958, 'HI'],
   ['puuhonua_o_honaunau', 'Puʻuhonua o Hōnaunau', 'Пуухонуа-о-Хонаунау', 19.4219, -155.91, 'HI'],
+  // Maunakea Observatories — every major summit facility (Wikipedia / IfA
+  // coordinates). Keck I & II share one campus → one place. VLBA sits ~3 km
+  // below the ridge. CSO ceased science ops in 2015 but the dome remains.
+  ['keck_observatory', 'W. M. Keck Observatory', 'Обсерватория Кека', 19.8263, -155.47441, 'HI'],
+  ['subaru_telescope', 'Subaru Telescope', 'Телескоп «Субару»', 19.8256, -155.4761, 'HI'],
+  ['gemini_north', 'Gemini North', 'Джемини-Север', 19.8238, -155.469, 'HI'],
+  ['cfht', 'Canada–France–Hawaii Telescope', 'Телескоп Канада–Франция–Гавайи', 19.8253, -155.4689, 'HI'],
+  ['irtf', 'NASA Infrared Telescope Facility', 'Инфракрасный телескоп NASA (IRTF)', 19.8263, -155.473, 'HI'],
+  ['ukirt', 'United Kingdom Infrared Telescope', 'UKIRT', 19.8225, -155.47069444, 'HI'],
+  ['uh88', 'UH 2.2 m Telescope', 'Телескоп UH 2,2 м', 19.8231, -155.47, 'HI'],
+  ['jcmt', 'James Clerk Maxwell Telescope', 'Телескоп Джеймса Клерка Максвелла', 19.822861, -155.477053, 'HI'],
+  ['sma', 'Submillimeter Array', 'Субмиллиметровая антенная решётка (SMA)', 19.8243, -155.478, 'HI'],
+  ['vlba_mauna_kea', 'VLBA Mauna Kea', 'VLBA (Мауна-Кеа)', 19.8014, -155.4555, 'HI'],
+  ['cso', 'Caltech Submillimeter Observatory', 'Субмиллиметровая обсерватория Калтеха (CSO)', 19.8225, -155.476, 'HI'],
+  // Haleakalā High Altitude Observatory Site (Maui)
+  ['dkist', 'Daniel K. Inouye Solar Telescope', 'Солнечный телескоп Дэниела Иноуэ', 20.7067, -156.2561, 'HI'],
+  ['pan_starrs', 'Pan-STARRS', 'Pan-STARRS', 20.707318, -156.25589, 'HI'],
+  ['faulkes_north', 'Faulkes Telescope North', 'Телескоп Фолкса (Север)', 20.707, -156.25753, 'HI'],
+  ['atlas_haleakala', 'ATLAS (Haleakalā)', 'ATLAS (Халеакала)', 20.7085, -156.257, 'HI'],
 ];
 
 // No Census land-area data applies to a bridge or a hotel — a small
@@ -177,9 +196,11 @@ const PLACES = [
 // any changes to that shared code.
 const NOMINAL_RADIUS_KM = 2;
 
+// toFixed(2): Maunakea summit telescopes sit <1 km apart — one decimal
+// collapses them onto the same pixel even at deep Hawaii zoom.
 const places = PLACES.map(([id, name, ru, lat, lon, region]) => {
   const [cx, cy] = project(region, lon, lat);
-  return { id, name, ru, cx: +cx.toFixed(1), cy: +cy.toFixed(1), radiusKm: NOMINAL_RADIUS_KM };
+  return { id, name, ru, cx: +cx.toFixed(2), cy: +cy.toFixed(2), radiusKm: NOMINAL_RADIUS_KM };
 });
 
 console.error('places', places.length);

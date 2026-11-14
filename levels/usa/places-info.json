@@ -243,5 +243,80 @@
     "extract": "Адиро́ндак — горный хребет на северо-востоке штата Нью-Йорк. Иногда включается в горную систему Аппалачей, хотя имеет другое геологическое происхождение.",
     "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/ff/Mountain_Range.jpg/330px-Mountain_Range.jpg",
     "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%90%D0%B4%D0%B8%D1%80%D0%BE%D0%BD%D0%B4%D0%B0%D0%BA"
+  },
+  "keck_observatory": {
+    "extract": "Обсерватория У. М. Кека — астрономическая обсерватория на вершине Мауна-Кеа (Гавайи). Два одинаковых 10-метровых зеркальных телескопа (Keck I и Keck II) — одни из крупнейших в мире в оптическом и ближнем ИК-диапазоне.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/KeckTelescopes-hi.png/330px-KeckTelescopes-hi.png",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9E%D0%B1%D1%81%D0%B5%D1%80%D0%B2%D0%B0%D1%82%D0%BE%D1%80%D0%B8%D1%8F_%D0%9A%D0%B5%D0%BA%D0%B0"
+  },
+  "subaru_telescope": {
+    "extract": "«Субару» — 8,2-метровый оптический и инфракрасный телескоп Национальной астрономической обсерватории Японии на Мауна-Кеа. Открыт в 1999 году; одно из крупнейших монолитных зеркал в мире.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/MaunaKea_Subaru.jpg/330px-MaunaKea_Subaru.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D1%83%D0%B1%D0%B0%D1%80%D1%83_(%D1%82%D0%B5%D0%BB%D0%B5%D1%81%D0%BA%D0%BE%D0%BF)"
+  },
+  "gemini_north": {
+    "extract": "Джемини-Север — 8,1-метровый телескоп международной обсерватории Gemini на Мауна-Кеа. Парный «близнец» Джемини-Юг в Чили; вместе они покрывают всё небо в оптике и ближнем ИК.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Mauna_Kea_Observatories.jpg/330px-Mauna_Kea_Observatories.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%9E%D0%B1%D1%81%D0%B5%D1%80%D0%B2%D0%B0%D1%82%D0%BE%D1%80%D0%B8%D1%8F_%D0%94%D0%B6%D0%B5%D0%BC%D0%B8%D0%BD%D0%B8"
+  },
+  "cfht": {
+    "extract": "Телескоп Канада–Франция–Гавайи (CFHT) — 3,58-метровый оптический/ИК-телескоп на Мауна-Кеа, совместный проект Канады, Франции и Университета Гавайев. Работает с 1979 года.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/CFW_Telescope.JPG/330px-CFW_Telescope.JPG",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Canada%E2%80%93France%E2%80%93Hawaii_Telescope"
+  },
+  "irtf": {
+    "extract": "NASA Infrared Telescope Facility (IRTF) — 3-метровый инфракрасный телескоп на Мауна-Кеа, управляемый Университетом Гавайев для NASA. Около половины времени отдано исследованиям Солнечной системы.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Afshin_Darian_-_NASA_Infrared_Telescope_Facility.jpg/330px-Afshin_Darian_-_NASA_Infrared_Telescope_Facility.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/NASA_Infrared_Telescope_Facility"
+  },
+  "ukirt": {
+    "extract": "UKIRT (United Kingdom Infrared Telescope) — 3,8-метровый инфракрасный телескоп на Мауна-Кеа. Долгое время был крупнейшим телескопом, целиком посвящённым ИК-наблюдениям.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/UKIRT_small.png/330px-UKIRT_small.png",
+    "wikiUrl": "https://en.wikipedia.org/wiki/United_Kingdom_Infrared_Telescope"
+  },
+  "uh88": {
+    "extract": "Телескоп Университета Гавайев диаметром 2,2 м (UH88) — первый крупный инструмент на Мауна-Кеа (1970). Его успехи доказали качество площадки и открыли путь остальным обсерваториям вершины.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/UH88_at_sunset.jpg/330px-UH88_at_sunset.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/UH88"
+  },
+  "jcmt": {
+    "extract": "Телескоп Джеймса Клерка Максвелла (JCMT) — 15-метровый субмиллиметровый телескоп на Мауна-Кеа, крупнейший в мире в своём диапазоне. Изучает холодный газ и пыль в Галактике и за её пределами.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/JCMT_on_Mauna_Kea.jpg/330px-JCMT_on_Mauna_Kea.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A2%D0%B5%D0%BB%D0%B5%D1%81%D0%BA%D0%BE%D0%BF_%D0%94%D0%B6%D0%B5%D0%B9%D0%BC%D1%81%D0%B0_%D0%9A%D0%BB%D0%B5%D1%80%D0%BA%D0%B0_%D0%9C%D0%B0%D0%BA%D1%81%D0%B2%D0%B5%D0%BB%D0%BB%D0%B0"
+  },
+  "sma": {
+    "extract": "Субмиллиметровая антенная решётка (Submillimeter Array, SMA) — интерферометр из восьми 6-метровых антенн на Мауна-Кеа (Смитсоновская астрофизическая обсерватория и Тайвань). Даёт высокое угловое разрешение в субмиллиметровом диапазоне.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Smithsonian_Submillimeter_Array.jpg/330px-Smithsonian_Submillimeter_Array.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Submillimeter_Array"
+  },
+  "vlba_mauna_kea": {
+    "extract": "Антенна VLBA на Мауна-Кеа — западный конец Сети сверхдлинных баз: 25-метровый радиотелескоп в составе из десяти станций по США. Наблюдает в радиодиапазоне, синхронизируясь с остальными антеннами VLBA.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/VLBA.jpg/330px-VLBA.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Very_Long_Baseline_Array"
+  },
+  "cso": {
+    "extract": "Субмиллиметровая обсерватория Калтеха (CSO) — 10,4-метровый телескоп на Мауна-Кеа. Научные наблюдения завершены в 2015 году; купол остаётся на вершине в рамках плана по выводу из эксплуатации.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Caltech-CSO-telescope_%28fix%29.jpg/330px-Caltech-CSO-telescope_%28fix%29.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Caltech_Submillimeter_Observatory"
+  },
+  "dkist": {
+    "extract": "Солнечный телескоп Дэниела К. Иноуэ (DKIST) на Халеакала (Maui) — крупнейший в мире солнечный телескоп (зеркало 4 м). Даёт детальные изображения магнитного поля и атмосферы Солнца.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Haleakala_Observatory_2017.jpg/330px-Haleakala_Observatory_2017.jpg",
+    "wikiUrl": "https://ru.wikipedia.org/wiki/%D0%A1%D0%BE%D0%BB%D0%BD%D0%B5%D1%87%D0%BD%D1%8B%D0%B9_%D1%82%D0%B5%D0%BB%D0%B5%D1%81%D0%BA%D0%BE%D0%BF_%D0%94%D1%8D%D0%BD%D0%B8%D0%B5%D0%BB%D0%B0_%D0%98%D0%BD%D0%BE%D1%83%D1%8D"
+  },
+  "pan_starrs": {
+    "extract": "Pan-STARRS — система обзора неба из телескопов на Халеакала (Maui). PS1 и PS2 с камерами свыше миллиарда пикселей ищут астероиды, сверхновые и переменные объекты; открыли множество околоземных тел.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Haleakala_Observatory_2017.jpg/330px-Haleakala_Observatory_2017.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Pan-STARRS"
+  },
+  "faulkes_north": {
+    "extract": "Телескоп Фолкса (Север) — 2-метровый инструмент сети Las Cumbres Observatory на Халеакала. Используется для науки и образования; парный южный телескоп стоит в Австралии.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Faulkes_telescope-Science_City-Maui_%2829605281058%29.jpg/330px-Faulkes_telescope-Science_City-Maui_%2829605281058%29.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Faulkes_Telescope_North"
+  },
+  "atlas_haleakala": {
+    "extract": "ATLAS (Asteroid Terrestrial-impact Last Alert System) — система раннего предупреждения об астероидах (Университет Гавайев / NASA). Один из телескопов стоит на Халеакала и каждую ночь сканирует небо в поисках движущихся объектов.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Haleakala_Observatory_2017.jpg/330px-Haleakala_Observatory_2017.jpg",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Asteroid_Terrestrial-impact_Last_Alert_System"
   }
 }
