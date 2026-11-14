@@ -111,6 +111,8 @@ const PLACES = [
   ['norad_cheyenne_mountain', 'NORAD Cheyenne Mountain Complex', 'НОРАД (комплекс в горе Шайенн)', 38.7425, -104.8483],
   ['hollywood_sign', 'Hollywood Sign', 'Знак Голливуд', 34.1341, -118.3215],
   ['kennedy_space_center', 'Kennedy Space Center', 'Космический центр Кеннеди', 28.5729, -80.6490],
+  // MediaWiki API coordinates for «Канаверал» (мыс; не путать с KSC на острове Меррит).
+  ['cape_canaveral', 'Cape Canaveral', 'Мыс Канаверал', 28.475, -80.5528],
   ['harvard_university', 'Harvard University', 'Гарвардский университет', 42.3770, -71.1167],
   // grand_canyon / yellowstone / death_valley / everglades / appalachians —
   // moved to real polygons (scripts/build_usa_place_polys.js), same reason

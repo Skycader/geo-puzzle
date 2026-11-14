@@ -12,6 +12,7 @@ export default [
   { id: 'norad_cheyenne_mountain', name: 'NORAD Cheyenne Mountain Complex', ru: 'НОРАД (комплекс в горе Шайенн)', cx: 1191.76, cy: 927.9, radiusKm: 2 },
   { id: 'hollywood_sign', name: 'Hollywood Sign', ru: 'Знак Голливуд', cx: 928.58, cy: 993.47, radiusKm: 2 },
   { id: 'kennedy_space_center', name: 'Kennedy Space Center', ru: 'Космический центр Кеннеди', cx: 1662.3, cy: 1147.43, radiusKm: 2 },
+  { id: 'cape_canaveral', name: 'Cape Canaveral', ru: 'Мыс Канаверал', cx: 1664.6, cy: 1149.35, radiusKm: 2 },
   { id: 'harvard_university', name: 'Harvard University', ru: 'Гарвардский университет', cx: 1769.09, cy: 795.06, radiusKm: 2 },
   { id: 'niagara_falls', name: 'Niagara Falls', ru: 'Ниагарский водопад', cx: 1634.5, cy: 807.98, radiusKm: 2 },
   { id: 'mauna_kea', name: 'Mauna Kea', ru: 'Мауна-Кеа', cx: 114.51, cy: 941.43, radiusKm: 2 },
