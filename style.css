@@ -2192,14 +2192,14 @@ body {
 
 /* ---------------- overview mode ---------------- */
 
-/* City circles: dashed rim (Hawaii-locator language) + house/high-rise
-   tile fill (CITY_PATTERNS in overviewBoard.js). stroke-width / dasharray
-   are set inline so they stay constant screen px across zoom. */
+/* City circles: house/high-rise tile fill + solid red rim (no dashes). */
 .overview-city-dot {
   fill: url(#city-pattern-house);
   stroke: var(--neon-pink);
-  stroke-opacity: 0.75;
+  stroke-width: 1.6;
+  stroke-opacity: 0.9;
   fill-opacity: 1;
+  vector-effect: non-scaling-stroke;
   cursor: default;
 }
 .overview-city-dot-house { fill: url(#city-pattern-house); }
@@ -2235,9 +2235,9 @@ body {
   fill: url(#city-pattern-highrise);
   fill-opacity: 1;
   stroke: var(--neon-pink);
-  stroke-width: 1.2;
-  stroke-opacity: 0.75;
-  stroke-dasharray: 4 3;
+  stroke-width: 1.6;
+  stroke-opacity: 0.9;
+  vector-effect: non-scaling-stroke;
   cursor: default;
   transition: stroke-opacity 0.15s ease;
 }

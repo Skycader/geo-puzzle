@@ -61,10 +61,6 @@ const SPACE_VIEW_LABEL_HIDE_ENABLED = true;
 const LABEL_MIN_ZOOM = 3;
 const CITY_LABEL_PX = 10;
 const CITY_LABEL_STROKE_PX = 2.5;
-const CITY_DOT_STROKE_PX = 1.3;
-// Dashed city outline — same language as .hawaii-locator (dash/gap in screen px).
-const CITY_DOT_DASH_PX = 4;
-const CITY_DOT_GAP_PX = 3.2;
 // World-map cities (levels/worldCities.js) have a population but no real land
 // area, so instead of a true-to-scale circle they get a constant-size dot, and
 // the less populous the city the later (higher zoom) its name appears.
@@ -997,7 +993,7 @@ export class OverviewBoard {
       if (c.d) {
         const path = document.createElementNS(SVG_NS, 'path');
         path.setAttribute('d', c.d);
-        // Silhouette cities are the large metros — high-rise tile + dashed rim.
+        // Silhouette cities are the large metros — high-rise tile + solid rim.
         path.setAttribute('class', 'overview-city-shape overview-city-dot-highrise');
         path.dataset.id = c.id;
         path.dataset.kind = 'city';
@@ -1026,12 +1022,11 @@ export class OverviewBoard {
       const fixedDot = c.radiusKm == null; // world city: no area, constant-size dot (set in _styleCityEntry)
       const radiusNative = fixedDot ? 0 : c.radiusKm / this.level.kmPerUnit;
 
+      const tile = cityIsLarge(c) ? 'highrise' : 'house';
       const dot = document.createElementNS(SVG_NS, 'circle');
       dot.setAttribute('cx', c.cx);
       dot.setAttribute('cy', c.cy);
       dot.setAttribute('r', radiusNative.toFixed(3));
-      // Dashed rim (Hawaii-locator style) + house/high-rise tile fill.
-      const tile = cityIsLarge(c) ? 'highrise' : 'house';
       dot.setAttribute('class', `overview-city-dot overview-city-dot-${tile}`);
       dot.dataset.id = c.id;
       dot.dataset.kind = 'city';
@@ -1456,11 +1451,6 @@ export class OverviewBoard {
   // (USA cities have minLabelZoom 0, so for them this is just the "Подписи" toggle).
   _styleCityEntry(entry, effScale, zoom) {
     if (entry.fixedDot) entry.dot.setAttribute('r', (WORLD_CITY_DOT_PX / effScale).toFixed(4));
-    // Dashed rim stays constant screen px (Hawaii-locator language).
-    entry.dot.style.strokeWidth = `${fmtScreenNative(CITY_DOT_STROKE_PX, effScale)}px`;
-    // Same `px` unit as strokeWidth — CSS px on SVG keeps dash length
-    // constant on screen while the circle itself scales with the map.
-    entry.dot.style.strokeDasharray = `${CITY_DOT_DASH_PX}px ${CITY_DOT_GAP_PX}px`;
     const labelOn = this.labelsVisible && zoom >= entry.minLabelZoom;
     entry.leaderLabel.style.opacity = labelOn ? '' : '0';
     entry.leaderPath.style.opacity = labelOn ? '' : '0';
