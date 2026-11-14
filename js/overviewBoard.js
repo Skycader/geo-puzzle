@@ -96,7 +96,18 @@ const VIRTUALIZE_MARGIN = 0.4; // extra fraction of the visible rect's size kept
 // "close-up" radius instead of deriving one from that nominal value.
 const PLACE_DOT_R_PX = 4;
 const PLACE_DOT_STROKE_PX = 1;
-const PLACE_FOCUS_RADIUS_KM = 30;
+// Close-up context for zooming to a place. 30 km used to yank the camera so
+// tight the 4 px yellowed place-dot was easy to miss; 250 km (city no-area
+// close-up) is the other extreme — on the USA canvas it clamps to zoom 1 and
+// never moves the camera at all. ~100 km + a larger fill fraction lands in
+// a readable mid-zoom with regional context still on screen.
+const PLACE_FOCUS_RADIUS_KM = 100;
+const PLACE_POINT_FOCUS_FILL = 0.22;
+// Pulsing focus ring around a place (constant *screen* px — same idea as
+// PLACE_DOT_R_PX). States get a full-shape glow copy; a place has no shape,
+// so this ring is what the player actually sees light up.
+const PLACE_FOCUS_GLOW_R_PX = 36;
+const PLACE_FOCUS_GLOW_STROKE_PX = 4;
 
 // Airports: a constant-screen-px plane icon (Material "flight" glyph, 24x24
 // box, nose up — rotated 45° at render) over the airport's runways, which
@@ -432,6 +443,7 @@ export class OverviewBoard {
     // states) — always rendered, no `appended` bookkeeping needed.
     this.placeEntries = []; // { id, cx, cy, dot, pointMark, leaderPath, leaderLabel }
     this.placesVisible = opts.placesVisible !== false;
+    this.onPlacesVisibleChange = opts.onPlacesVisibleChange || null;
     this.lakesVisible = opts.lakesVisible !== false;
     // USA-only, only ~59 of them (see levels/usaHighways.js) — same
     // "few enough to just always be in the DOM" reasoning as places.
@@ -2256,25 +2268,49 @@ export class OverviewBoard {
 
   // A place has no bbox and no real physical radius (unlike a city's
   // true-to-scale one) — same point-feature zoom math as _focusCity's
-  // point branch, just against a fixed "close-up" radius instead of a
-  // meaningful one.
+  // point branch, against a fixed "close-up" radius. The highlight is a
+  // pulsing screen-px ring (plus the yellowed place-dot), not just the
+  // 4 px fill change — that alone was effectively invisible.
   _focusPlace(id) {
     const entry = this.placesById.get(id);
     if (!entry) return;
     const { data } = entry;
+    // Panel click must still reveal the place even if the layer toggle is off
+    // — otherwise the camera moves and nothing on the map appears to react.
+    // Glow is drawn either way; the place-dot itself needs the layer on.
+    if (!this.placesVisible) {
+      this.setPlacesVisible(true);
+      this.onPlacesVisibleChange?.(true);
+    }
     const radiusNative = PLACE_FOCUS_RADIUS_KM / this.level.kmPerUnit;
     const diameterNative = Math.max(radiusNative * 2, 1);
     const vw = this.zoomViewport.clientWidth;
     const vh = this.zoomViewport.clientHeight;
     const targetZoom = Math.max(
       1,
-      Math.min((vw * CITY_POINT_FOCUS_FILL) / (diameterNative * this.scale), (vh * CITY_POINT_FOCUS_FILL) / (diameterNative * this.scale))
+      Math.min((vw * PLACE_POINT_FOCUS_FILL) / (diameterNative * this.scale), (vh * PLACE_POINT_FOCUS_FILL) / (diameterNative * this.scale))
     );
     this.zoomCtl.focusOn(data.cx, data.cy, targetZoom);
     this._clearFocus();
     entry.dotEl.classList.add('overview-focused');
     this.focusedEl = entry.dotEl;
+    // Glow ring on top of paint order (same reason _focusShape appends a
+    // fresh path). Radius kept in screen px via _rescaleForZoom.
+    const glow = document.createElementNS(SVG_NS, 'circle');
+    glow.setAttribute('cx', data.cx);
+    glow.setAttribute('cy', data.cy);
+    glow.setAttribute('class', 'overview-focus-glow overview-focus-glow-place');
+    this.svg.appendChild(glow);
+    this.focusGlowEl = glow;
+    this._rescalePlaceFocusGlow(this.scale * (this.zoomCtl?.getZoom() ?? 1));
     this._scheduleAutoClear();
+  }
+
+  _rescalePlaceFocusGlow(effScale) {
+    const glow = this.focusGlowEl;
+    if (!glow?.classList.contains('overview-focus-glow-place')) return;
+    glow.setAttribute('r', (PLACE_FOCUS_GLOW_R_PX / effScale).toFixed(2));
+    glow.style.strokeWidth = `${(PLACE_FOCUS_GLOW_STROKE_PX / effScale).toFixed(2)}px`;
   }
 
   // Lakes have a real bbox/`d` (scripts/build_usa_lakes.js), same as
@@ -2409,6 +2445,7 @@ export class OverviewBoard {
       entry.dot.setAttribute('r', (PLACE_DOT_R_PX / effScale).toFixed(2));
       entry.dot.style.strokeWidth = `${(PLACE_DOT_STROKE_PX / effScale).toFixed(2)}px`;
     }
+    this._rescalePlaceFocusGlow(effScale);
     for (const e of this.currentEntries) this._layoutCurrent(e, effScale, zoom);
     for (const e of this.timezoneEntries) {
       const shown = this.timezonesVisible && this.labelsVisible && (e.whole || zoom >= TIMEZONE_FRACTIONAL_LABEL_ZOOM);

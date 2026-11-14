@@ -2379,6 +2379,12 @@ body {
   vector-effect: non-scaling-stroke;
   stroke-linecap: round;
 }
+/* Place focus ring — hollow so it doesn't blot out the map under the point;
+   r / stroke-width are set in screen px by overviewBoard.js. */
+.overview-focus-glow.overview-focus-glow-place {
+  fill: rgba(var(--neon-yellow-rgb), 0.18);
+  stroke: var(--neon-yellow);
+}
 .overview-city-dot.overview-focused,
 .overview-place-dot.overview-focused {
   fill: var(--neon-yellow) !important;

@@ -2368,6 +2368,12 @@ export class Game {
       scale,
       initialView,
       onViewChange: (view) => writeOverviewView(level.id, view),
+      // Side-panel focus can force a layer back on (e.g. places) — keep the
+      // HUD checkbox in sync so it doesn't lie about what's drawn.
+      onPlacesVisibleChange: (visible) => {
+        this.placesVisible = visible;
+        this.el.togglePlaces.checked = visible;
+      },
       labelsVisible: this.labelsVisible,
       citiesVisible: this.citiesVisible,
       placesVisible: this.placesVisible,
