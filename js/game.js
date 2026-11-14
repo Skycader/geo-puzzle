@@ -2354,6 +2354,7 @@ export class Game {
     if (level.cities.length) progressParts.push(`${level.cities.length} ${t('citiesUnit')}`);
     if (level.places.length) progressParts.push(`${level.places.length} ${t('placesUnit')}`);
     if (level.lakes?.length) progressParts.push(`${level.lakes.length} ${t('lakesUnit')}`);
+    if (level.id === 'countries' && level.land?.length) progressParts.push(`${level.land.length} ${t('zonesUnit')}`);
     this.el.hudProgress.textContent = progressParts.join(' · ');
     this.el.hudGroups.hidden = true;
 

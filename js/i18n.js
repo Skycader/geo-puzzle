@@ -226,6 +226,8 @@ const STRINGS = {
   overviewTabHighways: { ru: 'Шоссе', en: 'Highways' },
   overviewTabAirports: { ru: 'Аэропорты', en: 'Airports' },
   overviewTabCurrents: { ru: 'Течения', en: 'Currents' },
+  overviewTabZones: { ru: 'Зоны', en: 'Zones' },
+  zonesUnit: { ru: 'зон', en: 'zones' },
   currentWarm: { ru: 'тёплое течение', en: 'warm current' },
   currentCold: { ru: 'холодное течение', en: 'cold current' },
   currentsToggleText: { ru: 'Течения', en: 'Currents' },

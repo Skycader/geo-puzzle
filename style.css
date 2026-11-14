@@ -148,6 +148,12 @@
   --land-fill-faint: rgba(38, 139, 210, 0.08);
   --land-stroke: rgba(88, 173, 224, 0.6);
   --land-stroke-faint: rgba(147, 161, 161, 0.35);
+  /* Overview place-polys / countries "Зоны" wash — map-side (like
+     --land-fill), not UI chrome. Tracks the scheme: violet under blue,
+     soft red under gray. Separate from --neon-violet so a future chrome
+     tweak doesn't silently restyle the map wash. */
+  --place-poly: #a25bff;
+  --place-poly-stroke: #c49bff;
   /* .quiz-path's base fill (clickable states in "Найди штат", seas in
      "Найди море") — same Solarized-blue-as-hardcoded-literal issue as
      everything above, just missed on the first sweep. */
@@ -200,6 +206,8 @@
   --land-fill-faint: rgba(92, 92, 92, 0.1);
   --land-stroke: rgba(110, 110, 110, 0.7);
   --land-stroke-faint: rgba(158, 158, 158, 0.35);
+  --place-poly: #cc2936;
+  --place-poly-stroke: #e07078;
   --quiz-fill-rgb: 120, 120, 120;
   /* --green (correct-answer/match feedback — .name-match-yes,
      .name-feedback-correct, etc.) was left untouched by the first pass at
@@ -2243,20 +2251,27 @@ body {
 }
 .overview-lake-shape:hover { fill-opacity: 0.8; }
 
-/* Areal places (ranges/parks — levels/usaPlacePolys.js): violet for ranges,
-   green for national parks; same "paint on top of states" layer as lakes. */
+/* Areal places (ranges/parks — levels/usaPlacePolys.js) and countries
+   Overview "Зоны": --place-poly wash (violet / soft-red by land-scheme),
+   green for national parks. Parks stay fixed green like --terrain-*
+   (category signal). non-scaling-stroke keeps the rim thin at deep zoom. */
 .overview-place-poly {
-  fill: var(--neon-violet);
-  fill-opacity: 0.22;
-  stroke: var(--neon-violet);
-  stroke-width: 1.5;
+  /* 0.32 (not ~0.2): over dark ocean a weaker fill collapses to a muddy
+     blob; over USA state fills the same opacity still reads as a wash. */
+  fill: var(--place-poly);
+  fill-opacity: 0.32;
+  stroke: var(--place-poly-stroke);
+  stroke-opacity: 0.9;
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
   cursor: default;
   transition: fill-opacity 0.15s ease;
 }
-.overview-place-poly:hover { fill-opacity: 0.4; }
+.overview-place-poly:hover { fill-opacity: 0.48; }
 .overview-place-poly.overview-place-poly-park {
   fill: #3dba7a;
   stroke: #2f9a64;
+  stroke-opacity: 0.85;
   fill-opacity: 0.28;
 }
 .overview-place-poly.overview-place-poly-park:hover { fill-opacity: 0.45; }
@@ -2278,22 +2293,6 @@ body {
   stroke-width: 1.7px;
   stroke-linecap: round;
 }
-/* Round "?" marker on map-only zones with a card — theme accent (--neon-cyan follows the
-   colour scheme), drawn in a 24-unit box and scaled to a constant screen size by js. */
-.overview-info-marker { cursor: help; }
-.overview-info-marker-disc {
-  fill: rgba(var(--ink-rgb), 0.85);
-  stroke: var(--neon-cyan);
-  stroke-width: 1.6px;
-}
-.overview-info-marker-mark {
-  fill: var(--neon-cyan);
-  font: 700 15px 'JetBrains Mono', monospace;
-  text-anchor: middle;
-  dominant-baseline: central;
-  pointer-events: none;
-}
-.overview-info-marker:hover .overview-info-marker-disc { fill: rgba(var(--neon-cyan-rgb), 0.25); }
 /* Question-mark cursor marks an airport that has an article to open. */
 .overview-airport-plane.overview-has-info { cursor: help; }
 /* Time zones (countries level): translucent bands + labels in the three theme accents

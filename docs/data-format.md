@@ -16,7 +16,7 @@
 | `projection` | usa | Альберс (`phi1Deg 29.5`, `phi2Deg 45.5`, `phi0Deg 23`, `lambda0Deg -96`, `scale`, `minX/minY`, `marginPx`) — по нему `geoCoords.js` возвращает широту/долготу; Аляска считается тем же Альберсом, Гавайи — локальной проекцией в истинном положении и масштабе |
 | `contextLand` | usa | массив из одной фигуры Канады (только контекст, не `piece`) |
 | `pieces` | все | основные объекты уровня: штаты / акватории / страны |
-| `land` | world, countries | world: страны как фон (~258); countries: «зоны» — территории, которые рисуются и подписываются, но не страны (Западная Сахара, Свободная зона; список `ZONE_IDS` в `build_countries_level.js`), в играх, списках и счётчиках не участвуют |
+| `land` | world, countries | world: страны как фон (~258); countries: «зоны» в Обзоре (Западная Сахара, Свободная зона + overlay вроде Курил из `kurilsZone.js`); в играх/счётчике стран не участвуют |
 | `cities`, `places`, `lakes`, `highways`, `airports`, `routeGraph` | usa | см. ниже |
 | `currents` | world | см. ниже |
 | `cities`, `places` | countries | города мира (~247) и места (~3) — только на «Страны мира»; подключаются в `levels/index.js` из `worldCities.js` / `worldPlaces.js`; см. «Города мира» ниже |
@@ -118,14 +118,15 @@
 | `levels/usa/places-info.en.json` | места | английские; **в коде не подключён** |
 | `levels/usa/lakes-info.json` | озёра | русские |
 | `levels/usa/contextland-info.json` | `canada` | открывается из контекстного меню по правому клику |
-| `levels/world/zones-info.json` | зоны уровня countries (`esh`, `esh_east`) | правый клик → «Что здесь?»; собирается `scripts/build_zones_info.js` (заголовки статей — в нём) |
+| `levels/world/zones-info.json` | зоны уровня countries (`esh`, `esh_east`, `kurils`) | Обзор → вкладка «Зоны»; клик по полигону / «Что здесь?»; стиль как у USA place-poly |
 
 **Картинки карточек.** Поле `image` в `*-info.json` — обычно прямая ссылка на `upload.wikimedia.org`
 (миниатюра статьи, грузится из сети). Свои файлы лежат в `assets/` и указываются путём `assets/<имя>`:
-`assets/kapa'a.jpg` (карточка Капаа) и `assets/western_sahara_landscape.jpg` — «Western sahara landscape»,
-автор bob rayner, **CC BY 2.0**, Wikimedia Commons (карточка Западной Сахары; в `build_zones_info.js`
-закреплена полем `image`, чтобы пересборка её не затёрла). CC BY требует указания автора — в самой
-карточке подписи нет, только здесь.
+`assets/kapa'a.jpg` (карточка Капаа), `assets/western_sahara_landscape.jpg` — «Western sahara landscape»,
+автор bob rayner, **CC BY 2.0**, Wikimedia Commons (карточка Западной Сахары), и
+`assets/kuril_islands_alaid.jpg` — «ISS-31 Alaid Volcano…», NASA / Expedition 31 (**public domain**,
+карточка Курил). Локальные `image` закреплены в `build_zones_info.js`, чтобы пересборка их не затёрла.
+CC BY у Сахары требует указания автора — в самой карточке подписи нет, только здесь.
 | `levels/usa/airports-info.json` | аэропорты (~144) | + поле `lang` (`ru`/`en`); больше половины только на английском — русской статьи нет |
 | `levels/world/currents-info.json` | течения | русские |
 | `levels/world/cities-info.json` | города мира | поле `lang`; русская статья, иначе английская; грузится для всех уровней, кроме США (США берёт `usa/cities-info.json`); используется на уровне countries |

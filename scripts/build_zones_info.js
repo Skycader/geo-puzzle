@@ -13,6 +13,9 @@ const ZONES = {
   // Wikimedia Commons — a landscape instead of the article's map thumbnail.
   esh: { title: 'Западная Сахара', image: 'assets/western_sahara_landscape.jpg' },
   esh_east: 'Свободная зона (Западная Сахара)',
+  // assets/kuril_islands_alaid.jpg: ISS-31 Alaid Volcano (NASA / Expedition 31), public domain —
+  // landscape instead of the article's SVG map thumb (often fails to render as <img>).
+  kurils: { title: 'Курильские острова', image: 'assets/kuril_islands_alaid.jpg' },
 };
 
 const UA = { 'User-Agent': 'geo-puzzle-dev/1.0 (personal learning project)' };

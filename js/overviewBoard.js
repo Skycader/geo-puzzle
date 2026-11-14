@@ -119,12 +119,6 @@ const CURRENT_LINE_PX = [1, 4]; // [min, max] stroke width
 const CURRENT_HEAD_PX = [2.5, 7]; // [min, max] arrowhead half-width
 const CURRENT_FULL_SIZE_ZOOM = 4;
 const CURRENT_HEAD_D = 'M -1.7 -1 L 0 0 L -1.7 1 Z';
-// Round "?" marker on map-only zones that have a card (Western Sahara…): a click opens it,
-// like the right-click "Что здесь?". Constant screen size; only drawn once zoomed in so the
-// markers don't clutter the map. It sits INFO_MARKER_LIFT_PX above the zone's label point.
-const INFO_MARKER_PX = 18;
-const INFO_MARKER_MIN_ZOOM = 3;
-const INFO_MARKER_LIFT_PX = 16;
 // Time-zone labels: constant screen size; "UTC+3" from FULL_LABEL_ZOOM, else just "+3";
 // half-hour/45-minute zones only from FRACTIONAL_LABEL_ZOOM (they'd crowd their neighbours).
 const TIMEZONE_LABEL_PX = 12;
@@ -486,7 +480,6 @@ export class OverviewBoard {
     this.airportEntries = []; // { id, cx, cy, icon, runway, pointMark, leaderPath, leaderLabel }
     this.airportsById = new Map(); // id -> { data, dotEl }
     // World only (levels/worldCurrents.js): ocean currents as thick arrows.
-    this.infoMarkerEntries = []; // { id, cx, cy, el } — built once the zones' cards have loaded
     this.currentEntries = []; // { id, line, hit, head, label }
     this.currentsById = new Map(); // id -> { data, dotEl }
     this.currentsVisible = opts.currentsVisible !== false;
@@ -629,10 +622,25 @@ export class OverviewBoard {
     // seaIdentifyBoard.js had before they gained this same background
     // layer). The USA level has no `land` field at all (its `pieces`
     // already cover the whole map), so this is a no-op there.
-    if (this.level.land) {
-      // Hover names every country; the ones with label points (levels/index.js) also get a
-      // permanent name label like any other territory (shown from LABEL_MIN_ZOOM).
+    // World: `land` = country silhouettes under the seas (solid world-bg).
+    // Countries: `land` = Overview "Зоны" — same violet place-poly style as
+    // USA ranges (painted after pieces below); only register ids/labels here.
+    if (this.level.id === 'world' && this.level.land) {
       this.zonesLayer.appendChild(buildStateBackground(this.level.land, { pathClass: 'world-bg-path', kind: 'land', title: (p) => bilingualLabel(p) }));
+      for (const l of this.level.land) {
+        this.landById.set(l.id, { data: l });
+        for (const [lx, ly] of l.labelPoints || []) {
+          const label = document.createElementNS(SVG_NS, 'text');
+          label.setAttribute('x', lx);
+          label.setAttribute('y', ly);
+          label.setAttribute('class', 'piece-label');
+          label.textContent = itemName(l);
+          this.labelsLayer.appendChild(label);
+          this.allLabelEls.push(label);
+          this.stateLabels.push({ el: label, minZoom: countryLabelMinZoom(l.area || 0) });
+        }
+      }
+    } else if (this.level.id === 'countries' && this.level.land) {
       for (const l of this.level.land) {
         this.landById.set(l.id, { data: l });
         for (const [lx, ly] of l.labelPoints || []) {
@@ -775,6 +783,24 @@ export class OverviewBoard {
         this.stateLabels.push({ el: label });
       });
       this.statesById.set(p.id, { data: p, pathEl: path, titleEl: title });
+    }
+
+    // Countries "Зоны": same .overview-place-poly look as USA ranges/parks
+    // (violet fill), on top of country pieces so overlays like Kurils read.
+    if (this.level.id === 'countries') {
+      for (const z of this.level.land || []) {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', z.d);
+        path.setAttribute('class', 'overview-place-poly');
+        path.dataset.kind = 'land';
+        path.dataset.id = z.id;
+        const title = document.createElementNS(SVG_NS, 'title');
+        title.textContent = bilingualLabel(z);
+        path.appendChild(title);
+        this.zonesLayer.appendChild(path);
+        const entry = this.landById.get(z.id);
+        if (entry) entry.pathEl = path;
+      }
     }
 
     // Lakes (USA only, see levels/usaLakes.js) — real polygon shapes with a
@@ -1379,6 +1405,9 @@ export class OverviewBoard {
     for (const [id, entry] of this.placesById) {
       if (entry.pathEl && this.info.places[id]) entry.pathEl.classList.add('overview-has-info');
     }
+    for (const [id, entry] of this.landById) {
+      if (entry.pathEl && this.info.zones[id]) entry.pathEl.classList.add('overview-has-info');
+    }
     for (const [id, entry] of this.lakesById) {
       if (this.info.lakes[id]) entry.pathEl.classList.add('overview-has-info');
     }
@@ -1388,40 +1417,6 @@ export class OverviewBoard {
     for (const entry of this.currentEntries) {
       if (this.info.currents[entry.id]) entry.hit.classList.add('overview-has-info');
     }
-    this._buildInfoMarkers();
-  }
-
-  // "?" markers for the level's `land` shapes that have a card in zones-info.json (see
-  // INFO_MARKER_PX). Built here, not in _build(), because which shapes qualify is only
-  // known once the cards have loaded. Positioned/shown by _rescaleForZoom.
-  _buildInfoMarkers() {
-    if (this.infoMarkerEntries.length) return;
-    for (const l of this.level.land || []) {
-      const at = l.labelPoints?.[0];
-      if (!at || !this.info.zones[l.id]) continue;
-      const el = document.createElementNS(SVG_NS, 'g');
-      el.setAttribute('class', 'overview-info-marker overview-has-info');
-      el.dataset.kind = 'zone';
-      el.dataset.id = l.id;
-      el.style.display = 'none';
-      const disc = document.createElementNS(SVG_NS, 'circle');
-      disc.setAttribute('cx', 12);
-      disc.setAttribute('cy', 12);
-      disc.setAttribute('r', 11);
-      disc.setAttribute('class', 'overview-info-marker-disc');
-      const mark = document.createElementNS(SVG_NS, 'text');
-      mark.setAttribute('x', 12);
-      mark.setAttribute('y', 12);
-      mark.setAttribute('class', 'overview-info-marker-mark');
-      mark.textContent = '?';
-      const title = document.createElementNS(SVG_NS, 'title');
-      title.textContent = t('whatsHereMenuItem');
-      el.append(disc, mark, title);
-      this.pointsLayer.appendChild(el);
-      this.infoMarkerEntries.push({ id: l.id, cx: at[0], cy: at[1], el });
-      this.landById.get(l.id).dotEl = el; // the popup's anchor
-    }
-    this._rescaleForZoom(this.zoomCtl?.getZoom() ?? 1);
   }
 
   _onMapTap(ev) {
@@ -1447,7 +1442,7 @@ export class OverviewBoard {
               ? this.info.airports[id]
               : kind === 'current'
                 ? this.info.currents[id]
-                : kind === 'zone'
+                : kind === 'zone' || kind === 'land'
                   ? this.info.zones[id]
                   : null;
     if (entry) {
@@ -1477,7 +1472,7 @@ export class OverviewBoard {
           ? this.lakesById.get(id)
           : kind === 'contextland'
             ? this.contextLandById.get(id)
-            : kind === 'zone'
+            : kind === 'zone' || kind === 'land'
               ? this.landById.get(id)
               : kind === 'airport'
                 ? this.airportsById.get(id)
@@ -1940,6 +1935,7 @@ export class OverviewBoard {
     if (tab === 'highways') return this._highwayItems().length;
     if (tab === 'airports') return (this.level.airports || []).length;
     if (tab === 'currents') return (this.level.currents || []).length;
+    if (tab === 'zones') return (this.level.land || []).length;
     return 0;
   }
 
@@ -1967,6 +1963,7 @@ export class OverviewBoard {
           ? // Countries: the country tab plus the world cities/places (attached in
             // levels/index.js) — no Штаты/Водоёмы/Шоссе/Аэропорты, those are USA-only.
             `<button type="button" class="overview-tab active" data-tab="states">${this._tabLabel('states', 'overviewTabCountries')}</button>
+           ${(this.level.land || []).length ? `<button type="button" class="overview-tab" data-tab="zones">${this._tabLabel('zones', 'overviewTabZones')}</button>` : ''}
            ${this.level.cities?.length ? `<button type="button" class="overview-tab" data-tab="cities">${this._tabLabel('cities', 'overviewTabCities')}</button>` : ''}
            ${this.level.places?.length ? `<button type="button" class="overview-tab" data-tab="places">${this._tabLabel('places', 'overviewTabPlaces')}</button>` : ''}`
           : `<button type="button" class="overview-tab active" data-tab="states">${this._tabLabel('states', 'overviewTabStates')}</button>
@@ -2069,7 +2066,7 @@ export class OverviewBoard {
   // geometry, not derived); cities only store a radius, so their area is
   // derived (they're rendered as a circle of that radius to begin with).
   _areaOf(it) {
-    if (this._isPieceTab() || this.activeTab === 'lakes') return it.area;
+    if (this._isPieceTab() || this.activeTab === 'lakes' || this.activeTab === 'zones') return it.area;
     // Areal places (ranges/parks) have a real `area`; point places fall through.
     if (this.activeTab === 'places' && it.area != null) return it.area;
     if (it.pop != null) return it.pop; // world city: the list's number column shows population
@@ -2190,17 +2187,19 @@ export class OverviewBoard {
         ? this.level.pieces
         : this.activeTab === 'oceans' || this.activeTab === 'seas' || this.activeTab === 'other'
           ? this.level.pieces.filter((p) => this._pieceCategory(p) === this.activeTab)
-          : this.activeTab === 'places'
-            ? this.level.places
-            : this.activeTab === 'lakes'
-              ? this.level.lakes || []
-              : this.activeTab === 'highways'
-                ? this._highwayItems()
-                : this.activeTab === 'airports'
-                  ? this.level.airports || []
-                  : this.activeTab === 'currents'
-                    ? this.level.currents || []
-                    : this.level.cities;
+          : this.activeTab === 'zones'
+            ? this.level.land || []
+            : this.activeTab === 'places'
+              ? this.level.places
+              : this.activeTab === 'lakes'
+                ? this.level.lakes || []
+                : this.activeTab === 'highways'
+                  ? this._highwayItems()
+                  : this.activeTab === 'airports'
+                    ? this.level.airports || []
+                    : this.activeTab === 'currents'
+                      ? this.level.currents || []
+                      : this.level.cities;
     const q = this.searchQuery;
     const filtered = q
       ? items.filter((it) => it.ru.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q))
@@ -2255,6 +2254,7 @@ export class OverviewBoard {
       row.innerHTML = this._mainColumnHtml(it) + `<span class="overview-item-area">${areaStr}</span>`;
       row.addEventListener('click', () => {
         if (this._isPieceTab()) this._focusState(it.id);
+        else if (this.activeTab === 'zones') this._focusZone(it.id);
         else if (this.activeTab === 'places') this._focusPlace(it.id);
         else if (this.activeTab === 'lakes') this._focusLake(it.id);
         else if (this.activeTab === 'highways') this._focusHighway(it);
@@ -2267,6 +2267,15 @@ export class OverviewBoard {
   }
 
   // ---------------- focus / highlight ----------------
+
+  // Countries-level `land` zones (Western Sahara, Kurils…). Gap-fill zones
+  // have no dedicated pathEl (they're in the shared world-bg group); overlay
+  // ones do — both still zoom via _focusShape on the data.
+  _focusZone(id) {
+    const entry = this.landById.get(id);
+    if (!entry) return;
+    this._focusShape(entry.data);
+  }
 
   _focusState(id) {
     const entry = this.statesById.get(id);
@@ -2504,17 +2513,6 @@ export class OverviewBoard {
       entry.leaderLabel.style.opacity = labelOn ? '' : '0';
       entry.leaderPath.style.opacity = labelOn ? '' : '0';
       entry.icon.setAttribute('transform', `translate(${entry.cx} ${entry.cy}) scale(${k.toFixed(5)}) translate(-12 -12)`);
-    }
-    // "?" markers: constant screen size, hidden until INFO_MARKER_MIN_ZOOM.
-    for (const m of this.infoMarkerEntries) {
-      if (zoom < INFO_MARKER_MIN_ZOOM) {
-        m.el.style.display = 'none';
-        continue;
-      }
-      m.el.style.display = '';
-      const k = INFO_MARKER_PX / 24 / effScale;
-      const cy = m.cy - INFO_MARKER_LIFT_PX / effScale;
-      m.el.setAttribute('transform', `translate(${m.cx} ${cy.toFixed(3)}) scale(${k.toFixed(5)}) translate(-12 -12)`);
     }
     // Keeps whichever shields are already showing at a constant screen
     // size DURING a zoom gesture — _updateHighwayShields itself only runs
