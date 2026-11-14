@@ -61,11 +61,21 @@ const SPACE_VIEW_LABEL_HIDE_ENABLED = true;
 const LABEL_MIN_ZOOM = 3;
 const CITY_LABEL_PX = 10;
 const CITY_LABEL_STROKE_PX = 2.5;
-const CITY_DOT_STROKE_PX = 1;
+const CITY_DOT_STROKE_PX = 1.3;
+// Dashed city outline — same language as .hawaii-locator (dash/gap in screen px).
+const CITY_DOT_DASH_PX = 4;
+const CITY_DOT_GAP_PX = 3.2;
 // World-map cities (levels/worldCities.js) have a population but no real land
 // area, so instead of a true-to-scale circle they get a constant-size dot, and
 // the less populous the city the later (higher zoom) its name appears.
 const WORLD_CITY_DOT_PX = 3.5;
+// Dot fill: house tile below this radius (or pop), high-rise tile at/above —
+// mirrors terrain's icon-in-pattern language (TERRAIN_PATTERNS).
+const CITY_LARGE_RADIUS_KM = 12;
+const CITY_LARGE_POP = 1.5e6;
+// Fraction of the city circle's bbox per tile (objectBoundingBox).
+// 0.08 → ~12–13 icons across a diameter — fine texture, not giant houses.
+const CITY_PATTERN_TILE_FRAC = 0.08;
 const CITY_FOCUS_RADIUS_KM = 250; // close-up radius for a city that has no area
 // World-map country name labels: the bigger the country, the lower the zoom its name
 // appears at (the big ones are readable on the whole-world view; the rest as you zoom in).
@@ -335,6 +345,33 @@ const TERRAIN_PATTERNS = {
   `,
 };
 
+// City-circle fills — same tile+icon approach as TERRAIN_PATTERNS, but a
+// much smaller tile (city circles aren't mountain ranges). House for
+// small towns, high-rise cluster for large metros.
+const CITY_PATTERNS = {
+  house: `
+    <rect width="5" height="5" fill="var(--neon-pink)" fill-opacity="0.14"/>
+    <path d="M0.7,4.2 V2.5 L2.5,1.1 L4.3,2.5 V4.2 Z" fill="var(--neon-pink)" fill-opacity="0.88"/>
+    <rect x="2.1" y="3.1" width="0.8" height="1.1" fill="var(--neon-pink)" fill-opacity="0.4"/>
+  `,
+  highrise: `
+    <rect width="5" height="5" fill="var(--neon-pink)" fill-opacity="0.14"/>
+    <rect x="0.5" y="2.1" width="1.1" height="2.5" fill="var(--neon-pink)" fill-opacity="0.88"/>
+    <rect x="1.9" y="0.7" width="1.3" height="3.9" fill="var(--neon-pink)" fill-opacity="0.9"/>
+    <rect x="3.5" y="1.6" width="1" height="3" fill="var(--neon-pink)" fill-opacity="0.85"/>
+    <rect x="2.15" y="1.3" width="0.35" height="0.35" fill="var(--neon-pink)" fill-opacity="0.35"/>
+    <rect x="2.65" y="1.3" width="0.35" height="0.35" fill="var(--neon-pink)" fill-opacity="0.35"/>
+    <rect x="2.15" y="1.9" width="0.35" height="0.35" fill="var(--neon-pink)" fill-opacity="0.35"/>
+    <rect x="2.65" y="1.9" width="0.35" height="0.35" fill="var(--neon-pink)" fill-opacity="0.35"/>
+  `,
+};
+
+function cityIsLarge(c) {
+  if (c.radiusKm != null) return c.radiusKm >= CITY_LARGE_RADIUS_KM;
+  if (c.pop != null) return c.pop >= CITY_LARGE_POP;
+  return false;
+}
+
 // Overview mode's 3rd map layer (see setTopoVisible below) — TraceTrack's
 // topo__ XYZ tile set, standard Web Mercator/EPSG:3857 slippy-map tiles
 // (256px), unlike OSM's option above which is an embeddable bbox *page*
@@ -595,6 +632,20 @@ export class OverviewBoard {
         <stop offset="0" stop-color="var(--piece-a)" />
         <stop offset="1" stop-color="var(--piece-b)" />
       </linearGradient>`;
+    // City house/high-rise tiles — objectBoundingBox so icons scale with
+    // the circle (userSpaceOnUse + 1/zoom ballooned them at deep zoom).
+    this.cityPatternsByKind = new Map();
+    for (const [kind, iconSvg] of Object.entries(CITY_PATTERNS)) {
+      const pattern = document.createElementNS(SVG_NS, 'pattern');
+      pattern.id = `city-pattern-${kind}`;
+      pattern.setAttribute('patternUnits', 'objectBoundingBox');
+      pattern.setAttribute('width', CITY_PATTERN_TILE_FRAC);
+      pattern.setAttribute('height', CITY_PATTERN_TILE_FRAC);
+      pattern.setAttribute('viewBox', '0 0 5 5');
+      pattern.innerHTML = iconSvg;
+      defs.appendChild(pattern);
+      this.cityPatternsByKind.set(kind, pattern);
+    }
     this.svg.appendChild(defs);
 
     // Two persistent layers so paint order (and therefore click hit-testing,
@@ -946,7 +997,8 @@ export class OverviewBoard {
       if (c.d) {
         const path = document.createElementNS(SVG_NS, 'path');
         path.setAttribute('d', c.d);
-        path.setAttribute('class', 'overview-city-shape');
+        // Silhouette cities are the large metros — high-rise tile + dashed rim.
+        path.setAttribute('class', 'overview-city-shape overview-city-dot-highrise');
         path.dataset.id = c.id;
         path.dataset.kind = 'city';
         const title = document.createElementNS(SVG_NS, 'title');
@@ -978,7 +1030,9 @@ export class OverviewBoard {
       dot.setAttribute('cx', c.cx);
       dot.setAttribute('cy', c.cy);
       dot.setAttribute('r', radiusNative.toFixed(3));
-      dot.setAttribute('class', 'overview-city-dot');
+      // Dashed rim (Hawaii-locator style) + house/high-rise tile fill.
+      const tile = cityIsLarge(c) ? 'highrise' : 'house';
+      dot.setAttribute('class', `overview-city-dot overview-city-dot-${tile}`);
       dot.dataset.id = c.id;
       dot.dataset.kind = 'city';
       const title = document.createElementNS(SVG_NS, 'title');
@@ -1402,6 +1456,11 @@ export class OverviewBoard {
   // (USA cities have minLabelZoom 0, so for them this is just the "Подписи" toggle).
   _styleCityEntry(entry, effScale, zoom) {
     if (entry.fixedDot) entry.dot.setAttribute('r', (WORLD_CITY_DOT_PX / effScale).toFixed(4));
+    // Dashed rim stays constant screen px (Hawaii-locator language).
+    entry.dot.style.strokeWidth = `${fmtScreenNative(CITY_DOT_STROKE_PX, effScale)}px`;
+    // Same `px` unit as strokeWidth — CSS px on SVG keeps dash length
+    // constant on screen while the circle itself scales with the map.
+    entry.dot.style.strokeDasharray = `${CITY_DOT_DASH_PX}px ${CITY_DOT_GAP_PX}px`;
     const labelOn = this.labelsVisible && zoom >= entry.minLabelZoom;
     entry.leaderLabel.style.opacity = labelOn ? '' : '0';
     entry.leaderPath.style.opacity = labelOn ? '' : '0';
@@ -2546,9 +2605,6 @@ export class OverviewBoard {
       if (!entry.appended) continue;
       this._layoutCityLeader(entry, effScale);
       this._styleCityEntry(entry, effScale, zoom);
-      // dot radius is NOT rescaled here — it's fixed in native units (true
-      // geographic size), only the outline stroke stays a constant screen px.
-      entry.dot.style.strokeWidth = `${fmtScreenNative(CITY_DOT_STROKE_PX, effScale)}px`;
     }
     for (const entry of this.placeEntries) {
       this._layoutCityLeader(entry, effScale);

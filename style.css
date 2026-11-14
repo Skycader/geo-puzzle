@@ -2192,13 +2192,18 @@ body {
 
 /* ---------------- overview mode ---------------- */
 
+/* City circles: dashed rim (Hawaii-locator language) + house/high-rise
+   tile fill (CITY_PATTERNS in overviewBoard.js). stroke-width / dasharray
+   are set inline so they stay constant screen px across zoom. */
 .overview-city-dot {
-  fill: var(--neon-pink);
-  stroke: rgba(var(--ink-rgb), 0.85);
-  /* r and stroke-width are set inline in JS, rescaled to stay a constant
-     screen size as the board zoom level changes. */
+  fill: url(#city-pattern-house);
+  stroke: var(--neon-pink);
+  stroke-opacity: 0.75;
+  fill-opacity: 1;
   cursor: default;
 }
+.overview-city-dot-house { fill: url(#city-pattern-house); }
+.overview-city-dot-highrise { fill: url(#city-pattern-highrise); }
 /* Leader-line city label: a small point-mark at the city's exact
    coordinate, a line running diagonally then bending horizontal, and the
    name sitting above that horizontal run — geometry built in JS
@@ -2227,14 +2232,17 @@ body {
 }
 
 .overview-city-shape {
-  fill: var(--neon-pink);
-  fill-opacity: 0.55;
+  fill: url(#city-pattern-highrise);
+  fill-opacity: 1;
   stroke: var(--neon-pink);
   stroke-width: 1.2;
+  stroke-opacity: 0.75;
+  stroke-dasharray: 4 3;
   cursor: default;
-  transition: fill-opacity 0.15s ease;
+  transition: stroke-opacity 0.15s ease;
 }
-.overview-city-shape:hover { fill-opacity: 0.75; }
+.overview-city-shape:hover { stroke-opacity: 1; }
+.overview-city-shape.overview-city-dot-highrise { fill: url(#city-pattern-highrise); }
 
 /* Lakes (js/overviewBoard.js, levels/usaLakes.js) — a real polygon shape,
    same interaction model as .overview-city-shape (hover/click for the info
@@ -2425,6 +2433,7 @@ body {
   stroke: var(--neon-yellow);
 }
 .overview-city-dot.overview-focused,
+.overview-city-shape.overview-focused,
 .overview-place-dot.overview-focused {
   fill: var(--neon-yellow) !important;
 }
