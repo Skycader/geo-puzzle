@@ -255,6 +255,7 @@ export class Game {
     // colored onto the map. See _startOverview/OverviewBoard's
     // setProgressVisible/setProgressScope.
     this.progressVisible = false;
+    this.gridVisible = false; // Overview GRID — opt-in, see OverviewBoard.setGridVisible
     this.progressScope = 'name-state-states';
     // "Рельеф" — real terrain sub-regions painted under the state pieces,
     // same opt-in/USA-only shape as progressVisible above, but 3-step
@@ -537,6 +538,9 @@ export class Game {
       toggleTimezonesWrap: document.getElementById('toggle-timezones-wrap'),
       toggleTimezones: document.getElementById('toggle-timezones'),
       toggleTimezonesText: document.getElementById('toggle-timezones-text'),
+      toggleGridWrap: document.getElementById('toggle-grid-wrap'),
+      toggleGrid: document.getElementById('toggle-grid'),
+      toggleGridText: document.getElementById('toggle-grid-text'),
       toggleProgressWrap: document.getElementById('toggle-progress-wrap'),
       toggleProgress: document.getElementById('toggle-progress'),
       toggleProgressText: document.getElementById('toggle-progress-text'),
@@ -792,6 +796,8 @@ export class Game {
     this.el.toggleCurrentsText.textContent = t('currentsToggleText');
     this.el.toggleTimezonesWrap.title = t('timezonesTitle');
     this.el.toggleTimezonesText.textContent = t('timezonesToggleText');
+    this.el.toggleGridWrap.title = t('gridTitle');
+    this.el.toggleGridText.textContent = t('gridToggleText');
     for (const b of this.el.settingsFlyoutMenu.querySelectorAll('.source-btn')) {
       b.title = t('sourceBtnTitle');
       b.setAttribute('aria-label', t('sourceBtnTitle'));
@@ -1722,6 +1728,10 @@ export class Game {
       this.timezonesVisible = ev.target.checked;
       if (this.board?.setTimezonesVisible) this.board.setTimezonesVisible(this.timezonesVisible);
     });
+    this.el.toggleGrid.addEventListener('change', (ev) => {
+      this.gridVisible = ev.target.checked;
+      if (this.board?.setGridVisible) this.board.setGridVisible(this.gridVisible);
+    });
     this.el.toggleProgress.addEventListener('change', (ev) => {
       this.progressVisible = ev.target.checked;
       this.el.progressScopeWrap.hidden = !this.progressVisible;
@@ -1844,6 +1854,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.toggleHintsText.textContent = t('hints');
@@ -1910,6 +1921,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
@@ -1939,6 +1951,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    // No text prompt here — the "question" is the pulsing highlight on the
@@ -1972,6 +1985,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;
@@ -2014,6 +2028,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    // No text prompt — the "question" is entirely on the map (highlighted
@@ -2050,6 +2065,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
@@ -2082,6 +2098,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = true;
@@ -2114,6 +2131,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;
@@ -2156,6 +2174,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
@@ -2190,6 +2209,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;    this.el.quizPrompt.hidden = false;
@@ -2241,6 +2261,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;
@@ -2294,6 +2315,7 @@ export class Game {
     this.currentsVisible = isFull;
     // Opt-in like "Прогресс": a colour overlay over the whole map, off even in "Полная информация".
     this.timezonesVisible = false;
+    this.gridVisible = false; // same opt-in spirit — not part of "full info" clutter
     // USA-only, same as the toggle itself being hidden for world/countries
     // below. "Full" defaults to the richest look ('pattern'), same spirit
     // as every other *Visible flag above defaulting fully on.
@@ -2322,6 +2344,8 @@ export class Game {
     this.el.toggleCurrents.checked = this.currentsVisible;
     this.el.toggleTimezonesWrap.hidden = !level.timezones?.length;
     this.el.toggleTimezones.checked = this.timezonesVisible;
+    this.el.toggleGridWrap.hidden = false;
+    this.el.toggleGrid.checked = this.gridVisible;
     // States only for now (per the feature's own scope) — every adaptive-
     // mode success scope this drives (ADAPTIVE_SUCCESS_SCOPE_BY_MODE) is
     // state-keyed, so there's nothing meaningful to show on world/countries.
@@ -2385,6 +2409,7 @@ export class Game {
       airportsVisible: this.airportsVisible,
       currentsVisible: this.currentsVisible,
       timezonesVisible: this.timezonesVisible,
+      gridVisible: this.gridVisible,
       progressVisible: level.id === 'usa' && this.progressVisible,
       progressScope: this.progressScope,
       terrainMode: level.id === 'usa' ? this.terrainMode : 'off',
@@ -2405,6 +2430,7 @@ export class Game {
     this.el.toggleAirportsWrap.hidden = true;
     this.el.toggleCurrentsWrap.hidden = true;
     this.el.toggleTimezonesWrap.hidden = true;
+    this.el.toggleGridWrap.hidden = true;
     this.el.toggleProgressWrap.hidden = true;
     this.el.toggleTerrainWrap.hidden = true;
     this.el.progressScopeWrap.hidden = true;

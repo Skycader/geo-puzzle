@@ -234,6 +234,8 @@ const STRINGS = {
   currentsTitle: { ru: 'Показать/скрыть течения на карте', en: 'Show/hide ocean currents on the map' },
   timezonesToggleText: { ru: 'Часовые пояса', en: 'Time zones' },
   timezonesTitle: { ru: 'Показать/скрыть часовые пояса на карте', en: 'Show/hide time zones on the map' },
+  gridToggleText: { ru: 'Сетка', en: 'Grid' },
+  gridTitle: { ru: 'Сетка размером с линейку масштаба', en: 'Grid sized to the scale bar' },
   airportCode: { ru: 'Код IATA:', en: 'IATA code:' },
   airportRegional: { ru: 'Региональный аэропорт', en: 'Regional airport' },
   airportRegionalDesc: { ru: 'связывает регионы и штаты', en: 'connects regions and states' },

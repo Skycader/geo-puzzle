@@ -8,6 +8,10 @@ import { getLang, t, itemName, terrainDescription, terrainLabel, bilingualLabel,
 import { cityMarkersHtml, searchBoxHtml, bindSearchClear } from './listWidgets.js';
 import { registerTipProvider, refreshTips } from './tooltips.js';
 
+// Must match zoomPan.js `SCALE_BAR_PX` / `.scale-bar` CSS width — grid cells
+// are the same on-screen size as the bottom-left scale bar.
+const SCALE_BAR_PX = 100;
+
 // Hawaii's own piece is one <path> with 8 real, physically separate
 // island rings (see scripts/build_usa_level.js's Hawaii-splice comment) —
 // a single static tooltip text can't say which one the cursor is actually
@@ -504,6 +508,11 @@ export class OverviewBoard {
     this.currentsVisible = opts.currentsVisible !== false;
     this.timezonesVisible = opts.timezonesVisible === true; // opt-in colour overlay (countries level)
     this.timezoneEntries = []; // { zone, path, label, offset, name, whole, colorClass } — offset fields: _refreshTimezoneOffsets
+    // Opt-in grid of squares matching the scale bar's screen length
+    // (SCALE_BAR_PX) — see setGridVisible / _updateGrid.
+    this.gridVisible = opts.gridVisible === true;
+    this.gridLayer = null;
+    this.gridPattern = null;
     this.lakesById = new Map(); // id -> { data, pathEl }
     this.lakeEls = []; // { pathEl, labelEl } — see setLakesVisible
     this.contextLandById = new Map(); // id -> { data } — Canada, see build_usa_level.js's contextLand
@@ -1157,6 +1166,42 @@ export class OverviewBoard {
       this.currentsById.set(c.id, { data: c, dotEl: hit });
     }
 
+    // Grid — real SVG <pattern> tiles: cell border + size in the tile's
+    // bottom-right. Labels live in pattern space so they pan/zoom with the
+    // map (HTML overlays "stuck" to the screen). No text stroke — that
+    // ballooned into dark clouds at deep zoom.
+    {
+      const patternId = `overview-grid-${Math.random().toString(36).slice(2, 9)}`;
+      this.gridPattern = document.createElementNS(SVG_NS, 'pattern');
+      this.gridPattern.setAttribute('id', patternId);
+      this.gridPattern.setAttribute('patternUnits', 'userSpaceOnUse');
+      this.gridPattern.setAttribute('width', '1');
+      this.gridPattern.setAttribute('height', '1');
+      const cellPath = document.createElementNS(SVG_NS, 'path');
+      cellPath.setAttribute('class', 'overview-grid-cell');
+      cellPath.setAttribute('fill', 'none');
+      this.gridPattern.appendChild(cellPath);
+      this.gridPatternPath = cellPath;
+      const cellLabel = document.createElementNS(SVG_NS, 'text');
+      cellLabel.setAttribute('class', 'overview-grid-label');
+      cellLabel.setAttribute('text-anchor', 'end');
+      cellLabel.setAttribute('dominant-baseline', 'ideographic');
+      this.gridPattern.appendChild(cellLabel);
+      this.gridPatternLabel = cellLabel;
+      const defsEl = this.svg.querySelector('defs') || this.svg.insertBefore(document.createElementNS(SVG_NS, 'defs'), this.svg.firstChild);
+      defsEl.appendChild(this.gridPattern);
+
+      this.gridLayer = document.createElementNS(SVG_NS, 'g');
+      this.gridLayer.setAttribute('class', 'grid-layer');
+      this.gridLayer.style.display = 'none';
+      const cover = document.createElementNS(SVG_NS, 'rect');
+      cover.setAttribute('width', this.level.canvas.width);
+      cover.setAttribute('height', this.level.canvas.height);
+      cover.setAttribute('fill', `url(#${patternId})`);
+      this.gridLayer.appendChild(cover);
+      this.svg.appendChild(this.gridLayer);
+    }
+
     // Ruler layer — kept as its own <g> so _renderRuler can cheaply
     // rebuild just its contents (innerHTML='') without touching anything
     // else, and so it can be re-appended (moved) to the end of this.svg's
@@ -1258,6 +1303,7 @@ export class OverviewBoard {
     this.setLakesVisible(this.lakesVisible);
     this.setHighwaysVisible(this.highwaysVisible);
     this.setProgressVisible(this.progressVisible);
+    this.setGridVisible(this.gridVisible);
     if (this.terrainMode !== 'off') this.setTerrainMode(this.terrainMode);
   }
 
@@ -2546,6 +2592,37 @@ export class OverviewBoard {
     // keeps ruler point/label sizes constant-screen-px too, same as
     // everything else in this method.
     if (this.rulerLayer) this._renderRuler();
+    this._updateGrid(effScale);
+  }
+
+  // Cell size = scale-bar length in native units (SCALE_BAR_PX / effScale).
+  // Border + size label are both inside the pattern tile, so they move
+  // with the map on pan/zoom like a real grid.
+  _updateGrid(effScale) {
+    if (!this.gridPattern || !this.gridVisible) return;
+    const cell = SCALE_BAR_PX / effScale;
+    if (!(cell > 0) || !Number.isFinite(cell)) return;
+    const c = cell >= 0.01 ? cell.toFixed(4) : cell.toFixed(8);
+    this.gridPattern.setAttribute('width', c);
+    this.gridPattern.setAttribute('height', c);
+    this.gridPatternPath.setAttribute('d', `M ${c} 0 H 0 V ${c}`);
+    if (this.gridPatternLabel) {
+      const km = cell * (this.level.kmPerUnit || 0);
+      const pad = 4 / effScale;
+      this.gridPatternLabel.setAttribute('x', (cell - pad).toFixed(cell >= 0.01 ? 4 : 8));
+      this.gridPatternLabel.setAttribute('y', (cell - pad).toFixed(cell >= 0.01 ? 4 : 8));
+      this.gridPatternLabel.style.fontSize = `${fmtScreenNative(11, effScale)}px`;
+      this.gridPatternLabel.textContent = `${km < 10 ? km.toFixed(1) : Math.round(km)} ${t('kmUnit')}`;
+    }
+  }
+
+  setGridVisible(visible) {
+    this.gridVisible = visible;
+    if (this.gridLayer) this.gridLayer.style.display = visible ? '' : 'none';
+    if (visible) {
+      const zoom = this.zoomCtl?.getZoom() ?? 1;
+      this._updateGrid(this.scale * zoom);
+    }
   }
 
   // getComputedTextLength() forces a synchronous layout of the *whole*

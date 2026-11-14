@@ -384,16 +384,20 @@ export function createZoomControls(zoomCtl) {
 
 const KM_PER_MI = 0.621371;
 
+// Fixed screen width of the scale bar — and of each Overview GRID cell
+// (overviewBoard.js's setGridVisible). Only the km/mi label changes with zoom.
+export const SCALE_BAR_PX = 100;
+
 // A passive, Google-Maps-style scale readout pinned to the bottom-left of
-// the map: a fixed 100-screen-pixel bracket labeled with how much real
-// distance those 100px cover at the current zoom. `baseScale` is the
+// the map: a fixed SCALE_BAR_PX bracket labeled with how much real
+// distance those pixels cover at the current zoom. `baseScale` is the
 // board's fit-to-viewport scale (native units -> px at zoom 1); `kmPerUnit`
 // converts native canvas units to real-world km (baked in at build time
 // from the map's projection — see scripts/build_usa_level.js).
 export function createScaleBar(zoomCtl, opts = {}) {
   const baseScale = opts.baseScale || 1;
   const kmPerUnit = opts.kmPerUnit || 0;
-  const barPx = 100;
+  const barPx = SCALE_BAR_PX;
 
   const wrap = document.createElement('div');
   wrap.className = 'scale-bar';
