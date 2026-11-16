@@ -4,6 +4,17 @@
 // Regenerate: node scripts/filter_usa_place_polys.js && node scripts/build_usa_place_polys.js
 export default [
   {
+    id: 'bermuda_triangle',
+    name: 'Bermuda Triangle',
+    ru: 'Бермудский треугольник',
+    kind: 'range',
+    cx: 1884.4,
+    cy: 1164.3,
+    bbox: [1682.2, 986.5, 2021.9, 1296.5],
+    area: 1136236,
+    d: 'M 1682.25,1209.87 L 1948.88,986.54 L 2021.93,1296.54 L 1682.25,1209.87 Z',
+  },
+  {
     id: 'rocky_mountains',
     name: 'Rocky Mountains',
     ru: 'Скалистые горы',

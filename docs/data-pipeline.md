@@ -57,7 +57,7 @@
 
 | Данные | Источник | Лицензия (по описанию источника/комментариям скриптов) |
 |---|---|---|
-| Штаты США | PublicaMundi `us-states` GeoJSON; Гавайи — US Census TIGER/Line 2023 (State) | общественное достояние |
+| Штаты США | PublicaMundi `us-states` GeoJSON; Гавайи — US Census TIGER/Line 2023 (State); Флорида-Кис — Census cb_2023_us_state_500k (дописаны к материку) | общественное достояние |
 | Города (площади, силуэты) | US Census Bureau: Gazetteer Files 2024, Cartographic Boundary Files | общественное достояние |
 | Шоссе | US Census Bureau TIGER/Line 2023 (Primary Roads; Hawaii — Primary & Secondary Roads) | общественное достояние |
 | Озёра, моря, океаны, страны | Natural Earth (`ne_10m_lakes`, marine polys 110m/10m, admin-0 10m, disputed areas) | общественное достояние |

@@ -144,7 +144,34 @@ function geometryCentroid(geometry) {
   return ringCentroid(best);
 }
 
-const places = geo.features
+// Hand-built ocean polygon — not in Natural Earth, and must NOT be clipped
+// to US land (filter_usa_place_polys.js). Classic vertices from the Russian
+// Wikipedia blurb / places-info.json: Miami, Bermuda, San Juan (PR).
+const HAND_FEATURES = [
+  {
+    type: 'Feature',
+    properties: {
+      id: 'bermuda_triangle',
+      name: 'Bermuda Triangle',
+      ru: 'Бермудский треугольник',
+      kind: 'range', // violet place-poly wash (not a park)
+    },
+    geometry: {
+      type: 'Polygon',
+      // Closed ring, lon/lat. CW to match other USA place-polys' fill winding.
+      coordinates: [
+        [
+          [-80.1918, 25.7617], // Miami
+          [-64.7505, 32.3078], // Bermuda
+          [-66.1057, 18.4655], // San Juan
+          [-80.1918, 25.7617],
+        ],
+      ],
+    },
+  },
+];
+
+const places = [...geo.features, ...HAND_FEATURES]
   .map((f) => {
     const { id, name, ru, kind } = f.properties;
     if (!id || !name || !ru || !kind) throw new Error(`Bad place-poly feature props: ${JSON.stringify(f.properties)}`);

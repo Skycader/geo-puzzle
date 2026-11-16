@@ -119,6 +119,11 @@
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/NaPali_overlook_Kalalau_Valley.jpg/330px-NaPali_overlook_Kalalau_Valley.jpg",
     "wikiUrl": "https://en.wikipedia.org/wiki/N%C4%81_Pali_Coast_State_Park"
   },
+  "wilcox_memorial_hospital": {
+    "extract": "Мемориальный госпиталь Уилкокс (Wilcox Medical Center) — одна из трёх больниц на острове Кауаи, в городе Лихуэ. Входит в сеть Hawaii Pacific Health: есть приёмный покой, хирургическое отделение и диагностический центр. Отдельной статьи в русской Википедии нет — данные из английской.",
+    "image": "assets/wilcox_memorial_hospital.webp",
+    "wikiUrl": "https://en.wikipedia.org/wiki/Wilcox_Medical_Center"
+  },
   "pearl_harbor": {
     "extract": "Мемориал линкора «Аризона» расположен в Пёрл-Харборе на месте гибели линкора. Представляет собой бетонную конструкцию, установленную над затонувшим корпусом корабля, не касаясь его. Мемориал построен в честь погибших 1177 человек на линкоре «Аризона» во время нападения японских сил на Пёрл-Харбор 7 декабря 1941 года.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/USS_Arizona_Memorial_%28aerial_view%29.jpg/330px-USS_Arizona_Memorial_%28aerial_view%29.jpg",

@@ -123,7 +123,7 @@ const PLACES = [
   ['forks', 'Forks', 'Форкс', 47.9506, -124.3856],
   ['alcatraz', 'Alcatraz', 'Алькатрас', 37.8267, -122.4230],
   ['overlook_hotel', 'The Overlook Hotel', 'Отель «Оверлук»', 40.3775, -105.5217],
-  ['bermuda_triangle', 'Bermuda Triangle', 'Бермудский треугольник', 25.0, -71.0],
+  // bermuda_triangle — moved to a real triangle polygon (build_usa_place_polys.js).
   ['las_vegas_strip', 'The Las Vegas Strip', 'Лас-Вегас-Стрип', 36.1147, -115.1728],
   // Wikipedia (verified via the MediaWiki API, not just the article prose):
   // 38.525°N 111.75°W, Fishlake National Forest, Sevier County, UT.
@@ -159,6 +159,9 @@ const PLACES = [
   // search) — same "real English source, honestly linked" call as
   // usaHawaiiHighways.js's Kaneohe/Kailua city-info entries.
   ['na_pali_coast', 'Nā Pali Coast', 'На-Пали', 22.17552, -159.64362, 'HI'],
+  // MediaWiki API coordinates for "Wilcox Medical Center" (Līhuʻe, Kauaʻi).
+  // No Russian Wikipedia article — English card, same as Nā Pali / Kalaupapa.
+  ['wilcox_memorial_hospital', 'Wilcox Memorial Hospital', 'Мемориальный госпиталь Уилкокс', 21.986, -159.3647, 'HI'],
   ['pearl_harbor', 'USS Arizona Memorial', 'Мемориал USS Arizona (Пёрл-Харбор)', 21.365, -157.95, 'HI'],
   ['diamond_head', 'Diamond Head', 'Даймонд-Хед', 21.25972, -157.81175, 'HI'],
   ['haleakala', 'Haleakalā', 'Халеакала', 20.71333, -156.2575, 'HI'],

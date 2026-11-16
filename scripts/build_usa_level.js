@@ -30,6 +30,16 @@ const path = require('path');
 //      feature (same properties, geometry replaced) — every build script
 //      here reads us-states.geojson directly, so this is the one place
 //      that needed changing for all of them to pick it up.
+//
+// Florida Keys: PublicaMundi's Florida polygon stops ~25.12°N (mainland tip),
+// so Key West / EYW sat in open ocean. Keys rings were taken from Census
+// cartographic boundary 2023 (cb_2023_us_state_500k, STUSPS=FL), filtered to
+// islands with maxLat < 25.2 and minLon > -83 (Keys + Dry Tortugas; not the
+// huge mainland poly or gulf barrier islands), mapshaper-simplified, dust
+// rings dropped → scripts/data/florida-keys-simplified.geojson, then appended
+// as extra MultiPolygon parts onto the existing PublicaMundi mainland ring
+// (do not replace the mainland — CB500k's is ~5k points and would dwarf
+// every other state).
 const SRC = path.join(__dirname, 'data', 'us-states.geojson');
 const geo = JSON.parse(fs.readFileSync(SRC, 'utf8'));
 
@@ -416,8 +426,13 @@ const GLOBAL_SHIFT_Y = -shiftMinY + MARGIN;
 for (const p of pieces) translatePiece(p, GLOBAL_SHIFT_X, GLOBAL_SHIFT_Y);
 translatePiece(canadaPiece, GLOBAL_SHIFT_X, GLOBAL_SHIFT_Y);
 
-const CANVAS_W = shiftMaxX + GLOBAL_SHIFT_X + MARGIN;
-const CANVAS_H = shiftMaxY + GLOBAL_SHIFT_Y + MARGIN;
+// Bermuda Triangle place-poly (Miami–Bermuda–San Juan) sits SE of Florida
+// past the land bbox — pad the canvas so Overview can pan to the whole
+// triangle. Values from build_usa_place_polys.js vertex projection.
+const OFFSHORE_CANVAS_W = 2030;
+const OFFSHORE_CANVAS_H = 1305;
+const CANVAS_W = Math.max(shiftMaxX + GLOBAL_SHIFT_X + MARGIN, OFFSHORE_CANVAS_W);
+const CANVAS_H = Math.max(shiftMaxY + GLOBAL_SHIFT_Y + MARGIN, OFFSHORE_CANVAS_H);
 
 console.error('TRUE_SCALE', TRUE_SCALE);
 console.error('GLOBAL_SHIFT_X', GLOBAL_SHIFT_X, 'GLOBAL_SHIFT_Y', GLOBAL_SHIFT_Y);
