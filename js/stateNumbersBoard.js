@@ -103,7 +103,7 @@ export class StateNumbersBoard {
         if (id) this._answerMap(id);
       },
     });
-    this.container.appendChild(createZoomControls(this.zoomCtl));
+    this.container.appendChild(createZoomControls(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
     this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
   }
 

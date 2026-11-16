@@ -214,7 +214,7 @@ export class NameStateBoard {
     // outside the visible, clipped region. #board-container is the real,
     // correctly-sized ancestor — same fix already applied to
     // .overview-panel, see its own CSS comment.
-    this.container.appendChild(createZoomControls(this.zoomCtl));
+    this.container.appendChild(createZoomControls(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
     this.container.appendChild(
       createScaleBar(this.zoomCtl, {
         baseScale: this.scale,

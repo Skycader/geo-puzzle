@@ -189,7 +189,7 @@ export class JourneyNameBoard {
       panFromAnywhere: true,
       onZoomChange: (zoom) => this._rescaleLabels(zoom),
     });
-    this.container.appendChild(createZoomControls(this.zoomCtl));
+    this.container.appendChild(createZoomControls(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
     this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
     this._buildAnswerBar();

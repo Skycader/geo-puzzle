@@ -224,7 +224,7 @@ export class StatePlacementBoard {
       panFromAnywhere: false,
       onZoomChange: () => this._onZoomChange(),
     });
-    this.zoomControlsEl = createZoomControls(this.zoomCtl);
+    this.zoomControlsEl = createZoomControls(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit });
     this.container.appendChild(this.zoomControlsEl);
     this.scaleBarEl = createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit });
     this.container.appendChild(this.scaleBarEl);

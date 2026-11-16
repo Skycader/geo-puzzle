@@ -311,7 +311,7 @@ export class NeighborBoard {
     this.container.appendChild(this.answerBar);
 
     this.zoomCtl = attachZoomPan(this.zoomViewport, this.svg, { panFromAnywhere: true });
-    this.zoomControlsEl = createZoomControls(this.zoomCtl);
+    this.zoomControlsEl = createZoomControls(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit });
     this.scaleBarEl = createScaleBar(this.zoomCtl, { baseScale: fitScale, kmPerUnit: this.level.kmPerUnit });
     this.container.appendChild(this.zoomControlsEl);
     this.container.appendChild(this.scaleBarEl);

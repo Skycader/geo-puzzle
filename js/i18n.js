@@ -273,7 +273,7 @@ const STRINGS = {
   journeyOffRoute: { ru: 'Штат на карте, но не в маршруте — без монет', en: 'On the map, but not on the route — no coins' },
   // js/zoomPan.js's zoom control cluster.
   zoomIn: { ru: 'Приблизить', en: 'Zoom in' },
-  currentZoom: { ru: 'Текущий масштаб', en: 'Current zoom' },
+  currentZoom: { ru: 'Сторона квадрата масштаба', en: 'Scale-bar / grid square size' },
   resetZoom: { ru: 'Сбросить масштаб', en: 'Reset zoom' },
   zoomOut: { ru: 'Отдалить', en: 'Zoom out' },
   // js/dataPortability.js's import error messages.

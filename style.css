@@ -1712,7 +1712,11 @@ body {
   z-index: 20;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 6px;
+  /* Lock to button width so a longer "1200 км" label can't shove +/⟲/−
+     leftward as the scale side-length string grows/shrinks with zoom. */
+  width: 38px;
 }
 /* Overview mode only — #board-container gets a plain JS-toggled class
    (see overviewBoard.js's _build/destroy) rather than a :has(.overview-
@@ -1759,12 +1763,26 @@ body {
 .zoom-btn[data-action='reset'] { font-size: 16px; }
 
 .zoom-level {
-  text-align: center;
+  /* Fixed slot the same width as the buttons; the inner label is
+     absolutely centered so "1200 км" can overhang without shifting +/⟲/−. */
+  flex: none;
+  position: relative;
+  width: 38px;
+  height: 14px;
+  overflow: visible;
+  user-select: none;
+}
+.zoom-level-text {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
   font-size: 12px;
   font-weight: 700;
   color: var(--base1);
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
-  user-select: none;
+  pointer-events: none;
 }
 
 /* Overview mode's SVG/OSM layer switcher (see overviewBoard.js's

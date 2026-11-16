@@ -359,14 +359,30 @@ export function createZoomWrap(baseWidth, baseHeight, fpsMountEl) {
   return { wrap, viewport };
 }
 
-// Small floating +/reset/- button cluster wired to a zoomPan controller,
-// with a live "100%" / "300%" readout between the buttons.
-export function createZoomControls(zoomCtl) {
+const KM_PER_MI = 0.621371;
+
+// Fixed screen width of the scale bar — and of each Overview GRID cell
+// (overviewBoard.js's setGridVisible). Only the km/mi label changes with zoom.
+export const SCALE_BAR_PX = 100;
+
+function formatScaleSideKm(zoom, baseScale, kmPerUnit) {
+  const km = (SCALE_BAR_PX / (baseScale * zoom)) * kmPerUnit;
+  if (!(km > 0) || !Number.isFinite(km)) return '—';
+  return `${km < 10 ? km.toFixed(1) : Math.round(km)} ${t('kmUnit')}`;
+}
+
+// Small floating +/reset/- button cluster wired to a zoomPan controller.
+// The middle readout is the real-world side length of the scale-bar /
+// grid square at the current zoom (same number as the scale bar / grid
+// cell label) — not a "1321%" zoom percentage.
+export function createZoomControls(zoomCtl, opts = {}) {
+  const baseScale = opts.baseScale || 1;
+  const kmPerUnit = opts.kmPerUnit || 0;
   const wrap = document.createElement('div');
   wrap.className = 'zoom-controls';
   wrap.innerHTML = `
     <button type="button" class="zoom-btn" data-action="in" title="${t('zoomIn')}">+</button>
-    <span class="zoom-level" title="${t('currentZoom')}"></span>
+    <span class="zoom-level" title="${t('currentZoom')}"><span class="zoom-level-text"></span></span>
     <button type="button" class="zoom-btn" data-action="reset" title="${t('resetZoom')}">⟲</button>
     <button type="button" class="zoom-btn" data-action="out" title="${t('zoomOut')}">−</button>
   `;
@@ -374,19 +390,17 @@ export function createZoomControls(zoomCtl) {
   wrap.querySelector('[data-action="reset"]').addEventListener('click', () => zoomCtl.reset());
   wrap.querySelector('[data-action="out"]').addEventListener('click', () => zoomCtl.zoomOut());
 
-  const levelEl = wrap.querySelector('.zoom-level');
-  const updateLevel = (zoom) => { levelEl.textContent = `${Math.round(zoom * 100)}%`; };
+  const levelEl = wrap.querySelector('.zoom-level-text');
+  const updateLevel = (zoom) => {
+    levelEl.textContent = kmPerUnit
+      ? formatScaleSideKm(zoom, baseScale, kmPerUnit)
+      : `${Math.round(zoom * 100)}%`;
+  };
   updateLevel(zoomCtl.getZoom());
   zoomCtl.subscribe(updateLevel);
 
   return wrap;
 }
-
-const KM_PER_MI = 0.621371;
-
-// Fixed screen width of the scale bar — and of each Overview GRID cell
-// (overviewBoard.js's setGridVisible). Only the km/mi label changes with zoom.
-export const SCALE_BAR_PX = 100;
 
 // A passive, Google-Maps-style scale readout pinned to the bottom-left of
 // the map: a fixed SCALE_BAR_PX bracket labeled with how much real

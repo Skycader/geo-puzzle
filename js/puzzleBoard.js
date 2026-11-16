@@ -161,7 +161,7 @@ export class PuzzleBoard {
     // of the container keeps the controls flush against the actually-
     // rendered map's own corner rather than the full screen's, in case
     // contain-fit letterboxes the map away from that corner.
-    this.zoomWrap.appendChild(createZoomControls(this.zoomCtl));
+    this.zoomWrap.appendChild(createZoomControls(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
     this.zoomWrap.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
     this._bindTrayDrawer();
 

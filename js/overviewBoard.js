@@ -1323,7 +1323,7 @@ export class OverviewBoard {
     // Saved (not just appended-and-forgotten) so setOsmVisible can hide
     // them while the OSM iframe is showing — they only control this.svg's
     // own zoomCtl, which isn't what's on screen at that point.
-    this.zoomControlsEl = createZoomControls(this.zoomCtl);
+    this.zoomControlsEl = createZoomControls(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit });
     this.scaleBarEl = createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit });
     this.container.appendChild(this.zoomControlsEl);
     this.container.appendChild(this.scaleBarEl);

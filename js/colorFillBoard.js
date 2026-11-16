@@ -133,7 +133,7 @@ export class ColorFillBoard {
       baseHeight: baseH,
       panFromAnywhere: true,
     });
-    this.container.appendChild(createZoomControls(this.zoomCtl));
+    this.container.appendChild(createZoomControls(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
     this.container.appendChild(createScaleBar(this.zoomCtl, { baseScale: this.scale, kmPerUnit: this.level.kmPerUnit }));
 
     this._buildPalette();
